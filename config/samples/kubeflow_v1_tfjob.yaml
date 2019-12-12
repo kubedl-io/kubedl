@@ -1,0 +1,7 @@
+apiVersion: kubeflow.alibaba-inc.com/v1
+kind: Tfjob
+metadata:
+  name: tfjob-sample
+spec:
+  # Add fields here
+  foo: bar
