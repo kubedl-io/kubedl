@@ -17,7 +17,7 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 [xgboost-operator](https://github.com/kubeflow/xgboost-operator) and integrates them with enhanced features as below:
 
 - Support running prevalent ML/DL workloads in a single operator.
-- Instrumented with rich prometheus metrics to provide more insights about the job status, such as job launch delay, total number of running jobs.
+- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job status, such as job launch delay, total number of running jobs.
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
 - Support debugging  workload types selectively.
 - Support running a job (in the form of YAML) with source code from github/remote store(e.g. hdfs) without rebuilding the image
@@ -25,65 +25,65 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 
 ## Getting started
 
-### Installation
-
-#### Download and build
-
-```bash
-git clone http://github.com/alibaba/kubedl.git
-cd kubedl && make
-```
-
 #### Install CRDs
 
 ```bash
-kubectl apply -f http://github.com/alibaba/config/crd/bases
+kubectl apply -f http://github.com/alibaba/kubedl/config/crd/bases
 ```
 
 #### Deploy KubeDL as a deployment
 
 ```bash
-kubectl apply -f http://github.com/alibaba/config/manager/all_in_one.yaml
+kubectl apply -f http://github.com/alibaba/kubedl/config/manager/all_in_one.yaml
 ```
 
-The official KubeDL image is hosted under [docker hub](https://hub.docker.com/r/kubedl/kubedl).
+The official KubeDL operator image is hosted under [docker hub](https://hub.docker.com/r/kubedl/kubedl).
 
-## Example
+## Run an Example Job 
 
 This example demonstrates how to run a simple MNist Tensorflow job with KubeDL.
-- Install CRD for TensorFlow job
-  `kubectl apply -f kubedl/example/crd/crd-tf.yaml`
-- Deploy the event volume
-  `kubectl apply -f kubedl/example/tf/tfevent-volume`
-- Submit the TFJob
-  `kubectl apply -f tf_job_mnist.yaml`
-- Monitor the status of the Tensorflow job
+
+#### Submit the TFJob
+
+  `kubectl apply -f tf_job_mnist.yaml` #FIXME tf_job_mnist.yaml doesn't exist
+
+#### Monitor the status of the Tensorflow job
+
   `kubectl describe tfjob mnist`
-- Delete the job
+
+#### Delete the job
+
   `kubectl delete tfjob mnist`
 
 ## Developer Guide
 
-Th Makefile in the root folder  describes the options to build and install. Commonly used options include:
-
-- Build the controller manager binary: 
-  `make manager`
-- Run the tests: 
-  `make test`
-- Generate manifests e.g. CRD, RBAC YAML files etc: 
-  `make manifests`
-
-To build the docker image, named as `alibaba/kubedl:v1alpha1` by default:
+#### Download 
 
 ```bash
+git clone http://github.com/alibaba/kubedl.git
+```
+
+#### Build the controller manager binary
+
+`make manager`
+
+#### Run the tests
+
+`make test`
+
+#### Generate manifests e.g. CRD, RBAC YAML files etc
+
+`make manifests`
+
+#### Build the docker image
+
+```
 export IMG=<your_image_name> && make docker-build
 ```
 
-To push the image: 
+#### Push the image
 
-```bash
-export IMG=<your_image_name> && make docker-push 
-// or
+```
 docker push <your_image_name>
 ```
 

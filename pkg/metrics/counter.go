@@ -37,7 +37,7 @@ func NewJobCounter(kind string) *JobCounter {
 	counter := &JobCounter{
 		kind: strings.ToLower(kind),
 		created: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "controller_jobs_created",
+			Name: "kubedl_jobs_created",
 			Help: "Counts number of jobs created",
 		}, []string{"kind"}),
 		deleted: promauto.NewCounterVec(prometheus.CounterOpts{
