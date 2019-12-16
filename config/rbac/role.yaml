@@ -7,7 +7,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - kubeflow.alibaba-inc.com
+  - kubeflow.org
   resources:
   - tfjobs
   verbs:
@@ -19,10 +19,70 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kubeflow.alibaba-inc.com
+  - kubeflow.org
   resources:
   - tfjobs/status
   verbs:
   - get
   - patch
   - update
+- apiGroups:
+    - kubeflow.org
+  resources:
+    - pytorchjobs
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - kubeflow.org
+  resources:
+    - pytorchjobs/status
+  verbs:
+    - get
+    - patch
+    - update
+- apiGroups:
+    - xdl.alibaba.com
+  resources:
+    - xdljobs
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - xdl.alibaba.com
+  resources:
+    - xdljobs/status
+  verbs:
+    - get
+    - patch
+    - update
+- apiGroups:
+    - xgboostjob.kubeflow.org
+  resources:
+    - xgboostjobs
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - xgboostjob.kubeflow.org
+  resources:
+    - xgboostjobs/status
+  verbs:
+    - get
+    - patch
+    - update
