@@ -22,7 +22,7 @@ import (
 
 	"github.com/alibaba/kubedl/api"
 	"github.com/alibaba/kubedl/controllers"
-	"github.com/alibaba/kubedl/pkg/gang_schedule"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -56,7 +56,7 @@ func main() {
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.BoolVar(&ctrlConfig.EnableGangScheduling, "enable-gang-schedule", false, "enable gang scheduling for workloads")
-	flag.StringVar(&ctrlConfig.GangSchedulerName, "gang-scheduler-name", "default", "specify the name of gang scheduler")
+	flag.StringVar(&ctrlConfig.GangSchedulerName, "gang-scheduler-name", "default-scheduler", "specify the name of gang scheduler")
 	flag.Parse()
 
 	ctrl.SetLogger(zap.Logger(true))
@@ -79,7 +79,7 @@ func main() {
 	}
 
 	setupLog.Info("setting up gang schedulers")
-	gang_schedule.RegisterGangSchedulers(mgr.GetClient())
+	registry.RegisterGangSchedulers(mgr)
 
 	// Setup all controllers with provided manager.
 	if err = controllers.SetupWithManager(mgr, ctrlConfig); err != nil {

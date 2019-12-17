@@ -24,6 +24,7 @@ import (
 	"time"
 
 	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
@@ -63,6 +64,9 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		Recorder:       r.recorder,
 		MetricsCounter: metrics.NewJobCounter("pytorch"),
 		MetricsGauge:   metrics.NewJobGauge("pytorch", r.Client, 10*time.Second, metrics.PytorchJobRunningCounter),
+	}
+	if r.ctrl.Config.EnableGangScheduling {
+		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
 	return r
 }

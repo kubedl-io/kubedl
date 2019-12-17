@@ -15,17 +15,14 @@ package xgboostjob
 import (
 	"context"
 	"flag"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/metrics"
-	"k8s.io/kubernetes/pkg/apis/apps"
 	"path/filepath"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 	"time"
 
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
+	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -34,13 +31,17 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/kubernetes/pkg/apis/apps"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -105,7 +106,9 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		MetricsCounter: metrics.NewJobCounter("xgboost"),
 		MetricsGauge:   metrics.NewJobGauge("xgboost", r.Client, 30*time.Second, metrics.XGBoostJobRunningCounter),
 	}
-
+	if r.ctrl.Config.EnableGangScheduling {
+		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
+	}
 	return r
 }
 
