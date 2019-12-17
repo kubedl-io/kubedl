@@ -19,16 +19,14 @@ package xdljob
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/metrics"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 	"strings"
 	"time"
 
 	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
+	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/metrics"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -38,10 +36,13 @@ import (
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -74,6 +75,9 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		Recorder:       r.recorder,
 		MetricsCounter: metrics.NewJobCounter("xdl"),
 		MetricsGauge:   metrics.NewJobGauge("xdl", r.Client, 30*time.Second, metrics.XDLJobRunningCounter),
+	}
+	if r.ctrl.Config.EnableGangScheduling {
+		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
 	return r
 }
