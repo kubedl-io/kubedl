@@ -53,10 +53,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			return false
 		}
 		if reconciler.ctrl.MetricsCounter != nil {
-			reconciler.ctrl.MetricsCounter.Created().Inc()
-		}
-		if reconciler.ctrl.MetricsGauge != nil {
-			reconciler.ctrl.MetricsGauge.Running().Gauge()
+			reconciler.ctrl.MetricsCounter.CreatedInc()
 		}
 		return true
 	}
@@ -92,8 +89,8 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					return err
 				}
 				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-					r.ctrl.MetricsCounter.Restart().Inc()
+					r.ctrl.MetricsCounter.FailureInc()
+					r.ctrl.MetricsCounter.RestartInc()
 				}
 			} else {
 				msg := fmt.Sprintf("XDLJob %s is failed because %d %s replica(s) failed.", xdlJob.Name, failed, rtype)
@@ -108,10 +105,8 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					return err
 				}
 				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-				}
-				if r.ctrl.MetricsGauge != nil {
-					r.ctrl.MetricsGauge.Running().Gauge()
+					r.ctrl.MetricsCounter.FailureInc()
+					r.ctrl.MetricsCounter.RunningGauge()
 				}
 			}
 			return nil
@@ -132,10 +127,7 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 			return err
 		}
 		if r.ctrl.MetricsCounter != nil {
-			r.ctrl.MetricsCounter.Success().Inc()
-		}
-		if r.ctrl.MetricsGauge != nil {
-			r.ctrl.MetricsGauge.Running().Gauge()
+			r.ctrl.MetricsCounter.SuccessInc()
 		}
 		return nil
 	}
@@ -145,6 +137,9 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 	if err := commonutil.UpdateJobConditions(jobStatus, v1.JobRunning, commonutil.JobRunningReason, msg); err != nil {
 		log.Error(err, "failed to update xdl job conditions")
 		return err
+	}
+	if r.ctrl.MetricsCounter != nil {
+		r.ctrl.MetricsCounter.RunningGauge()
 	}
 	if r.ctrl.MetricsGauge != nil {
 		r.ctrl.MetricsGauge.LaunchTime().Gauge(xdlJob, *jobStatus)

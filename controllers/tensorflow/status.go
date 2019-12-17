@@ -48,10 +48,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 		}
 		log.Info(msg)
 		if reconciler.ctrl.MetricsCounter != nil {
-			reconciler.ctrl.MetricsCounter.Created().Inc()
-		}
-		if reconciler.ctrl.MetricsGauge != nil {
-			reconciler.ctrl.MetricsGauge.Running().Gauge()
+			reconciler.ctrl.MetricsCounter.CreatedInc()
 		}
 		return true
 	}
@@ -127,6 +124,9 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
+					if r.ctrl.MetricsCounter != nil {
+						r.ctrl.MetricsCounter.RunningGauge()
+					}
 				}
 				if expected == 0 {
 					msg := fmt.Sprintf("TFJob %s successfully completed.", tfJob.Name)
@@ -141,10 +141,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						return err
 					}
 					if r.ctrl.MetricsCounter != nil {
-						r.ctrl.MetricsCounter.Success().Inc()
-					}
-					if r.ctrl.MetricsGauge != nil {
-						r.ctrl.MetricsGauge.Running().Gauge()
+						r.ctrl.MetricsCounter.SuccessInc()
 					}
 				}
 			}
@@ -164,10 +161,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						return err
 					}
 					if r.ctrl.MetricsCounter != nil {
-						r.ctrl.MetricsCounter.Success().Inc()
-					}
-					if r.ctrl.MetricsGauge != nil {
-						r.ctrl.MetricsGauge.Running().Gauge()
+						r.ctrl.MetricsCounter.SuccessInc()
 					}
 				} else if running > 0 {
 					// Some workers are still running, leave a running condition.
@@ -176,6 +170,9 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					if err != nil {
 						log.Error(err, "append tfjob condition error")
 						return err
+					}
+					if r.ctrl.MetricsCounter != nil {
+						r.ctrl.MetricsCounter.RunningGauge()
 					}
 				}
 			}
@@ -191,8 +188,8 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					return err
 				}
 				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-					r.ctrl.MetricsCounter.Restart().Inc()
+					r.ctrl.MetricsCounter.FailureInc()
+					r.ctrl.MetricsCounter.RestartInc()
 				}
 			} else {
 				msg := fmt.Sprintf("TFJob %s is failed because %d %s replica(s) failed.", tfJob.Name, failed, rtype)
@@ -207,10 +204,8 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					return err
 				}
 				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-				}
-				if r.ctrl.MetricsGauge != nil {
-					r.ctrl.MetricsGauge.Running().Gauge()
+					r.ctrl.MetricsCounter.FailureInc()
+					r.ctrl.MetricsCounter.RunningGauge()
 				}
 			}
 		}

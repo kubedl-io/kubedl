@@ -19,16 +19,10 @@ package xdljob
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/metrics"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strings"
-	"time"
-
 	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/metrics"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -38,10 +32,14 @@ import (
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strings"
 )
 
 const (
@@ -72,8 +70,8 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		Config:         config,
 		WorkQueue:      &commonutil.FakeWorkQueue{},
 		Recorder:       r.recorder,
-		MetricsCounter: metrics.NewJobCounter("xdl"),
-		MetricsGauge:   metrics.NewJobGauge("xdl", r.Client, 30*time.Second, metrics.XDLJobRunningCounter),
+		MetricsCounter: metrics.NewJobCounter("xdl", metrics.XDLJobRunningCounter(r.Client)),
+		MetricsGauge:   metrics.NewJobGauge("xdl"),
 	}
 	return r
 }
@@ -105,10 +103,8 @@ func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", request.String())
 			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.Deleted().Inc()
-			}
-			if r.ctrl.MetricsGauge != nil {
-				r.ctrl.MetricsGauge.Running().Gauge()
+				r.ctrl.MetricsCounter.DeletedInc()
+				r.ctrl.MetricsCounter.RunningGauge()
 			}
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.

@@ -34,14 +34,12 @@ type LaunchTimeGauge struct {
 	runningSet sets.String
 }
 
-func NewLaunchTimeGauge(kind string, opts prometheus.GaugeOpts) *LaunchTimeGauge {
-	gauge := &LaunchTimeGauge{
+func NewLaunchTimeGauge(kind string, gauge *prometheus.GaugeVec) *LaunchTimeGauge {
+	return &LaunchTimeGauge{
 		kind:       kind,
-		gauge:      prometheus.NewGaugeVec(opts, []string{"kind", "name", "namespace", "uid"}),
+		gauge:      gauge,
 		runningSet: sets.NewString(),
 	}
-	prometheus.MustRegister(gauge.gauge)
-	return gauge
 }
 
 func (g *LaunchTimeGauge) jobGauged(obj v1.Object, status commonv1.JobStatus) bool {

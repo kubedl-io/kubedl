@@ -18,64 +18,99 @@ package metrics
 
 import (
 	"strings"
+	"sync/atomic"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+var (
+	created = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "kubedl_jobs_created",
+		Help: "Counts number of jobs created",
+	}, []string{"kind"})
+	deleted = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "kubedl_jobs_deleted",
+		Help: "Counts number of jobs deleted",
+	}, []string{"kind"})
+	success = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "kubedl_jobs_successful",
+		Help: "Counts number of jobs successfully finished",
+	}, []string{"kind"})
+	failure = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "kubedl_jobs_failed",
+		Help: "Counts number of jobs failed",
+	}, []string{"kind"})
+	restart = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "kubedl_jobs_restarted",
+		Help: "Counts number of jobs restarted",
+	}, []string{"kind"})
+	running = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kubedl_running_jobs",
+		Help: "Counts number of jobs running now",
+	}, []string{"kind"})
+)
+
 // JobCounter holds the kinds of metrics counter for some type of job workload.
 type JobCounter struct {
-	kind    string
-	created *prometheus.CounterVec
-	deleted *prometheus.CounterVec
-	success *prometheus.CounterVec
-	failure *prometheus.CounterVec
-	restart *prometheus.CounterVec
+	runningCount   int32
+	runningCounter RunningCounterFunc
+	created        prometheus.Counter
+	deleted        prometheus.Counter
+	success        prometheus.Counter
+	failure        prometheus.Counter
+	restart        prometheus.Counter
+	running        prometheus.Gauge
 }
 
-func NewJobCounter(kind string) *JobCounter {
+func NewJobCounter(kind string, runningCounter RunningCounterFunc) *JobCounter {
+	kind = strings.ToLower(kind)
+	label := prometheus.Labels{"kind": kind}
 	counter := &JobCounter{
-		kind: strings.ToLower(kind),
-		created: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "kubedl_jobs_created",
-			Help: "Counts number of jobs created",
-		}, []string{"kind"}),
-		deleted: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "controller_jobs_deleted",
-			Help: "Counts number of jobs deleted",
-		}, []string{"kind"}),
-		success: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "controller_jobs_successful",
-			Help: "Counts number of jobs successful",
-		}, []string{"kind"}),
-		failure: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "controller_jobs_failed",
-			Help: "Counts number of jobs failed",
-		}, []string{"kind"}),
-		restart: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "controller_jobs_restarted",
-			Help: "Counts number of jobs restarted",
-		}, []string{"kind"}),
+		runningCounter: runningCounter,
+		created:        created.With(label),
+		deleted:        deleted.With(label),
+		success:        success.With(label),
+		failure:        failure.With(label),
+		restart:        restart.With(label),
+		running:        running.With(label),
 	}
 	return counter
 }
 
-func (jc JobCounter) Created() prometheus.Counter {
-	return jc.created.With(prometheus.Labels{"kind": jc.kind})
+func (jc *JobCounter) CreatedInc() {
+	atomic.AddInt32(&jc.runningCount, 1)
+	jc.created.Inc()
 }
 
-func (jc JobCounter) Deleted() prometheus.Counter {
-	return jc.deleted.With(prometheus.Labels{"kind": jc.kind})
+func (jc *JobCounter) DeletedInc() {
+	jc.deleted.Inc()
 }
 
-func (jc JobCounter) Success() prometheus.Counter {
-	return jc.success.With(prometheus.Labels{"kind": jc.kind})
+func (jc *JobCounter) SuccessInc() {
+	atomic.AddInt32(&jc.runningCount, -1)
+	jc.success.Inc()
 }
 
-func (jc JobCounter) Failure() prometheus.Counter {
-	return jc.failure.With(prometheus.Labels{"kind": jc.kind})
+func (jc *JobCounter) FailureInc() {
+	atomic.AddInt32(&jc.runningCount, -1)
+	jc.failure.Inc()
 }
 
-func (jc JobCounter) Restart() prometheus.Counter {
-	return jc.restart.With(prometheus.Labels{"kind": jc.kind})
+func (jc *JobCounter) RestartInc() {
+	atomic.AddInt32(&jc.runningCount, -1)
+	jc.restart.Inc()
+}
+
+func (jc *JobCounter) RunningGauge() {
+	// Init number of currently running jobs in cluster, and this counter func
+	// will only be invoked one time, then it will be set as nil.
+	if jc.runningCounter != nil {
+		running, err := jc.runningCounter()
+		if err == nil {
+			atomic.StoreInt32(&jc.runningCount, running)
+			jc.runningCounter = nil
+		}
+	}
+	jc.running.Set(float64(jc.runningCount))
 }

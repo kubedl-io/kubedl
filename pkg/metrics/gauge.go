@@ -17,33 +17,25 @@ limitations under the License.
 package metrics
 
 import (
-	"strings"
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+var (
+	launchTimeGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kubedl_launch_time",
+		Help: "Gauge for launch time of each job",
+	}, []string{"kind", "name", "namespace", "uid"})
 )
 
 type JobGauge struct {
-	running    *JobRunningGauge
 	launchTime *LaunchTimeGauge
 }
 
-func NewJobGauge(kind string, reader client.Reader, interval time.Duration, runningCounter RunningCounterFunc) *JobGauge {
+func NewJobGauge(kind string) *JobGauge {
 	return &JobGauge{
-		running: NewJobRunningGauge(strings.ToLower(kind), prometheus.GaugeOpts{
-			Name: "controller_running_jobs",
-			Help: "Counts number of jobs running",
-		}, reader, interval, runningCounter),
-		launchTime: NewLaunchTimeGauge(kind, prometheus.GaugeOpts{
-			Name: "controller_launch_time",
-			Help: "Gauge for launch time of each job",
-		}),
+		launchTime: NewLaunchTimeGauge(kind, launchTimeGauge),
 	}
-}
-
-func (jp JobGauge) Running() *JobRunningGauge {
-	return jp.running
 }
 
 func (jp JobGauge) LaunchTime() *LaunchTimeGauge {

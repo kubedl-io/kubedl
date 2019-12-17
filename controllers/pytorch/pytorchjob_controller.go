@@ -19,10 +19,6 @@ package pytorch
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
-
 	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -42,6 +38,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -61,8 +59,8 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		Config:         config,
 		WorkQueue:      &util.FakeWorkQueue{},
 		Recorder:       r.recorder,
-		MetricsCounter: metrics.NewJobCounter("pytorch"),
-		MetricsGauge:   metrics.NewJobGauge("pytorch", r.Client, 10*time.Second, metrics.PytorchJobRunningCounter),
+		MetricsCounter: metrics.NewJobCounter("pytorch", metrics.PytorchJobRunningCounter(r.Client)),
+		MetricsGauge:   metrics.NewJobGauge("pytorch"),
 	}
 	return r
 }
@@ -94,10 +92,8 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
 			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.Deleted().Inc()
-			}
-			if r.ctrl.MetricsGauge != nil {
-				r.ctrl.MetricsGauge.Running().Gauge()
+				r.ctrl.MetricsCounter.DeletedInc()
+				r.ctrl.MetricsCounter.RunningGauge()
 			}
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.

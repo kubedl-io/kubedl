@@ -15,17 +15,10 @@ package xgboostjob
 import (
 	"context"
 	"flag"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/metrics"
-	"k8s.io/kubernetes/pkg/apis/apps"
-	"path/filepath"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
-
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -34,13 +27,18 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/kubernetes/pkg/apis/apps"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
+	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -102,8 +100,8 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		WorkQueue:      &util.FakeWorkQueue{},
 		Recorder:       r.recorder,
 		Client:         r.Client,
-		MetricsCounter: metrics.NewJobCounter("xgboost"),
-		MetricsGauge:   metrics.NewJobGauge("xgboost", r.Client, 30*time.Second, metrics.XGBoostJobRunningCounter),
+		MetricsCounter: metrics.NewJobCounter("xgboost", metrics.XGBoostJobRunningCounter(r.Client)),
+		MetricsGauge:   metrics.NewJobGauge("xgboost"),
 	}
 
 	return r
@@ -136,10 +134,8 @@ func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Resul
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
 			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.Deleted().Inc()
-			}
-			if r.ctrl.MetricsGauge != nil {
-				r.ctrl.MetricsGauge.Running().Gauge()
+				r.ctrl.MetricsCounter.DeletedInc()
+				r.ctrl.MetricsCounter.RunningGauge()
 			}
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
