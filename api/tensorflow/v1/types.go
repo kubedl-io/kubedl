@@ -22,6 +22,7 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +resource:path=tfjob
+// +kubebuilder:resource:scope=Namespaced
 
 // TFJob represents a TFJob resource.
 type TFJob struct {

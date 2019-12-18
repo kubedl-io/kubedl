@@ -23,6 +23,7 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +resource:path=pytorchjob
+// +kubebuilder:resource:scope=Namespaced
 
 // Represents a PyTorchJob resource.
 type PyTorchJob struct {
