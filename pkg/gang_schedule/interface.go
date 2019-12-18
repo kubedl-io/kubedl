@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 // GangScheduler describe a abstract gang scheduler to implement job gang scheduling,
@@ -46,3 +47,6 @@ type GangScheduler interface {
 	// Name of gang scheduler.
 	Name() string
 }
+
+// NewGangScheduler receive a client as init parameter and return a new gang scheduler.
+type NewGangScheduler func(mgr controllerruntime.Manager) GangScheduler

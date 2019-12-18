@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
-	"github.com/alibaba/kubedl/pkg/gang_schedule"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
@@ -71,7 +71,7 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		MetricsCounter: metrics.NewJobCounter("tf", metrics.TFJobRunningCounter(r.Client)),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
-		r.ctrl.GangScheduler = gang_schedule.Get(r.ctrl.Config.GangSchedulerName)
+		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
 	return r
 }

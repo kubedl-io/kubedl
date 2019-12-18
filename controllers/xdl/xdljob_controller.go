@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
@@ -72,6 +73,9 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		WorkQueue:      &commonutil.FakeWorkQueue{},
 		Recorder:       r.recorder,
 		MetricsCounter: metrics.NewJobCounter("xdl", metrics.XDLJobRunningCounter(r.Client)),
+	}
+	if r.ctrl.Config.EnableGangScheduling {
+		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
 	return r
 }

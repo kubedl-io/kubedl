@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
@@ -103,7 +104,9 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		Client:         r.Client,
 		MetricsCounter: metrics.NewJobCounter("xgboost", metrics.XGBoostJobRunningCounter(r.Client)),
 	}
-
+	if r.ctrl.Config.EnableGangScheduling {
+		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
+	}
 	return r
 }
 

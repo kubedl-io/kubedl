@@ -19,6 +19,7 @@ package batch_scheduler
 import (
 	"context"
 
+	"github.com/alibaba/kubedl/api"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
@@ -30,15 +31,18 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func init() {
-	gang_schedule.NewGangSchedulers = append(gang_schedule.NewGangSchedulers, NewKubeBatchScheduler)
+	// Add to runtime scheme so that reflector of go-client will identify this CRD
+	// controlled by scheduler.
+	api.AddToSchemes = append(api.AddToSchemes, v1alpha1.AddToScheme)
 }
 
-func NewKubeBatchScheduler(client client.Client) gang_schedule.GangScheduler {
-	return &kubeBatchScheduler{client: client}
+func NewKubeBatchScheduler(mgr controllerruntime.Manager) gang_schedule.GangScheduler {
+	return &kubeBatchScheduler{client: mgr.GetClient()}
 }
 
 var _ gang_schedule.GangScheduler = &kubeBatchScheduler{}
