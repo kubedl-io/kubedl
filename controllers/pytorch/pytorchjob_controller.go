@@ -60,7 +60,6 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		WorkQueue:      &util.FakeWorkQueue{},
 		Recorder:       r.recorder,
 		MetricsCounter: metrics.NewJobCounter("pytorch", metrics.PytorchJobRunningCounter(r.Client)),
-		MetricsGauge:   metrics.NewJobGauge("pytorch"),
 	}
 	return r
 }
@@ -93,7 +92,6 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 			log.Info("try to get job but it has been deleted", "key", req.String())
 			if r.ctrl.MetricsCounter != nil {
 				r.ctrl.MetricsCounter.DeletedInc()
-				r.ctrl.MetricsCounter.RunningGauge()
 			}
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.

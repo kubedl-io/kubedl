@@ -18,7 +18,6 @@ package metrics
 
 import (
 	"strings"
-	"sync/atomic"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -53,7 +52,6 @@ var (
 
 // JobCounter holds the kinds of metrics counter for some type of job workload.
 type JobCounter struct {
-	runningCount   int32
 	runningCounter RunningCounterFunc
 	created        prometheus.Counter
 	deleted        prometheus.Counter
@@ -79,7 +77,6 @@ func NewJobCounter(kind string, runningCounter RunningCounterFunc) *JobCounter {
 }
 
 func (jc *JobCounter) CreatedInc() {
-	atomic.AddInt32(&jc.runningCount, 1)
 	jc.created.Inc()
 }
 
@@ -88,29 +85,31 @@ func (jc *JobCounter) DeletedInc() {
 }
 
 func (jc *JobCounter) SuccessInc() {
-	atomic.AddInt32(&jc.runningCount, -1)
 	jc.success.Inc()
 }
 
 func (jc *JobCounter) FailureInc() {
-	atomic.AddInt32(&jc.runningCount, -1)
 	jc.failure.Inc()
 }
 
 func (jc *JobCounter) RestartInc() {
-	atomic.AddInt32(&jc.runningCount, -1)
 	jc.restart.Inc()
 }
 
-func (jc *JobCounter) RunningGauge() {
+func (jc *JobCounter) RunningDec() {
+	jc.running.Dec()
+}
+
+func (jc *JobCounter) RunningInc() {
 	// Init number of currently running jobs in cluster, and this counter func
 	// will only be invoked one time, then it will be set as nil.
 	if jc.runningCounter != nil {
 		running, err := jc.runningCounter()
 		if err == nil {
-			atomic.StoreInt32(&jc.runningCount, running)
+			jc.running.Set(float64(running))
 			jc.runningCounter = nil
+			return
 		}
 	}
-	jc.running.Set(float64(jc.runningCount))
+	jc.running.Inc()
 }

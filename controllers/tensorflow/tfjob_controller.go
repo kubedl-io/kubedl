@@ -20,6 +20,7 @@ package tensorflow
 import (
 	"context"
 	"fmt"
+
 	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -68,7 +69,6 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		WorkQueue:      &util.FakeWorkQueue{},
 		Recorder:       r.recorder,
 		MetricsCounter: metrics.NewJobCounter("tf", metrics.TFJobRunningCounter(r.Client)),
-		MetricsGauge:   metrics.NewJobGauge("tf"),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = gang_schedule.Get(r.ctrl.Config.GangSchedulerName)
@@ -104,7 +104,6 @@ func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
 			if r.ctrl.MetricsCounter != nil {
 				r.ctrl.MetricsCounter.DeletedInc()
-				r.ctrl.MetricsCounter.RunningGauge()
 			}
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.

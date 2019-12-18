@@ -39,6 +39,10 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 		jobStatus.StartTime = &now
 	}
 
+	// If job is previous running, when it transfers to state failed or restarting,
+	// running metrics will do dec.
+	previousRunning := commonutil.IsRunning(*jobStatus)
+
 	for rtype, spec := range replicaSpecs {
 		replicas := *spec.Replicas
 		expected := replicas - jobStatus.ReplicaStatuses[rtype].Succeeded
@@ -57,8 +61,8 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						log.Info("Append job condition", " error:", err)
 						return err
 					}
-					if r.ctrl.MetricsCounter != nil {
-						r.ctrl.MetricsCounter.RunningGauge()
+					if r.ctrl.MetricsCounter != nil && !previousRunning {
+						r.ctrl.MetricsCounter.RunningInc()
 					}
 				}
 				if expected == 0 {
@@ -75,7 +79,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					}
 					if r.ctrl.MetricsCounter != nil {
 						r.ctrl.MetricsCounter.SuccessInc()
-						r.ctrl.MetricsCounter.RunningGauge()
+						r.ctrl.MetricsCounter.RunningDec()
 					}
 				}
 			}
@@ -96,6 +100,9 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 				if r.ctrl.MetricsCounter != nil {
 					r.ctrl.MetricsCounter.FailureInc()
 					r.ctrl.MetricsCounter.RestartInc()
+					if previousRunning {
+						r.ctrl.MetricsCounter.RunningDec()
+					}
 				}
 			} else {
 				msg := fmt.Sprintf("PyTorchJob %s is failed because %d %s replica(s) failed.", pytorchJob.Name, failed, rtype)
@@ -111,13 +118,12 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 				}
 				if r.ctrl.MetricsCounter != nil {
 					r.ctrl.MetricsCounter.FailureInc()
-					r.ctrl.MetricsCounter.RunningGauge()
+					if previousRunning {
+						r.ctrl.MetricsCounter.RunningDec()
+					}
 				}
 			}
 		}
-	}
-	if r.ctrl.MetricsGauge != nil {
-		r.ctrl.MetricsGauge.LaunchTime().Gauge(pytorchJob, *jobStatus)
 	}
 	return nil
 }

@@ -15,6 +15,8 @@ package xgboostjob
 import (
 	"context"
 	"flag"
+	"path/filepath"
+
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -29,7 +31,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/kubernetes/pkg/apis/apps"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
-	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -101,7 +102,6 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		Recorder:       r.recorder,
 		Client:         r.Client,
 		MetricsCounter: metrics.NewJobCounter("xgboost", metrics.XGBoostJobRunningCounter(r.Client)),
-		MetricsGauge:   metrics.NewJobGauge("xgboost"),
 	}
 
 	return r
@@ -135,7 +135,6 @@ func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Resul
 			log.Info("try to get job but it has been deleted", "key", req.String())
 			if r.ctrl.MetricsCounter != nil {
 				r.ctrl.MetricsCounter.DeletedInc()
-				r.ctrl.MetricsCounter.RunningGauge()
 			}
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.

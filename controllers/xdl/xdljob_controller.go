@@ -19,6 +19,8 @@ package xdljob
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -39,7 +41,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strings"
 )
 
 const (
@@ -71,7 +72,6 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		WorkQueue:      &commonutil.FakeWorkQueue{},
 		Recorder:       r.recorder,
 		MetricsCounter: metrics.NewJobCounter("xdl", metrics.XDLJobRunningCounter(r.Client)),
-		MetricsGauge:   metrics.NewJobGauge("xdl"),
 	}
 	return r
 }
@@ -104,7 +104,6 @@ func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 			log.Info("try to get job but it has been deleted", "key", request.String())
 			if r.ctrl.MetricsCounter != nil {
 				r.ctrl.MetricsCounter.DeletedInc()
-				r.ctrl.MetricsCounter.RunningGauge()
 			}
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.

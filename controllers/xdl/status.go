@@ -63,6 +63,10 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
 	log.Info("Updating status", "XDLJob name", xdlJob.Name)
 
+	// If job is previous running, when it transfers to state failed or restarting,
+	// running metrics will do dec.
+	previousRunning := commonutil.IsRunning(*jobStatus)
+
 	workerNum, workerSucceeded := int32(0), int32(0)
 	// Iterate all replicas for counting and try to update start time.
 	for rtype, spec := range replicaSpecs {
@@ -91,6 +95,9 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 				if r.ctrl.MetricsCounter != nil {
 					r.ctrl.MetricsCounter.FailureInc()
 					r.ctrl.MetricsCounter.RestartInc()
+					if previousRunning {
+						r.ctrl.MetricsCounter.RunningDec()
+					}
 				}
 			} else {
 				msg := fmt.Sprintf("XDLJob %s is failed because %d %s replica(s) failed.", xdlJob.Name, failed, rtype)
@@ -106,7 +113,9 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 				}
 				if r.ctrl.MetricsCounter != nil {
 					r.ctrl.MetricsCounter.FailureInc()
-					r.ctrl.MetricsCounter.RunningGauge()
+					if previousRunning {
+						r.ctrl.MetricsCounter.RunningDec()
+					}
 				}
 			}
 			return nil
@@ -128,6 +137,7 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 		}
 		if r.ctrl.MetricsCounter != nil {
 			r.ctrl.MetricsCounter.SuccessInc()
+			r.ctrl.MetricsCounter.RunningDec()
 		}
 		return nil
 	}
@@ -138,11 +148,8 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 		log.Error(err, "failed to update xdl job conditions")
 		return err
 	}
-	if r.ctrl.MetricsCounter != nil {
-		r.ctrl.MetricsCounter.RunningGauge()
-	}
-	if r.ctrl.MetricsGauge != nil {
-		r.ctrl.MetricsGauge.LaunchTime().Gauge(xdlJob, *jobStatus)
+	if r.ctrl.MetricsCounter != nil && !previousRunning {
+		r.ctrl.MetricsCounter.RunningInc()
 	}
 	return nil
 }

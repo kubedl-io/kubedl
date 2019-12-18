@@ -97,10 +97,6 @@ type JobController struct {
 	// MetricsCounter is a metrics exporter that export counter values whose single
 	// numerical value that only ever goes up.
 	MetricsCounter *metrics.JobCounter
-
-	// MetricsGauge is a metrics exporter that export gauge values whose numerical value
-	// that can arbitrarily go up and down.
-	MetricsGauge *metrics.JobGauge
 }
 
 func NewJobController(

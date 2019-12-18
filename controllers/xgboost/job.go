@@ -92,6 +92,10 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		return fmt.Errorf("%+v is not a type of xgboostJob", xgboostJob)
 	}
 
+	// If job is previous running, when it transfers to state failed or restarting,
+	// running metrics will do dec.
+	previousRunning := commonutil.IsRunning(*jobStatus)
+
 	for rtype, spec := range replicas {
 		status := jobStatus.ReplicaStatuses[rtype]
 
@@ -111,8 +115,8 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Error(err, "Append job condition error")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.RunningGauge()
+				if r.ctrl.MetricsCounter != nil && !previousRunning {
+					r.ctrl.MetricsCounter.RunningInc()
 				}
 			}
 			// when master is succeed, the job is finished.
@@ -131,6 +135,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 				}
 				if r.ctrl.MetricsCounter != nil {
 					r.ctrl.MetricsCounter.SuccessInc()
+					r.ctrl.MetricsCounter.RunningDec()
 				}
 				return nil
 			}
@@ -147,6 +152,9 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 				if r.ctrl.MetricsCounter != nil {
 					r.ctrl.MetricsCounter.FailureInc()
 					r.ctrl.MetricsCounter.RestartInc()
+					if previousRunning {
+						r.ctrl.MetricsCounter.RunningDec()
+					}
 				}
 			} else {
 				msg := fmt.Sprintf("XGBoostJob %s is failed because %d %s replica(s) failed.", xgboostJob.Name, failed, rtype)
@@ -162,6 +170,9 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 				}
 				if r.ctrl.MetricsCounter != nil {
 					r.ctrl.MetricsCounter.FailureInc()
+					if previousRunning {
+						r.ctrl.MetricsCounter.RunningDec()
+					}
 				}
 			}
 		}
@@ -175,11 +186,8 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		log.Error(err, "failed to update XGBoost Job conditions")
 		return err
 	}
-	if r.ctrl.MetricsCounter != nil {
-		r.ctrl.MetricsCounter.RunningGauge()
-	}
-	if r.ctrl.MetricsGauge != nil {
-		r.ctrl.MetricsGauge.LaunchTime().Gauge(xgboostJob, *jobStatus)
+	if r.ctrl.MetricsCounter != nil && !previousRunning {
+		r.ctrl.MetricsCounter.RunningInc()
 	}
 	return nil
 }
