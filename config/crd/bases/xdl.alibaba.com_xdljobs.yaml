@@ -79,6 +79,7 @@ spec:
               description: 'XDLReplicaSpecs is map of ReplicaType and ReplicaSpec
                 specifies the XDL replicas to run. For example,   {     "PS": ReplicaSpec,     "Worker":
                 ReplicaSpec,   }'
+              type: object
           required:
           - xdlReplicaSpecs
           type: object
@@ -134,7 +135,6 @@ spec:
             replicaStatuses:
               description: ReplicaStatuses is map of ReplicaType and ReplicaStatus,
                 specifies the status of each replica.
-              type: object
             startTime:
               description: Represents time when the job was acknowledged by the job
                 controller. It is not guaranteed to be set in happens-before order

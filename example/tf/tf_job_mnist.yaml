@@ -32,5 +32,6 @@ spec:
                   memory: 1Gi
           volumes:
             - name: "training"
-              persistentVolumeClaim:
-                claimName: "tfevent-volume"  
+              hostPath:
+                path: /tmp/data
+                type: DirectoryOrCreate

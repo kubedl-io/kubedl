@@ -21,6 +21,7 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:defaulter-gen=TypeMeta
 // +resource:path=tfjob
 // +kubebuilder:resource:scope=Namespaced
 
