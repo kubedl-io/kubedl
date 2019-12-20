@@ -52,7 +52,7 @@ kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/config/manager/
 #### Submit the TFJob
 
 ```bash
-  kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/example/tf/tf_job_mnist.yaml`
+  kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/example/tf/tf_job_mnist.yaml
 ```
 
 #### Monitor the status of the Tensorflow job
