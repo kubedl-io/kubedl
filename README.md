@@ -43,7 +43,7 @@ The official KubeDL operator image is hosted under [docker hub](https://hub.dock
 
 This example demonstrates how to run a simple MNist Tensorflow job with KubeDL.
 
-### Deploy KubeDL
+#### Deploy KubeDL
 
 ```bash
 kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/config/manager/all_in_one.yaml
