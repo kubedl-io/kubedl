@@ -49,6 +49,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 		log.Info(msg)
 		if reconciler.ctrl.MetricsCounter != nil {
 			reconciler.ctrl.MetricsCounter.CreatedInc()
+			reconciler.ctrl.MetricsCounter.PendingInc()
 		}
 		return true
 	}
@@ -130,6 +131,8 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					}
 					if r.ctrl.MetricsCounter != nil && !previousRunning {
 						r.ctrl.MetricsCounter.RunningInc()
+						r.ctrl.MetricsCounter.PendingDec()
+						r.ctrl.MetricsHistogram.LaunchDelay(tfJob, *jobStatus)
 					}
 				}
 				if expected == 0 {
@@ -179,6 +182,8 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					}
 					if r.ctrl.MetricsCounter != nil && !previousRunning {
 						r.ctrl.MetricsCounter.RunningInc()
+						r.ctrl.MetricsCounter.PendingDec()
+						r.ctrl.MetricsHistogram.LaunchDelay(tfJob, *jobStatus)
 					}
 				}
 			}

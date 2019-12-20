@@ -54,6 +54,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 		}
 		if reconciler.ctrl.MetricsCounter != nil {
 			reconciler.ctrl.MetricsCounter.CreatedInc()
+			reconciler.ctrl.MetricsCounter.PendingInc()
 		}
 		return true
 	}
@@ -150,6 +151,8 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 	}
 	if r.ctrl.MetricsCounter != nil && !previousRunning {
 		r.ctrl.MetricsCounter.RunningInc()
+		r.ctrl.MetricsCounter.PendingDec()
+		r.ctrl.MetricsHistogram.LaunchDelay(xdlJob, *jobStatus)
 	}
 	return nil
 }

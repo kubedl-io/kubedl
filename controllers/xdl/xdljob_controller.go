@@ -67,12 +67,13 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
-		Controller:     r,
-		Expectations:   k8scontroller.NewControllerExpectations(),
-		Config:         config,
-		WorkQueue:      &commonutil.FakeWorkQueue{},
-		Recorder:       r.recorder,
-		MetricsCounter: metrics.NewJobCounter("xdl", metrics.XDLJobRunningCounter(r.Client)),
+		Controller:       r,
+		Expectations:     k8scontroller.NewControllerExpectations(),
+		Config:           config,
+		WorkQueue:        &commonutil.FakeWorkQueue{},
+		Recorder:         r.recorder,
+		MetricsCounter:   metrics.NewJobCounter(xdlv1alpha1.Kind, r.Client),
+		MetricsHistogram: metrics.NewJobHistogram(xdlv1alpha1.Kind),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)

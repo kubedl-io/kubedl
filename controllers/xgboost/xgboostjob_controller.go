@@ -96,13 +96,14 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
-		Controller:     r,
-		Expectations:   k8scontroller.NewControllerExpectations(),
-		Config:         config,
-		WorkQueue:      &util.FakeWorkQueue{},
-		Recorder:       r.recorder,
-		Client:         r.Client,
-		MetricsCounter: metrics.NewJobCounter("xgboost", metrics.XGBoostJobRunningCounter(r.Client)),
+		Controller:       r,
+		Expectations:     k8scontroller.NewControllerExpectations(),
+		Config:           config,
+		WorkQueue:        &util.FakeWorkQueue{},
+		Recorder:         r.recorder,
+		Client:           r.Client,
+		MetricsCounter:   metrics.NewJobCounter(v1alpha1.Kind, r.Client),
+		MetricsHistogram: metrics.NewJobHistogram(v1alpha1.Kind),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)

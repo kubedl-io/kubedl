@@ -17,6 +17,7 @@ limitations under the License.
 package metrics
 
 import (
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -45,33 +46,39 @@ var (
 		Help: "Counts number of jobs restarted",
 	}, []string{"kind"})
 	running = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "kubedl_running_jobs",
-		Help: "Counts number of jobs running now",
+		Name: "kubedl_jobs_running",
+		Help: "Counts number of jobs running currently",
+	}, []string{"kind"})
+	pending = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kubedl_jobs_pending",
+		Help: "Counts number of jobs pending currently",
 	}, []string{"kind"})
 )
 
 // JobCounter holds the kinds of metrics counter for some type of job workload.
 type JobCounter struct {
-	runningCounter RunningCounterFunc
-	created        prometheus.Counter
-	deleted        prometheus.Counter
-	success        prometheus.Counter
-	failure        prometheus.Counter
-	restart        prometheus.Counter
-	running        prometheus.Gauge
+	statusCounter JobStatusCounterFunc
+	created       prometheus.Counter
+	deleted       prometheus.Counter
+	success       prometheus.Counter
+	failure       prometheus.Counter
+	restart       prometheus.Counter
+	running       prometheus.Gauge
+	pending       prometheus.Gauge
 }
 
-func NewJobCounter(kind string, runningCounter RunningCounterFunc) *JobCounter {
+func NewJobCounter(kind string, client client.Client) *JobCounter {
 	kind = strings.ToLower(kind)
 	label := prometheus.Labels{"kind": kind}
 	counter := &JobCounter{
-		runningCounter: runningCounter,
-		created:        created.With(label),
-		deleted:        deleted.With(label),
-		success:        success.With(label),
-		failure:        failure.With(label),
-		restart:        restart.With(label),
-		running:        running.With(label),
+		statusCounter: JobStatusCounter(kind, client),
+		created:       created.With(label),
+		deleted:       deleted.With(label),
+		success:       success.With(label),
+		failure:       failure.With(label),
+		restart:       restart.With(label),
+		running:       running.With(label),
+		pending:       pending.With(label),
 	}
 	return counter
 }
@@ -96,6 +103,14 @@ func (jc *JobCounter) RestartInc() {
 	jc.restart.Inc()
 }
 
+func (jc *JobCounter) PendingInc() {
+	jc.pending.Inc()
+}
+
+func (jc *JobCounter) PendingDec() {
+	jc.pending.Dec()
+}
+
 func (jc *JobCounter) RunningDec() {
 	jc.running.Dec()
 }
@@ -103,11 +118,12 @@ func (jc *JobCounter) RunningDec() {
 func (jc *JobCounter) RunningInc() {
 	// Init number of currently running jobs in cluster, and this counter func
 	// will only be invoked one time, then it will be set as nil.
-	if jc.runningCounter != nil {
-		running, err := jc.runningCounter()
+	if jc.statusCounter != nil {
+		running, pending, err := jc.statusCounter()
 		if err == nil {
 			jc.running.Set(float64(running))
-			jc.runningCounter = nil
+			jc.pending.Set(float64(pending))
+			jc.statusCounter = nil
 			return
 		}
 	}

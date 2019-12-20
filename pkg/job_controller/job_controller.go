@@ -94,9 +94,12 @@ type JobController struct {
 	// Kubernetes API.
 	Recorder record.EventRecorder
 
-	// MetricsCounter is a metrics exporter that export counter values whose single
-	// numerical value that only ever goes up.
+	// MetricsCounter is a metrics exporter that export single numerical counter values.
 	MetricsCounter *metrics.JobCounter
+
+	// MetricsHistogram counts the same thing partitioned by various dimensions and have
+	// different values for their variable labels
+	MetricsHistogram *metrics.JobHistogram
 }
 
 func NewJobController(

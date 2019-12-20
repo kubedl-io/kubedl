@@ -63,6 +63,8 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					}
 					if r.ctrl.MetricsCounter != nil && !previousRunning {
 						r.ctrl.MetricsCounter.RunningInc()
+						r.ctrl.MetricsCounter.PendingDec()
+						r.ctrl.MetricsHistogram.LaunchDelay(pytorchJob, *jobStatus)
 					}
 				}
 				if expected == 0 {
@@ -146,6 +148,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 		}
 		if reconciler.ctrl.MetricsCounter != nil {
 			reconciler.ctrl.MetricsCounter.CreatedInc()
+			reconciler.ctrl.MetricsCounter.PendingInc()
 		}
 		return true
 	}

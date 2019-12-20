@@ -56,11 +56,12 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	r.ctrl = job_controller.JobController{
-		Controller:     r,
-		Config:         config,
-		WorkQueue:      &util.FakeWorkQueue{},
-		Recorder:       r.recorder,
-		MetricsCounter: metrics.NewJobCounter("pytorch", metrics.PytorchJobRunningCounter(r.Client)),
+		Controller:       r,
+		Config:           config,
+		WorkQueue:        &util.FakeWorkQueue{},
+		Recorder:         r.recorder,
+		MetricsCounter:   metrics.NewJobCounter(pytorchv1.Kind, r.Client),
+		MetricsHistogram: metrics.NewJobHistogram(pytorchv1.Kind),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)

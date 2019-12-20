@@ -117,6 +117,8 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 				}
 				if r.ctrl.MetricsCounter != nil && !previousRunning {
 					r.ctrl.MetricsCounter.RunningInc()
+					r.ctrl.MetricsCounter.PendingDec()
+					r.ctrl.MetricsHistogram.LaunchDelay(xgboostJob, *jobStatus)
 				}
 			}
 			// when master is succeed, the job is finished.
@@ -188,6 +190,8 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 	}
 	if r.ctrl.MetricsCounter != nil && !previousRunning {
 		r.ctrl.MetricsCounter.RunningInc()
+		r.ctrl.MetricsCounter.PendingDec()
+		r.ctrl.MetricsHistogram.LaunchDelay(xgboostJob, *jobStatus)
 	}
 	return nil
 }
@@ -224,6 +228,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 		}
 		if reconciler.ctrl.MetricsCounter != nil {
 			reconciler.ctrl.MetricsCounter.CreatedInc()
+			reconciler.ctrl.MetricsCounter.PendingInc()
 		}
 		return true
 	}
