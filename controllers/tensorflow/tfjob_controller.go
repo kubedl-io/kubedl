@@ -63,13 +63,12 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
-		Controller:       r,
-		Expectations:     k8scontroller.NewControllerExpectations(),
-		Config:           config,
-		WorkQueue:        &util.FakeWorkQueue{},
-		Recorder:         r.recorder,
-		MetricsCounter:   metrics.NewJobCounter(tfv1.Kind, r.Client),
-		MetricsHistogram: metrics.NewJobHistogram(tfv1.Kind),
+		Controller:   r,
+		Expectations: k8scontroller.NewControllerExpectations(),
+		Config:       config,
+		WorkQueue:    &util.FakeWorkQueue{},
+		Recorder:     r.recorder,
+		Metrics:      metrics.NewJobMetrics(tfv1.Kind, r.Client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -103,9 +102,7 @@ func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
-			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.DeletedInc()
-			}
+			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return reconcile.Result{}, nil

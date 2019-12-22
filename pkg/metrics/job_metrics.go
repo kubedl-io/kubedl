@@ -17,6 +17,9 @@ limitations under the License.
 package metrics
 
 import (
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 
@@ -53,10 +56,15 @@ var (
 		Name: "kubedl_jobs_pending",
 		Help: "Counts number of jobs pending currently",
 	}, []string{"kind"})
+	launchDelayHist = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "kubedl_jobs_launch_delay",
+		Help: "Histogram for recording launch delay duration(from job created to job running) of each job.",
+	}, []string{"kind", "name", "namespace", "uid"})
 )
 
-// JobCounter holds the kinds of metrics counter for some type of job workload.
-type JobCounter struct {
+// JobMetrics holds the kinds of metrics counter for some type of job workload.
+type JobMetrics struct {
+	kind          string
 	statusCounter JobStatusCounterFunc
 	created       prometheus.Counter
 	deleted       prometheus.Counter
@@ -65,12 +73,14 @@ type JobCounter struct {
 	restart       prometheus.Counter
 	running       prometheus.Gauge
 	pending       prometheus.Gauge
+	launchDelay   *prometheus.HistogramVec
 }
 
-func NewJobCounter(kind string, client client.Client) *JobCounter {
+func NewJobMetrics(kind string, client client.Client) *JobMetrics {
 	kind = strings.ToLower(kind)
 	label := prometheus.Labels{"kind": kind}
-	counter := &JobCounter{
+	metrics := &JobMetrics{
+		kind:          kind,
 		statusCounter: JobStatusCounter(kind, client),
 		created:       created.With(label),
 		deleted:       deleted.With(label),
@@ -79,53 +89,68 @@ func NewJobCounter(kind string, client client.Client) *JobCounter {
 		restart:       restart.With(label),
 		running:       running.With(label),
 		pending:       pending.With(label),
+		launchDelay:   launchDelayHist,
 	}
-	return counter
+	return metrics
 }
 
-func (jc *JobCounter) CreatedInc() {
-	jc.created.Inc()
+func (m *JobMetrics) CreatedInc() {
+	m.created.Inc()
 }
 
-func (jc *JobCounter) DeletedInc() {
-	jc.deleted.Inc()
+func (m *JobMetrics) DeletedInc() {
+	m.deleted.Inc()
 }
 
-func (jc *JobCounter) SuccessInc() {
-	jc.success.Inc()
+func (m *JobMetrics) SuccessInc() {
+	m.success.Inc()
 }
 
-func (jc *JobCounter) FailureInc() {
-	jc.failure.Inc()
+func (m *JobMetrics) FailureInc() {
+	m.failure.Inc()
 }
 
-func (jc *JobCounter) RestartInc() {
-	jc.restart.Inc()
+func (m *JobMetrics) RestartInc() {
+	m.restart.Inc()
 }
 
-func (jc *JobCounter) PendingInc() {
-	jc.pending.Inc()
+func (m *JobMetrics) PendingInc() {
+	m.pending.Inc()
 }
 
-func (jc *JobCounter) PendingDec() {
-	jc.pending.Dec()
+func (m *JobMetrics) PendingDec() {
+	m.pending.Dec()
 }
 
-func (jc *JobCounter) RunningDec() {
-	jc.running.Dec()
+func (m *JobMetrics) RunningDec() {
+	m.running.Dec()
 }
 
-func (jc *JobCounter) RunningInc() {
+func (m *JobMetrics) RunningInc() {
 	// Init number of currently running jobs in cluster, and this counter func
 	// will only be invoked one time, then it will be set as nil.
-	if jc.statusCounter != nil {
-		running, pending, err := jc.statusCounter()
+	if m.statusCounter != nil {
+		running, pending, err := m.statusCounter()
 		if err == nil {
-			jc.running.Set(float64(running))
-			jc.pending.Set(float64(pending))
-			jc.statusCounter = nil
+			m.running.Set(float64(running))
+			m.pending.Set(float64(pending))
+			m.statusCounter = nil
 			return
 		}
 	}
-	jc.running.Inc()
+	m.running.Inc()
+}
+
+func (m *JobMetrics) LaunchDelay(job metav1.Object, status v1.JobStatus) {
+	cond := util.GetCondition(status, v1.JobRunning)
+	if cond == nil {
+		return
+	}
+	delay := metav1.Now().Time.Sub(status.StartTime.Time).Seconds()
+	m.launchDelay.With(prometheus.Labels{
+		"kind":      m.kind,
+		"name":      job.GetName(),
+		"namespace": job.GetNamespace(),
+		"uid":       string(job.GetUID()),
+	}).Observe(delay)
 }

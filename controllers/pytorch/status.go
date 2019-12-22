@@ -61,10 +61,10 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						log.Info("Append job condition", " error:", err)
 						return err
 					}
-					if r.ctrl.MetricsCounter != nil && !previousRunning {
-						r.ctrl.MetricsCounter.RunningInc()
-						r.ctrl.MetricsCounter.PendingDec()
-						r.ctrl.MetricsHistogram.LaunchDelay(pytorchJob, *jobStatus)
+					if !previousRunning {
+						r.ctrl.Metrics.RunningInc()
+						r.ctrl.Metrics.PendingDec()
+						r.ctrl.Metrics.LaunchDelay(pytorchJob, *jobStatus)
 					}
 				}
 				if expected == 0 {
@@ -79,10 +79,8 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						log.Info("Append job condition", "error:", err)
 						return err
 					}
-					if r.ctrl.MetricsCounter != nil {
-						r.ctrl.MetricsCounter.SuccessInc()
-						r.ctrl.MetricsCounter.RunningDec()
-					}
+					r.ctrl.Metrics.SuccessInc()
+					r.ctrl.Metrics.RunningDec()
 				}
 			}
 		} else {
@@ -99,12 +97,10 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					log.Info("Append job condition", "error:", err)
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.FailureInc()
-					r.ctrl.MetricsCounter.RestartInc()
-					if previousRunning {
-						r.ctrl.MetricsCounter.RunningDec()
-					}
+				r.ctrl.Metrics.FailureInc()
+				r.ctrl.Metrics.RestartInc()
+				if previousRunning {
+					r.ctrl.Metrics.RunningDec()
 				}
 			} else {
 				msg := fmt.Sprintf("PyTorchJob %s is failed because %d %s replica(s) failed.", pytorchJob.Name, failed, rtype)
@@ -118,11 +114,9 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					log.Info("Append job condition", "error: ", err)
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.FailureInc()
-					if previousRunning {
-						r.ctrl.MetricsCounter.RunningDec()
-					}
+				r.ctrl.Metrics.FailureInc()
+				if previousRunning {
+					r.ctrl.Metrics.RunningDec()
 				}
 			}
 		}
@@ -146,10 +140,8 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 			log.Error(err, "append job condition error")
 			return false
 		}
-		if reconciler.ctrl.MetricsCounter != nil {
-			reconciler.ctrl.MetricsCounter.CreatedInc()
-			reconciler.ctrl.MetricsCounter.PendingInc()
-		}
+		reconciler.ctrl.Metrics.CreatedInc()
+		reconciler.ctrl.Metrics.PendingInc()
 		return true
 	}
 }

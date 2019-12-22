@@ -67,13 +67,12 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
-		Controller:       r,
-		Expectations:     k8scontroller.NewControllerExpectations(),
-		Config:           config,
-		WorkQueue:        &commonutil.FakeWorkQueue{},
-		Recorder:         r.recorder,
-		MetricsCounter:   metrics.NewJobCounter(xdlv1alpha1.Kind, r.Client),
-		MetricsHistogram: metrics.NewJobHistogram(xdlv1alpha1.Kind),
+		Controller:   r,
+		Expectations: k8scontroller.NewControllerExpectations(),
+		Config:       config,
+		WorkQueue:    &commonutil.FakeWorkQueue{},
+		Recorder:     r.recorder,
+		Metrics:      metrics.NewJobMetrics(xdlv1alpha1.Kind, r.Client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -107,9 +106,7 @@ func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", request.String())
-			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.DeletedInc()
-			}
+			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return reconcile.Result{}, nil

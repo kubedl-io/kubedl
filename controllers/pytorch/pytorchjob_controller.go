@@ -56,12 +56,11 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	r.ctrl = job_controller.JobController{
-		Controller:       r,
-		Config:           config,
-		WorkQueue:        &util.FakeWorkQueue{},
-		Recorder:         r.recorder,
-		MetricsCounter:   metrics.NewJobCounter(pytorchv1.Kind, r.Client),
-		MetricsHistogram: metrics.NewJobHistogram(pytorchv1.Kind),
+		Controller: r,
+		Config:     config,
+		WorkQueue:  &util.FakeWorkQueue{},
+		Recorder:   r.recorder,
+		Metrics:    metrics.NewJobMetrics(pytorchv1.Kind, r.Client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -95,9 +94,7 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
-			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.DeletedInc()
-			}
+			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return reconcile.Result{}, nil

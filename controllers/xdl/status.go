@@ -52,10 +52,8 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			log.Error(err, "append job condition error")
 			return false
 		}
-		if reconciler.ctrl.MetricsCounter != nil {
-			reconciler.ctrl.MetricsCounter.CreatedInc()
-			reconciler.ctrl.MetricsCounter.PendingInc()
-		}
+		reconciler.ctrl.Metrics.CreatedInc()
+		reconciler.ctrl.Metrics.PendingInc()
 		return true
 	}
 }
@@ -93,12 +91,10 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					log.Error(err, "failed to update xdl job conditions")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.FailureInc()
-					r.ctrl.MetricsCounter.RestartInc()
-					if previousRunning {
-						r.ctrl.MetricsCounter.RunningDec()
-					}
+				r.ctrl.Metrics.FailureInc()
+				r.ctrl.Metrics.RestartInc()
+				if previousRunning {
+					r.ctrl.Metrics.RunningDec()
 				}
 			} else {
 				msg := fmt.Sprintf("XDLJob %s is failed because %d %s replica(s) failed.", xdlJob.Name, failed, rtype)
@@ -112,11 +108,9 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					log.Error(err, "failed to update xdl job conditions")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.FailureInc()
-					if previousRunning {
-						r.ctrl.MetricsCounter.RunningDec()
-					}
+				r.ctrl.Metrics.FailureInc()
+				if previousRunning {
+					r.ctrl.Metrics.RunningDec()
 				}
 			}
 			return nil
@@ -136,10 +130,8 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 			log.Error(err, "failed to update xdl job conditions")
 			return err
 		}
-		if r.ctrl.MetricsCounter != nil {
-			r.ctrl.MetricsCounter.SuccessInc()
-			r.ctrl.MetricsCounter.RunningDec()
-		}
+		r.ctrl.Metrics.SuccessInc()
+		r.ctrl.Metrics.RunningDec()
 		return nil
 	}
 
@@ -149,10 +141,10 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 		log.Error(err, "failed to update xdl job conditions")
 		return err
 	}
-	if r.ctrl.MetricsCounter != nil && !previousRunning {
-		r.ctrl.MetricsCounter.RunningInc()
-		r.ctrl.MetricsCounter.PendingDec()
-		r.ctrl.MetricsHistogram.LaunchDelay(xdlJob, *jobStatus)
+	if !previousRunning {
+		r.ctrl.Metrics.RunningInc()
+		r.ctrl.Metrics.PendingDec()
+		r.ctrl.Metrics.LaunchDelay(xdlJob, *jobStatus)
 	}
 	return nil
 }
