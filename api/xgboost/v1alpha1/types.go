@@ -39,6 +39,9 @@ type XGBoostJobStatus struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:defaulter-gen=TypeMeta
+// +resource:path=xgboostjob
+// +kubebuilder:resource:scope=Namespaced
 
 // XGBoostJob is the Schema for the xgboostjobs API
 // +k8s:openapi-gen=true

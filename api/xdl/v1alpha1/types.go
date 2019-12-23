@@ -52,6 +52,8 @@ type XDLJobSpec struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:defaulter-gen=TypeMeta
+// +resource:path=xdljob
+// +kubebuilder:resource:scope=Namespaced
 
 // XDLJob is the Schema for the xdljobs API
 // +k8s:openapi-gen=true
