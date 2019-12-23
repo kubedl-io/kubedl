@@ -34,7 +34,10 @@ kubectl apply -f http://github.com/alibaba/kubedl/config/crd/bases
 #### Deploy KubeDL as a deployment
 
 ```bash
-kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/config/manager/all_in_one.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_pytorchjobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_tfjobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xdl.alibaba.com_xdljobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
 ```
 
 The official KubeDL operator image is hosted under [docker hub](https://hub.docker.com/r/kubedl/kubedl).
