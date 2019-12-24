@@ -19,10 +19,6 @@ package pytorch
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
-
 	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -43,6 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -58,12 +56,11 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	r.ctrl = job_controller.JobController{
-		Controller:     r,
-		Config:         config,
-		WorkQueue:      &util.FakeWorkQueue{},
-		Recorder:       r.recorder,
-		MetricsCounter: metrics.NewJobCounter("pytorch"),
-		MetricsGauge:   metrics.NewJobGauge("pytorch", r.Client, 10*time.Second, metrics.PytorchJobRunningCounter),
+		Controller: r,
+		Config:     config,
+		WorkQueue:  &util.FakeWorkQueue{},
+		Recorder:   r.recorder,
+		Metrics:    metrics.NewJobMetrics(pytorchv1.Kind, r.Client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -97,12 +94,7 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
-			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.Deleted().Inc()
-			}
-			if r.ctrl.MetricsGauge != nil {
-				r.ctrl.MetricsGauge.Running().Gauge()
-			}
+			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return reconcile.Result{}, nil

@@ -57,6 +57,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						log.Info("Append job condition", " error:", err)
 						return err
 					}
+					r.ctrl.Metrics.LaunchDelay(pytorchJob, *jobStatus)
 				}
 				if expected == 0 {
 					msg := fmt.Sprintf("PyTorchJob %s is successfully completed.", pytorchJob.Name)
@@ -70,12 +71,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						log.Info("Append job condition", "error:", err)
 						return err
 					}
-					if r.ctrl.MetricsCounter != nil {
-						r.ctrl.MetricsCounter.Success().Inc()
-					}
-					if r.ctrl.MetricsGauge != nil {
-						r.ctrl.MetricsGauge.Running().Gauge()
-					}
+					r.ctrl.Metrics.SuccessInc()
 				}
 			}
 		} else {
@@ -92,10 +88,8 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					log.Info("Append job condition", "error:", err)
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-					r.ctrl.MetricsCounter.Restart().Inc()
-				}
+				r.ctrl.Metrics.FailureInc()
+				r.ctrl.Metrics.RestartInc()
 			} else {
 				msg := fmt.Sprintf("PyTorchJob %s is failed because %d %s replica(s) failed.", pytorchJob.Name, failed, rtype)
 				r.recorder.Event(pytorchJob, corev1.EventTypeNormal, commonutil.JobFailedReason, msg)
@@ -108,17 +102,9 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					log.Info("Append job condition", "error: ", err)
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-				}
-				if r.ctrl.MetricsGauge != nil {
-					r.ctrl.MetricsGauge.Running().Gauge()
-				}
+				r.ctrl.Metrics.FailureInc()
 			}
 		}
-	}
-	if r.ctrl.MetricsGauge != nil {
-		r.ctrl.MetricsGauge.LaunchTime().Gauge(pytorchJob, *jobStatus)
 	}
 	return nil
 }
@@ -139,12 +125,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 			log.Error(err, "append job condition error")
 			return false
 		}
-		if reconciler.ctrl.MetricsCounter != nil {
-			reconciler.ctrl.MetricsCounter.Created().Inc()
-		}
-		if reconciler.ctrl.MetricsGauge != nil {
-			reconciler.ctrl.MetricsGauge.Running().Gauge()
-		}
+		reconciler.ctrl.Metrics.CreatedInc()
 		return true
 	}
 }

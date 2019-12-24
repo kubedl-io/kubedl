@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
@@ -68,13 +67,12 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
-		Controller:     r,
-		Expectations:   k8scontroller.NewControllerExpectations(),
-		Config:         config,
-		WorkQueue:      &commonutil.FakeWorkQueue{},
-		Recorder:       r.recorder,
-		MetricsCounter: metrics.NewJobCounter("xdl"),
-		MetricsGauge:   metrics.NewJobGauge("xdl", r.Client, 30*time.Second, metrics.XDLJobRunningCounter),
+		Controller:   r,
+		Expectations: k8scontroller.NewControllerExpectations(),
+		Config:       config,
+		WorkQueue:    &commonutil.FakeWorkQueue{},
+		Recorder:     r.recorder,
+		Metrics:      metrics.NewJobMetrics(xdlv1alpha1.Kind, r.Client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -108,12 +106,7 @@ func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", request.String())
-			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.Deleted().Inc()
-			}
-			if r.ctrl.MetricsGauge != nil {
-				r.ctrl.MetricsGauge.Running().Gauge()
-			}
+			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return reconcile.Result{}, nil

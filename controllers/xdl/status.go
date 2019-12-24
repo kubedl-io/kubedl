@@ -52,12 +52,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			log.Error(err, "append job condition error")
 			return false
 		}
-		if reconciler.ctrl.MetricsCounter != nil {
-			reconciler.ctrl.MetricsCounter.Created().Inc()
-		}
-		if reconciler.ctrl.MetricsGauge != nil {
-			reconciler.ctrl.MetricsGauge.Running().Gauge()
-		}
+		reconciler.ctrl.Metrics.CreatedInc()
 		return true
 	}
 }
@@ -65,6 +60,10 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 // updateGeneralJobStatus updates the status of job with given replica specs and job status.
 func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
 	log.Info("Updating status", "XDLJob name", xdlJob.Name)
+
+	// If job is previous running, when it transfers to state failed or restarting,
+	// running metrics will do dec.
+	previousRunning := commonutil.IsRunning(*jobStatus)
 
 	workerNum, workerSucceeded := int32(0), int32(0)
 	// Iterate all replicas for counting and try to update start time.
@@ -91,10 +90,8 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					log.Error(err, "failed to update xdl job conditions")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-					r.ctrl.MetricsCounter.Restart().Inc()
-				}
+				r.ctrl.Metrics.FailureInc()
+				r.ctrl.Metrics.RestartInc()
 			} else {
 				msg := fmt.Sprintf("XDLJob %s is failed because %d %s replica(s) failed.", xdlJob.Name, failed, rtype)
 				r.recorder.Event(xdlJob, corev1.EventTypeNormal, xdlJobFailedReason, msg)
@@ -107,12 +104,7 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					log.Error(err, "failed to update xdl job conditions")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-				}
-				if r.ctrl.MetricsGauge != nil {
-					r.ctrl.MetricsGauge.Running().Gauge()
-				}
+				r.ctrl.Metrics.FailureInc()
 			}
 			return nil
 		}
@@ -131,12 +123,7 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 			log.Error(err, "failed to update xdl job conditions")
 			return err
 		}
-		if r.ctrl.MetricsCounter != nil {
-			r.ctrl.MetricsCounter.Success().Inc()
-		}
-		if r.ctrl.MetricsGauge != nil {
-			r.ctrl.MetricsGauge.Running().Gauge()
-		}
+		r.ctrl.Metrics.SuccessInc()
 		return nil
 	}
 
@@ -146,8 +133,8 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 		log.Error(err, "failed to update xdl job conditions")
 		return err
 	}
-	if r.ctrl.MetricsGauge != nil {
-		r.ctrl.MetricsGauge.LaunchTime().Gauge(xdlJob, *jobStatus)
+	if !previousRunning {
+		r.ctrl.Metrics.LaunchDelay(xdlJob, *jobStatus)
 	}
 	return nil
 }

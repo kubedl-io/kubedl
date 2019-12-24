@@ -111,6 +111,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Error(err, "Append job condition error")
 					return err
 				}
+				r.ctrl.Metrics.LaunchDelay(xgboostJob, *jobStatus)
 			}
 			// when master is succeed, the job is finished.
 			if expected == 0 {
@@ -126,12 +127,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Error(err, "Append job condition error")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Success().Inc()
-				}
-				if r.ctrl.MetricsGauge != nil {
-					r.ctrl.MetricsGauge.Running().Gauge()
-				}
+				r.ctrl.Metrics.SuccessInc()
 				return nil
 			}
 		}
@@ -144,10 +140,8 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Error(err, "Append job condition error")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-					r.ctrl.MetricsCounter.Restart().Inc()
-				}
+				r.ctrl.Metrics.FailureInc()
+				r.ctrl.Metrics.RestartInc()
 			} else {
 				msg := fmt.Sprintf("XGBoostJob %s is failed because %d %s replica(s) failed.", xgboostJob.Name, failed, rtype)
 				r.ctrl.Recorder.Event(xgboostJob, k8sv1.EventTypeNormal, commonutil.JobFailedReason, msg)
@@ -160,9 +154,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Info("Append job condition", "error: ", err)
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-				}
+				r.ctrl.Metrics.FailureInc()
 			}
 		}
 	}
@@ -175,9 +167,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		log.Error(err, "failed to update XGBoost Job conditions")
 		return err
 	}
-	if r.ctrl.MetricsGauge != nil {
-		r.ctrl.MetricsGauge.LaunchTime().Gauge(xgboostJob, *jobStatus)
-	}
+	r.ctrl.Metrics.LaunchDelay(xgboostJob, *jobStatus)
 	return nil
 }
 
@@ -211,12 +201,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			log.Error(err, "append job condition error")
 			return false
 		}
-		if reconciler.ctrl.MetricsCounter != nil {
-			reconciler.ctrl.MetricsCounter.Created().Inc()
-		}
-		if reconciler.ctrl.MetricsGauge != nil {
-			reconciler.ctrl.MetricsGauge.Running().Gauge()
-		}
+		reconciler.ctrl.Metrics.CreatedInc()
 		return true
 	}
 }

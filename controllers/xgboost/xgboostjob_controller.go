@@ -16,7 +16,6 @@ import (
 	"context"
 	"flag"
 	"path/filepath"
-	"time"
 
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
@@ -97,14 +96,13 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
-		Controller:     r,
-		Expectations:   k8scontroller.NewControllerExpectations(),
-		Config:         config,
-		WorkQueue:      &util.FakeWorkQueue{},
-		Recorder:       r.recorder,
-		Client:         r.Client,
-		MetricsCounter: metrics.NewJobCounter("xgboost"),
-		MetricsGauge:   metrics.NewJobGauge("xgboost", r.Client, 30*time.Second, metrics.XGBoostJobRunningCounter),
+		Controller:   r,
+		Expectations: k8scontroller.NewControllerExpectations(),
+		Config:       config,
+		WorkQueue:    &util.FakeWorkQueue{},
+		Recorder:     r.recorder,
+		Client:       r.Client,
+		Metrics:      metrics.NewJobMetrics(v1alpha1.Kind, r.Client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -138,12 +136,7 @@ func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Resul
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
-			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.Deleted().Inc()
-			}
-			if r.ctrl.MetricsGauge != nil {
-				r.ctrl.MetricsGauge.Running().Gauge()
-			}
+			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return reconcile.Result{}, nil
