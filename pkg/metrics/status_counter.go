@@ -24,38 +24,27 @@ import (
 	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// JobStatusCounterFunc list some kind of job in cluster, and counts the
-// number of running jobs among listed one.
-type JobStatusCounterFunc func() (running, pending int32, err error)
-
-func JobStatusCounter(kind string, reader client.Reader) JobStatusCounterFunc {
-	return func() (running, pending int32, err error) {
-		var list runtime.Object
-		if obj, ok := listObjectMap[kind]; ok {
-			list = obj.DeepCopyObject()
-		}
-		err = reader.List(context.Background(), list)
-		if err != nil {
-			return 0, 0, err
-		}
-		statuses := getJobStatusList(list, kind)
-		running = int32(0)
-		pending = int32(0)
-		for _, status := range statuses {
-			if util.IsRunning(*status) {
-				running++
-			}
-			if util.IsCreated(*status) {
-				pending++
-			}
-		}
-		return running, pending, nil
+func JobStatusCounter(kind string, reader client.Reader, filter func(status v1.JobStatus) bool) (result int32, err error) {
+	var list runtime.Object
+	if obj, ok := listObjectMap[kind]; ok {
+		list = obj.DeepCopyObject()
 	}
+	err = reader.List(context.Background(), list)
+	if err != nil {
+		return 0, err
+	}
+	statuses := getJobStatusList(list, kind)
+	result = int32(0)
+	for _, status := range statuses {
+		if filter(*status) {
+			result++
+		}
+	}
+	return result, nil
 }
 
 var (

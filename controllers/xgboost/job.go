@@ -92,10 +92,6 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		return fmt.Errorf("%+v is not a type of xgboostJob", xgboostJob)
 	}
 
-	// If job is previous running, when it transfers to state failed or restarting,
-	// running metrics will do dec.
-	previousRunning := commonutil.IsRunning(*jobStatus)
-
 	for rtype, spec := range replicas {
 		status := jobStatus.ReplicaStatuses[rtype]
 
@@ -115,11 +111,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Error(err, "Append job condition error")
 					return err
 				}
-				if !previousRunning {
-					r.ctrl.Metrics.RunningInc()
-					r.ctrl.Metrics.PendingDec()
-					r.ctrl.Metrics.LaunchDelay(xgboostJob, *jobStatus)
-				}
+				r.ctrl.Metrics.LaunchDelay(xgboostJob, *jobStatus)
 			}
 			// when master is succeed, the job is finished.
 			if expected == 0 {
@@ -136,7 +128,6 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					return err
 				}
 				r.ctrl.Metrics.SuccessInc()
-				r.ctrl.Metrics.RunningDec()
 				return nil
 			}
 		}
@@ -151,9 +142,6 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 				}
 				r.ctrl.Metrics.FailureInc()
 				r.ctrl.Metrics.RestartInc()
-				if previousRunning {
-					r.ctrl.Metrics.RunningDec()
-				}
 			} else {
 				msg := fmt.Sprintf("XGBoostJob %s is failed because %d %s replica(s) failed.", xgboostJob.Name, failed, rtype)
 				r.ctrl.Recorder.Event(xgboostJob, k8sv1.EventTypeNormal, commonutil.JobFailedReason, msg)
@@ -167,9 +155,6 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					return err
 				}
 				r.ctrl.Metrics.FailureInc()
-				if previousRunning {
-					r.ctrl.Metrics.RunningDec()
-				}
 			}
 		}
 	}
@@ -182,11 +167,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		log.Error(err, "failed to update XGBoost Job conditions")
 		return err
 	}
-	if !previousRunning {
-		r.ctrl.Metrics.RunningInc()
-		r.ctrl.Metrics.PendingDec()
-		r.ctrl.Metrics.LaunchDelay(xgboostJob, *jobStatus)
-	}
+	r.ctrl.Metrics.LaunchDelay(xgboostJob, *jobStatus)
 	return nil
 }
 
@@ -221,7 +202,6 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			return false
 		}
 		reconciler.ctrl.Metrics.CreatedInc()
-		reconciler.ctrl.Metrics.PendingInc()
 		return true
 	}
 }

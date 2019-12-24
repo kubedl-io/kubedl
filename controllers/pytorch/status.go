@@ -39,10 +39,6 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 		jobStatus.StartTime = &now
 	}
 
-	// If job is previous running, when it transfers to state failed or restarting,
-	// running metrics will do dec.
-	previousRunning := commonutil.IsRunning(*jobStatus)
-
 	for rtype, spec := range replicaSpecs {
 		replicas := *spec.Replicas
 		expected := replicas - jobStatus.ReplicaStatuses[rtype].Succeeded
@@ -61,11 +57,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						log.Info("Append job condition", " error:", err)
 						return err
 					}
-					if !previousRunning {
-						r.ctrl.Metrics.RunningInc()
-						r.ctrl.Metrics.PendingDec()
-						r.ctrl.Metrics.LaunchDelay(pytorchJob, *jobStatus)
-					}
+					r.ctrl.Metrics.LaunchDelay(pytorchJob, *jobStatus)
 				}
 				if expected == 0 {
 					msg := fmt.Sprintf("PyTorchJob %s is successfully completed.", pytorchJob.Name)
@@ -80,7 +72,6 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						return err
 					}
 					r.ctrl.Metrics.SuccessInc()
-					r.ctrl.Metrics.RunningDec()
 				}
 			}
 		} else {
@@ -99,9 +90,6 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 				}
 				r.ctrl.Metrics.FailureInc()
 				r.ctrl.Metrics.RestartInc()
-				if previousRunning {
-					r.ctrl.Metrics.RunningDec()
-				}
 			} else {
 				msg := fmt.Sprintf("PyTorchJob %s is failed because %d %s replica(s) failed.", pytorchJob.Name, failed, rtype)
 				r.recorder.Event(pytorchJob, corev1.EventTypeNormal, commonutil.JobFailedReason, msg)
@@ -115,9 +103,6 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					return err
 				}
 				r.ctrl.Metrics.FailureInc()
-				if previousRunning {
-					r.ctrl.Metrics.RunningDec()
-				}
 			}
 		}
 	}
@@ -141,7 +126,6 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 			return false
 		}
 		reconciler.ctrl.Metrics.CreatedInc()
-		reconciler.ctrl.Metrics.PendingInc()
 		return true
 	}
 }

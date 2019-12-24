@@ -18,18 +18,12 @@ package xdljob
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/alibaba/kubedl/api/xdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
-)
-
-var (
-	// ErrPortNotFound failed to find port
-	ErrPortNotFound = errors.New("failed to find port " + v1alpha1.DefaultContainerPortName)
 )
 
 // XDLConfig is a struct representing the distributed XDL config.

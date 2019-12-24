@@ -53,7 +53,6 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			return false
 		}
 		reconciler.ctrl.Metrics.CreatedInc()
-		reconciler.ctrl.Metrics.PendingInc()
 		return true
 	}
 }
@@ -93,9 +92,6 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 				}
 				r.ctrl.Metrics.FailureInc()
 				r.ctrl.Metrics.RestartInc()
-				if previousRunning {
-					r.ctrl.Metrics.RunningDec()
-				}
 			} else {
 				msg := fmt.Sprintf("XDLJob %s is failed because %d %s replica(s) failed.", xdlJob.Name, failed, rtype)
 				r.recorder.Event(xdlJob, corev1.EventTypeNormal, xdlJobFailedReason, msg)
@@ -109,9 +105,6 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					return err
 				}
 				r.ctrl.Metrics.FailureInc()
-				if previousRunning {
-					r.ctrl.Metrics.RunningDec()
-				}
 			}
 			return nil
 		}
@@ -131,7 +124,6 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 			return err
 		}
 		r.ctrl.Metrics.SuccessInc()
-		r.ctrl.Metrics.RunningDec()
 		return nil
 	}
 
@@ -142,8 +134,6 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 		return err
 	}
 	if !previousRunning {
-		r.ctrl.Metrics.RunningInc()
-		r.ctrl.Metrics.PendingDec()
 		r.ctrl.Metrics.LaunchDelay(xdlJob, *jobStatus)
 	}
 	return nil
