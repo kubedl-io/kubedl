@@ -28,16 +28,16 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 #### Install CRDs
 
 ```bash
-kubectl apply -f http://github.com/alibaba/kubedl/config/crd/bases
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_pytorchjobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_tfjobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xdl.alibaba.com_xdljobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
 ```
 
 #### Deploy KubeDL as a deployment
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_pytorchjobs.yaml
-kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_tfjobs.yaml
-kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xdl.alibaba.com_xdljobs.yaml
-kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/manager/all_in_one.yaml
 ```
 
 The official KubeDL operator image is hosted under [docker hub](https://hub.docker.com/r/kubedl/kubedl).
@@ -45,12 +45,6 @@ The official KubeDL operator image is hosted under [docker hub](https://hub.dock
 ## Run an Example Job 
 
 This example demonstrates how to run a simple MNist Tensorflow job with KubeDL.
-
-#### Deploy KubeDL
-
-```bash
-kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/config/manager/all_in_one.yaml
-```
 
 #### Submit the TFJob
 
