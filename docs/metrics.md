@@ -1,7 +1,8 @@
-## Expand Metrics
+# Metrics
 
-This file describes all built-in expanded and practical prometheus metrics for job workloads
-in KubeDL, and difference kinds of workloads is classified by labels.
+This document describes the prometheus metrics supported for the KubeDL operator.
+The curly brackets `{}`are used to indicate the labels supported for the metrics.
+- `kind` - the target job workload kind, e.g. TFJob, PyTorchJob, XDLJob, XGBoostJob
 
 |    Metric Names     |   Description    |
 |    ------------     |   -----------    |
@@ -12,4 +13,4 @@ in KubeDL, and difference kinds of workloads is classified by labels.
 |    kubedl_jobs_restarted{kind}   |   Counts number of jobs restarted  |
 |    kubedl_jobs_running{kind}     |   Counts number of jobs currently running  |
 |    kubedl_jobs_pending{kind}     |   Counts number of jobs currently pending  |
-|    kubedl_jobs_launch_delay{kind, name, namespace, uid}  |  Histogram for recording launch delay duration(from job created to job running) of each job  |
+|    kubedl_jobs_launch_delay{kind, name, namespace, uid}  |  Histogram for recording launch delay duration (from job created to job running)  |
