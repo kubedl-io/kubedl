@@ -17,11 +17,11 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 [xgboost-operator](https://github.com/kubeflow/xgboost-operator) and integrates them with enhanced features as below:
 
 - Support running prevalent ML/DL workloads in a single operator.
-- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job status, such as job launch delay, total number of running jobs.
+- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
-- Support debugging  workload types selectively.
+- Enable specific job workload type selectively.
 - Support running a job (in the form of YAML) with source code from github/remote store(e.g. hdfs) without rebuilding the image
-- A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
+- A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
 
 ## Getting started
 
@@ -49,20 +49,23 @@ This example demonstrates how to run a simple MNist Tensorflow job with KubeDL.
 #### Submit the TFJob
 
 ```bash
-  kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/example/tf/tf_job_mnist.yaml
+kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/example/tf/tf_job_mnist.yaml
 ```
 
 #### Monitor the status of the Tensorflow job
 
 ```bash
-  kubectl describe tfjob mnist -n kubedl
+kubectl describe tfjob mnist -n kubedl
 ```
 
 #### Delete the job
 
 ```bash
-  kubectl delete tfjob mnist -n kubedl
+kubectl delete tfjob mnist -n kubedl
 ```
+
+## Metrics
+See the [details](docs/metrics.md) for the prometheus metrics supported for KubeDL operator.
 
 ## Developer Guide
 
