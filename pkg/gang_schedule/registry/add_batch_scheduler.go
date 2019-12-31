@@ -14,22 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gang_schedule
+package registry
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/batch_scheduler"
 )
 
-// NewGangScheduler receive a client as init parameter and return a new gang scheduler.
-type NewGangScheduler func(client client.Client) GangScheduler
-
-var (
-	NewGangSchedulers []NewGangScheduler
-)
-
-func RegisterGangSchedulers(client client.Client) {
-	for _, newer := range NewGangSchedulers {
-		scheduler := newer(client)
-		defaultRegistry.Add(scheduler)
-	}
+func init() {
+	NewGangSchedulers = append(NewGangSchedulers, batch_scheduler.NewKubeBatchScheduler)
 }

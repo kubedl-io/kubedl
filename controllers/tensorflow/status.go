@@ -47,12 +47,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			return false
 		}
 		log.Info(msg)
-		if reconciler.ctrl.MetricsCounter != nil {
-			reconciler.ctrl.MetricsCounter.Created().Inc()
-		}
-		if reconciler.ctrl.MetricsGauge != nil {
-			reconciler.ctrl.MetricsGauge.Running().Gauge()
-		}
+		reconciler.ctrl.Metrics.CreatedInc()
 		return true
 	}
 }
@@ -127,6 +122,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
+					r.ctrl.Metrics.LaunchDelay(tfJob, *jobStatus)
 				}
 				if expected == 0 {
 					msg := fmt.Sprintf("TFJob %s successfully completed.", tfJob.Name)
@@ -140,12 +136,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
-					if r.ctrl.MetricsCounter != nil {
-						r.ctrl.MetricsCounter.Success().Inc()
-					}
-					if r.ctrl.MetricsGauge != nil {
-						r.ctrl.MetricsGauge.Running().Gauge()
-					}
+					r.ctrl.Metrics.SuccessInc()
 				}
 			}
 		} else {
@@ -163,12 +154,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
-					if r.ctrl.MetricsCounter != nil {
-						r.ctrl.MetricsCounter.Success().Inc()
-					}
-					if r.ctrl.MetricsGauge != nil {
-						r.ctrl.MetricsGauge.Running().Gauge()
-					}
+					r.ctrl.Metrics.SuccessInc()
 				} else if running > 0 {
 					// Some workers are still running, leave a running condition.
 					msg := fmt.Sprintf("TFJob %s is running.", tfJob.Name)
@@ -177,6 +163,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
+					r.ctrl.Metrics.LaunchDelay(tfJob, *jobStatus)
 				}
 			}
 		}
@@ -190,10 +177,8 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					log.Error(err, "failed to update tensorflow job conditions")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-					r.ctrl.MetricsCounter.Restart().Inc()
-				}
+				r.ctrl.Metrics.FailureInc()
+				r.ctrl.Metrics.RestartInc()
 			} else {
 				msg := fmt.Sprintf("TFJob %s is failed because %d %s replica(s) failed.", tfJob.Name, failed, rtype)
 				r.recorder.Event(tfJob, corev1.EventTypeNormal, commonutil.JobFailedReason, msg)
@@ -206,17 +191,9 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					log.Error(err, "failed to update tensorflow job conditions")
 					return err
 				}
-				if r.ctrl.MetricsCounter != nil {
-					r.ctrl.MetricsCounter.Failure().Inc()
-				}
-				if r.ctrl.MetricsGauge != nil {
-					r.ctrl.MetricsGauge.Running().Gauge()
-				}
+				r.ctrl.Metrics.FailureInc()
 			}
 		}
-	}
-	if r.ctrl.MetricsGauge != nil {
-		r.ctrl.MetricsGauge.LaunchTime().Gauge(tfJob, *jobStatus)
 	}
 	return nil
 }

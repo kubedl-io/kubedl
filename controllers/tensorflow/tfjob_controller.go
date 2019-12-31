@@ -20,10 +20,9 @@ package tensorflow
 import (
 	"context"
 	"fmt"
-	"time"
 
 	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
-	"github.com/alibaba/kubedl/pkg/gang_schedule"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
@@ -64,16 +63,15 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
-		Controller:     r,
-		Expectations:   k8scontroller.NewControllerExpectations(),
-		Config:         config,
-		WorkQueue:      &util.FakeWorkQueue{},
-		Recorder:       r.recorder,
-		MetricsCounter: metrics.NewJobCounter("tf"),
-		MetricsGauge:   metrics.NewJobGauge("tf", r.Client, 60*time.Second, metrics.TFJobRunningCounter),
+		Controller:   r,
+		Expectations: k8scontroller.NewControllerExpectations(),
+		Config:       config,
+		WorkQueue:    &util.FakeWorkQueue{},
+		Recorder:     r.recorder,
+		Metrics:      metrics.NewJobMetrics(tfv1.Kind, r.Client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
-		r.ctrl.GangScheduler = gang_schedule.Get(r.ctrl.Config.GangSchedulerName)
+		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
 	return r
 }
@@ -104,12 +102,7 @@ func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
-			if r.ctrl.MetricsCounter != nil {
-				r.ctrl.MetricsCounter.Deleted().Inc()
-			}
-			if r.ctrl.MetricsGauge != nil {
-				r.ctrl.MetricsGauge.Running().Gauge()
-			}
+			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// For additional cleanup logic use finalizers.
 			return reconcile.Result{}, nil

@@ -28,13 +28,16 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 #### Install CRDs
 
 ```bash
-kubectl apply -f http://github.com/alibaba/kubedl/config/crd/bases
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_pytorchjobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_tfjobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xdl.alibaba.com_xdljobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
 ```
 
 #### Deploy KubeDL as a deployment
 
 ```bash
-kubectl apply -f http://github.com/alibaba/kubedl/config/manager/all_in_one.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/manager/all_in_one.yaml
 ```
 
 The official KubeDL operator image is hosted under [docker hub](https://hub.docker.com/r/kubedl/kubedl).
@@ -45,15 +48,21 @@ This example demonstrates how to run a simple MNist Tensorflow job with KubeDL.
 
 #### Submit the TFJob
 
-  `kubectl apply -f tf_job_mnist.yaml` #FIXME tf_job_mnist.yaml doesn't exist
+```bash
+  kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/example/tf/tf_job_mnist.yaml
+```
 
 #### Monitor the status of the Tensorflow job
 
-  `kubectl describe tfjob mnist`
+```bash
+  kubectl describe tfjob mnist -n kubedl
+```
 
 #### Delete the job
 
-  `kubectl delete tfjob mnist`
+```bash
+  kubectl delete tfjob mnist -n kubedl
+```
 
 ## Developer Guide
 
@@ -65,25 +74,28 @@ git clone http://github.com/alibaba/kubedl.git
 
 #### Build the controller manager binary
 
-`make manager`
-
+```bash
+make manager
+```
 #### Run the tests
 
-`make test`
-
+```bash
+make test
+```
 #### Generate manifests e.g. CRD, RBAC YAML files etc
 
-`make manifests`
-
+```bash
+make manifests
+```
 #### Build the docker image
 
-```
+```bash
 export IMG=<your_image_name> && make docker-build
 ```
 
 #### Push the image
 
-```
+```bash
 docker push <your_image_name>
 ```
 

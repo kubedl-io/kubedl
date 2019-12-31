@@ -37,10 +37,25 @@ func IsRunning(status apiv1.JobStatus) bool {
 	return hasCondition(status, apiv1.JobRunning)
 }
 
+// IsCreated checks if the job is created.
+func IsCreated(status apiv1.JobStatus) bool {
+	return hasCondition(status, apiv1.JobCreated)
+}
+
 // UpdateJobConditions adds to the jobStatus a new condition if needed, with the conditionType, reason, and message.
 func UpdateJobConditions(jobStatus *apiv1.JobStatus, conditionType apiv1.JobConditionType, reason, message string) error {
 	condition := newCondition(conditionType, reason, message)
 	setCondition(jobStatus, condition)
+	return nil
+}
+
+// GetCondition returns the condition with the provided type.
+func GetCondition(status apiv1.JobStatus, condType apiv1.JobConditionType) *apiv1.JobCondition {
+	for _, condition := range status.Conditions {
+		if condition.Type == condType {
+			return &condition
+		}
+	}
 	return nil
 }
 
@@ -65,16 +80,6 @@ func newCondition(conditionType apiv1.JobConditionType, reason, message string) 
 	}
 }
 
-// getCondition returns the condition with the provided type.
-func getCondition(status apiv1.JobStatus, condType apiv1.JobConditionType) *apiv1.JobCondition {
-	for _, condition := range status.Conditions {
-		if condition.Type == condType {
-			return &condition
-		}
-	}
-	return nil
-}
-
 // setCondition updates the job to include the provided condition.
 // If the condition that we are about to add already exists
 // and has the same status and reason then we are not going to update.
@@ -84,7 +89,7 @@ func setCondition(status *apiv1.JobStatus, condition apiv1.JobCondition) {
 		return
 	}
 
-	currentCond := getCondition(*status, condition.Type)
+	currentCond := GetCondition(*status, condition.Type)
 
 	// Do nothing if condition doesn't change
 	if currentCond != nil && currentCond.Status == condition.Status && currentCond.Reason == condition.Reason {

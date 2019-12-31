@@ -14,21 +14,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gang_schedule
+package registry
 
 import (
 	"sync"
+
+	"github.com/alibaba/kubedl/pkg/gang_schedule"
+	"k8s.io/klog"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 var (
-	defaultRegistry = Registry{registry: make(map[string]GangScheduler)}
+	NewGangSchedulers []gang_schedule.NewGangScheduler
+	defaultRegistry   = Registry{registry: make(map[string]gang_schedule.GangScheduler)}
 )
 
-func Add(scheduler GangScheduler) {
+func RegisterGangSchedulers(mgr controllerruntime.Manager) {
+	for _, newer := range NewGangSchedulers {
+		scheduler := newer(mgr)
+		klog.Infof("register gang scheduler %s", scheduler.Name())
+		defaultRegistry.Add(scheduler)
+	}
+}
+
+func Add(scheduler gang_schedule.GangScheduler) {
 	defaultRegistry.Add(scheduler)
 }
 
-func Get(name string) GangScheduler {
+func Get(name string) gang_schedule.GangScheduler {
 	return defaultRegistry.Get(name)
 }
 
@@ -38,16 +51,16 @@ func Remove(name string) {
 
 type Registry struct {
 	lock     sync.Mutex
-	registry map[string]GangScheduler
+	registry map[string]gang_schedule.GangScheduler
 }
 
-func (r *Registry) Add(scheduler GangScheduler) {
+func (r *Registry) Add(scheduler gang_schedule.GangScheduler) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	r.registry[scheduler.Name()] = scheduler
 }
 
-func (r *Registry) Get(name string) GangScheduler {
+func (r *Registry) Get(name string) gang_schedule.GangScheduler {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	return r.registry[name]
