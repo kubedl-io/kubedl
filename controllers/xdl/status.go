@@ -134,7 +134,7 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 		return err
 	}
 	if !previousRunning {
-		r.ctrl.Metrics.LaunchDelay(xdlJob, *jobStatus)
+		r.ctrl.Metrics.LaunchDelaySeconds(xdlJob, *jobStatus)
 	}
 	return nil
 }

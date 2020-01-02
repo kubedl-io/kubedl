@@ -111,7 +111,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Error(err, "Append job condition error")
 					return err
 				}
-				r.ctrl.Metrics.LaunchDelay(xgboostJob, *jobStatus)
+				r.ctrl.Metrics.LaunchDelaySeconds(xgboostJob, *jobStatus)
 			}
 			// when master is succeed, the job is finished.
 			if expected == 0 {
@@ -167,7 +167,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		log.Error(err, "failed to update XGBoost Job conditions")
 		return err
 	}
-	r.ctrl.Metrics.LaunchDelay(xgboostJob, *jobStatus)
+	r.ctrl.Metrics.LaunchDelaySeconds(xgboostJob, *jobStatus)
 	return nil
 }
 
