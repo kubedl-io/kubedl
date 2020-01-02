@@ -23,6 +23,8 @@ import (
 	"github.com/alibaba/kubedl/pkg/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -48,34 +50,40 @@ var (
 		Name: "kubedl_jobs_restarted",
 		Help: "Counts number of jobs restarted",
 	}, []string{"kind"})
-	launchDelayHist = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "kubedl_jobs_launch_delay",
-		Help: "Histogram for recording launch delay duration(from job created to job running) of each job.",
+	firstPodLaunchDelayHist = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "kubedl_jobs_first_pod_launch_delay_seconds",
+		Help: "Histogram for recording launch delay duration(from job created to first pod running).",
+	}, []string{"kind", "name", "namespace", "uid"})
+	allPodsLaunchDelayHist = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "kubedl_jobs_all_pods_launch_delay_seconds",
+		Help: "Histogram for recording sync launch delay duration(from job created to all pods running).",
 	}, []string{"kind", "name", "namespace", "uid"})
 )
 
 // JobMetrics holds the kinds of metrics counter for some type of job workload.
 type JobMetrics struct {
-	kind        string
-	created     prometheus.Counter
-	deleted     prometheus.Counter
-	success     prometheus.Counter
-	failure     prometheus.Counter
-	restart     prometheus.Counter
-	launchDelay *prometheus.HistogramVec
+	kind                string
+	created             prometheus.Counter
+	deleted             prometheus.Counter
+	success             prometheus.Counter
+	failure             prometheus.Counter
+	restart             prometheus.Counter
+	firstPodLaunchDelay *prometheus.HistogramVec
+	allPodsLaunchDelay  *prometheus.HistogramVec
 }
 
 func NewJobMetrics(kind string, client client.Client) *JobMetrics {
-	kind = strings.ToLower(kind)
-	label := prometheus.Labels{"kind": kind}
+	lowerKind := strings.ToLower(kind)
+	label := prometheus.Labels{"kind": lowerKind}
 	metrics := &JobMetrics{
-		kind:        kind,
-		created:     created.With(label),
-		deleted:     deleted.With(label),
-		success:     success.With(label),
-		failure:     failure.With(label),
-		restart:     restart.With(label),
-		launchDelay: launchDelayHist,
+		kind:                kind,
+		created:             created.With(label),
+		deleted:             deleted.With(label),
+		success:             success.With(label),
+		failure:             failure.With(label),
+		restart:             restart.With(label),
+		firstPodLaunchDelay: firstPodLaunchDelayHist,
+		allPodsLaunchDelay:  allPodsLaunchDelayHist,
 	}
 	// Register running gauge func on center prometheus demand pull.
 	// Different kinds of workload metrics share the same metric name and help info,
@@ -97,7 +105,9 @@ func NewJobMetrics(kind string, client client.Client) *JobMetrics {
 		Help:        "Counts number of jobs pending currently",
 		ConstLabels: label,
 	}, func() float64 {
-		pending, err := JobStatusCounter(kind, client, util.IsCreated)
+		pending, err := JobStatusCounter(kind, client, func(status v1.JobStatus) bool {
+			return util.IsCreated(status) && len(status.Conditions) == 1
+		})
 		if err != nil {
 			return 0
 		}
@@ -126,16 +136,35 @@ func (m *JobMetrics) RestartInc() {
 	m.restart.Inc()
 }
 
-func (m *JobMetrics) LaunchDelay(job metav1.Object, status v1.JobStatus) {
+func (m *JobMetrics) FirstPodLaunchDelaySeconds(job metav1.Object, status v1.JobStatus) {
 	cond := util.GetCondition(status, v1.JobRunning)
 	if cond == nil {
 		return
 	}
 	delay := metav1.Now().Time.Sub(status.StartTime.Time).Seconds()
-	m.launchDelay.With(prometheus.Labels{
+	m.firstPodLaunchDelay.With(prometheus.Labels{
 		"kind":      m.kind,
 		"name":      job.GetName(),
 		"namespace": job.GetNamespace(),
 		"uid":       string(job.GetUID()),
 	}).Observe(delay)
+}
+
+func (m *JobMetrics) AllPodsLaunchDelaySeconds(pods []*corev1.Pod, job metav1.Object, status v1.JobStatus) {
+	finalTime := status.StartTime.Time
+	for _, pod := range pods {
+		if pod.Status.Phase != corev1.PodRunning {
+			return
+		}
+		if pod.Status.StartTime.After(finalTime) {
+			finalTime = pod.Status.StartTime.Time
+		}
+	}
+	syncDelay := status.StartTime.Sub(finalTime).Seconds()
+	m.allPodsLaunchDelay.With(prometheus.Labels{
+		"kind":      m.kind,
+		"name":      job.GetName(),
+		"namespace": job.GetNamespace(),
+		"uid":       string(job.GetUID()),
+	}).Observe(syncDelay)
 }

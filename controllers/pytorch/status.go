@@ -57,7 +57,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						log.Info("Append job condition", " error:", err)
 						return err
 					}
-					r.ctrl.Metrics.LaunchDelay(pytorchJob, *jobStatus)
+					r.ctrl.Metrics.FirstPodLaunchDelaySeconds(pytorchJob, *jobStatus)
 				}
 				if expected == 0 {
 					msg := fmt.Sprintf("PyTorchJob %s is successfully completed.", pytorchJob.Name)

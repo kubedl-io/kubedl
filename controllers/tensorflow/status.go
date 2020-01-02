@@ -122,7 +122,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
-					r.ctrl.Metrics.LaunchDelay(tfJob, *jobStatus)
+					r.ctrl.Metrics.FirstPodLaunchDelaySeconds(tfJob, *jobStatus)
 				}
 				if expected == 0 {
 					msg := fmt.Sprintf("TFJob %s successfully completed.", tfJob.Name)
@@ -163,7 +163,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
-					r.ctrl.Metrics.LaunchDelay(tfJob, *jobStatus)
+					r.ctrl.Metrics.FirstPodLaunchDelaySeconds(tfJob, *jobStatus)
 				}
 			}
 		}
