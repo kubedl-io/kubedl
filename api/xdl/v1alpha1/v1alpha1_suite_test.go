@@ -23,12 +23,11 @@ import (
 	"testing"
 
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
-var cfg *rest.Config
 var c client.Client
 
 func TestMain(m *testing.M) {
@@ -41,15 +40,16 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	if cfg, err = t.Start(); err != nil {
+	if _, err = t.Start(); err != nil {
 		log.Fatal(err)
 	}
 
-	if c, err = client.New(cfg, client.Options{Scheme: scheme.Scheme}); err != nil {
-		log.Fatal(err)
-	}
+	c = fake.NewFakeClientWithScheme(scheme.Scheme)
 
 	code := m.Run()
-	t.Stop()
+	err = t.Stop()
+	if err != nil {
+		log.Fatal(err)
+	}
 	os.Exit(code)
 }

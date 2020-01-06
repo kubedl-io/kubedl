@@ -70,7 +70,11 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 	}
 	flag.Parse()
 
-	mode = flag.Lookup("mode").Value.(flag.Getter).Get().(string)
+	if flag.Lookup("mode") == nil {
+		mode = "local"
+	} else {
+		mode = flag.Lookup("mode").Value.(flag.Getter).Get().(string)
+	}
 	if mode == "local" {
 		log.Info("Running controller in local mode, using kubeconfig file")
 		/// TODO, add the master url and kubeconfigpath with user input

@@ -17,9 +17,12 @@ package api
 
 import (
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
+	"k8s.io/kubernetes/pkg/apis/apps"
 )
 
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes, v1alpha1.SchemeBuilder.AddToScheme)
+	// Deployment is watched by xgboost controller
+	AddToSchemes = append(AddToSchemes, apps.AddToScheme)
 }
