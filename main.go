@@ -21,9 +21,9 @@ import (
 	"os"
 
 	"github.com/alibaba/kubedl/api"
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
-	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -48,16 +48,20 @@ func main() {
 		mode                 string
 		metricsAddr          int
 		enableLeaderElection bool
-		ctrlConfig           job_controller.JobControllerConfiguration
 	)
 	flag.StringVar(&ctrlMetricsAddr, "controller-metrics-addr", ":8080", "The address the controller metric endpoint binds to.")
 	flag.IntVar(&metricsAddr, "metrics-addr", 8443, "The address the default endpoints binds to.")
 	flag.StringVar(&mode, "mode", "local", "The mode in which xgboost-operator to run")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	flag.BoolVar(&ctrlConfig.EnableGangScheduling, "enable-gang-schedule", false, "enable gang scheduling for workloads")
-	flag.StringVar(&ctrlConfig.GangSchedulerName, "gang-scheduler-name", "default-scheduler", "specify the name of gang scheduler")
+	flag.BoolVar(&options.CtrlConfig.EnableGangScheduling, "enable-gang-schedule", false, "enable gang scheduling for workloads")
+	flag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "default-scheduler", "specify the name of gang scheduler")
+	flag.IntVar(&options.CtrlConfig.MaxConcurrentReconciles, "max-reconciles", 1, "specify the number of max concurrent reconciles of each controller")
 	flag.Parse()
+
+	if options.CtrlConfig.MaxConcurrentReconciles <= 0 {
+		options.CtrlConfig.MaxConcurrentReconciles = 1
+	}
 
 	ctrl.SetLogger(zap.Logger(true))
 
@@ -82,7 +86,7 @@ func main() {
 	registry.RegisterGangSchedulers(mgr)
 
 	// Setup all controllers with provided manager.
-	if err = controllers.SetupWithManager(mgr, ctrlConfig); err != nil {
+	if err = controllers.SetupWithManager(mgr, options.CtrlConfig); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KubeDL")
 		os.Exit(1)
 	}
