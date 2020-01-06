@@ -235,6 +235,9 @@ func (jc *JobController) ReconcileJobs(
 		log.Warnf("UpdateJobStatus error %v", err)
 		return result, err
 	}
+
+	jc.Metrics.AllPodsLaunchDelaySeconds(pods, metaObject, jobStatus)
+
 	// No need to update the job status if the status hasn't changed since last time.
 	if !reflect.DeepEqual(*oldStatus, jobStatus) {
 		return result, jc.Controller.UpdateJobStatusInApiServer(job, &jobStatus)
