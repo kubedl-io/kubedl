@@ -19,37 +19,23 @@ package v1
 import (
 	"log"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
 var c client.Client
 
 func TestMain(m *testing.M) {
-	t := &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "..", "..", "..", "config", "crds")},
-	}
-
 	err := SchemeBuilder.AddToScheme(scheme.Scheme)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	if _, err = t.Start(); err != nil {
 		log.Fatal(err)
 	}
 
 	c = fake.NewFakeClientWithScheme(scheme.Scheme)
 
 	code := m.Run()
-	err = t.Stop()
-	if err != nil {
-		log.Fatal(err)
-	}
 	os.Exit(code)
 }
