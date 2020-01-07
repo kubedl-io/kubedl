@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -167,7 +168,10 @@ func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Resul
 // SetupWithManager setup reconciler to the Manager with default RBAC. The Manager will set fields on the
 // Controller and Start it when the Manager is Started.
 func (r *XgboostJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	c, err := controller.New(r.ControllerName(), mgr, controller.Options{Reconciler: r})
+	c, err := controller.New(r.ControllerName(), mgr, controller.Options{
+		Reconciler:              r,
+		MaxConcurrentReconciles: options.CtrlConfig.MaxConcurrentReconciles,
+	})
 	if err != nil {
 		return err
 	}

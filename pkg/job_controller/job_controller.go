@@ -27,6 +27,13 @@ var (
 
 // JobControllerConfiguration contains configuration of operator.
 type JobControllerConfiguration struct {
+	// Enable gang scheduling by abstract GangScheduler.
+	EnableGangScheduling bool
+
+	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run.
+	// Defaults to 1.
+	MaxConcurrentReconciles int
+
 	// ReconcilerSyncLoopPeriod is the amount of time the reconciler sync states loop
 	// wait between two reconciler sync.
 	// It is set to 15 sec by default.
@@ -35,10 +42,7 @@ type JobControllerConfiguration struct {
 	// e.g. 15s, 30s, 60s, 120s...
 	ReconcilerSyncLoopPeriod metav1.Duration
 
-	// Enable gang scheduling by abstract GangScheduler.
-	EnableGangScheduling bool
-
-	// Gang scheduler name.
+	// Name of global default gang scheduler.
 	GangSchedulerName string
 }
 

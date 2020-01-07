@@ -19,7 +19,11 @@ package pytorch
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+
 	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -39,8 +43,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -124,7 +126,10 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 }
 
 func (r *PytorchJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	c, err := controller.New(r.ControllerName(), mgr, controller.Options{Reconciler: r})
+	c, err := controller.New(r.ControllerName(), mgr, controller.Options{
+		Reconciler:              r,
+		MaxConcurrentReconciles: options.CtrlConfig.MaxConcurrentReconciles,
+	})
 	if err != nil {
 		return err
 	}
