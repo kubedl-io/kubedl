@@ -54,8 +54,8 @@ func main() {
 	flag.StringVar(&mode, "mode", "local", "The mode in which xgboost-operator to run")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	flag.BoolVar(&options.CtrlConfig.EnableGangScheduling, "enable-gang-schedule", false, "enable gang scheduling for workloads")
-	flag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "default-scheduler", "specify the name of gang scheduler")
+	flag.BoolVar(&options.CtrlConfig.EnableGangScheduling, "enable-gang-scheduling", false, "enable gang scheduling for workloads")
+	flag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "kube-batch", "specify the name of gang scheduler")
 	flag.IntVar(&options.CtrlConfig.MaxConcurrentReconciles, "max-reconciles", 1, "specify the number of max concurrent reconciles of each controller")
 	flag.Parse()
 
