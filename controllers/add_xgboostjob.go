@@ -16,13 +16,18 @@ limitations under the License.
 package controllers
 
 import (
+	"flag"
+
 	xgboostjob "github.com/alibaba/kubedl/controllers/xgboost"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
+var mode string
+
 func init() {
 	SetupWithManagerMap["xgboost"] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+		flag.StringVar(&mode, "mode", "local", "The mode in which xgboost-operator to run")
 		return xgboostjob.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
 }
