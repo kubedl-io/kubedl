@@ -18,10 +18,13 @@ package v1alpha1
 import (
 	"testing"
 
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 func TestStorageXGBoostJob(t *testing.T) {
@@ -33,25 +36,50 @@ func TestStorageXGBoostJob(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "default",
-		}}
+		},
+		Spec: XGBoostJobSpec{
+			XGBReplicaSpecs: make(map[v1.ReplicaType]*v1.ReplicaSpec),
+		},
+		Status: XGBoostJobStatus{
+			JobStatus: v1.JobStatus{
+				ReplicaStatuses: map[v1.ReplicaType]*v1.ReplicaStatus{},
+			},
+		},
+	}
 	g := gomega.NewGomegaWithT(t)
 
-	// Test Create
-	fetched := &XGBoostJob{}
 	g.Expect(c.Create(context.TODO(), created)).NotTo(gomega.HaveOccurred())
 
+	// Test Create
+	expected := &XGBoostJob{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "default",
+		},
+		Spec: XGBoostJobSpec{
+			XGBReplicaSpecs: make(map[v1.ReplicaType]*v1.ReplicaSpec),
+		},
+		Status: XGBoostJobStatus{
+			JobStatus: v1.JobStatus{
+				ReplicaStatuses: map[v1.ReplicaType]*v1.ReplicaStatus{},
+			},
+		},
+	}
+	scheme.Scheme.Default(expected)
+
+	fetched := &XGBoostJob{}
 	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(created))
+	g.Expect(expected).To(gomega.Equal(fetched))
 
 	// Test Updating the Labels
-	updated := fetched.DeepCopy()
+	updated := expected.DeepCopy()
 	updated.Labels = map[string]string{"hello": "world"}
 	g.Expect(c.Update(context.TODO(), updated)).NotTo(gomega.HaveOccurred())
 
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(updated))
+	g.Expect(c.Get(context.TODO(), key, expected)).NotTo(gomega.HaveOccurred())
+	g.Expect(expected).To(gomega.Equal(updated))
 
 	// Test Delete
-	g.Expect(c.Delete(context.TODO(), fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(c.Get(context.TODO(), key, fetched)).To(gomega.HaveOccurred())
+	g.Expect(c.Delete(context.TODO(), expected)).NotTo(gomega.HaveOccurred())
+	g.Expect(c.Get(context.TODO(), key, expected)).To(gomega.HaveOccurred())
 }

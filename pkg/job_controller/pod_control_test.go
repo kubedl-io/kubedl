@@ -15,60 +15,62 @@
 package job_controller
 
 import (
-	"encoding/json"
-	"net/http/httptest"
-	"testing"
+	"context"
 
-	"github.com/stretchr/testify/assert"
+	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
 	"k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
-	utiltesting "k8s.io/client-go/util/testing"
-	"k8s.io/kubernetes/pkg/api/testapi"
-
-	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
 )
 
-func TestCreatePods(t *testing.T) {
-	ns := metav1.NamespaceDefault
-	body := runtime.EncodeOrDie(testapi.Default.Codec(), &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "empty_pod"}})
-	fakeHandler := utiltesting.FakeHandler{
-		StatusCode:   200,
-		ResponseBody: string(body),
-	}
-	testServer := httptest.NewServer(&fakeHandler)
-	defer testServer.Close()
+var _ = Describe("PodControl", func() {
 
-	podControl := PodControl{
-		client:   fakeClient{},
-		recorder: &record.FakeRecorder{},
-	}
+	BeforeEach(func() {
+		// Add any setup steps that needs to be executed before each test
+	})
 
-	testJob := testutilv1.NewTestJob(1)
+	AfterEach(func() {
+		// Add any teardown steps that needs to be executed after each test
+	})
 
-	testName := "pod-name"
-	podTemplate := testutilv1.NewTestReplicaSpecTemplate()
-	podTemplate.Name = testName
-	podTemplate.Labels = testutilv1.GenLabels(testJob.Name)
-	podTemplate.SetOwnerReferences([]metav1.OwnerReference{})
+	Context("Pod Control", func() {
+		It("Should create successfully", func() {
+			testName := "pod-name"
 
-	// Make sure createReplica sends a POST to the apiserver with a pod from the controllers pod template
-	err := podControl.CreatePods(ns, &podTemplate, testJob)
-	assert.NoError(t, err, "unexpected error: %v", err)
+			podControl := PodControl{
+				client:   k8sClient,
+				recorder: &record.FakeRecorder{},
+			}
+			testJob := testutilv1.NewTestJob(1)
 
-	expectedPod := v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels: testutilv1.GenLabels(testJob.Name),
-			Name:   testName,
-		},
-		Spec: podTemplate.Spec,
-	}
-	fakeHandler.ValidateRequest(t, testapi.Default.ResourcePath("pods", metav1.NamespaceDefault, ""), "POST", nil)
-	var actualPod = &v1.Pod{}
-	err = json.Unmarshal([]byte(fakeHandler.RequestBody), actualPod)
-	assert.NoError(t, err, "unexpected error: %v", err)
-	assert.True(t, apiequality.Semantic.DeepDerivative(&expectedPod, actualPod),
-		"Body: %s", fakeHandler.RequestBody)
-}
+			podTemplate := testutilv1.NewTestReplicaSpecTemplate()
+			podTemplate.Name = testName
+			podTemplate.Namespace = testJob.Namespace
+			podTemplate.Labels = testutilv1.GenLabels(testJob.Name)
+			podTemplate.SetOwnerReferences([]metav1.OwnerReference{})
+
+			// Make sure createReplica sends a POST to the apiserver with a pod from the controllers pod template
+			err := podControl.CreatePods(testJob.Namespace, &podTemplate, testJob)
+			Expect(err).Should(Succeed())
+
+			expectedPod := v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:    testutilv1.GenLabels(testJob.Name),
+					Name:      testName,
+					Namespace: testJob.Namespace,
+				},
+				Spec: podTemplate.Spec,
+			}
+
+			actualPod := &v1.Pod{}
+			err = podControl.client.Get(context.Background(), types.NamespacedName{Namespace: testJob.Namespace, Name: testName}, actualPod)
+			Expect(err).Should(Succeed())
+			Expect(apiequality.Semantic.DeepDerivative(&expectedPod, actualPod)).Should(BeTrue())
+		})
+	})
+})

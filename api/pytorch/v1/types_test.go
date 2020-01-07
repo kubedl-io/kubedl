@@ -14,32 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1
 
 import (
 	"context"
 	"testing"
 
-	"github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/onsi/gomega"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-func TestStorageXDLJob(t *testing.T) {
+func TestStoragePytorchJob(t *testing.T) {
 	key := types.NamespacedName{
 		Name:      "foo",
 		Namespace: "default",
 	}
-	created := &XDLJob{
+	created := &PyTorchJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "default",
 		},
-		Spec: XDLJobSpec{
-			XDLReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{},
+		Spec: PyTorchJobSpec{
+			PyTorchReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{},
 		},
 		Status: v1.JobStatus{
 			ReplicaStatuses: map[v1.ReplicaType]*v1.ReplicaStatus{},
@@ -48,13 +47,13 @@ func TestStorageXDLJob(t *testing.T) {
 	}
 	g := gomega.NewGomegaWithT(t)
 
-	expected := &XDLJob{
+	expected := &PyTorchJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "default",
 		},
-		Spec: XDLJobSpec{
-			XDLReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{},
+		Spec: PyTorchJobSpec{
+			PyTorchReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{},
 		},
 		Status: v1.JobStatus{
 			ReplicaStatuses: map[v1.ReplicaType]*v1.ReplicaStatus{},
@@ -64,7 +63,7 @@ func TestStorageXDLJob(t *testing.T) {
 	scheme.Scheme.Default(expected)
 
 	// Test Create
-	fetched := &XDLJob{}
+	fetched := &PyTorchJob{}
 	g.Expect(c.Create(context.TODO(), created)).NotTo(gomega.HaveOccurred())
 
 	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())

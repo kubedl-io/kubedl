@@ -145,6 +145,7 @@ func (r PodControl) createPods(nodeName, namespace string, template *v1.PodTempl
 	if len(nodeName) != 0 {
 		pod.Spec.NodeName = nodeName
 	}
+	pod.Namespace = namespace
 	if labels.Set(pod.Labels).AsSelectorPreValidated().Empty() {
 		return fmt.Errorf("unable to create pods, no labels")
 	}
