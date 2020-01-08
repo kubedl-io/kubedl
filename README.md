@@ -106,7 +106,7 @@ To develop/debug KubeDL controller manager locally, please check the [debug guid
 If you have any questions or want to contribute, GitHub issues or pull requests are warmly welcome.
 You can also contact us via the following channels:
 
-Slack:
+Slack: [Join the Channel](https://join.slack.com/t/kubedl/shared_invite/enQtOTAwNjI5NjUyNjMxLWU3N2UxMzdjZWQ0YTc3MzE1NWUxZWU1MmVkMmZhNWIxOTUyZDc1OWVhMTA4NmRkYmVjMzkxNTllNGY4NGYwZTc)
 
 Dingtalk:
 
