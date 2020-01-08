@@ -1,7 +1,6 @@
 # KubeDL
 
-> A unified framework for deep-learning/machine-learning operators on Kubernetes.
-
+> A unified operator for running deep-learning/machine-learning workloads on Kubernetes.
 
 KubeDL is short for **Kube**rnetes-**D**eep-**L**earning. It is a unified operator that supports running
 multiple types of distributed deep learning/machine learning workloads on Kubernetes.
