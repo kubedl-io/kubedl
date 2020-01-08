@@ -111,7 +111,7 @@ You can also contact us via the following channels:
 - Dingtalk Group(钉钉讨论群)
 
 <div align="center">
-  <img src="docs/img/kubedl.JPG.JPG" width="250" title="dingtalk">
+  <img src="docs/img/kubedl.JPG" width="250" title="dingtalk">
 </div>
 
 ## Copyright
