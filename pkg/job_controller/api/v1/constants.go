@@ -16,3 +16,10 @@ const (
 	// JobRoleLabel represents the label key for the job role, e.g. the value is master
 	JobRoleLabel = "job-role"
 )
+
+// Constant label/annotation keys for job configuration.
+const (
+	KubeDLPrefix = "kubedl.io"
+
+	AnnotationCodeSyncConfig = KubeDLPrefix + "/code-sync-config"
+)
