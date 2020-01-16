@@ -18,24 +18,27 @@ package controllers
 
 import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/util/flaggate"
+	"github.com/alibaba/kubedl/pkg/util/workloadgate"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 // SetupWithManagerFunc is a list of functions to setup all controllers to the manager.
-var SetupWithManagerMap = make(map[string]func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error)
+var SetupWithManagerMap = make(map[runtime.Object]func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error)
 
 // SetupWithManager setups all controllers to the manager.
 func SetupWithManager(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
 	for workload, f := range SetupWithManagerMap {
-		if !flaggate.IsWorkloadEnable(workload) {
-			klog.Warningf("skip workload %s for it is not enabled.", workload)
+		kind, enabled := workloadgate.IsWorkloadEnable(workload, mgr.GetScheme())
+		if !enabled {
+			klog.Warningf("skip workload %v because it is not enabled.", kind)
 			continue
 		}
 		if err := f(mgr, config); err != nil {
 			return err
 		}
+		klog.Infof("workload %v controller has started.", kind)
 	}
 	return nil
 }

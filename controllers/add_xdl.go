@@ -17,13 +17,14 @@ limitations under the License.
 package controllers
 
 import (
+	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
 	xdljob "github.com/alibaba/kubedl/controllers/xdl"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"sigs.k8s.io/controller-runtime"
 )
 
 func init() {
-	SetupWithManagerMap["xdl"] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+	SetupWithManagerMap[&xdlv1alpha1.XDLJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
 		return xdljob.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
 }

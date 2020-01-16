@@ -18,6 +18,7 @@ package controllers
 import (
 	"flag"
 
+	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
 	xgboostjob "github.com/alibaba/kubedl/controllers/xgboost"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -26,7 +27,7 @@ import (
 var mode string
 
 func init() {
-	SetupWithManagerMap["xgboost"] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+	SetupWithManagerMap[&v1alpha1.XGBoostJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
 		flag.StringVar(&mode, "mode", "local", "The mode in which xgboost-operator to run")
 		return xgboostjob.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
