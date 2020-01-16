@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	envWorkloadEnable = "WORKLOAD_ENABLE"
+	envWorkloadEnable = "WORKLOADS_ENABLE"
 	autoDetectOption  = "auto"
 )
 
