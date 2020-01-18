@@ -21,5 +21,5 @@ const (
 const (
 	KubeDLPrefix = "kubedl.io"
 
-	AnnotationCodeSyncConfig = KubeDLPrefix + "/code-sync-config"
+	AnnotationGitSyncConfig = KubeDLPrefix + "/git-sync-config"
 )

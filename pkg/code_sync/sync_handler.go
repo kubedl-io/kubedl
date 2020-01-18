@@ -1,38 +1,22 @@
 package code_sync
 
 import (
-	"encoding/json"
-	"fmt"
 	"path"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	DefaultCodeRootPath = "/code"
 )
 
-type CodeSyncMode string
-
-const (
-	GitSyncMode  CodeSyncMode = "git"
-	HttpSyncMode CodeSyncMode = "http"
-	HDFDSyncMode CodeSyncMode = "hdfs"
-)
-
 type CodeSyncHandler interface {
-	GenerateInitContainer(optsConfig []byte, mountVolumeName string) (v1.Container, SyncOptions, error)
-}
-
-type mode struct {
-	// Code sync mode: git, http, hdfs...(required)
-	Mode CodeSyncMode `json:"mode"`
+	InitContainer(optsConfig []byte, mountVolume *v1.Volume) (c *v1.Container, codePath string, err error)
 }
 
 type SyncOptions struct {
-	mode `json:",inline"`
 	// Code source address.(required)
 	Source string `json:"source"`
 	// Image contains toolkits to execute syncing code.
@@ -46,54 +30,43 @@ type SyncOptions struct {
 	Envs []v1.EnvVar `json:"envs,omitempty"`
 }
 
-func InjectCodeSyncInitContainers(config string, specs map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
-	var (
-		handler CodeSyncHandler
-		mode    mode
-	)
+func InjectCodeSyncInitContainers(metaObj metav1.Object, specs map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
+	var err error
 
-	cfgBytes := []byte(config)
-	err := json.Unmarshal(cfgBytes, &mode)
-	if err != nil {
-		return err
+	if cfg, ok := metaObj.GetAnnotations()[apiv1.AnnotationGitSyncConfig]; ok {
+		if err = injectCodeSyncInitContainer([]byte(cfg), &gitSyncHandler{}, specs, &v1.Volume{
+			Name:         "git-sync",
+			VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{}},
+		}); err != nil {
+			return err
+		}
 	}
 
-	if handler = newSyncHandler(&mode); handler == nil {
-		return fmt.Errorf("unspported sync mode: %s", mode.Mode)
-	}
+	// TODO(SimonCqk): support other sources.
 
-	syncVolume := v1.Volume{
-		Name:         "code-sync",
-		VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{}},
-	}
+	return nil
+}
 
-	initContainer, opts, err := handler.GenerateInitContainer(cfgBytes, syncVolume.Name)
+func injectCodeSyncInitContainer(optsConfig []byte, handler CodeSyncHandler, specs map[apiv1.ReplicaType]*apiv1.ReplicaSpec, mountVolume *v1.Volume) error {
+	initContainer, dest, err := handler.InitContainer(optsConfig, mountVolume)
 	if err != nil {
 		return err
 	}
 
 	for _, spec := range specs {
 		initContainer.Resources = *spec.Template.Spec.Containers[0].Resources.DeepCopy()
-		spec.Template.Spec.InitContainers = append(spec.Template.Spec.InitContainers, initContainer)
+		spec.Template.Spec.InitContainers = append(spec.Template.Spec.InitContainers, *initContainer)
 
 		// Inject volumes and volume mounts into main containers.
-		spec.Template.Spec.Volumes = append(spec.Template.Spec.Volumes, syncVolume)
+		spec.Template.Spec.Volumes = append(spec.Template.Spec.Volumes, *mountVolume)
 		for idx := range spec.Template.Spec.Containers {
 			container := &spec.Template.Spec.Containers[idx]
 			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-				Name:      syncVolume.Name,
+				Name:      mountVolume.Name,
 				ReadOnly:  false,
-				MountPath: path.Join(container.WorkingDir, opts.DestPath),
+				MountPath: path.Join(container.WorkingDir, dest),
 			})
 		}
-	}
-	return nil
-}
-
-func newSyncHandler(m *mode) CodeSyncHandler {
-	switch m.Mode {
-	case GitSyncMode:
-		return &gitSyncHandler{}
 	}
 	return nil
 }

@@ -109,14 +109,12 @@ func (jc *JobController) ReconcileJobs(
 
 	oldStatus := jobStatus.DeepCopy()
 
-	if cfg, ok := metaObject.GetAnnotations()[apiv1.AnnotationCodeSyncConfig]; ok {
-		err := code_sync.InjectCodeSyncInitContainers(cfg, replicas)
-		if err != nil {
-			log.Error(err, "failed to inject code sync init container")
-			return reconcile.Result{}, err
-		}
-		// TODO(SimonCqk): update job conditions failed ?
+	err = code_sync.InjectCodeSyncInitContainers(metaObject, replicas)
+	if err != nil {
+		log.Error(err, "failed to inject code sync init container")
+		return reconcile.Result{}, err
 	}
+	// TODO(SimonCqk): update job conditions failed ?
 
 	pods, err := jc.Controller.GetPodsForJob(job)
 	if err != nil {

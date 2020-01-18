@@ -17,6 +17,8 @@ var _ CodeSyncHandler = &gitSyncHandler{}
 type gitSyncOptions struct {
 	SyncOptions `json:",inline"`
 
+	// All fields down below are optional.
+
 	// Git repository settings for user to specify.
 	Branch   string `json:"branch,omitempty"`
 	Revision string `json:"revision,omitempty"`
@@ -33,12 +35,11 @@ type gitSyncOptions struct {
 
 type gitSyncHandler struct{}
 
-func (h *gitSyncHandler) GenerateInitContainer(optsConfig []byte, mountVolumeName string) (v1.Container, SyncOptions, error) {
+func (h *gitSyncHandler) InitContainer(optsConfig []byte, mountVolume *v1.Volume) (*v1.Container, string, error) {
 	opts := gitSyncOptions{}
 	if err := json.Unmarshal(optsConfig, &opts); err != nil {
-		return v1.Container{}, SyncOptions{}, err
+		return nil, "", err
 	}
-
 	setDefaultSyncOpts(&opts)
 	setSyncOptsEnvs(&opts)
 
@@ -49,13 +50,13 @@ func (h *gitSyncHandler) GenerateInitContainer(optsConfig []byte, mountVolumeNam
 		ImagePullPolicy: v1.PullIfNotPresent,
 		VolumeMounts: []v1.VolumeMount{
 			{
-				Name:      mountVolumeName,
+				Name:      mountVolume.Name,
 				ReadOnly:  false,
 				MountPath: opts.RootPath,
 			},
 		},
 	}
-	return container, opts.SyncOptions, nil
+	return &container, opts.DestPath, nil
 }
 
 func setDefaultSyncOpts(opts *gitSyncOptions) {
