@@ -3,19 +3,20 @@ package job_controller
 import (
 	"fmt"
 	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/alibaba/kubedl/pkg/code_sync"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+	log "github.com/sirupsen/logrus"
 )
 
 // Reasons for job events.
@@ -107,15 +108,21 @@ func (jc *JobController) ReconcileJobs(
 	}
 
 	oldStatus := jobStatus.DeepCopy()
-	pods, err := jc.Controller.GetPodsForJob(job)
 
+	err = code_sync.InjectCodeSyncInitContainers(metaObject, replicas)
+	if err != nil {
+		log.Error(err, "failed to inject code sync init container")
+		return reconcile.Result{}, err
+	}
+	// TODO(SimonCqk): update job conditions failed ?
+
+	pods, err := jc.Controller.GetPodsForJob(job)
 	if err != nil {
 		log.Warnf("GetPodsForJob error %v", err)
 		return result, err
 	}
 
 	services, err := jc.Controller.GetServicesForJob(job)
-
 	if err != nil {
 		log.Warnf("GetServicesForJob error %v", err)
 		return result, err
