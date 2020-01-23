@@ -5,20 +5,20 @@ multiple types of distributed deep learning/machine learning workloads on Kubern
 
 Currently, KubeDL supports the following types of ML/DL jobs:
 
-1. [Tensorflow](https://github.com/tensorflow/tensorflow)
-2. [Pytorch](https://github.com/pytorch/pytorch)
-3. [XGBoost](https://github.com/dmlc/xgboost)
-4. [XDL](https://github.com/alibaba/x-deeplearning/tree/master/xdl/xdl)
+- [TensorFlow](https://github.com/tensorflow/tensorflow)
+- [PyTorch](https://github.com/pytorch/pytorch)
+- [XGBoost](https://github.com/dmlc/xgboost)
+- [XDL](https://github.com/alibaba/x-deeplearning/)
 
 KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-operator), [pytorch-operator](https://github.com/kubeflow/pytorch-operator),
 [xgboost-operator](https://github.com/kubeflow/xgboost-operator) and integrates them with enhanced features as below:
 
 - Support running prevalent ML/DL workloads in a single operator.
 - Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
-- Support gang scheduling with a pluggable interface to support different backend gang schedulers.
-- Enable specific workload type according to the installed CRDs or user-provided flags..
-- Support running a job (in the form of YAML) with source code from github/remote store(e.g. hdfs) without rebuilding the image
+- Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
+- Support running a job (in the form of YAML) with [source code from github](./docs/sync_code.md ) without rebuilding the image.
 - A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
+- Support gang scheduling with a pluggable interface to support different backend gang schedulers.
 
 ## Getting started
 
@@ -38,6 +38,18 @@ kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/
 ```
 
 The official KubeDL operator image is hosted under [docker hub](https://hub.docker.com/r/kubedl/kubedl).
+
+#### Optional: Enable workload kind selectively
+
+If you only need some of the workload types and want to disable others, you can use either one of the three options or all of them:
+
+- Set env `WORKLOADS_ENABLE` in KubeDL container when you do deploying. The value is a list of workloads types that you want to enable. For example, `WORKLOADS_ENABLE=TFJob,PytorchJob` means only TFJob and PytorchJob workload are enabled, the others are disabled.
+
+- Set startup arguments `--workloads` in KubeDL container args when you do deploying. The value configuration is consistent with `WORKLOADS_ENABLE` env. 
+
+- **[DEFAULT]** Only install the CRDs you need, KubeDL will automatically enables corresponding workload controllers, you can set `--workloads auto` or `WORKLOADS_ENABLE=auto` explicitly. This is a recommended approach.
+
+
 
 ## Run an Example Job 
 
@@ -61,27 +73,14 @@ kubectl describe tfjob mnist -n kubedl
 kubectl delete tfjob mnist -n kubedl
 ```
 
-#### Optional: enable workloads selectively
-
-If you only need some of the workload types and want to disable others, you can use either one of the three options or all of them:
-
-1. Set env `WORKLOADS_ENABLE` in KubeDL container when you do deploying. The value is a list of workloads types that you want to enable. For example, `WORKLOADS_ENABLE=TFJob,PytorchJob` means only TFJob and PytorchJob workload are enabled, the others are disabled.
-
-2. Set startup arguments `--workloads` in KubeDL container args when you do deploying. The value configuration is consistent with `WORKLOADS_ENABLE` env. 
-
-3. **DEFAULTED.** Only install the CRDs you need, KubeDL will automatically enables corresponding workload controllers, you can set `--workloads auto` or `WORKLOADS_ENABLE=auto` explicitly. It's a recommended approach.
-
-
 ## Metrics
-See the [details](docs/metrics.md) for the prometheus metrics supported for KubeDL operator.
+Check the [documents](docs/metrics.md) for the prometheus metrics supported for KubeDL operator.
+
+## Code Sync
+KubeDL supports running jobs with source code synced from remote source dynamically without rebuilding the image.
+Check the [documents](docs/sync_code.md) for details.
 
 ## Developer Guide
-
-#### Download 
-
-```bash
-git clone http://github.com/alibaba/kubedl.git
-```
 
 #### Build the controller manager binary
 
