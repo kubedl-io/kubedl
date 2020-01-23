@@ -1,4 +1,4 @@
-package flaggate
+package workloadgate
 
 import (
 	"reflect"
@@ -53,7 +53,7 @@ func TestIsWorkloadEnable(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		enables, enableAll := parseWorkloadList(&c.workloads)
+		enables, enableAll := parseWorkloadsEnabled(c.workloads)
 		if !reflect.DeepEqual(enables, c.expectEnables) {
 			t.Fatalf("workloads: %s, expected: %v, got: %v", c.workloads, c.expectEnables, enables)
 		}

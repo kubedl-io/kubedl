@@ -16,7 +16,7 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 - Support running prevalent ML/DL workloads in a single operator.
 - Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
-- Enable specific job workload type selectively.
+- Enable specific workload type according to the installed CRDs or user-provided flags..
 - Support running a job (in the form of YAML) with source code from github/remote store(e.g. hdfs) without rebuilding the image
 - A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
 
@@ -60,6 +60,17 @@ kubectl describe tfjob mnist -n kubedl
 ```bash
 kubectl delete tfjob mnist -n kubedl
 ```
+
+#### Optional: enable workloads selectively
+
+If you only need some of the workload types and want to disable others, you can use either one of the three options or all of them:
+
+1. Set env `WORKLOADS_ENABLE` in KubeDL container when you do deploying. The value is a list of workloads types that you want to enable. For example, `WORKLOADS_ENABLE=TFJob,PytorchJob` means only TFJob and PytorchJob workload are enabled, the others are disabled.
+
+2. Set startup arguments `--workloads` in KubeDL container args when you do deploying. The value configuration is consistent with `WORKLOADS_ENABLE` env. 
+
+3. **DEFAULTED.** Only install the CRDs you need, KubeDL will automatically enables corresponding workload controllers, you can set `--workloads auto` or `WORKLOADS_ENABLE=auto` explicitly. It's a recommended approach.
+
 
 ## Metrics
 See the [details](docs/metrics.md) for the prometheus metrics supported for KubeDL operator.
