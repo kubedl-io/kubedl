@@ -1,5 +1,8 @@
 # KubeDL
 
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+[![Build Status](https://travis-ci.com/alibaba/kubedl.svg?branch=master)](https://travis-ci.com/alibaba/kubedl)
+
 KubeDL is short for **Kube**rnetes-**D**eep-**L**earning. It is a unified operator that supports running
 multiple types of distributed deep learning/machine learning workloads on Kubernetes.
 
