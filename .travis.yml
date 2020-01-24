@@ -9,6 +9,7 @@ before_script:
   - go mod download
 
 script:
+  - export KUBEDL_CI=true
   - make test
 
 after_script:
