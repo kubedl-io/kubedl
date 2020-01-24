@@ -308,7 +308,7 @@ spec:
         app: kubedl
     spec:
       containers:
-      - image: alibaba/kubedl:v1alpha1
+      - image: kubedl/kubedl:v0.1.0
         imagePullPolicy: Always
         name: kubedl-manager
         ports:
