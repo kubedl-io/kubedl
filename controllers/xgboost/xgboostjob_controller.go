@@ -14,8 +14,6 @@ package xgboostjob
 
 import (
 	"context"
-	"flag"
-	"path/filepath"
 
 	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
@@ -24,12 +22,11 @@ import (
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/util"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/kubernetes/pkg/apis/apps"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
@@ -46,13 +43,9 @@ import (
 
 const (
 	controllerName = "XGBoostController"
-	// gang scheduler name.
-	gangSchedulerName = "kube-batch"
 )
 
-var log = logf.Log.WithName("controller")
-
-const RecommendedKubeConfigPathEnv = "KUBECONFIG"
+var log = logf.Log.WithName("xgb-controller")
 
 // newReconciler returns a new reconcile.Reconciler
 func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfiguration) *XgboostJobReconciler {
@@ -61,39 +54,6 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-
-	var mode string
-	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig_", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig_", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	mode = flag.Lookup("mode").Value.(flag.Getter).Get().(string)
-	if mode == "local" {
-		log.Info("Running controller in local mode, using kubeconfig file")
-		/// TODO, add the master url and kubeconfigpath with user input
-		kcfg, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-		if err != nil {
-			log.Info("Error building kubeconfig: %s", err.Error())
-			panic(err.Error())
-		}
-		_ = kcfg
-	} else if mode == "in-cluster" {
-		log.Info("Running controller in in-cluster mode")
-		/// TODO, add the master url and kubeconfigpath with user input
-		kcfg, err := rest.InClusterConfig()
-		if err != nil {
-			log.Info("Error getting in-cluster kubeconfig")
-			panic(err.Error())
-		}
-		_ = kcfg
-	} else {
-		log.Info("Given mode is not valid: ", "mode", mode)
-		panic("-mode should be either local or in-cluster")
-	}
 
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
