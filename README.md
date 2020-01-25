@@ -17,9 +17,9 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 [xgboost-operator](https://github.com/kubeflow/xgboost-operator) and integrates them with enhanced features as below:
 
 - Support running prevalent ML/DL workloads in a single operator.
-- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
 - Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
-- Support running a job (in the form of YAML) with [source code from github](./docs/sync_code.md ) without rebuilding the image.
+- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
+- Support submitting a job with [source code from github](./docs/sync_code.md ) without rebuilding the image.
 - A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
 
@@ -50,9 +50,9 @@ If you only need some of the workload types and want to disable others, you can 
 
 - Set startup arguments `--workloads` in KubeDL container args when you do deploying. The value configuration is consistent with `WORKLOADS_ENABLE` env. 
 
-- **[DEFAULT]** Only install the CRDs you need, KubeDL will automatically enables corresponding workload controllers, you can set `--workloads auto` or `WORKLOADS_ENABLE=auto` explicitly. This is a recommended approach.
+- **[DEFAULT]** Only install the CRDs you need, KubeDL will automatically enables corresponding workload controllers, you can set `--workloads auto` or `WORKLOADS_ENABLE=auto` explicitly. This is the default approach.
 
-
+Check [documents](./docs/startup_flags.md) for a full list of operator startup flags.
 
 ## Run an Example Job 
 
