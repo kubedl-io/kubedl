@@ -52,10 +52,11 @@ func main() {
 	flag.IntVar(&metricsAddr, "metrics-addr", 8443, "The address the default endpoints binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	flag.BoolVar(&options.CtrlConfig.EnableGangScheduling, "enable-gang-scheduling", false, "enable gang scheduling for workloads")
-	flag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "kube-batch", "specify the name of gang scheduler")
+	flag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "", "specify the name of gang scheduler")
 	flag.IntVar(&options.CtrlConfig.MaxConcurrentReconciles, "max-reconciles", 1, "specify the number of max concurrent reconciles of each controller")
 	flag.Parse()
+
+	options.CtrlConfig.EnableGangScheduling = options.CtrlConfig.GangSchedulerName != ""
 
 	if options.CtrlConfig.MaxConcurrentReconciles <= 0 {
 		options.CtrlConfig.MaxConcurrentReconciles = 1
