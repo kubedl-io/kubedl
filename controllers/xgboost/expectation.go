@@ -18,14 +18,9 @@ package xgboostjob
 import (
 	"fmt"
 
-	v1alpha1 "github.com/alibaba/kubedl/api/xgboost/v1alpha1"
+	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // satisfiedExpectations returns true if the required adds/dels for the given job have been observed.
@@ -47,49 +42,4 @@ func (r *XgboostJobReconciler) satisfiedExpectations(xgbJob *v1alpha1.XGBoostJob
 		satisfied = satisfied || r.ctrl.Expectations.SatisfiedExpectations(expectationServicesKey)
 	}
 	return satisfied
-}
-
-// onDependentCreateFunc modify expectations when dependent (pod/service) creation observed.
-func onDependentCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
-	return func(e event.CreateEvent) bool {
-		reconciler, ok := r.(*XgboostJobReconciler)
-		if !ok {
-			return true
-		}
-		logrus.Info("Update on create function ", reconciler.ControllerName(), " create object ", e.Meta.GetName())
-		rtype := e.Meta.GetLabels()[v1.ReplicaTypeLabel]
-		if len(rtype) == 0 {
-			return false
-		}
-		if controllerRef := metav1.GetControllerOf(e.Meta); controllerRef != nil {
-			expectKey := job_controller.GenExpectationPodsKey(e.Meta.GetNamespace()+"/"+controllerRef.Name, rtype)
-			reconciler.ctrl.Expectations.CreationObserved(expectKey)
-			return true
-		}
-
-		return true
-	}
-}
-
-// onDependentDeleteFunc modify expectations when dependent (pod/service) deletion observed.
-func onDependentDeleteFunc(r reconcile.Reconciler) func(event.DeleteEvent) bool {
-	return func(e event.DeleteEvent) bool {
-		reconciler, ok := r.(*XgboostJobReconciler)
-		if !ok {
-			return true
-		}
-
-		logrus.Info("Update on deleting function ", reconciler.ControllerName(), " delete object ", e.Meta.GetName())
-		rtype := e.Meta.GetLabels()[v1.ReplicaTypeLabel]
-		if len(rtype) == 0 {
-			return false
-		}
-		if controllerRef := metav1.GetControllerOf(e.Meta); controllerRef != nil {
-			expectKey := job_controller.GenExpectationPodsKey(e.Meta.GetNamespace()+"/"+controllerRef.Name, rtype)
-			reconciler.ctrl.Expectations.DeleteExpectations(expectKey)
-			return true
-		}
-
-		return true
-	}
 }

@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/kubernetes/pkg/apis/apps"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -86,8 +85,10 @@ type XgboostJobReconciler struct {
 // and what is in the XGBoostJob.Spec
 // a Deployment as an example
 // Automatically generate RBAC rules to allow the Controller to read and write Deployments
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=xgboostjob.kubeflow.org,resources=xgboostjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=xgboostjob.kubeflow.org,resources=xgboostjobs/status,verbs=get;update;patch
 func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
@@ -139,17 +140,6 @@ func (r *XgboostJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Watch owner resource with create event filter.
 	if err = c.Watch(&source.Kind{Type: &v1alpha1.XGBoostJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
-	}); err != nil {
-		return err
-	}
-
-	// Watch managed resource with owner and create/delete event filter.
-	if err = c.Watch(&source.Kind{Type: &apps.Deployment{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &v1alpha1.XGBoostJob{},
-		IsController: true,
-	}, predicate.Funcs{
-		CreateFunc: onDependentCreateFunc(r),
-		DeleteFunc: onDependentDeleteFunc(r),
 	}); err != nil {
 		return err
 	}
