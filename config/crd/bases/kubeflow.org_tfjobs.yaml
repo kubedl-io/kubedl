@@ -15,6 +15,8 @@ spec:
     plural: tfjobs
     singular: tfjob
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: TFJob represents a TFJob resource.

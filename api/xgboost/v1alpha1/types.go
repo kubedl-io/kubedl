@@ -27,6 +27,13 @@ type XGBoostJobSpec struct {
 	// active.
 	RunPolicy commonv1.RunPolicy `json:",inline"`
 
+	// XGBoostReplicaSpecs is map of ReplicaType and ReplicaSpec
+	// specifies the XGBoost replicas to run.
+	// For example,
+	//   {
+	//     "PS": ReplicaSpec,
+	//     "Worker": ReplicaSpec,
+	//   }
 	XGBReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"xgbReplicaSpecs"`
 }
 
@@ -41,6 +48,7 @@ type XGBoostJobStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:defaulter-gen=TypeMeta
 // +resource:path=xgboostjob
+// +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Namespaced
 
 // XGBoostJob is the Schema for the xgboostjobs API
