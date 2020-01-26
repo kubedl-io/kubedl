@@ -15,6 +15,8 @@ spec:
     plural: pytorchjobs
     singular: pytorchjob
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: Represents a PyTorchJob resource.
