@@ -13,7 +13,7 @@ spec:
         spec:
           containers:
             - name: tensorflow
-              image: gcr.io/kubeflow-ci/tf-mnist-with-summaries:1.0
+              image: kubedl/tf-mnist-with-summaries:1.0
               command:
                 - "python"
                 - "/var/tf_mnist/mnist_with_summaries.py"

@@ -61,12 +61,13 @@ This example demonstrates how to run a simple MNist Tensorflow job with KubeDL.
 #### Submit the TFJob
 
 ```bash
-kubectl apply -f http://raw.githubusercontent.com/alibaba/kubedl/example/tf/tf_job_mnist.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/example/tf/tf_job_mnist.yaml
 ```
 
 #### Monitor the status of the Tensorflow job
 
 ```bash
+kubectl get tfjobs -n kubedl
 kubectl describe tfjob mnist -n kubedl
 ```
 
