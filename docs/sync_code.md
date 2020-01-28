@@ -1,13 +1,14 @@
-## Code Sync
+## Remote Source Sync
 
-KubeDL supports syncing user code from multiple sources, and mount the code directory into main container. In this way, users
+KubeDL supports syncing user artifacts from remote sources, and mount the artifacts  into main container. In this way, users
 can commit their code to remote source and re-submit training jobs without re-build container images.
 
-As of now, git-sync mode is supported.
+As of now, github is supported.
 
-### Git
+### Git Hub
 
-Users can set the git config in the job's annotation with key `kubedl.io/git-sync-config` as follows: 
+Users can set the git config in the job's annotation with key `kubedl.io/git-sync-config` as below. The git repo will be downloaded and saved in the container's working dir by default.
+
 
 ```yaml
     apiVersion: "kubeflow.org/v1"
@@ -23,11 +24,10 @@ Users can set the git config in the job's annotation with key `kubedl.io/git-syn
         ...
 ```
 
-The git repo will be downloaded and saved in the container's working dir by default.
 
 A full list of supported options are:
 
-```json
+```json5
 {
     "source": "https://github.com/sample/sample.git",  // code source (required).
     "image": "xxx",     // the image to execute the git-sync logic (optional).

@@ -19,7 +19,7 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 - Support running prevalent ML/DL workloads in a single operator.
 - Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
 - Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
-- Support submitting a job with [source code from github](./docs/sync_code.md ) without rebuilding the image.
+- Support submitting a job with [artifacts synced from remote source such as github](./docs/sync_code.md ) without rebuilding the image. 
 - A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
 
@@ -76,13 +76,18 @@ kubectl describe tfjob mnist -n kubedl
 ```bash
 kubectl delete tfjob mnist -n kubedl
 ```
+#### Workload types
+Supported workload types are `tfjob`, `xgboostjob`, `pytorchjob`, `xdljob`, e.g.
+```bash 
+kubectl get xgboostjob 
+```
 
 ## Metrics
 Check the [documents](docs/metrics.md) for the prometheus metrics supported for KubeDL operator.
 
-## Code Sync
-KubeDL supports running jobs with source code synced from remote source dynamically without rebuilding the image.
-Check the [documents](docs/sync_code.md) for details.
+## Remote Source Sync
+KubeDL supports submitting jobs with artifacts synced from remote source dynamically without rebuilding the image.
+Currently github is supported. A plugable interface is supported for other sources such as hdfs. Check the [documents](docs/sync_code.md) for details.
 
 ## Developer Guide
 
