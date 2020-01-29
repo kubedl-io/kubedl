@@ -151,6 +151,9 @@ func (m *JobMetrics) FirstPodLaunchDelaySeconds(job metav1.Object, status v1.Job
 }
 
 func (m *JobMetrics) AllPodsLaunchDelaySeconds(pods []*corev1.Pod, job metav1.Object, status v1.JobStatus) {
+	if status.StartTime == nil {
+		return
+	}
 	finalTime := status.StartTime.Time
 	for _, pod := range pods {
 		if pod.Status.Phase != corev1.PodRunning {
@@ -160,7 +163,7 @@ func (m *JobMetrics) AllPodsLaunchDelaySeconds(pods []*corev1.Pod, job metav1.Ob
 			finalTime = pod.Status.StartTime.Time
 		}
 	}
-	syncDelay := status.StartTime.Sub(finalTime).Seconds()
+	syncDelay := finalTime.Sub(status.StartTime.Time).Seconds()
 	m.allPodsLaunchDelay.With(prometheus.Labels{
 		"kind":      m.kind,
 		"name":      job.GetName(),
