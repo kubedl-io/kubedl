@@ -141,6 +141,9 @@ func (m *JobMetrics) FirstPodLaunchDelaySeconds(job metav1.Object, status v1.Job
 	if cond == nil {
 		return
 	}
+	if status.StartTime == nil {
+		return
+	}
 	delay := metav1.Now().Time.Sub(status.StartTime.Time).Seconds()
 	m.firstPodLaunchDelay.With(prometheus.Labels{
 		"kind":      m.kind,
