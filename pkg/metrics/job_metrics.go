@@ -151,6 +151,9 @@ func (m *JobMetrics) FirstPodLaunchDelaySeconds(job metav1.Object, status v1.Job
 }
 
 func (m *JobMetrics) AllPodsLaunchDelaySeconds(pods []*corev1.Pod, job metav1.Object, status v1.JobStatus) {
+	if status.StartTime == nil {
+		return
+	}
 	finalTime := status.StartTime.Time
 	for _, pod := range pods {
 		if pod.Status.Phase != corev1.PodRunning {

@@ -103,6 +103,12 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		logrus.Infof("XGBoostJob=%s, ReplicaType=%s expected=%d, running=%d, succeeded=%d , failed=%d",
 			xgboostJob.Name, rtype, expected, running, succeeded, failed)
 
+		// All workers are running, update job start time.
+		if status.Active == *spec.Replicas && jobStatus.StartTime == nil {
+			now := metav1.Now()
+			jobStatus.StartTime = &now
+		}
+
 		if rtype == v1alpha1.XGBoostReplicaTypeMaster {
 			if running > 0 {
 				msg := fmt.Sprintf("XGBoostJob %s is running.", xgboostJob.Name)
