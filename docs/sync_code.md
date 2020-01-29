@@ -7,8 +7,9 @@ As of now, github is supported.
 
 ### Git Hub
 
-Users can set the git config in the job's annotation with key `kubedl.io/git-sync-config` as below. The git repo will be downloaded and saved in the container's working dir by default.
-
+Users can set the git config in the job's annotation with key `kubedl.io/git-sync-config` as below. The git repo will be 
+downloaded and saved in the container's working dir by default. Please use the git repo's clone url ending with the `.git`,
+rather than the git repo's web url.
 
 ```yaml
     apiVersion: "kubeflow.org/v1"
@@ -17,7 +18,7 @@ Users can set the git config in the job's annotation with key `kubedl.io/git-syn
       name: "mnist"
       namespace: kubedl 
       annotations:
- +      kubedl.io/git-sync-config: '{"source": "https://github.alibaba/kubedl" }'
+ +      kubedl.io/git-sync-config: '{"source": "https://github.com/alibaba/kubedl.git" }'
     spec:
       cleanPodPolicy: None 
       tfReplicaSpecs:
