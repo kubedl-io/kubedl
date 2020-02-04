@@ -153,7 +153,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 				r.ctrl.Recorder.Event(xgboostJob, k8sv1.EventTypeNormal, commonutil.JobFailedReason, msg)
 				if xgboostJob.Status.CompletionTime == nil {
 					now := metav1.Now()
-					xgboostJob.Status.CompletionTime = &now
+					jobStatus.CompletionTime = &now
 				}
 				err := commonutil.UpdateJobConditions(jobStatus, v1.JobFailed, commonutil.JobFailedReason, msg)
 				if err != nil {

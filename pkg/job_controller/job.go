@@ -313,6 +313,9 @@ func (jc *JobController) cleanupJob(runPolicy *apiv1.RunPolicy, jobStatus apiv1.
 	if ttl == nil {
 		return res, nil
 	}
+	if jobStatus.CompletionTime == nil {
+		return res, fmt.Errorf("cleanup Job %s, but job has CompletionTime not set", metaObject.GetName())
+	}
 	duration := time.Second * time.Duration(*ttl)
 	deleteTime := jobStatus.CompletionTime.Add(duration)
 	if currentTime.After(deleteTime) {
