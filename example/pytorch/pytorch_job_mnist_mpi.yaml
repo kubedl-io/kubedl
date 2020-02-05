@@ -1,0 +1,25 @@
+apiVersion: "kubeflow.org/v1"
+kind: "PyTorchJob"
+metadata:
+  name: "pytorch-dist-sendrecv-example"
+  namespace: "kubedl"
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: ExitCode
+      template:
+        spec:
+          containers:
+            - name: pytorch
+              image: kubedl/pytorch-dist-example
+              imagePullPolicy: Always
+    Worker:
+      replicas: 2
+      restartPolicy: ExitCode
+      template:
+        spec:
+          containers:
+            - name: pytorch
+              image: kubedl/pytorch-dist-example
+              imagePullPolicy: Always

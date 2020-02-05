@@ -106,10 +106,17 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 	for rtype, spec := range replicaSpecs {
 
 		replicas := *spec.Replicas
+		// If rtype in replica status not found, there must be a mistyped/invalid rtype in job spec,
+		// and it has not been reconciled in previous processes, discard it.
+		status, ok := jobStatus.ReplicaStatuses[rtype]
+		if !ok {
+			log.Info("skipping invalid replica type", "rtype", rtype)
+			continue
+		}
 		// Expect to have `replicas - succeeded` pods alive.
-		expected := replicas - jobStatus.ReplicaStatuses[rtype].Succeeded
-		running := jobStatus.ReplicaStatuses[rtype].Active
-		failed := jobStatus.ReplicaStatuses[rtype].Failed
+		expected := replicas - status.Succeeded
+		running := status.Active
+		failed := status.Failed
 
 		// If the TFJob contains Chief or Master spec, then we will update the status
 		// according to the Chief/Master spec.

@@ -93,7 +93,13 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 	}
 
 	for rtype, spec := range replicas {
-		status := jobStatus.ReplicaStatuses[rtype]
+		// If rtype in replica status not found, there must be a mistyped/invalid rtype in job spec,
+		// and it has not been reconciled in previous processes, discard it.
+		status, ok := jobStatus.ReplicaStatuses[rtype]
+		if !ok {
+			log.Info("skipping invalid replica type", "rtype", rtype)
+			continue
+		}
 
 		succeeded := status.Succeeded
 		expected := *(spec.Replicas) - succeeded

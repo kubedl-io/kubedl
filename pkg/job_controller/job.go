@@ -12,6 +12,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
 	"github.com/alibaba/kubedl/pkg/code_sync"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
@@ -228,6 +229,13 @@ func (jc *JobController) ReconcileJobs(
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
 			return result, err
+		}
+
+		// Hack(SimonCqk): pytorch job is specialized that services only discovery master
+		// and transparent to other replica roles.
+		if jc.Controller.GetAPIGroupVersionKind().Kind == pytorchv1.Kind &&
+			rtype != pytorchv1.PyTorchReplicaTypeMaster {
+			continue
 		}
 
 		err = jc.ReconcileServices(metaObject, services, rtype, spec)

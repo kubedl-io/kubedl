@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
+	k8scontroller "k8s.io/kubernetes/pkg/controller"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -58,11 +59,12 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
 	r.ctrl = job_controller.JobController{
-		Controller: r,
-		Config:     config,
-		WorkQueue:  &util.FakeWorkQueue{},
-		Recorder:   r.recorder,
-		Metrics:    metrics.NewJobMetrics(pytorchv1.Kind, r.Client),
+		Controller:   r,
+		Config:       config,
+		WorkQueue:    &util.FakeWorkQueue{},
+		Recorder:     r.recorder,
+		Metrics:      metrics.NewJobMetrics(pytorchv1.Kind, r.Client),
+		Expectations: k8scontroller.NewControllerExpectations(),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -193,7 +195,7 @@ func (r *PytorchJobReconciler) SetClusterSpec(job interface{}, podTemplate *core
 		return err
 	}
 
-	masterPort, err := job_controller.GetPortFromJob(pytorchJob.Spec.PyTorchReplicaSpecs, v1.ReplicaType(rtype), pytorchv1.DefaultContainerName, pytorchv1.DefaultPortName)
+	masterPort, err := job_controller.GetPortFromJob(pytorchJob.Spec.PyTorchReplicaSpecs, pytorchv1.PyTorchReplicaTypeMaster, pytorchv1.DefaultContainerName, pytorchv1.DefaultPortName)
 	if err != nil {
 		return err
 	}

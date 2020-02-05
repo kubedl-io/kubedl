@@ -41,9 +41,16 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 
 	for rtype, spec := range replicaSpecs {
 		replicas := *spec.Replicas
-		expected := replicas - jobStatus.ReplicaStatuses[rtype].Succeeded
-		running := jobStatus.ReplicaStatuses[rtype].Active
-		failed := jobStatus.ReplicaStatuses[rtype].Failed
+		// If rtype in replica status not found, there must be a mistyped/invalid rtype in job spec,
+		// and it has not been reconciled in previous processes, discard it.
+		status, ok := jobStatus.ReplicaStatuses[rtype]
+		if !ok {
+			log.Info("skipping invalid replica type", "rtype", rtype)
+			continue
+		}
+		expected := replicas - status.Succeeded
+		running := status.Active
+		failed := status.Failed
 
 		log.Info("Update pytorch job status", "PyTorchJob", pytorchJob.Name,
 			"ReplicaType", rtype, "expected", expected, "running", running, "failed", failed)

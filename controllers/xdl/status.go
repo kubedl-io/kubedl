@@ -69,7 +69,13 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 	// Iterate all replicas for counting and try to update start time.
 	for rtype, spec := range replicaSpecs {
 		replicas := *spec.Replicas
-		status := jobStatus.ReplicaStatuses[rtype]
+		// If rtype in replica status not found, there must be a mistyped/invalid rtype in job spec,
+		// and it has not been reconciled in previous processes, discard it.
+		status, ok := jobStatus.ReplicaStatuses[rtype]
+		if !ok {
+			log.Info("skipping invalid replica type", "rtype", rtype)
+			continue
+		}
 		failed := status.Failed
 		if rtype == xdlv1alpha1.XDLReplicaTypeWorker || rtype == xdlv1alpha1.XDLReplicaTypeExtendRole {
 			workerNum += replicas
