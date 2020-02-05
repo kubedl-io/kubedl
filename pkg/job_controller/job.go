@@ -231,8 +231,7 @@ func (jc *JobController) ReconcileJobs(
 			return result, err
 		}
 
-		// Hack(SimonCqk): pytorch job is specialized that services only discovery master
-		// and transparent to other replica roles.
+		// Service is in need only for Master
 		if jc.Controller.GetAPIGroupVersionKind().Kind == pytorchv1.Kind &&
 			rtype != pytorchv1.PyTorchReplicaTypeMaster {
 			continue
