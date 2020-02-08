@@ -1,0 +1,145 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: zk-0
+  namespace: kubedl
+  labels:
+    app: zk
+    node: node0
+spec:
+  clusterIP: None
+  ports:
+  - name: port-2181
+    port: 2181
+  - name: port-2888
+    port: 2888
+  - name: port-3888
+    port: 3888
+  selector:
+    app: zk
+    node: node0
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: zk-0
+  namespace: kubedl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zk
+      node: node0
+  template:
+    metadata:
+      labels:
+        app: zk
+        node: node0
+    spec:
+      hostname: zk-0
+      volumes:
+        - name: zk-data
+          emptyDir: {}
+        - name: zk-logs
+          emptyDir: {}
+      containers:
+      - name: zk-0
+        image: zookeeper
+        volumeMounts:
+        - name: zk-data
+          readOnly: false
+          mountPath: "/data/zk-data"
+        - name: zk-logs
+          readOnly: false
+          mountPath: "/data/zk-logs"
+        ports:
+        - containerPort: 2181
+        - containerPort: 2888
+        - containerPort: 3888
+        env:
+        - name: ZOO_MY_ID
+          value: '0'
+        - name: ZOO_SERVERS
+          value: server.0=0.0.0.0:2888:3888;2181
+        - name: ZOO_DATA_DIR
+          value: '/data/zk-data'
+        - name: ZOO_DATA_LOG_DIR
+          value: '/data/zk-logs'
+
+---
+apiVersion: xdl.alibaba.com/v1alpha1
+kind: XDLJob
+metadata:
+  name: xdl-mnist-example
+  namespace: kubedl
+spec:
+  cleanPodPolicy: None
+  xdlReplicaSpecs:
+    Scheduler:
+      replicas: 1
+      restartPolicy: ExitCode
+      template:
+        spec:
+          containers:
+          - env:
+            - name: ZK_ADDR
+              value: zfs://zk-0:2181/xdl/
+            command:
+            - bash
+            - -c
+            - exec python mnist.py --task_name $(TASK_NAME) --task_index $(TASK_INDEX) --run_mode dist --zk_addr $(ZK_ADDR) --config ./config.json
+            image: kubedl/xdl-mnist-example
+            name: xdl
+            volumeMounts:
+            - mountPath: /checkpoint
+              name: checkpoint
+          volumes:
+          - emptyDir: {}
+            name: checkpoint
+    PS:
+      replicas: 1
+      restartPolicy: ExitCode
+      template:
+        spec:
+          containers:
+          - env:
+            - name: ZK_ADDR
+              value: zfs://zk-0:2181/xdl/
+            command:
+            - bash
+            - -c
+            - exec python mnist.py --task_name $(TASK_NAME) --task_index $(TASK_INDEX) --run_mode dist --zk_addr $(ZK_ADDR) --config ./config.json
+            image: kubedl/xdl-mnist-example
+            name: xdl
+            volumeMounts:
+            - mountPath: /checkpoint
+              name: checkpoint
+          volumes:
+          - emptyDir: {}
+            name: checkpoint
+          volumes:
+          - emptyDir: {}
+            name: checkpoint
+    Worker:
+      replicas: 2
+      restartPolicy: ExitCode
+      template:
+        spec:
+          containers:
+          - env:
+            - name: ZK_ADDR
+              value: zfs://zk-0:2181/xdl/
+            command:
+            - bash
+            - -c
+            - exec python mnist.py --task_name $(TASK_NAME) --task_index $(TASK_INDEX) --run_mode dist --zk_addr $(ZK_ADDR) --config ./config.json
+            image: kubedl/xdl-mnist-example
+            name: xdl
+            volumeMounts:
+            - mountPath: /checkpoint
+              name: checkpoint
+          volumes:
+          - emptyDir: {}
+            name: checkpoint
+  ttlSecondsAfterFinished: 3600
