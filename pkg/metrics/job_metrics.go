@@ -136,15 +136,28 @@ func (m *JobMetrics) RestartInc() {
 	m.restart.Inc()
 }
 
-func (m *JobMetrics) FirstPodLaunchDelaySeconds(job metav1.Object, status v1.JobStatus) {
-	cond := util.GetCondition(status, v1.JobRunning)
-	if cond == nil {
+func (m *JobMetrics) FirstPodLaunchDelaySeconds(activePods []*corev1.Pod, job metav1.Object, status v1.JobStatus) {
+	if !util.IsRunning(status) {
 		return
 	}
-	if status.StartTime == nil {
+
+	var earliestTime *metav1.Time
+	for _, pod := range activePods {
+		if pod.Status.Phase != corev1.PodRunning {
+			continue
+		}
+		readyCond := getPodCondition(&pod.Status, corev1.PodReady)
+		if readyCond == nil {
+			continue
+		}
+		if earliestTime == nil || readyCond.LastTransitionTime.Before(earliestTime) {
+			earliestTime = &readyCond.LastTransitionTime
+		}
+	}
+	if earliestTime == nil {
 		return
 	}
-	delay := metav1.Now().Time.Sub(status.StartTime.Time).Seconds()
+	delay := earliestTime.Time.Sub(job.GetCreationTimestamp().Time).Seconds()
 	m.firstPodLaunchDelay.With(prometheus.Labels{
 		"kind":      m.kind,
 		"name":      job.GetName(),
@@ -154,23 +167,37 @@ func (m *JobMetrics) FirstPodLaunchDelaySeconds(job metav1.Object, status v1.Job
 }
 
 func (m *JobMetrics) AllPodsLaunchDelaySeconds(pods []*corev1.Pod, job metav1.Object, status v1.JobStatus) {
-	if status.StartTime == nil {
+	if !util.IsRunning(status) || status.StartTime == nil {
 		return
 	}
-	finalTime := status.StartTime.Time
+
+	finalTime := job.GetCreationTimestamp().Time
 	for _, pod := range pods {
 		if pod.Status.Phase != corev1.PodRunning {
 			return
 		}
-		if pod.Status.StartTime.After(finalTime) {
-			finalTime = pod.Status.StartTime.Time
+		readyCond := getPodCondition(&pod.Status, corev1.PodReady)
+		if readyCond == nil {
+			continue
+		}
+		if readyCond.LastTransitionTime.After(finalTime) {
+			finalTime = readyCond.LastTransitionTime.Time
 		}
 	}
-	syncDelay := finalTime.Sub(status.StartTime.Time).Seconds()
+	syncDelay := finalTime.Sub(job.GetCreationTimestamp().Time).Seconds()
 	m.allPodsLaunchDelay.With(prometheus.Labels{
 		"kind":      m.kind,
 		"name":      job.GetName(),
 		"namespace": job.GetNamespace(),
 		"uid":       string(job.GetUID()),
 	}).Observe(syncDelay)
+}
+
+func getPodCondition(podStatus *corev1.PodStatus, condType corev1.PodConditionType) *corev1.PodCondition {
+	for idx := range podStatus.Conditions {
+		if podStatus.Conditions[idx].Type == condType {
+			return &podStatus.Conditions[idx]
+		}
+	}
+	return nil
 }

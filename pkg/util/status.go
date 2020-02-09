@@ -37,9 +37,14 @@ func IsRunning(status apiv1.JobStatus) bool {
 	return hasCondition(status, apiv1.JobRunning)
 }
 
-// IsCreated checks if the job is created.
+// IsCreated checks if the job has created.
 func IsCreated(status apiv1.JobStatus) bool {
 	return hasCondition(status, apiv1.JobCreated)
+}
+
+// IsRestart checks if the job is restarting.
+func IsRestarting(status apiv1.JobStatus) bool {
+	return hasCondition(status, apiv1.JobRestarting)
 }
 
 // UpdateJobConditions adds to the jobStatus a new condition if needed, with the conditionType, reason, and message.

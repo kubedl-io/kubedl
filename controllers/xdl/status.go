@@ -61,9 +61,8 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
 	log.Info("Updating status", "XDLJob name", xdlJob.Name)
 
-	// If job is previous running, when it transfers to state failed or restarting,
-	// running metrics will do dec.
-	previousRunning := commonutil.IsRunning(*jobStatus)
+	previousRestarting := commonutil.IsRestarting(*jobStatus)
+	previousFailed := commonutil.IsFailed(*jobStatus)
 
 	workerNum, workerSucceeded := int32(0), int32(0)
 	// Iterate all replicas for counting and try to update start time.
@@ -96,8 +95,10 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					log.Error(err, "failed to update xdl job conditions")
 					return err
 				}
-				r.ctrl.Metrics.FailureInc()
-				r.ctrl.Metrics.RestartInc()
+				if !previousRestarting {
+					r.ctrl.Metrics.FailureInc()
+					r.ctrl.Metrics.RestartInc()
+				}
 			} else {
 				msg := fmt.Sprintf("XDLJob %s is failed because %d %s replica(s) failed.", xdlJob.Name, failed, rtype)
 				r.recorder.Event(xdlJob, corev1.EventTypeNormal, xdlJobFailedReason, msg)
@@ -110,7 +111,9 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 					log.Error(err, "failed to update xdl job conditions")
 					return err
 				}
-				r.ctrl.Metrics.FailureInc()
+				if !previousFailed {
+					r.ctrl.Metrics.FailureInc()
+				}
 			}
 			return nil
 		}
@@ -138,9 +141,6 @@ func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, re
 	if err := commonutil.UpdateJobConditions(jobStatus, v1.JobRunning, commonutil.JobRunningReason, msg); err != nil {
 		log.Error(err, "failed to update xdl job conditions")
 		return err
-	}
-	if !previousRunning {
-		r.ctrl.Metrics.FirstPodLaunchDelaySeconds(xdlJob, *jobStatus)
 	}
 	return nil
 }
