@@ -56,6 +56,9 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
 	log.Info("Updating status", "TFJob name", tfJob.Name)
 
+	previousRestarting := commonutil.IsRestarting(*jobStatus)
+	previousFailed := commonutil.IsFailed(*jobStatus)
+
 	// Check whether worker 0 has completed。
 	worker0Completed := false
 
@@ -129,7 +132,6 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
-					r.ctrl.Metrics.FirstPodLaunchDelaySeconds(tfJob, *jobStatus)
 				}
 				if expected == 0 {
 					msg := fmt.Sprintf("TFJob %s successfully completed.", tfJob.Name)
@@ -170,7 +172,6 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 						log.Error(err, "append tfjob condition error")
 						return err
 					}
-					r.ctrl.Metrics.FirstPodLaunchDelaySeconds(tfJob, *jobStatus)
 				}
 			}
 		}
@@ -184,8 +185,10 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					log.Error(err, "failed to update tensorflow job conditions")
 					return err
 				}
-				r.ctrl.Metrics.FailureInc()
-				r.ctrl.Metrics.RestartInc()
+				if !previousRestarting {
+					r.ctrl.Metrics.FailureInc()
+					r.ctrl.Metrics.RestartInc()
+				}
 			} else {
 				msg := fmt.Sprintf("TFJob %s is failed because %d %s replica(s) failed.", tfJob.Name, failed, rtype)
 				r.recorder.Event(tfJob, corev1.EventTypeNormal, commonutil.JobFailedReason, msg)
@@ -198,7 +201,9 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 					log.Error(err, "failed to update tensorflow job conditions")
 					return err
 				}
-				r.ctrl.Metrics.FailureInc()
+				if !previousFailed {
+					r.ctrl.Metrics.FailureInc()
+				}
 			}
 		}
 	}

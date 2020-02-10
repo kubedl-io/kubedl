@@ -92,6 +92,9 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		return fmt.Errorf("%+v is not a type of xgboostJob", xgboostJob)
 	}
 
+	previousRestarting := commonutil.IsRestarting(*jobStatus)
+	previousFailed := commonutil.IsFailed(*jobStatus)
+
 	for rtype, spec := range replicas {
 		// If rtype in replica status not found, there must be a mistyped/invalid rtype in job spec,
 		// and it has not been reconciled in previous processes, discard it.
@@ -123,7 +126,6 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Error(err, "Append job condition error")
 					return err
 				}
-				r.ctrl.Metrics.FirstPodLaunchDelaySeconds(xgboostJob, *jobStatus)
 			}
 			// when master is succeed, the job is finished.
 			if expected == 0 {
@@ -152,8 +154,10 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Error(err, "Append job condition error")
 					return err
 				}
-				r.ctrl.Metrics.FailureInc()
-				r.ctrl.Metrics.RestartInc()
+				if !previousRestarting {
+					r.ctrl.Metrics.FailureInc()
+					r.ctrl.Metrics.RestartInc()
+				}
 			} else {
 				msg := fmt.Sprintf("XGBoostJob %s is failed because %d %s replica(s) failed.", xgboostJob.Name, failed, rtype)
 				r.ctrl.Recorder.Event(xgboostJob, k8sv1.EventTypeNormal, commonutil.JobFailedReason, msg)
@@ -166,7 +170,9 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 					log.Info("Append job condition", "error: ", err)
 					return err
 				}
-				r.ctrl.Metrics.FailureInc()
+				if !previousFailed {
+					r.ctrl.Metrics.FailureInc()
+				}
 			}
 		}
 	}
@@ -179,7 +185,6 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 		log.Error(err, "failed to update XGBoost Job conditions")
 		return err
 	}
-	r.ctrl.Metrics.FirstPodLaunchDelaySeconds(xgboostJob, *jobStatus)
 	return nil
 }
 

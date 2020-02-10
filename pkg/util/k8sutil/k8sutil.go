@@ -138,3 +138,11 @@ func GetTotalFailedReplicas(replicas map[apiv1.ReplicaType]*apiv1.ReplicaStatus)
 	}
 	return totalFailedReplicas
 }
+
+func GetTotalAvtiveReplicas(replicas map[apiv1.ReplicaType]*apiv1.ReplicaStatus) int32 {
+	totalActiveReplicas := int32(0)
+	for _, status := range replicas {
+		totalActiveReplicas += status.Active
+	}
+	return totalActiveReplicas
+}

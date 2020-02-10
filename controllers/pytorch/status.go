@@ -39,6 +39,9 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 		jobStatus.StartTime = &now
 	}
 
+	previousRestarting := commonutil.IsRestarting(*jobStatus)
+	previousFailed := commonutil.IsFailed(*jobStatus)
+
 	for rtype, spec := range replicaSpecs {
 		replicas := *spec.Replicas
 		// If rtype in replica status not found, there must be a mistyped/invalid rtype in job spec,
@@ -64,7 +67,6 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 						log.Info("Append job condition", " error:", err)
 						return err
 					}
-					r.ctrl.Metrics.FirstPodLaunchDelaySeconds(pytorchJob, *jobStatus)
 				}
 				if expected == 0 {
 					msg := fmt.Sprintf("PyTorchJob %s is successfully completed.", pytorchJob.Name)
@@ -95,8 +97,10 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					log.Info("Append job condition", "error:", err)
 					return err
 				}
-				r.ctrl.Metrics.FailureInc()
-				r.ctrl.Metrics.RestartInc()
+				if !previousRestarting {
+					r.ctrl.Metrics.FailureInc()
+					r.ctrl.Metrics.RestartInc()
+				}
 			} else {
 				msg := fmt.Sprintf("PyTorchJob %s is failed because %d %s replica(s) failed.", pytorchJob.Name, failed, rtype)
 				r.recorder.Event(pytorchJob, corev1.EventTypeNormal, commonutil.JobFailedReason, msg)
@@ -109,7 +113,9 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 					log.Info("Append job condition", "error: ", err)
 					return err
 				}
-				r.ctrl.Metrics.FailureInc()
+				if !previousFailed {
+					r.ctrl.Metrics.FailureInc()
+				}
 			}
 		}
 	}

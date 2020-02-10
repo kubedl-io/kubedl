@@ -250,7 +250,24 @@ func (jc *JobController) ReconcileJobs(
 		return result, err
 	}
 
-	jc.Metrics.AllPodsLaunchDelaySeconds(pods, metaObject, jobStatus)
+	// Metering first pod launch delay when job state transit from created to running.
+	if commonutil.IsCreated(*oldStatus) && commonutil.IsRunning(jobStatus) {
+		jc.Metrics.FirstPodLaunchDelaySeconds(activePods, metaObject, jobStatus)
+	}
+
+	// Metring all pods launch delay when latest pods are all active after reconciled, and previous
+	// job status has not reached a all-active state, including the following cases:
+	// 1. job created, successfully create all pods and becomes job running.
+	// 2. job created, create some pods while some pods failed, finally becomes job running.
+	// 3. job running then some pods failed, job step into restarting state, then pod recreated and
+	//    finally return back to running state.
+	//
+	// case 3 should be discarded.
+	if (k8sutil.GetTotalAvtiveReplicas(jobStatus.ReplicaStatuses) == totalReplicas) &&
+		(k8sutil.GetTotalAvtiveReplicas(oldStatus.ReplicaStatuses) < totalReplicas) &&
+		!commonutil.IsRestarting(*oldStatus) {
+		jc.Metrics.AllPodsLaunchDelaySeconds(pods, metaObject, jobStatus)
+	}
 
 	// No need to update the job status if the status hasn't changed since last time.
 	if !reflect.DeepEqual(*oldStatus, jobStatus) {
