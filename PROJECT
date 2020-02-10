@@ -1,11 +1,11 @@
 version: "2"
-domain: alibaba-inc.com
+domain: kubedl.io
 repo: github.com/alibaba/kubedl
 resources:
 - group: kubeflow.org
   version: v1
   kind: TFJob
-- group: xdl.alibaba.com
+- group: xdl.kubedl.io
   version: v1alpha1
   kind: XDLJob
 - group: kubeflow.org

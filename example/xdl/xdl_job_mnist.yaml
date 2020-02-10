@@ -68,7 +68,7 @@ spec:
           value: '/data/zk-logs'
 
 ---
-apiVersion: xdl.alibaba.com/v1alpha1
+apiVersion: xdl.kubedl.io/v1alpha1
 kind: XDLJob
 metadata:
   name: xdl-mnist-example
