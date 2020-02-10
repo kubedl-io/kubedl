@@ -17,11 +17,12 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 [xgboost-operator](https://github.com/kubeflow/xgboost-operator) and integrates them with enhanced features as below:
 
 - Support running prevalent ML/DL workloads in a single operator.
-- Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
-- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
-- Support submitting a job with [artifacts synced from remote source such as github](./docs/sync_code.md ) without rebuilding the image. 
 - A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
+- Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
+- Support submitting a job with [artifacts synced from remote source such as github](./docs/sync_code.md ) without rebuilding the image. 
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
+- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
+- [Work in progress] Provide a web UI for metrics monitoring and job management including job creation、termination, and deletion, see [web UI demo](https://github.com/alibaba/kubedl/blob/master/docs/img/ui_demo.png).
 
 ## Getting started
 
