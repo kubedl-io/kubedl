@@ -66,8 +66,8 @@ spec:
               type: integer
             xgbReplicaSpecs:
               description: 'XGBoostReplicaSpecs is map of ReplicaType and ReplicaSpec
-              specifies the XGBoost replicas to run. For example,   {     "PS": ReplicaSpec,     "Worker":
-              ReplicaSpec,   }'
+                specifies the XGBoost replicas to run. For example,   {     "PS":
+                ReplicaSpec,     "Worker": ReplicaSpec,   }'
               type: object
           required:
           - xgbReplicaSpecs

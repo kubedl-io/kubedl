@@ -47,7 +47,7 @@ rules:
     - patch
     - update
 - apiGroups:
-    - xdl.alibaba.com
+    - xdl.kubedl.io
   resources:
     - xdljobs
   verbs:
@@ -59,7 +59,7 @@ rules:
     - update
     - watch
 - apiGroups:
-    - xdl.alibaba.com
+    - xdl.kubedl.io
   resources:
     - xdljobs/status
   verbs:

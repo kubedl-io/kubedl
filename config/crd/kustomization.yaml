@@ -4,7 +4,7 @@
 resources:
 - bases/kubeflow.org_tfjobs.yaml
 - bases/kubeflow.org_pytorchjobs.yaml
-- bases/xdl.alibaba.com_xdljobs.yaml
+- bases/xdl.kubedl.io_xdljobs.yaml
 - bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
