@@ -22,7 +22,7 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 - Support submitting a job with [artifacts synced from remote source such as github](./docs/sync_code.md ) without rebuilding the image. 
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
 - Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
-- [Work in progress] Provide a web UI for metrics monitoring and job management including job creation、termination, and deletion, see [web UI demo](https://github.com/alibaba/kubedl/blob/master/docs/img/ui_demo.png).
+- [Work-in-progress] Provide a [dashboard](#job-dashboard) for monitoring the jobs' lifecycle and stats.
 
 ## Getting started
 
@@ -89,6 +89,13 @@ Check the [documents](docs/metrics.md) for the prometheus metrics supported for 
 ## Remote Source Sync
 KubeDL supports submitting jobs with artifacts synced from remote source dynamically without rebuilding the image.
 Currently github is supported. A plugable interface is supported for other sources such as hdfs. Check the [documents](docs/sync_code.md) for details.
+
+## Job Dashboard
+A dashboard for monitoring the jobs' lifecycle and stats is currently in progress. The dashboard also provides convenient job operation options including job creation、termination, and deletion. See the demo below.
+
+<div align="center">
+  <img src="docs/img/ui_demo.png" width="1250" title="Job Dashboard Demo">
+</div>
 
 ## Developer Guide
 
