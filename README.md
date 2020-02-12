@@ -17,11 +17,12 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 [xgboost-operator](https://github.com/kubeflow/xgboost-operator) and integrates them with enhanced features as below:
 
 - Support running prevalent ML/DL workloads in a single operator.
-- Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
-- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
-- Support submitting a job with [artifacts synced from remote source such as github](./docs/sync_code.md ) without rebuilding the image. 
 - A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
+- Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
+- Support submitting a job with [artifacts synced from remote source such as github](./docs/sync_code.md ) without rebuilding the image. 
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
+- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
+- [Work-in-progress] Provide a [dashboard](#job-dashboard) for monitoring the jobs' lifecycle and stats.
 
 ## Getting started
 
@@ -88,6 +89,13 @@ Check the [documents](docs/metrics.md) for the prometheus metrics supported for 
 ## Remote Source Sync
 KubeDL supports submitting jobs with artifacts synced from remote source dynamically without rebuilding the image.
 Currently github is supported. A plugable interface is supported for other sources such as hdfs. Check the [documents](docs/sync_code.md) for details.
+
+## Job Dashboard
+A dashboard for monitoring the jobs' lifecycle and stats is currently in progress. The dashboard also provides convenient job operation options including job creation、termination, and deletion. See the demo below.
+
+<div align="center">
+  <img src="docs/img/ui_demo.png" width="1250" title="Job Dashboard Demo">
+</div>
 
 ## Developer Guide
 
