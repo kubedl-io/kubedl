@@ -74,7 +74,7 @@ func (t *TestJobController) DeleteJob(job interface{}) error {
 }
 
 func (t *TestJobController) UpdateJobStatus(job interface{}, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec,
-	jobStatus *apiv1.JobStatus) error {
+	jobStatus *apiv1.JobStatus, restart bool) error {
 	return nil
 }
 

@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/kubernetes/pkg/controller"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -216,7 +217,7 @@ func (jc *JobController) ReconcilePods(
 	rtype apiv1.ReplicaType,
 	spec *apiv1.ReplicaSpec,
 	rstatus map[string]v1.PodPhase,
-	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
+	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, restart *bool) error {
 
 	metaObject, ok := job.(metav1.Object)
 	if !ok {
@@ -264,6 +265,7 @@ func (jc *JobController) ReconcilePods(
 					exitCode = state.Terminated.ExitCode
 					logger.Infof("Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
 					jc.Recorder.Eventf(runtimeObject, v1.EventTypeNormal, exitedWithCodeReason, "Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
+					break
 				}
 			}
 			// Check if the pod is retryable.
@@ -273,6 +275,7 @@ func (jc *JobController) ReconcilePods(
 					if err := jc.Controller.DeletePod(job, pod); err != nil {
 						return err
 					}
+					restart = pointer.BoolPtr(true)
 				}
 			}
 
