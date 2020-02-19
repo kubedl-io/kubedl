@@ -83,12 +83,12 @@ func (r *XDLJobReconciler) DeleteJob(job interface{}) error {
 }
 
 // UpdateJobStatus updates the job status and job conditions
-func (r *XDLJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
+func (r *XDLJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	xdlJob, ok := job.(*xdlv1alpha1.XDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of XDLJob", xdlJob)
 	}
-	return r.updateGeneralJobStatus(xdlJob, replicas, jobStatus)
+	return r.updateGeneralJobStatus(xdlJob, replicas, jobStatus, restart)
 }
 
 // UpdateJobStatusInApiServer updates the job status in API server

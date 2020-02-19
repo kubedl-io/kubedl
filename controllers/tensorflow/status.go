@@ -53,7 +53,8 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 }
 
 // updateGeneralJobStatus updates the status of job with given replica specs and job status.
-func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
+func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec,
+	jobStatus *v1.JobStatus, restart bool) error {
 	log.Info("Updating status", "TFJob name", tfJob.Name)
 
 	previousRestarting := commonutil.IsRestarting(*jobStatus)
@@ -177,7 +178,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 		}
 
 		if failed > 0 {
-			if spec.RestartPolicy == v1.RestartPolicyExitCode {
+			if restart {
 				msg := fmt.Sprintf("TFJob %s is restarting because %d %s replica(s) failed.", tfJob.Name, failed, rtype)
 				r.recorder.Event(tfJob, corev1.EventTypeWarning, commonutil.JobRestartingReason, msg)
 				err := commonutil.UpdateJobConditions(jobStatus, v1.JobRestarting, commonutil.JobRestartingReason, msg)

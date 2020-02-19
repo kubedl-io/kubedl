@@ -86,7 +86,7 @@ func (r *XgboostJobReconciler) GetJobFromAPIClient(namespace, name string) (meta
 }
 
 // UpdateJobStatus updates the job status and job conditions
-func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
+func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	xgboostJob, ok := job.(*v1alpha1.XGBoostJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of xgboostJob", xgboostJob)
@@ -146,7 +146,7 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 			}
 		}
 		if failed > 0 {
-			if spec.RestartPolicy == v1.RestartPolicyExitCode {
+			if restart {
 				msg := fmt.Sprintf("XGBoostJob %s is restarting because %d %s replica(s) failed.", xgboostJob.Name, failed, rtype)
 				r.ctrl.Recorder.Event(xgboostJob, k8sv1.EventTypeWarning, commonutil.JobRestartingReason, msg)
 				err := commonutil.UpdateJobConditions(jobStatus, v1.JobRestarting, commonutil.JobRestartingReason, msg)

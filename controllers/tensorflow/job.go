@@ -83,12 +83,12 @@ func (r *TFJobReconciler) DeleteJob(job interface{}) error {
 }
 
 // UpdateJobStatus updates the job status and job conditions
-func (r *TFJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
+func (r *TFJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	tfJob, ok := job.(*tfv1.TFJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of TFJob", tfJob)
 	}
-	return r.updateGeneralJobStatus(tfJob, replicas, jobStatus)
+	return r.updateGeneralJobStatus(tfJob, replicas, jobStatus, restart)
 }
 
 // UpdateJobStatusInApiServer updates the job status in API server

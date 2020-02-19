@@ -38,7 +38,7 @@ type ControllerInterface interface {
 	DeleteJob(job interface{}) error
 
 	// UpdateJobStatus updates the job status and job conditions
-	UpdateJobStatus(job interface{}, replicas map[ReplicaType]*ReplicaSpec, jobStatus *JobStatus) error
+	UpdateJobStatus(job interface{}, replicas map[ReplicaType]*ReplicaSpec, jobStatus *JobStatus, restart bool) error
 
 	// UpdateJobStatusInApiServer updates the job status in API server
 	UpdateJobStatusInApiServer(job interface{}, jobStatus *JobStatus) error

@@ -217,6 +217,7 @@ func (jc *JobController) ReconcileJobs(
 
 	// Save the current state of the replicas
 	replicasStatus := make(map[string]v1.PodPhase)
+	restart := false
 
 	// Diff current active pods/services with replicas.
 	for _, rtype := range jc.Controller.GetReconcileOrders() {
@@ -225,7 +226,7 @@ func (jc *JobController) ReconcileJobs(
 			continue
 		}
 
-		err = jc.ReconcilePods(metaObject, &jobStatus, pods, rtype, spec, replicasStatus, replicas)
+		err = jc.ReconcilePods(metaObject, &jobStatus, pods, rtype, spec, replicasStatus, replicas, &restart)
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
 			return result, err
@@ -244,7 +245,7 @@ func (jc *JobController) ReconcileJobs(
 		}
 	}
 
-	err = jc.Controller.UpdateJobStatus(job, replicas, &jobStatus)
+	err = jc.Controller.UpdateJobStatus(job, replicas, &jobStatus, restart)
 	if err != nil {
 		log.Warnf("UpdateJobStatus error %v", err)
 		return result, err

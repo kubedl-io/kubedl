@@ -83,12 +83,12 @@ func (r *PytorchJobReconciler) DeleteJob(job interface{}) error {
 }
 
 // UpdateJobStatus updates the job status and job conditions
-func (r *PytorchJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus) error {
+func (r *PytorchJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	pytorchJob, ok := job.(*pytorchv1.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", pytorchJob)
 	}
-	return r.updateGeneralJobStatus(pytorchJob, replicas, jobStatus)
+	return r.updateGeneralJobStatus(pytorchJob, replicas, jobStatus, restart)
 }
 
 // UpdateJobStatusInApiServer updates the job status in API server
