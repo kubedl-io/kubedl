@@ -6,6 +6,10 @@
 KubeDL is short for **Kube**rnetes-**D**eep-**L**earning. It is a unified operator that supports running
 multiple types of distributed deep learning/machine learning workloads on Kubernetes.
 
+<div align="center">
+ <img src="docs/img/stack.png" width="700" title="Stack">
+</div> <br/>
+
 Currently, KubeDL supports the following types of ML/DL jobs:
 
 - [TensorFlow](https://github.com/tensorflow/tensorflow)
