@@ -15,7 +15,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -65,10 +64,6 @@ type JobController struct {
 	// Gang Scheduler is a abstract gang scheduling clientset.
 	GangScheduler gang_schedule.GangScheduler
 
-	// Client is a standard controller runtime clientset to communicate
-	// with api-server.
-	Client client.Client
-
 	// A TTLCache of pod/services creates/deletes each job expects to see
 	// We use Job namespace/name + ReplicaType + pods/services as an expectation key,
 	// For example, there is a TFJob with namespace "tf-operator" and name "tfjob-abc":
@@ -87,12 +82,10 @@ type JobController struct {
 	// - "tf-operator/tfjob-abc/worker/pods", expects 4 adds.
 	Expectations controller.ControllerExpectationsInterface
 
-	// WorkQueue is a rate limited work queue. This is used to queue work to be
-	// processed instead of performing it as soon as a change happens. This
-	// means we can ensure we only process a fixed amount of resources at a
-	// time, and makes it easy to ensure we are never processing the same item
-	// simultaneously in two different workers.
-	WorkQueue workqueue.RateLimitingInterface
+	// BackoffStatesQueue is a rate limited queue and record backoff counts for
+	// those reconciling-failed job instances, and it does not play a role of
+	// build-in work queue in controller-runtime.
+	BackoffStatesQueue workqueue.RateLimitingInterface
 
 	// Recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
@@ -104,27 +97,18 @@ type JobController struct {
 
 func NewJobController(
 	controllerImpl apiv1.ControllerInterface,
-	reconcilerSyncPeriod metav1.Duration,
-	enableGangScheduling bool,
-	client client.Client,
+	config JobControllerConfiguration,
 	recorder record.EventRecorder,
-	workQueueName string) JobController {
-
-	jobControllerConfig := JobControllerConfiguration{
-		ReconcilerSyncLoopPeriod: reconcilerSyncPeriod,
-		EnableGangScheduling:     enableGangScheduling,
+	metrics *metrics.JobMetrics,
+) JobController {
+	return JobController{
+		Controller:         controllerImpl,
+		Config:             config,
+		Expectations:       controller.NewControllerExpectations(),
+		BackoffStatesQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		Recorder:           recorder,
+		Metrics:            metrics,
 	}
-
-	jc := JobController{
-		Controller:   controllerImpl,
-		Config:       jobControllerConfig,
-		Client:       client,
-		Expectations: controller.NewControllerExpectations(),
-		WorkQueue:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), workQueueName),
-		Recorder:     recorder,
-	}
-	return jc
-
 }
 
 func (jc *JobController) GenOwnerReference(obj metav1.Object) *metav1.OwnerReference {
