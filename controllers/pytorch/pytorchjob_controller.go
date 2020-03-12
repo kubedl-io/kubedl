@@ -22,20 +22,11 @@ import (
 	"strconv"
 	"strings"
 
-	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
-	"github.com/alibaba/kubedl/cmd/options"
-	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/metrics"
-	"github.com/alibaba/kubedl/pkg/util"
-	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
-	k8scontroller "k8s.io/kubernetes/pkg/controller"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -44,6 +35,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
+	"github.com/alibaba/kubedl/pkg/job_controller"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 )
 
 const (
@@ -58,14 +57,7 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.JobController{
-		Controller:   r,
-		Config:       config,
-		WorkQueue:    &util.FakeWorkQueue{},
-		Recorder:     r.recorder,
-		Metrics:      metrics.NewJobMetrics(pytorchv1.Kind, r.Client),
-		Expectations: k8scontroller.NewControllerExpectations(),
-	}
+	r.ctrl = job_controller.NewJobController(r, config, r.recorder, metrics.NewJobMetrics(pytorchv1.Kind, r.Client))
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}

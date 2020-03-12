@@ -51,32 +51,6 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 	return nil
 }
 
-func (jc *JobController) cleanupJobIfTTL(runPolicy *apiv1.RunPolicy, jobStatus apiv1.JobStatus, job interface{}) error {
-	currentTime := time.Now()
-	metaObject, _ := job.(metav1.Object)
-	ttl := runPolicy.TTLSecondsAfterFinished
-	if ttl == nil {
-		// do nothing if the cleanup delay is not set
-		return nil
-	}
-	duration := time.Second * time.Duration(*ttl)
-	if currentTime.After(jobStatus.CompletionTime.Add(duration)) {
-		err := jc.Controller.DeleteJob(job)
-		if err != nil {
-			commonutil.LoggerForJob(metaObject).Warnf("Cleanup Job error: %v.", err)
-			return err
-		}
-		return nil
-	}
-	key, err := KeyFunc(job)
-	if err != nil {
-		commonutil.LoggerForJob(metaObject).Warnf("Couldn't get key for job object: %v", err)
-		return err
-	}
-	jc.WorkQueue.AddRateLimited(key)
-	return nil
-}
-
 // ReconcileJobs checks and updates replicas for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods/services.
 func (jc *JobController) ReconcileJobs(
@@ -100,6 +74,18 @@ func (jc *JobController) ReconcileJobs(
 		return result, err
 	}
 	log.Infof("Reconciling for job %s", metaObject.GetName())
+
+	defer func() {
+		// Add job key into backoff-states queue since it will be retried in
+		// next round util reconciling succeeded.
+		if result.Requeue || err != nil {
+			jc.BackoffStatesQueue.AddRateLimited(jobKey)
+			return
+		}
+		// Job exits reconciling process and do not have to be retried, just
+		// forget it.
+		jc.BackoffStatesQueue.Forget(jobKey)
+	}()
 
 	if jc.Config.EnableGangScheduling {
 		log.Infof("gang schedule enabled, start to syncing for job %s", jobKey)
@@ -130,7 +116,7 @@ func (jc *JobController) ReconcileJobs(
 	}
 
 	// retrieve the previous number of retry
-	previousRetry := jc.WorkQueue.NumRequeues(jobKey)
+	previousRetry := jc.BackoffStatesQueue.NumRequeues(jobKey)
 
 	activePods := k8sutil.FilterActivePods(pods)
 	active := int32(len(activePods))
