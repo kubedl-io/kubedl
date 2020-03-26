@@ -8,6 +8,19 @@ metadata:
   creationTimestamp: null
   name: xgboostjobs.xgboostjob.kubeflow.org
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.conditions[-1:].type
+    name: State
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  - JSONPath: .spec.ttlSecondsAfterFinished
+    name: Finished-TTL
+    type: integer
+  - JSONPath: .spec.activeDeadlineSeconds
+    name: Max-Lifetime
+    type: integer
   group: xgboostjob.kubeflow.org
   names:
     kind: XGBoostJob
@@ -123,6 +136,7 @@ spec:
             replicaStatuses:
               description: ReplicaStatuses is map of ReplicaType and ReplicaStatus,
                 specifies the status of each replica.
+              type: object
             startTime:
               description: Represents time when the job was acknowledged by the job
                 controller. It is not guaranteed to be set in happens-before order

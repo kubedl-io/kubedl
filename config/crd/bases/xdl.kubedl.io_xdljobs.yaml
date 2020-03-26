@@ -8,6 +8,19 @@ metadata:
   creationTimestamp: null
   name: xdljobs.xdl.kubedl.io
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.conditions[-1:].type
+    name: State
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  - JSONPath: .spec.ttlSecondsAfterFinished
+    name: Finished-TTL
+    type: integer
+  - JSONPath: .spec.activeDeadlineSeconds
+    name: Max-Lifetime
+    type: integer
   group: xdl.kubedl.io
   names:
     kind: XDLJob
