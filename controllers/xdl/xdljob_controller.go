@@ -109,7 +109,7 @@ func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	xdlJob := sharedXdlJob.DeepCopy()
 	// Check reconcile is required.
-	needSync := r.satisfiedExpectations(xdlJob)
+	needSync := r.ctrl.SatisfyExpectations(xdlJob, xdlJob.Spec.XDLReplicaSpecs)
 	// No need to do reconcile or job has been deleted.
 	if !needSync || xdlJob.DeletionTimestamp != nil {
 		log.Info("reconcile cancelled, job does not need to do reconcile or has been deleted",

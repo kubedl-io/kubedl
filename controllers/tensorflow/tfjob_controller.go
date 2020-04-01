@@ -105,7 +105,7 @@ func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	tfJob := sharedTfJob.DeepCopy()
 	// Check reconcile is required.
-	needSync := r.satisfiedExpectations(tfJob)
+	needSync := r.ctrl.SatisfyExpectations(tfJob, tfJob.Spec.TFReplicaSpecs)
 	// No need to do reconcile or job has been deleted.
 	if !needSync || tfJob.DeletionTimestamp != nil {
 		log.Info("reconcile cancelled, job does not need to do reconcile or has been deleted",
