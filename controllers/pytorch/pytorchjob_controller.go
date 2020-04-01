@@ -101,7 +101,7 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 
 	pytorchJob := sharedPytorchJob.DeepCopy()
 	// Check reconcile is required.
-	needSync := r.satisfyExpectations(pytorchJob)
+	needSync := r.ctrl.SatisfyExpectations(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs)
 	// No need to do reconcile or job has been deleted.
 	if !needSync || pytorchJob.DeletionTimestamp != nil {
 		log.Info("reconcile cancelled, job does not need to do reconcile or has been deleted",

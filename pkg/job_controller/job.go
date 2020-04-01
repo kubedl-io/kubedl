@@ -151,6 +151,8 @@ func (jc *JobController) ReconcileJobs(
 	} else if jc.pastActiveDeadline(runPolicy, jobStatus) {
 		failureMessage = fmt.Sprintf("Job %s has failed because it was active longer than specified deadline", jobName)
 		jobExceedsLimit = true
+		now := metav1.Now()
+		jobStatus.CompletionTime = &now
 	}
 
 	// If the Job is terminated, delete all pods and services.

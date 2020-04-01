@@ -96,7 +96,7 @@ func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Resul
 	}
 
 	// Check reconcile is required.
-	needSync := r.satisfiedExpectations(xgboostjob)
+	needSync := r.ctrl.SatisfyExpectations(xgboostjob, xgboostjob.Spec.XGBReplicaSpecs)
 
 	if !needSync || xgboostjob.DeletionTimestamp != nil {
 		log.Info("reconcile cancelled, job does not need to do reconcile or has been deleted",

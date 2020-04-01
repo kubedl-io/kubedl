@@ -19,6 +19,7 @@ package pytorch
 import (
 	"errors"
 	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -32,7 +33,7 @@ import (
 // updateGeneralJobStatus updates the status of job with given replica specs and job status.
 func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTorchJob,
 	replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
-	log.Info("Updating status", "PytorchJob name", pytorchJob.Name)
+	log.Info("Updating status", "PytorchJob name", pytorchJob.Name, "restart", restart)
 
 	// Set job status start time since this job has acknowledged by controller.
 	if jobStatus.StartTime == nil {
