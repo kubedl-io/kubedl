@@ -146,3 +146,15 @@ func GetTotalAvtiveReplicas(replicas map[apiv1.ReplicaType]*apiv1.ReplicaStatus)
 	}
 	return totalActiveReplicas
 }
+
+func ResolveDependentOwner(metaObj metav1.Object) (id, name string) {
+	if controllerRef := metav1.GetControllerOf(metaObj); controllerRef != nil {
+		return string(controllerRef.UID), controllerRef.Name
+	}
+	return "", ""
+}
+
+func GetReplicaType(pod *v1.Pod) (rtype string, ok bool) {
+	rtype, ok = pod.Labels[apiv1.ReplicaTypeLabel]
+	return
+}
