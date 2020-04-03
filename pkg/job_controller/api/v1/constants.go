@@ -21,5 +21,12 @@ const (
 const (
 	KubeDLPrefix = "kubedl.io"
 
+	// AnnotationGitSyncConfig annotate git sync configurations.
 	AnnotationGitSyncConfig = KubeDLPrefix + "/git-sync-config"
+	// AnnotationTenancyInfo annotate tenancy information.
+	AnnotationTenancyInfo = KubeDLPrefix + "/tenancy"
+)
+
+const (
+	DefaultKubeDLNamespace = "kubedl"
 )

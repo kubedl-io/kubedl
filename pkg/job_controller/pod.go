@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/kubernetes/pkg/controller"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -275,7 +274,7 @@ func (jc *JobController) ReconcilePods(
 					if err := jc.Controller.DeletePod(job, pod); err != nil {
 						return err
 					}
-					restart = pointer.BoolPtr(true)
+					*restart = true
 				}
 			}
 
