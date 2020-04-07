@@ -48,9 +48,14 @@ func TestStoragePytorchJob(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
 	expected := &PyTorchJob{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       Kind,
+			APIVersion: GroupName + "/" + GroupVersion,
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "default",
+			Name:            "foo",
+			Namespace:       "default",
+			ResourceVersion: "1",
 		},
 		Spec: PyTorchJobSpec{
 			PyTorchReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{},

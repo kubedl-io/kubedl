@@ -52,9 +52,14 @@ func TestStorageXGBoostJob(t *testing.T) {
 
 	// Test Create
 	expected := &XGBoostJob{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       Kind,
+			APIVersion: "xgboostjob.kubeflow.org/v1alpha1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "default",
+			Name:            "foo",
+			Namespace:       "default",
+			ResourceVersion: "1",
 		},
 		Spec: XGBoostJobSpec{
 			XGBReplicaSpecs: make(map[v1.ReplicaType]*v1.ReplicaSpec),

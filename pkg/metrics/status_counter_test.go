@@ -18,6 +18,9 @@ package metrics
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/alibaba/kubedl/api"
 	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -25,16 +28,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"testing"
-	"time"
 )
 
 var k8sClient client.Client
@@ -44,7 +46,7 @@ func TestAPIs(t *testing.T) {
 
 	RunSpecsWithDefaultAndCustomReporters(t,
 		"Controller Suite",
-		[]Reporter{envtest.NewlineReporter{}})
+		[]Reporter{printer.NewlineReporter{}})
 }
 
 var _ = BeforeSuite(func(done Done) {
