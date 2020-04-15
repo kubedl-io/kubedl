@@ -48,9 +48,14 @@ func TestStorageTFJob(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
 	expected := &TFJob{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       Kind,
+			APIVersion: GroupName + "/" + GroupVersion,
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "default",
+			Name:            "foo",
+			Namespace:       "default",
+			ResourceVersion: "1",
 		},
 		Spec: TFJobSpec{
 			TFReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{},
