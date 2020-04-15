@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Alibaba Authors.
+Copyright 2020 The Alibaba Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"errors"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -68,4 +69,13 @@ func ToServicePointerList(list []corev1.Service) []*corev1.Service {
 		ret = append(ret, &list[i])
 	}
 	return ret
+}
+
+func GetControllerOwnerReference(owners []v1.OwnerReference) v1.OwnerReference {
+	for idx := range owners {
+		if owners[idx].Controller != nil && *owners[idx].Controller == true {
+			return owners[idx]
+		}
+	}
+	return v1.OwnerReference{}
 }

@@ -3,13 +3,13 @@ package workloadgate
 import (
 	"flag"
 	"os"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
 	"k8s.io/klog"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
 

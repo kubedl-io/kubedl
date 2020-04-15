@@ -23,8 +23,11 @@ import (
 	"github.com/alibaba/kubedl/api"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers"
+	"github.com/alibaba/kubedl/controllers/persist"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	backendregistry "github.com/alibaba/kubedl/pkg/storage/backends/registry"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -89,6 +92,16 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "KubeDL")
 		os.Exit(1)
 	}
+
+	setupLog.Info("setting up storage backends")
+	backendregistry.RegisterStorageBackends()
+
+	// Setup persist controllers if storage backends are specified.
+	if err = persist.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to setup persist controllers")
+		os.Exit(1)
+	}
+
 	// Start monitoring for default registry.
 	metrics.StartMonitoringForDefaultRegistry(metricsAddr)
 
