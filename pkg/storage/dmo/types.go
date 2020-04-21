@@ -49,7 +49,7 @@ type Pod struct {
 	// DeployRegion indicates the physical region(IDC) this pod located in,
 	DeployRegion *string `gorm:"type:varchar(64);column:deploy_region" json:"deploy_region,omitempty"`
 	// Deleted indicates that whether this pod has been deleted or not.
-	Deleted *int `gorm:"type:tinyint(4);column:is_del" json:"is_del,omitempty"`
+	Deleted *int `gorm:"type:tinyint(4);column:deleted" json:"is_del,omitempty"`
 	// IsInEtcd indicates that whether record of this pod has been removed from etcd.
 	// Deleted pod could stay up in etcd due to different runtime policies.
 	IsInEtcd *int `gorm:"type:tinyint(4);column:is_in_etcd" json:"is_in_etcd,omitempty"`

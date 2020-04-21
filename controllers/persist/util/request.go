@@ -1,4 +1,5 @@
 /*
+Copyright 2020 The Alibaba Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,18 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package util
 
 import (
-	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
-	xgboostjob "github.com/alibaba/kubedl/controllers/xgboost"
-	"github.com/alibaba/kubedl/pkg/job_controller"
+	"fmt"
+	"strings"
 
-	controllerruntime "sigs.k8s.io/controller-runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func init() {
-	SetupWithManagerMap[&v1alpha1.XGBoostJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
-		return xgboostjob.NewReconciler(mgr, config).SetupWithManager(mgr)
+func IDName(obj metav1.Object) string {
+	return fmt.Sprintf("%s/%s", obj.GetUID(), obj.GetName())
+}
+
+func ParseIDName(key string) (id, name string, err error) {
+	parsed := strings.Split(key, "/")
+	if len(parsed) != 2 {
+		return "", "", fmt.Errorf("invalid key: %s, valid format is id/name", err)
 	}
+	id = strings.TrimSpace(parsed[0])
+	name = strings.TrimSpace(parsed[1])
+	return id, name, nil
 }
