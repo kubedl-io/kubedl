@@ -1,6 +1,6 @@
 # Run a XDLJob with KubeDL Operator
 
-This tutorial walks you through an example to run a XDLJob.
+This tutorial walks you through an example to run a XDLJob. [XDL](https://github.com/alibaba/x-deeplearning) is an open sourced deep learning engine from Alibab
 
 ## Requirements
 
@@ -8,9 +8,9 @@ Before starting this tutorial, you should [install KubeDL Operator](https://gith
 
 ## Install ZooKeeper
 
-XDLJob depends on ZooKeeper to make it's pods to communicate with each other, so we need install ZooKeeper first.
+XDLJob depends on ZooKeeper to make its pods communicate with each other.
 
-Below installs a single server instance of ZooKeeper.
+Below installs a single  instance of ZooKeeper.
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/docs/tutorial/v1/xdl-zk.yaml
@@ -20,15 +20,17 @@ For production environment, you can follow the [offical tutorial](https://kubern
 
 ## Run a XDLJob
 
-We need to set ZooKeeper server address and make config file in the XDLJob yaml.For every container in XDLJob, KubeDL operator will attach the environment variables ```TASK_NAME``` and ```TASK_INDEX``` to identify every pods. Also, KubeDL operator will modify the environment variable ```ZK_ADDR``` to add job UUID.
+We need to set `ZooKeeper server address` and `ConfigMap` accordingly in the [XDL Job yaml](v1/xdl-job.yaml).
+For every container in XDLJob, KubeDL operator will substitute the environment variables ```TASK_NAME``` and ```TASK_INDEX``` to identify every pod.
+Also, KubeDL operator will modify the `ZK_ADDR` env to add job UUID.
 
-Below run a XDLJob.
+Below runs a XDL job.
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/docs/tutorial/v1/xdl-job.yaml
 ```
 
-## Verify XDLJob Started
+## Verify XDL Job Started
 
 Check the XDLJob is started, and all pods are Running.
 

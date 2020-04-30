@@ -87,10 +87,13 @@ Supported workload types are `tfjob`, `xgboostjob`, `pytorchjob`, `xdljob`, e.g.
 kubectl get xgboostjob 
 ```
 
-## Metrics
+## Tutorial
+[How to run a XDL Job](docs/tutorial/xdljob.md)
+
+## KubeDL Metrics
 Check the [documents](docs/metrics.md) for the prometheus metrics supported for KubeDL operator.
 
-## Remote Source Sync
+## Sync Artifacts from Remote Repository
 KubeDL supports submitting jobs with artifacts synced from remote source dynamically without rebuilding the image.
 Currently github is supported. A plugable interface is supported for other sources such as hdfs. Check the [documents](docs/sync_code.md) for details.
 
@@ -100,6 +103,7 @@ A dashboard for monitoring the jobs' lifecycle and stats is currently in progres
 <div align="center">
   <img src="docs/img/ui_demo.png" width="1250" title="Job Dashboard Demo">
 </div>
+
 
 ## Developer Guide
 
@@ -132,12 +136,11 @@ docker push <your_image_name>
 
 To develop/debug KubeDL controller manager locally, please check the [debug guide](https://github.com/alibaba/kubedl/blob/master/docs/debug_guide.md).
 
+
 ## Community
 
 If you have any questions or want to contribute, GitHub issues or pull requests are warmly welcome.
 You can also contact us via the following channels:
-
-- Slack: [Join the Channel](https://join.slack.com/t/kubedl/shared_invite/enQtOTAwNjI5NjUyNjMxLWU3N2UxMzdjZWQ0YTc3MzE1NWUxZWU1MmVkMmZhNWIxOTUyZDc1OWVhMTA4NmRkYmVjMzkxNTllNGY4NGYwZTc)
 
 - Dingtalk Group(钉钉讨论群)
 
