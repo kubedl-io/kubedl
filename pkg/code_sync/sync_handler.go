@@ -65,6 +65,7 @@ func injectCodeSyncInitContainer(optsConfig []byte, handler CodeSyncHandler, spe
 				Name:      mountVolume.Name,
 				ReadOnly:  false,
 				MountPath: path.Join(container.WorkingDir, dest),
+				SubPath:   dest,
 			})
 		}
 	}
