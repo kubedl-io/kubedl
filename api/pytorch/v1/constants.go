@@ -29,6 +29,8 @@ const (
 	DefaultContainerName = "pytorch"
 	// DefaultPort is default value of the port.
 	DefaultPort = 23456
-	// DefaultRestartPolicy is default RestartPolicy for PyTorchReplicaSpec.
-	DefaultRestartPolicy = common.RestartPolicyOnFailure
+	// DefaultMasterRestartPolicy is default RestartPolicy for Master PyTorchReplicaSpec.
+	DefaultMasterRestartPolicy = common.RestartPolicyExitCode
+	// DefaultWorkerRestartPolicy is default RestartPolicy for Worker PyTorchReplicaSpec,
+	DefaultWorkerRestartPolicy = common.RestartPolicyOnFailure
 )
