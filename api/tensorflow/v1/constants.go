@@ -30,5 +30,5 @@ const (
 	// DefaultPort is default value of the port.
 	DefaultPort = 2222
 	// DefaultRestartPolicy is default RestartPolicy for TFReplicaSpec.
-	DefaultRestartPolicy = common.RestartPolicyNever
+	DefaultRestartPolicy = common.RestartPolicyExitCode
 )

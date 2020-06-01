@@ -56,13 +56,21 @@ func setDefaultPort(spec *v1.PodSpec) {
 		})
 	}
 }
-
-func setDefaultReplicas(spec *common.ReplicaSpec) {
+func setDefaultMasterReplicas(spec *common.ReplicaSpec) {
 	if spec.Replicas == nil {
 		spec.Replicas = Int32(1)
 	}
 	if spec.RestartPolicy == "" {
-		spec.RestartPolicy = DefaultRestartPolicy
+		spec.RestartPolicy = DefaultMasterRestartPolicy
+	}
+}
+
+func setDefaultWorkerReplicas(spec *common.ReplicaSpec) {
+	if spec.Replicas == nil {
+		spec.Replicas = Int32(1)
+	}
+	if spec.RestartPolicy == "" {
+		spec.RestartPolicy = DefaultWorkerRestartPolicy
 	}
 }
 
@@ -96,9 +104,12 @@ func SetDefaults_PyTorchJob(job *PyTorchJob) {
 	setTypeNamesToCamelCase(job)
 
 	for rType, spec := range job.Spec.PyTorchReplicaSpecs {
-		// Set default replicas to 1.
-		setDefaultReplicas(spec)
+		// Set default replicas and restart policy.
+		if rType == PyTorchReplicaTypeWorker {
+			setDefaultWorkerReplicas(spec)
+		}
 		if rType == PyTorchReplicaTypeMaster {
+			setDefaultMasterReplicas(spec)
 			// Set default port to pytorch container of Master.
 			setDefaultPort(&spec.Template.Spec)
 		}

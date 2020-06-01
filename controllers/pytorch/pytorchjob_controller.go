@@ -193,7 +193,7 @@ func (r *PytorchJobReconciler) SetClusterSpec(job interface{}, podTemplate *core
 	}
 
 	masterAddr := job_controller.GenGeneralName(pytorchJob.Name, strings.ToLower(string(pytorchv1.PyTorchReplicaTypeMaster)), strconv.Itoa(0))
-	if v1.ReplicaType(rtype) == pytorchv1.PyTorchReplicaTypeMaster {
+	if rtype == strings.ToLower(string(pytorchv1.PyTorchReplicaTypeMaster)) {
 		if rank != 0 {
 			return fmt.Errorf("invalid config: There should be only a single master with index=0")
 		}

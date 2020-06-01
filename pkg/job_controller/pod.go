@@ -251,6 +251,31 @@ func (jc *JobController) ReconcilePods(
 			masterRole = jc.Controller.IsMasterRole(replicas, rtype, index)
 			err = jc.createNewPod(job, rt, strconv.Itoa(index), spec, masterRole, replicas)
 			if err != nil {
+				// When controller tries to create a new pod but api-server returns a AlreadyExists error,
+				// there may comes with two case:
+				// 1. another controller watched this job instance and try to create pod concurrently.
+				// 2. when this job was just created, there were some pods stuck at Terminating state
+				//    and they belong to some job with same namespace/name.
+				//
+				// In the latter case, reconciling is interrupted and return a reconcile error, the underlying
+				// work queue will requeue this request and try another round of reconciliation, however the
+				// newly-arrived reconciliation just cancelled because no expectation satisfied, then no more
+				// expected pods created. To fix this we generate a new expectation event when catch AlreadyExists
+				// error.
+				if errors.IsAlreadyExists(err) {
+					jobKey, keyFuncErr := controller.KeyFunc(job)
+					if keyFuncErr != nil {
+						return err
+					}
+
+					expectationPodsKey := GenExpectationPodsKey(jobKey, rt)
+					jc.Expectations.CreationObserved(expectationPodsKey)
+					expectationServiceKey := GenExpectationServicesKey(jobKey, rt)
+					jc.Expectations.CreationObserved(expectationServiceKey)
+
+					logger.Infof("try create new pod %s but got a AlreadyExists error, generate a new expectation",
+						GenGeneralName(metaObject.GetName(), rt, strconv.Itoa(index)))
+				}
 				return err
 			}
 		} else {
