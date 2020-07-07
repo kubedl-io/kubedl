@@ -30,6 +30,27 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 
 ## Getting started
 
+You can deploy KubeDL using a single Helm command or just YAML files.
+
+### Deploy KubeDL using Helm
+
+KubeDL can be deployed with a single command leveraging the helm chart: 
+
+```bash
+helm install kubedl ./helm/kubedl 
+```
+
+You can override default values defined in `./helm/kubedl/values.yaml` with `--set` flag, for example:
+
+```bash
+helm install kubedl ./helm/kubedl --set kubedlSysNamespace=kube-system --set resources.requests.cpu=1024m --set resources.requests.memory=2Gi
+```
+
+Helm will render templates and apply them to cluster, just run the command above in root dir and be ready to go :) 
+
+
+### Alternatively, deploy KubeDL using YAML File
+
 #### Install CRDs
 
 ```bash
@@ -38,24 +59,7 @@ kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xdl.kubedl.io_xdljobs.yaml
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
 ```
-
-#### Deploy KubeDL by helm
-
-KubeDL can be deployed with a single command leveraging helm chart: 
-
-```bash
-helm install kubedl ./helm/kubedl 
-```
-
-You're able to override default values defined in `./helm/kubedl/values.yaml` with `--set` flag, for example:
-
-```bash
-helm install kubedl ./helm/kubedl --set kubedlSysNamespace=kube-system
-```
-
-helm will render templates and apply them to cluster, just run the command above in root dir and be ready to go :) 
-
-#### Deploy KubeDL as a deployment
+#### Install KubeDL operator
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/manager/all_in_one.yaml
