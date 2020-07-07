@@ -39,6 +39,22 @@ kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
 ```
 
+#### Deploy KubeDL by helm
+
+KubeDL can be deployed with a single command leveraging helm chart: 
+
+```bash
+helm install kubedl ./helm/kubedl 
+```
+
+You're able to override default values defined in `./helm/kubedl/values.yaml` with `--set` flag, for example:
+
+```bash
+helm install kubedl ./helm/kubedl --set kubedlSysNamespace=kube-system
+```
+
+helm will render templates and apply them to cluster, just run the command above in root dir and be ready to go :) 
+
 #### Deploy KubeDL as a deployment
 
 ```bash
