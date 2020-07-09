@@ -26,6 +26,7 @@ KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-opera
 - Support submitting a job with [artifacts synced from remote source such as github](./docs/sync_code.md ) without rebuilding the image. 
 - Support gang scheduling with a pluggable interface to support different backend gang schedulers.
 - Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
+- Built-in functionality to persist job metadata into a pluggable database such as Mysql.
 - [Work-in-progress] Provide a [dashboard](#job-dashboard) for monitoring the jobs' lifecycle and stats.
 
 ## Getting started
