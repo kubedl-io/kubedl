@@ -17,16 +17,15 @@ Currently, KubeDL supports the following types of ML/DL jobs:
 - [XGBoost](https://github.com/dmlc/xgboost)
 - [XDL](https://github.com/alibaba/x-deeplearning/)
 
-KubeDL is API compatible with [tf-operator](https://github.com/kubeflow/tf-operator), [pytorch-operator](https://github.com/kubeflow/pytorch-operator),
-[xgboost-operator](https://github.com/kubeflow/xgboost-operator) and integrates them with enhanced features as below:
+KubeDL maintains API compatibility with certain kubeflow job operators and provides additional features as below:
 
 - Support running prevalent ML/DL workloads in a single operator.
-- A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
-- Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
 - Support submitting a job with [artifacts synced from remote source such as github](./docs/sync_code.md ) without rebuilding the image. 
-- Support gang scheduling with a pluggable interface to support different backend gang schedulers.
-- Instrumented with rich prometheus [metrics](./docs/metrics.md) to provide more insights about the job stats, such as job launch delay, current number of pending/running jobs.
-- Built-in functionality to persist job metadata into a pluggable database such as Mysql.
+- Support advanced scheduling features such as gang scheduling with pluggable backend schedulers.
+- Instrumented with unified prometheus [metrics](./docs/metrics.md)  for different types of DL jobs, such as job launch delay, current number of pending/running jobs.
+- Job metadata persistency with a pluggable storage backend such as Mysql.
+- Enable specific workload type according to the installed CRDs automatically or through the startup flags explicitly.
+- A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
 - [Work-in-progress] Provide a [dashboard](#job-dashboard) for monitoring the jobs' lifecycle and stats.
 
 ## Getting started
