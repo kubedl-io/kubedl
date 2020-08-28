@@ -53,6 +53,14 @@ type TFJobSpec struct {
 	// active.
 	commonv1.RunPolicy `json:",inline"`
 
+	// SuccessPolicy defines the policy to mark the TFJob as succeeded when the job does not contain chief or master
+	// role.
+	// Value "" means the default policy that the job is succeeded if all workers are succeeded or worker 0 completed,
+	// Value "AllWorkers" means the job is succeeded if all workers are succeeded.
+	// Default to ""
+	// +optional
+	SuccessPolicy *SuccessPolicy `json:"successPolicy,omitempty"`
+
 	// A map of TFReplicaType (type) to ReplicaSpec (value). Specifies the TF cluster configuration.
 	// For example,
 	//   {
@@ -61,6 +69,16 @@ type TFJobSpec struct {
 	//   }
 	TFReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"tfReplicaSpecs"`
 }
+
+// SuccessPolicy is the policy to mark the job as succeeded, when the job does not contain the chief or master role.
+type SuccessPolicy string
+
+const (
+	// SuccessPolicyDefault indicates the job is succeeded if all workers are succeeded or worker 0 completed
+	SuccessPolicyDefault SuccessPolicy = ""
+	// SuccessPolicyAllWorkers indicates the job is succeeded if all workers are succeeded.
+	SuccessPolicyAllWorkers SuccessPolicy = "AllWorkers"
+)
 
 // TFReplicaType is the type for TFReplica. Can be one of: "Chief"/"Master" (semantically equivalent),
 // "Worker", "PS", or "Evaluator".
