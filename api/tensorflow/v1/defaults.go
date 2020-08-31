@@ -96,6 +96,12 @@ func SetDefaults_TFJob(tfjob *TFJob) {
 		tfjob.Spec.CleanPodPolicy = &running
 	}
 
+	// Set default success policy to "".
+	if tfjob.Spec.SuccessPolicy == nil {
+		defaultPolicy := SuccessPolicyDefault
+		tfjob.Spec.SuccessPolicy = &defaultPolicy
+	}
+
 	// Update the key of TFReplicaSpecs to camel case.
 	setTypeNamesToCamelCase(tfjob)
 
