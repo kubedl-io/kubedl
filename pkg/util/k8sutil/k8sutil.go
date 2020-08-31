@@ -78,7 +78,7 @@ func IsKubernetesResourceNotFoundError(err error) bool {
 	return apierrors.IsNotFound(err)
 }
 
-// TODO(jlewi): CascadeDeletOptions are part of garbage collection policy.
+// TODO(jlewi): CascadeDeleteOptions are part of garbage collection policy.
 // CascadeDeleteOptions deletes the workload after the grace period
 // Do we want to use this? See
 // https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/
