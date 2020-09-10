@@ -2,6 +2,8 @@ package quota
 
 import (
 	v1 "k8s.io/api/core/v1"
+	utilfeature "k8s.io/apiserver/pkg/util/feature"
+	"k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/quota/v1"
 )
 
@@ -32,4 +34,20 @@ func MaximumContainersResources(containers []v1.Container) v1.ResourceRequiremen
 		max.Limits = quota.Max(max.Limits, container.Resources.Limits)
 	}
 	return max
+}
+
+func ComputePodResourceRequest(pod *v1.Pod) v1.ResourceList {
+	result := v1.ResourceList{}
+	for _, container := range pod.Spec.Containers {
+		result = quota.Add(result, container.Resources.Requests)
+	}
+	// take max_resource(sum_pod, any_init_container)
+	for _, container := range pod.Spec.InitContainers {
+		result = quota.Max(result, container.Resources.Requests)
+	}
+	// If Overhead is being utilized, add to the total requests for the pod
+	if pod.Spec.Overhead != nil && utilfeature.DefaultFeatureGate.Enabled(features.PodOverhead) {
+		result = quota.Add(result, pod.Spec.Overhead)
+	}
+	return result
 }

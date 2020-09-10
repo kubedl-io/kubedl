@@ -6,14 +6,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.0
   creationTimestamp: null
-  name: xgboostjobs.xgboostjob.kubeflow.org
+  name: marsjobs.kubedl.io
 spec:
-  group: xgboostjob.kubeflow.org
+  group: kubedl.io
   names:
-    kind: XGBoostJob
-    listKind: XGBoostJobList
-    plural: xgboostjobs
-    singular: xgboostjob
+    kind: MarsJob
+    listKind: MarsJobList
+    plural: marsjobs
+    singular: marsjob
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -32,7 +32,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: XGBoostJob is the Schema for the xgboostjobs API
+        description: MarsJob represents a mars job instance nad
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -43,7 +43,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: XGBoostJobSpec defines the desired state of XGBoostJob
+            description: MarsJobSpec defines the desired state of MarsJob
             properties:
               activeDeadlineSeconds:
                 description: Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer.
@@ -56,18 +56,7 @@ spec:
               cleanPodPolicy:
                 description: CleanPodPolicy defines the policy to kill pods after the job completes. Default to Running.
                 type: string
-              schedulingPolicy:
-                description: SchedulingPolicy defines the policy related to scheduling, e.g. gang-scheduling
-                properties:
-                  minAvailable:
-                    format: int32
-                    type: integer
-                type: object
-              ttlSecondsAfterFinished:
-                description: TTLSecondsAfterFinished is the TTL to clean up jobs. It may take extra ReconcilePeriod seconds for the cleanup, since reconcile gets called periodically. Default to infinite.
-                format: int32
-                type: integer
-              xgbReplicaSpecs:
+              marsReplicaSpecs:
                 additionalProperties:
                   description: ReplicaSpec is a description of the replica
                   properties:
@@ -3665,13 +3654,53 @@ spec:
                           type: object
                       type: object
                   type: object
-                description: 'XGBoostReplicaSpecs is map of ReplicaType and ReplicaSpec specifies the XGBoost replicas to run. For example,   {     "PS": ReplicaSpec,     "Worker": ReplicaSpec,   }'
+                description: MarsReplicaSpecs is a map of MarsReplicaType(key) to ReplicaSpec(value), specifying replicas and template of each type.
+                type: object
+              schedulingPolicy:
+                description: SchedulingPolicy defines the policy related to scheduling, e.g. gang-scheduling
+                properties:
+                  minAvailable:
+                    format: int32
+                    type: integer
+                type: object
+              ttlSecondsAfterFinished:
+                description: TTLSecondsAfterFinished is the TTL to clean up jobs. It may take extra ReconcilePeriod seconds for the cleanup, since reconcile gets called periodically. Default to infinite.
+                format: int32
+                type: integer
+              webHost:
+                description: WebHost is the domain address of webservice that expose to external users.
+                type: string
+              workerMemoryTuningPolicy:
+                description: WorkerMemoryTuningPolicy provides multiple memory tuning policies to mars worker spec, such as cache size, cold data paths...
+                properties:
+                  lockFreeFileIO:
+                    description: LockFreeFileIO indicates whether spill dirs are dedicated or not.
+                    type: boolean
+                  plasmaStore:
+                    description: PlasmaStore specify the socket path of plasma store that handles shared memory between all worker processes.
+                    type: string
+                  spillDirs:
+                    description: SpillDirs specify multiple directory paths, when size of in-memory objects is about to reach the limitation, mars workers will swap cold data out to spill dirs and persist in ephemeral-storage.
+                    items:
+                      type: string
+                    type: array
+                  workerCachePercentage:
+                    description: WorkerCachePercentage specify the percentage of total available memory size can be used as cache, it will be overridden by workerCacheSize if it is been set.
+                    format: int32
+                    type: integer
+                  workerCacheSize:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: WorkerCacheSize specify the exact cache quantity can be used.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
                 type: object
             required:
-            - xgbReplicaSpecs
+            - marsReplicaSpecs
             type: object
           status:
-            description: XGBoostJobStatus defines the observed state of XGBoostJob
+            description: JobStatus represents the current observed state of the training Job.
             properties:
               completionTime:
                 description: Represents time when the job was completed. It is not guaranteed to be set in happens-before order across separate operations. It is represented in RFC3339 form and is in UTC.
