@@ -24,27 +24,27 @@ const (
 
 // IsSucceeded checks if the job is succeeded.
 func IsSucceeded(status apiv1.JobStatus) bool {
-	return hasCondition(status, apiv1.JobSucceeded)
+	return HasCondition(status, apiv1.JobSucceeded)
 }
 
 // IsFailed checks if the job is failed.
 func IsFailed(status apiv1.JobStatus) bool {
-	return hasCondition(status, apiv1.JobFailed)
+	return HasCondition(status, apiv1.JobFailed)
 }
 
 // IsRunning checks if the job is running.
 func IsRunning(status apiv1.JobStatus) bool {
-	return hasCondition(status, apiv1.JobRunning)
+	return HasCondition(status, apiv1.JobRunning)
 }
 
 // IsCreated checks if the job has created.
 func IsCreated(status apiv1.JobStatus) bool {
-	return hasCondition(status, apiv1.JobCreated)
+	return HasCondition(status, apiv1.JobCreated)
 }
 
 // IsRestart checks if the job is restarting.
 func IsRestarting(status apiv1.JobStatus) bool {
-	return hasCondition(status, apiv1.JobRestarting)
+	return HasCondition(status, apiv1.JobRestarting)
 }
 
 // UpdateJobConditions adds to the jobStatus a new condition if needed, with the conditionType, reason, and message.
@@ -64,7 +64,7 @@ func GetCondition(status apiv1.JobStatus, condType apiv1.JobConditionType) *apiv
 	return nil
 }
 
-func hasCondition(status apiv1.JobStatus, condType apiv1.JobConditionType) bool {
+func HasCondition(status apiv1.JobStatus, condType apiv1.JobConditionType) bool {
 	for _, condition := range status.Conditions {
 		if condition.Type == condType && condition.Status == v1.ConditionTrue {
 			return true

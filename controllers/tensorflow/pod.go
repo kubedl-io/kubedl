@@ -52,7 +52,7 @@ func (r *TFJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error) 
 	// If any adoptions are attempted, we should first recheck for deletion
 	// with an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := job_controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := r.GetJobFromAPIClient(job.GetNamespace(), job.GetName())
+		fresh, err := r.ctrl.Controller.GetJobFromAPIClient(job.GetNamespace(), job.GetName())
 		if err != nil {
 			return nil, err
 		}

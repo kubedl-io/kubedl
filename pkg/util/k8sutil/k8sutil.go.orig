@@ -99,12 +99,8 @@ func FilterActivePods(pods []*v1.Pod) []*v1.Pod {
 		if IsPodActive(p) {
 			result = append(result, p)
 		} else {
-			deletionTimeStamp := "N/A"
-			if p.DeletionTimestamp != nil {
-				deletionTimeStamp = p.DeletionTimestamp.String()
-			}
-			log.Infof("Ignoring inactive pod %v/%v in state %v, deletion time %s",
-				p.Namespace, p.Name, p.Status.Phase, deletionTimeStamp)
+			log.Infof("Ignoring inactive pod %v/%v in state %v, deletion time %v",
+				p.Namespace, p.Name, p.Status.Phase, p.DeletionTimestamp)
 		}
 	}
 	return result
