@@ -195,7 +195,10 @@ func (r *MarsJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.
 				Name:  "MARS_MEMORY_TOTAL",
 				Value: strconv.Itoa(int(podTemplate.Spec.Containers[i].Resources.Limits.Memory().Value())),
 			}, corev1.EnvVar{
-				Name:  "MARS_USE_CGROUP_STAT",
+				Name:  "MARS_CPU_USE_PROCESS_STAT",
+				Value: "1",
+			}, corev1.EnvVar{
+				Name:  "MARS_MEM_USE_CGROUP_STAT",
 				Value: "1",
 			}, corev1.EnvVar{
 				Name: "MARS_CONTAINER_IP",

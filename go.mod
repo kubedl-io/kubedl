@@ -20,11 +20,13 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.0.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/cobra v1.0.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	go.uber.org/zap v1.13.0 // indirect
 	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	golang.org/x/tools v0.0.0-20200616195046-dc31b401abb5 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	k8s.io/api v0.18.6
 	k8s.io/apimachinery v0.18.6
@@ -35,7 +37,7 @@ require (
 	k8s.io/kubernetes v1.18.6
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	sigs.k8s.io/controller-runtime v0.6.2
-	sigs.k8s.io/controller-tools v0.4.0 // indirect
+	sigs.k8s.io/controller-tools v0.3.0 // indirect
 )
 
 replace (
