@@ -48,7 +48,7 @@ const (
 
 var log = logf.Log.WithName("elasticdl-controller")
 
-func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfiguration) *PytorchJobReconciler {
+func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfiguration) *ElasticDLJobReconciler {
 	r := &ElasticDLJobReconciler{
 		Client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),
@@ -58,7 +58,7 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 	return r
 }
 
-var _ reconcile.Reconciler = &ElasticDlJobReconciler{}
+var _ reconcile.Reconciler = &ElasticDLJobReconciler{}
 var _ v1.ControllerInterface = &ElasticDLJobReconciler{}
 
 // ElasticDLJobReconciler reconcile a ElastiDLJob object
@@ -105,7 +105,7 @@ func (r *ElasticDLJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	// Set default properties for elasicdl job.
 	r.scheme.Default(elasticdlJob)
 
-	result, err := r.ctrl.ReconcileJobs(elasticdlJob, elasticdlJob.Spec.ElasticDLReplicaSpecs, elasticdljob.Status, &elasticdlJob.Spec.RunPolicy)
+	result, err := r.ctrl.ReconcileJobs(elasticdlJob, elasticdlJob.Spec.ElasticDLReplicaSpecs, elasticdlJob.Status, &elasticdlJob.Spec.RunPolicy)
 	if err != nil {
 		log.Error(err, "elasticdl job reconcile failed")
 		return result, err
@@ -170,13 +170,39 @@ func (r *ElasticDLJobReconciler) GetGroupNameLabelValue() string {
 	return elasticdlv1alpha1.GroupName
 }
 
+// GetDefaultContainerName returns the default container name in pod
+func (r *ElasticDLJobReconciler) GetDefaultContainerName() string {
+	return elasticdlv1alpha1.DefaultContainerName
+}
+
+// GetDefaultContainerPortName Get the default container port name
+func (r *ElasticDLJobReconciler) GetDefaultContainerPortName() string {
+	return elasticdlv1alpha1.DefaultPortName
+}
+
+// GetDefaultContainerPortNumber get the default container port number
+func (r *ElasticDLJobReconciler) GetDefaultContainerPortNumber() int32 {
+	return elasticdlv1alpha1.DefaultPort
+}
+
+func (r *ElasticDLJobReconciler) GetReconcileOrders() []v1.ReplicaType {
+	return []v1.ReplicaType{
+		elasticdlv1alpha1.ElasticDLReplicaTypeMaster,
+	}
+}
+
+func (r *ElasticDLJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaType, index int) bool {
+	_, ok := replicas[elasticdlv1alpha1.ElasticDLReplicaTypeMaster]
+	return ok && rtype == elasticdlv1alpha1.ElasticDLReplicaTypeMaster
+}
+
 // SetClusterSpec sets the cluster spec for the pod
 func (r *ElasticDLJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
-	elasticdlJob, ok := job.(*elasticdlv1alpha1.ElasticDLJob)
+	_, ok := job.(*elasticdlv1alpha1.ElasticDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
 	}
-	rank, err := strconv.Atoi(index)
+	_, err := strconv.Atoi(index)
 	if err != nil {
 		return err
 	}
