@@ -16,9 +16,9 @@ package controllers
 import (
 	"github.com/alibaba/kubedl/api/marsjob/v1alpha1"
 	controllers "github.com/alibaba/kubedl/controllers/mars"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 
 	"github.com/alibaba/kubedl/pkg/job_controller"
-	"sigs.k8s.io/controller-runtime"
 )
 
 func init() {

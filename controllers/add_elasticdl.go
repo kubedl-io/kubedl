@@ -18,7 +18,7 @@ package controllers
 
 import (
 	"github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
-	controllers "github.com/alibaba/kubedl/controllers/mars"
+	controllers "github.com/alibaba/kubedl/controllers/elasticdl"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 
 	"github.com/alibaba/kubedl/pkg/job_controller"
