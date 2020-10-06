@@ -17,7 +17,7 @@ limitations under the License.
 package controllers
 
 import (
-	"github.com/alibaba/kubedl/api/marsjob/v1alpha1"
+	"github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
 	controllers "github.com/alibaba/kubedl/controllers/mars"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 
@@ -25,7 +25,7 @@ import (
 )
 
 func init() {
-	SetupWithManagerMap[&v1alpha1.MarsJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+	SetupWithManagerMap[&v1alpha1.ElasticDLJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
 		return controllers.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
 }

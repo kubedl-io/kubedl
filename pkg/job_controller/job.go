@@ -12,6 +12,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	elasticdlv1alpha1 "github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
 	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
 	"github.com/alibaba/kubedl/pkg/code_sync"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -218,6 +219,11 @@ func (jc *JobController) ReconcileJobs(
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
 			return result, err
+		}
+
+		// Skip service of ElasticDLJob
+		if jc.Controller.GetAPIGroupVersionKind().Kind == elasticdlv1alpha1.Kind {
+			continue
 		}
 
 		// Service is in need only for Master
