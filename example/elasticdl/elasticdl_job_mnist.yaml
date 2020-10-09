@@ -17,7 +17,7 @@ spec:
             - set -o pipefail; python -m elasticdl.python.master.main
               --job_name 'test-mnist'
               --namespace 'kubedl'
-              --worker_image 'elasticdl:test'
+              --worker_image 'o0o0o/elasticdl:mnist'
               --model_zoo 'model_zoo'
               --model_def 'mnist_functional_api.mnist_functional_api.custom_model'
               --num_epochs '2'
@@ -41,7 +41,7 @@ spec:
               --checkpoint_steps '0'
               --checkpoint_dir ''
               --keep_checkpoint_max '0'
-              --image_pull_policy 'Never'
+              --image_pull_policy 'Always'
               --restart_policy 'Never'
             command:
             - /bin/bash
@@ -50,8 +50,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            image: elasticdl:test
-            imagePullPolicy: Never
+            image: o0o0o/elasticdl:mnist
+            imagePullPolicy: Always
             name: elasticdl-test-mnist-master
             resources:
               limits:
