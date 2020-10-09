@@ -69,14 +69,9 @@ type ElasticDLJobReconciler struct {
 	ctrl     job_controller.JobController
 }
 
-// Reconcile reads that state of the cluster for a ElasticDLJob object and makes changes based on the state read
-// and what is in the ElasticDLJob.Spec
-// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=elasticdl.org,resources=elasticdljobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=elasticdl.org,resources=elasticdljobs/status,verbs=get;update;patch
+
 func (r *ElasticDLJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest elasticdl job instance.
 	sharedElasticDLJob := &elasticdlv1alpha1.ElasticDLJob{}

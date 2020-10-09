@@ -1,7 +1,7 @@
 apiVersion: "elasticdl.org/v1alpha1"
 kind: "ElasticDLJob"
 metadata:
-  name: "mnist1"
+  name: "test-mnist"
   namespace: kubedl 
 spec:
   cleanPodPolicy: None 
@@ -30,11 +30,11 @@ spec:
               --master_pod_priority ''
               --num_workers '1'
               --worker_resource_request 'cpu=0.4,memory=1024Mi'
-              --worker_resource_limit 'cpu=1,memory=2048Mi'
+              --worker_resource_limit 'cpu=0.4,memory=1024Mi'
               --worker_pod_priority ''
               --num_ps_pods '1'
-              --ps_resource_request 'cpu=0.2,memory=1024Mi'
-              --ps_resource_limit 'cpu=1,memory=2048Mi'
+              --ps_resource_request 'cpu=0.2,memory=512Mi'
+              --ps_resource_limit 'cpu=0.2,memory=512Mi'
               --ps_pod_priority ''
               --volume 'host_path=/data,mount_path=/data'
               --output ''
@@ -55,11 +55,11 @@ spec:
             name: elasticdl-test-mnist-master
             resources:
               limits:
-                cpu: '1'
-                memory: 2048Mi
+                cpu: '0.2'
+                memory: 512Mi
               requests:
                 cpu: '0.2'
-                memory: 1024Mi
+                memory: 512Mi
             volumeMounts:
             - mountPath: /data
               name: elasticdl-test-mnist-master-volume-0

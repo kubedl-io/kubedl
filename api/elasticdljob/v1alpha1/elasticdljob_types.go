@@ -38,7 +38,7 @@ type ElasticDLJobSpec struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:defaulter-gen=TypeMeta
-// +resource:path=pytorchjob
+// +resource:path=elasticdljob
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Namespaced
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.conditions[-1:].type`
@@ -68,7 +68,7 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +resource:path=pytorchjobs
+// +resource:path=elasticdljobs
 
 // ElasticDLJobList is a list of ElasticDLJobs.
 type ElasticDLJobList struct {
