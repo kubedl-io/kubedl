@@ -7,9 +7,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - kubeflow.org
+  - ""
   resources:
-  - tfjobs
+  - pods
   verbs:
   - create
   - delete
@@ -19,70 +19,42 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kubeflow.org
+  - elasticdl.org
   resources:
-  - tfjobs/status
+  - elasticdljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - elasticdl.org
+  resources:
+  - elasticdljobs/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-    - kubeflow.org
+  - kubedl.io
   resources:
-    - pytorchjobs
+  - marsjobs
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
-    - kubeflow.org
+  - kubedl.io
   resources:
-    - pytorchjobs/status
+  - marsjobs/status
   verbs:
-    - get
-    - patch
-    - update
-- apiGroups:
-    - xdl.kubedl.io
-  resources:
-    - xdljobs
-  verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
-- apiGroups:
-    - xdl.kubedl.io
-  resources:
-    - xdljobs/status
-  verbs:
-    - get
-    - patch
-    - update
-- apiGroups:
-    - xgboostjob.kubeflow.org
-  resources:
-    - xgboostjobs
-  verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
-- apiGroups:
-    - xgboostjob.kubeflow.org
-  resources:
-    - xgboostjobs/status
-  verbs:
-    - get
-    - patch
-    - update
+  - get
+  - patch
+  - update

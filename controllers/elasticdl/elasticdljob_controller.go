@@ -69,6 +69,7 @@ type ElasticDLJobReconciler struct {
 	ctrl     job_controller.JobController
 }
 
+// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=elasticdl.org,resources=elasticdljobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=elasticdl.org,resources=elasticdljobs/status,verbs=get;update;patch
 
