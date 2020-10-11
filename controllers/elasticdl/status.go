@@ -44,15 +44,11 @@ func (r *ElasticDLJobReconciler) updateGeneralJobStatus(elasticdlJob *elasticdlv
 	previousRestarting := commonutil.IsRestarting(*jobStatus)
 	previousFailed := commonutil.IsFailed(*jobStatus)
 
-	for rtype, spec := range replicaSpecs {
-		replicas := *spec.Replicas
-		// If rtype in replica status not found, there must be a mistyped/invalid rtype in job spec,
-		// and it has not been reconciled in previous processes, discard it.
-		status, ok := jobStatus.ReplicaStatuses[rtype]
-		if !ok {
-			log.Info("skipping invalid replica type", "rtype", rtype)
-			continue
-		}
+	// An ElasticDLJob only contains a master replica spec.
+	rtype := elasticdlv1alpha1.ElasticDLReplicaTypeMaster
+	if ContainMasterSpec(elasticdlJob) {
+		replicas := *replicaSpecs[rtype].Replicas
+		status := jobStatus.ReplicaStatuses[rtype]
 		expected := replicas - status.Succeeded
 		running := status.Active
 		failed := status.Failed
@@ -60,34 +56,27 @@ func (r *ElasticDLJobReconciler) updateGeneralJobStatus(elasticdlJob *elasticdlv
 		log.Info("Update elasticdl job status", "ElasticDLJob", elasticdlJob.Name,
 			"ReplicaType", rtype, "expected", expected, "running", running, "failed", failed)
 
-		if ContainMasterSpec(elasticdlJob) {
-			if rtype == elasticdlv1alpha1.ElasticDLReplicaTypeMaster {
-				if running > 0 {
-					msg := fmt.Sprintf("ElasticDLJob %s is running.", elasticdlJob.Name)
-					err := commonutil.UpdateJobConditions(jobStatus, v1.JobRunning, commonutil.JobRunningReason, msg)
-					if err != nil {
-						log.Info("Append job condition", " error:", err)
-						return err
-					}
-				}
-				if expected == 0 {
-					msg := fmt.Sprintf("ElasticDLJob %s is successfully completed.", elasticdlJob.Name)
-					r.recorder.Event(elasticdlJob, corev1.EventTypeNormal, commonutil.JobSucceededReason, msg)
-					if jobStatus.CompletionTime == nil {
-						now := metav1.Now()
-						jobStatus.CompletionTime = &now
-					}
-					err := commonutil.UpdateJobConditions(jobStatus, v1.JobSucceeded, commonutil.JobSucceededReason, msg)
-					if err != nil {
-						log.Info("Append job condition", "error:", err)
-						return err
-					}
-					r.ctrl.Metrics.SuccessInc()
-				}
+		if running > 0 {
+			msg := fmt.Sprintf("ElasticDLJob %s is running.", elasticdlJob.Name)
+			err := commonutil.UpdateJobConditions(jobStatus, v1.JobRunning, commonutil.JobRunningReason, msg)
+			if err != nil {
+				log.Info("Append job condition", " error:", err)
+				return err
 			}
-		} else {
-			log.Info("Invalid config: Job must contain master replica spec")
-			return errors.New("invalid config: Job must contain master replica spec")
+		}
+		if expected == 0 {
+			msg := fmt.Sprintf("ElasticDLJob %s is successfully completed.", elasticdlJob.Name)
+			r.recorder.Event(elasticdlJob, corev1.EventTypeNormal, commonutil.JobSucceededReason, msg)
+			if jobStatus.CompletionTime == nil {
+				now := metav1.Now()
+				jobStatus.CompletionTime = &now
+			}
+			err := commonutil.UpdateJobConditions(jobStatus, v1.JobSucceeded, commonutil.JobSucceededReason, msg)
+			if err != nil {
+				log.Info("Append job condition", "error:", err)
+				return err
+			}
+			r.ctrl.Metrics.SuccessInc()
 		}
 
 		if failed > 0 {
@@ -120,6 +109,9 @@ func (r *ElasticDLJobReconciler) updateGeneralJobStatus(elasticdlJob *elasticdlv
 				}
 			}
 		}
+	} else {
+		log.Info("Invalid config: Job must contain master replica spec")
+		return errors.New("invalid config: Job must contain master replica spec")
 	}
 	return nil
 }
