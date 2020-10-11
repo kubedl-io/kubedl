@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Alibaba Authors.
+Copyright 2020 The Alibaba Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package elasticdl
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 
 	elasticdlv1alpha1 "github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -194,13 +192,5 @@ func (r *ElasticDLJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.Re
 
 // SetClusterSpec sets the cluster spec for the pod
 func (r *ElasticDLJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
-	_, ok := job.(*elasticdlv1alpha1.ElasticDLJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
-	}
-	_, err := strconv.Atoi(index)
-	if err != nil {
-		return err
-	}
 	return nil
 }
