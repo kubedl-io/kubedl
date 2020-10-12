@@ -71,6 +71,7 @@ func main() {
 		Scheme:             scheme,
 		MetricsBindAddress: ctrlMetricsAddr,
 		LeaderElection:     enableLeaderElection,
+		LeaderElectionID:   "kubedl-election",
 		Port:               9443,
 	})
 	if err != nil {
