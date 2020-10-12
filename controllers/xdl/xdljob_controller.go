@@ -91,6 +91,7 @@ type XDLJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=xdl.kubedl.io,resources=xdljobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=xdl.kubedl.io,resources=xdljobs/status,verbs=get;update;patch
+
 func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the latest xdlJob instance.
 	sharedXdlJob := &xdlv1alpha1.XDLJob{}
