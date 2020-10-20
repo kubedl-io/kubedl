@@ -346,6 +346,10 @@ func (jc *JobController) createNewPod(job interface{}, rt, index string, spec *a
 
 	// Set name for the template.
 	podTemplate.Name = GenGeneralName(metaObject.GetName(), rt, index)
+	// Compatible with the naming convention of ElasticDL
+	if jc.Controller.ControllerName() == "ElasticDLController" && masterRole {
+		podTemplate.Name = "elasticdl-" + metaObject.GetName() + "-master"
+	}
 
 	if podTemplate.Labels == nil {
 		podTemplate.Labels = make(map[string]string)

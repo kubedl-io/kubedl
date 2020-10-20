@@ -1,0 +1,71 @@
+apiVersion: "elasticdl.org/v1alpha1"
+kind: "ElasticDLJob"
+metadata:
+  name: "test-mnist"
+  namespace: kubedl 
+spec:
+  cleanPodPolicy: None 
+  elasticdlReplicaSpecs:
+    Master:
+      replicas: 1 
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+          - args:
+            - -c
+            - set -o pipefail; python -m elasticdl.python.master.main
+              --job_name 'test-mnist'
+              --namespace 'kubedl'
+              --worker_image 'o0o0o/elasticdl:mnist'
+              --model_zoo 'model_zoo'
+              --model_def 'mnist_functional_api.mnist_functional_api.custom_model'
+              --num_epochs '2'
+              --minibatch_size '64'
+              --num_minibatches_per_task '2'
+              --distribution_strategy 'ParameterServerStrategy'
+              --training_data '/data/mnist/train'
+              --validation_data ''
+              --evaluation_steps '0'
+              --master_pod_priority ''
+              --num_workers '1'
+              --worker_resource_request 'cpu=0.4,memory=1024Mi'
+              --worker_resource_limit 'cpu=0.4,memory=1024Mi'
+              --worker_pod_priority ''
+              --num_ps_pods '1'
+              --ps_resource_request 'cpu=0.2,memory=512Mi'
+              --ps_resource_limit 'cpu=0.2,memory=512Mi'
+              --ps_pod_priority ''
+              --volume 'host_path=/data,mount_path=/data'
+              --output ''
+              --checkpoint_steps '0'
+              --checkpoint_dir ''
+              --keep_checkpoint_max '0'
+              --image_pull_policy 'Always'
+              --restart_policy 'Never'
+            command:
+            - /bin/bash
+            env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            image: o0o0o/elasticdl:mnist
+            imagePullPolicy: Always
+            name: elasticdl-test-mnist-master
+            resources:
+              limits:
+                cpu: '0.2'
+                memory: 512Mi
+              requests:
+                cpu: '0.2'
+                memory: 512Mi
+            volumeMounts:
+            - mountPath: /data
+              name: elasticdl-test-mnist-master-volume-0
+          priorityClassName: ''
+          restartPolicy: Never
+          volumes:
+          - hostPath:
+              path: /data
+            name: elasticdl-test-mnist-master-volume-0

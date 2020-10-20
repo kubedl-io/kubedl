@@ -79,6 +79,7 @@ type XgboostJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=xgboostjob.kubeflow.org,resources=xgboostjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=xgboostjob.kubeflow.org,resources=xgboostjobs/status,verbs=get;update;patch
+
 func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
 	// Fetch the XGBoostJob instance
 	xgboostjob := &v1alpha1.XGBoostJob{}

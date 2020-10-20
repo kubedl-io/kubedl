@@ -83,6 +83,7 @@ type PytorchJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=kubeflow.org,resources=pytorchjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=kubeflow.org,resources=pytorchjobs/status,verbs=get;update;patch
+
 func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest pytorch job instance.
 	sharedPytorchJob := &pytorchv1.PyTorchJob{}

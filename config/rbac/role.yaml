@@ -7,6 +7,106 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - elasticdl.org
+  resources:
+  - elasticdljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - elasticdl.org
+  resources:
+  - elasticdljobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kubedl.io
+  resources:
+  - marsjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kubedl.io
+  resources:
+  - marsjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kubeflow.org
+  resources:
+  - pytorchjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kubeflow.org
+  resources:
+  - pytorchjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - kubeflow.org
   resources:
   - tfjobs
@@ -27,62 +127,42 @@ rules:
   - patch
   - update
 - apiGroups:
-    - kubeflow.org
+  - xdl.kubedl.io
   resources:
-    - pytorchjobs
+  - xdljobs
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
-    - kubeflow.org
+  - xdl.kubedl.io
   resources:
-    - pytorchjobs/status
+  - xdljobs/status
   verbs:
-    - get
-    - patch
-    - update
+  - get
+  - patch
+  - update
 - apiGroups:
-    - xdl.kubedl.io
+  - xgboostjob.kubeflow.org
   resources:
-    - xdljobs
+  - xgboostjobs
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
-    - xdl.kubedl.io
+  - xgboostjob.kubeflow.org
   resources:
-    - xdljobs/status
+  - xgboostjobs/status
   verbs:
-    - get
-    - patch
-    - update
-- apiGroups:
-    - xgboostjob.kubeflow.org
-  resources:
-    - xgboostjobs
-  verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
-- apiGroups:
-    - xgboostjob.kubeflow.org
-  resources:
-    - xgboostjobs/status
-  verbs:
-    - get
-    - patch
-    - update
+  - get
+  - patch
+  - update
