@@ -17,7 +17,7 @@ limitations under the License.
 package controllers
 
 import (
-	"github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
+	"github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
 	controllers "github.com/alibaba/kubedl/controllers/elasticdl"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 

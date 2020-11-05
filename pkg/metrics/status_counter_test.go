@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/kubedl/api"
-	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
+	"github.com/alibaba/kubedl/apis"
+	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
 	. "github.com/onsi/ginkgo"
@@ -57,7 +57,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	By("bootstrapping test environment")
 
-	err := api.AddToScheme(scheme.Scheme)
+	err := apis.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme

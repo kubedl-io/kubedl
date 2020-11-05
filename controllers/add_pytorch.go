@@ -17,7 +17,7 @@ limitations under the License.
 package controllers
 
 import (
-	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
 	"github.com/alibaba/kubedl/controllers/pytorch"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 

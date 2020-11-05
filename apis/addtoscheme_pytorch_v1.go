@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package apis
 
 import (
-	"github.com/alibaba/kubedl/api/tensorflow/v1"
+	"github.com/alibaba/kubedl/apis/pytorch/v1"
 )
 
 func init() {

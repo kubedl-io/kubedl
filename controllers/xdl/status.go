@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
+	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )

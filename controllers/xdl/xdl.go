@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/kubedl/api/xdl/v1alpha1"
+	"github.com/alibaba/kubedl/apis/xdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 )
 

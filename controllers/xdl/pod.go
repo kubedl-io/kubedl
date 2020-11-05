@@ -27,7 +27,7 @@ import (
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
+	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )

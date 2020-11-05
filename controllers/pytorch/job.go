@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"

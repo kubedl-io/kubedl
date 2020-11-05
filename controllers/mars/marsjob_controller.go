@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	kubedliov1beta1 "github.com/alibaba/kubedl/api/marsjob/v1alpha1"
+	kubedliov1beta1 "github.com/alibaba/kubedl/apis/mars/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"

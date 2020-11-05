@@ -22,7 +22,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/alibaba/kubedl/api/marsjob/v1alpha1"
+	"github.com/alibaba/kubedl/apis/mars/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 
 	v1 "k8s.io/api/core/v1"

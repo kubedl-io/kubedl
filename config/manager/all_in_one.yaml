@@ -114,6 +114,12 @@ rules:
   - ""
   resources:
   - pods
+  - pods/status
+  - configmaps
+  - events
+  - persistentvolumeclaims
+  - secrets
+  - services
   verbs:
   - get
   - list
@@ -139,62 +145,6 @@ rules:
   - update
   - patch
 - apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - pods/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumeclaims
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
   - apps
   resources:
   - controllerrevisions
@@ -219,25 +169,25 @@ rules:
   - patch
   - delete
 - apiGroups:
-    - apps
+  - apps
   resources:
-    - statefulsets
+  - statefulsets
   verbs:
-    - get
-    - list
-    - watch
-    - create
-    - update
-    - patch
-    - delete
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups:
-    - apps
+  - apps
   resources:
-    - statefulsets/status
+  - statefulsets/status
   verbs:
-    - get
-    - update
-    - patch
+  - get
+  - update
+  - patch
 - apiGroups:
   - admissionregistration.k8s.io
   resources:
@@ -252,49 +202,45 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - ""
+  - kubedl.io
   resources:
-  - secrets
+  - marsjobs
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
+  - update
+  - watch
 - apiGroups:
-  - ""
+  - kubedl.io
   resources:
-  - services
+  - marsjobs/status
   verbs:
   - get
-  - list
-  - watch
-  - create
-  - update
   - patch
+  - update
+- apiGroups:
+  - elasticdl.org
+  resources:
+  - elasticdljobs
+  verbs:
+  - create
   - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
-    - kubedl.io
+  - elasticdl.org
   resources:
-    - marsjobs
+  - elasticdljobs/status
   verbs:
-    - create
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
-- apiGroups:
-    - kubedl.io
-  resources:
-    - marsjobs/status
-  verbs:
-    - get
-    - patch
-    - update
+  - get
+  - patch
+  - update
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1

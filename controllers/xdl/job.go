@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
+	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"

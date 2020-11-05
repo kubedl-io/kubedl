@@ -16,7 +16,7 @@ limitations under the License.
 
 package pytorch
 
-import v1 "github.com/alibaba/kubedl/api/pytorch/v1"
+import v1 "github.com/alibaba/kubedl/apis/pytorch/v1"
 
 func ContainMasterSpec(job *v1.PyTorchJob) bool {
 	_, ok := job.Spec.PyTorchReplicaSpecs[v1.PyTorchReplicaTypeMaster]
