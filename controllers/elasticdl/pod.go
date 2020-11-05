@@ -27,7 +27,7 @@ import (
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	elasticdlv1alpha1 "github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
+	elasticdlv1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )

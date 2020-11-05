@@ -28,7 +28,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	kubedliov1beta1 "github.com/alibaba/kubedl/api/marsjob/v1alpha1"
+	kubedliov1beta1 "github.com/alibaba/kubedl/apis/mars/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

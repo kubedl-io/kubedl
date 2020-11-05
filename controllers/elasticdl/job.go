@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	elasticdlv1alpha1 "github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
+	elasticdlv1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"

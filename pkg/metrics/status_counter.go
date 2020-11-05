@@ -19,10 +19,10 @@ package metrics
 import (
 	"context"
 
-	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
-	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
-	xdlv1alpha1 "github.com/alibaba/kubedl/api/xdl/v1alpha1"
-	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
+	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
+	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
+	"github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"

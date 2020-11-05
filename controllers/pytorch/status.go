@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )

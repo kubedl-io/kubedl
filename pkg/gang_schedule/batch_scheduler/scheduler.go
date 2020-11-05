@@ -19,7 +19,7 @@ package batch_scheduler
 import (
 	"context"
 
-	"github.com/alibaba/kubedl/api"
+	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
@@ -38,7 +38,7 @@ import (
 func init() {
 	// Add to runtime scheme so that reflector of go-client will identify this CRD
 	// controlled by scheduler.
-	api.AddToSchemes = append(api.AddToSchemes, v1alpha1.AddToScheme)
+	apis.AddToSchemes = append(apis.AddToSchemes, v1alpha1.AddToScheme)
 }
 
 func NewKubeBatchScheduler(mgr controllerruntime.Manager) gang_schedule.GangScheduler {

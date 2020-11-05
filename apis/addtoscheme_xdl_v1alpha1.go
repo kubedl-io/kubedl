@@ -14,10 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package apis
 
-import "github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
+import (
+	"github.com/alibaba/kubedl/apis/xdl/v1alpha1"
+)
 
 func init() {
-	AddToSchemes = append(AddToSchemes, v1alpha1.AddToScheme)
+	AddToSchemes = append(AddToSchemes, v1alpha1.SchemeBuilder.AddToScheme)
 }

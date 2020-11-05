@@ -19,7 +19,7 @@ package job
 import (
 	"context"
 
-	v1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	v1 "github.com/alibaba/kubedl/apis/pytorch/v1"
 	"github.com/alibaba/kubedl/controllers/persist/util"
 
 	"k8s.io/apimachinery/pkg/api/errors"

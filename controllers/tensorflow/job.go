@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
+	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"

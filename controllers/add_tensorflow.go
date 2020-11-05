@@ -17,7 +17,7 @@ limitations under the License.
 package controllers
 
 import (
-	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
+	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
 	"github.com/alibaba/kubedl/controllers/tensorflow"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 

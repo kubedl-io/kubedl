@@ -1,7 +1,7 @@
 package suite_tests
 
 import (
-	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
+	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/net/context"

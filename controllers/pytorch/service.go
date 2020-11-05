@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	pytorchv1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )

@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
+	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 )
 

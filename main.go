@@ -20,7 +20,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/alibaba/kubedl/api"
+	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers"
 	"github.com/alibaba/kubedl/controllers/persist"
@@ -80,7 +80,7 @@ func main() {
 	}
 
 	setupLog.Info("setting up scheme")
-	if err := api.AddToScheme(mgr.GetScheme()); err != nil {
+	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
 		setupLog.Error(err, "unable to add APIs to scheme")
 		os.Exit(1)
 	}

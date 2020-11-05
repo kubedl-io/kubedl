@@ -16,7 +16,7 @@ limitations under the License.
 
 package elasticdl
 
-import v1alpha1 "github.com/alibaba/kubedl/api/elasticdljob/v1alpha1"
+import v1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
 
 func ContainMasterSpec(job *v1alpha1.ElasticDLJob) bool {
 	_, ok := job.Spec.ElasticDLReplicaSpecs[v1alpha1.ElasticDLReplicaTypeMaster]

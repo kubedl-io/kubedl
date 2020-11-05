@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package apis
 
 import (
-	"github.com/alibaba/kubedl/api/xdl/v1alpha1"
+	"github.com/alibaba/kubedl/apis/tensorflow/v1"
 )
 
 func init() {
-	AddToSchemes = append(AddToSchemes, v1alpha1.SchemeBuilder.AddToScheme)
+	AddToSchemes = append(AddToSchemes, v1.SchemeBuilder.AddToScheme)
 }

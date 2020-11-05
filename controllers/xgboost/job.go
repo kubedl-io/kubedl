@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
+	"github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"

@@ -44,7 +44,7 @@ limitations under the License.
 // Generate default for elasticdljob apis.
 //go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./elasticdljob/... -h ../hack/boilerplate.go.txt
 
-package api
+package apis
 
 import (
 	"k8s.io/apimachinery/pkg/runtime"

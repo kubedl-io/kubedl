@@ -14,12 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package apis
 
-import (
-	"github.com/alibaba/kubedl/api/pytorch/v1"
-)
+import "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
 
 func init() {
-	AddToSchemes = append(AddToSchemes, v1.SchemeBuilder.AddToScheme)
+	AddToSchemes = append(AddToSchemes, v1alpha1.AddToScheme)
 }

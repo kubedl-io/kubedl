@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/kubedl/api"
+	"github.com/alibaba/kubedl/apis"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -36,7 +36,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	By("bootstrapping test environment")
 
-	err := api.AddToScheme(scheme.Scheme)
+	err := apis.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme

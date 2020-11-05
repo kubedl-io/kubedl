@@ -1,7 +1,7 @@
 package suite_tests
 
 import (
-	v1 "github.com/alibaba/kubedl/api/pytorch/v1"
+	v1 "github.com/alibaba/kubedl/apis/pytorch/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/net/context"

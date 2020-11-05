@@ -1,4 +1,5 @@
 /*
+Copyright 2019 The Alibaba Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,13 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package apis
 
-import (
-	"github.com/alibaba/kubedl/api/xgboost/v1alpha1"
-)
+import "github.com/alibaba/kubedl/apis/mars/v1alpha1"
 
 func init() {
-	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
-	AddToSchemes = append(AddToSchemes, v1alpha1.SchemeBuilder.AddToScheme)
+	AddToSchemes = append(AddToSchemes, v1alpha1.AddToScheme)
 }

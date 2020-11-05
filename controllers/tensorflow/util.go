@@ -16,7 +16,7 @@
 package tensorflow
 
 import (
-	tfv1 "github.com/alibaba/kubedl/api/tensorflow/v1"
+	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
 )
 
 // ContainChieforMasterSpec returns true if the tfjob contains chief or master spec.
