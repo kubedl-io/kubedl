@@ -10,12 +10,13 @@ multiple types of distributed deep learning/machine learning workloads on Kubern
  <img src="docs/img/stack.png" width="700" title="Stack">
 </div> <br/>
 
-Currently, KubeDL supports the following types of ML/DL jobs:
+Currently, KubeDL supports the following types of ML/DL/BigData jobs:
 
 - [TensorFlow](https://github.com/tensorflow/tensorflow)
 - [PyTorch](https://github.com/pytorch/pytorch)
 - [XGBoost](https://github.com/dmlc/xgboost)
 - [XDL](https://github.com/alibaba/x-deeplearning/)
+- [Mars](https://github.com/mars-project/mars)
 
 KubeDL maintains API compatibility with certain kubeflow job operators and provides additional features as below:
 
@@ -58,6 +59,7 @@ kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubeflow.org_tfjobs.yaml
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xdl.kubedl.io_xdljobs.yaml
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
+kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubedl.io_marsjobs.yaml
 ```
 #### Install KubeDL operator
 
@@ -109,6 +111,8 @@ kubectl get xgboostjob
 
 ## Tutorial
 [How to run a XDL Job](docs/tutorial/xdljob.md)
+
+[Run and customize a Mars Job](docs/tutorial/marsjob.md)
 
 ## KubeDL Metrics
 Check the [documents](docs/metrics.md) for the prometheus metrics supported for KubeDL operator.
