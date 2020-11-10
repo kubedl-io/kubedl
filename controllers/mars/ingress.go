@@ -122,6 +122,13 @@ func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host 
 										ServicePort: intstr.IntOrString{IntVal: port},
 									},
 								},
+								{
+									Path: path.Join("/", "mars", svc.Namespace, svc.Name),
+									Backend: networkingv1beta.IngressBackend{
+										ServiceName: svc.Name,
+										ServicePort: intstr.IntOrString{IntVal: port},
+									},
+								},
 							},
 						},
 					},
