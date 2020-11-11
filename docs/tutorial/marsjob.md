@@ -14,7 +14,7 @@ A distributed mars job includes 3 roles to collaborate with each other：
 ## Run Distributed Mars Job in Standalone Mode
 
 
-In standalone mode, a distributed `Mars` job are running standalone on bare hosts without other container orchestration tools.
+In standalone mode, a distributed `Mars` job are running standalone on bare hosts without the help of other container orchestration tools.
 
 1. run `pip install pymars[distributed]` on every node in the cluster to install dependencies needed for distributed execution.
 2. start different mars role processes on each node.
@@ -36,19 +36,19 @@ df = md.DataFrame(a).sum()
 df.execute()  # submit DataFrame to cluster
 ```
  
-Running `Mars` job in standalone mode requires manual maintenance effort and lack other abilities such as automatic failover of workers.
+Running `Mars` job in standalone mode requires manual configuration effort and lack other abilities such as automatic failover of workers.
 
 ## Run Mars Job on Kubernetes with KubeDL
 
 Run `mars` job on kubernetes natively.
 
-#### 1. Deploy KubeDL to Cluster
+#### 1. Deploy KubeDL
 
 Follow the [installation tutorial](https://github.com/alibaba/kubedl#getting-started) in README and deploy `kubedl` operator to cluster.
 
 #### 2. Apply Mars CRD
 
-`Mars` CRD(CustomResourceDefinition) manifests file describes the structure of a mars job spec. Run the following to apply the CRD:
+`Mars` CRD(CustomResourceDefinition) manifest file describes the structure of a mars job spec. Run the following to apply the CRD:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/crd/bases/kubedl.io_marsjobs.yaml
@@ -56,7 +56,7 @@ kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/
 
 #### 3. Create a Mars Job
 
-Create a YAML spec that describes the requirements of a MarsJob such as the worker, scheduler like below
+Create a YAML spec that describes the requirements of a MarsJob such as the worker, scheduler, WebService like below
 
 ```yaml
 apiVersion: kubedl.io/v1alpha1
@@ -144,7 +144,7 @@ status: {}
 ```
 
 The `spec` field describes the requirement of each replica, including `replicas`, `restartPolicy`, `template`...and
- the job current status will be recorded in `status` filed. Run following command to start an example mars job:
+the `status` field describes the job current status. Run following command to start an example mars job:
 
 ```bash
 kubectl create -f example/mars/mars-test-demo.yaml
