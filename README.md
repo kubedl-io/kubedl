@@ -119,9 +119,9 @@ Currently, only github is supported. The framework is pluggable and can easily s
 Check the [documents](docs/sync_code.md) for details.
 
 ## Tutorial
-[How to run a XDL Job](docs/tutorial/xdljob.md)
+- [How to run a Mars Job on Kubernetes](docs/tutorial/marsjob.md)
 
-[How to runa Mars Job](docs/tutorial/marsjob.md)
+- [How to run a XDL Job on Kubernetes](docs/tutorial/xdljob.md)
 
 ## Job Dashboard
 A dashboard for monitoring the jobs' lifecycle and stats is currently in progress. The dashboard also provides convenient job operation options including job creation、termination, and deletion. See the demo below.
