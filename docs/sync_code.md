@@ -1,9 +1,9 @@
-## Remote Source Sync
+## Download Custom Artifacts 
 
-KubeDL supports syncing user artifacts from remote sources, and mount the artifacts  into main container. In this way, users
-can commit their code to remote source and re-submit training jobs without re-build container images.
+KubeDL supports downloading custom artifacts from remote repositories into the container. With that, user
+can commit their code to remote repository and re-submit the jobs without re-building the image to include the artifacts.
 
-As of now, github is supported.
+Currently, only github is supported. The framework is pluggable and can easily support other repositories like HDFS. 
 
 ### Git Hub
 
