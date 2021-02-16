@@ -19,12 +19,12 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"strconv"
 	"strings"
 
 	"github.com/alibaba/kubedl/apis/mars/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util/quota"
 
 	corev1 "k8s.io/api/core/v1"
@@ -74,9 +74,9 @@ func marsConfigInJson(marJob *v1alpha1.MarsJob, rtype, index string) (string, er
 
 	// Mars worker will perceive allocated resources and real-time usage inside worker
 	// process and report to scheduler.
-	if v1.ReplicaType(rtype) == v1alpha1.MarsReplicaTypeWorker {
+	if rtype == strings.ToLower(string(v1alpha1.MarsReplicaTypeWorker)) {
 		resources := quota.ComputePodResourceRequest(&corev1.Pod{
-			Spec: *marJob.Spec.MarsReplicaSpecs[v1.ReplicaType(rtype)].Template.Spec.DeepCopy(),
+			Spec: *marJob.Spec.MarsReplicaSpecs[v1alpha1.MarsReplicaTypeWorker].Template.Spec.DeepCopy(),
 		})
 		task.Resources = &workerResource{
 			CPU:    resources.Cpu().Value(),
@@ -117,4 +117,96 @@ func genClusterSpec(marsJob *v1alpha1.MarsJob) (ClusterSpec, error) {
 		cs[rt] = endpoints
 	}
 	return cs, nil
+}
+
+func injectSpillDirsByGivenPaths(paths []string, template *corev1.PodTemplateSpec, container *corev1.Container) {
+	if len(paths) == 0 {
+		return
+	}
+	var sizeLimit *resource.Quantity
+	if !container.Resources.Requests.StorageEphemeral().IsZero() {
+		q := resource.MustParse(strconv.Itoa(int(container.Resources.Requests.StorageEphemeral().Value()) / len(paths)))
+		sizeLimit = &q
+	}
+	for idx, path := range paths {
+		volumeName := "mars-empty-dir-" + strconv.Itoa(idx)
+		volume := corev1.Volume{
+			Name: volumeName,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		}
+		if sizeLimit != nil {
+			volume.VolumeSource.EmptyDir.SizeLimit = sizeLimit
+		}
+		// Check volume has not mounted yet inside container.
+		existed := false
+		for i := range container.VolumeMounts {
+			if container.VolumeMounts[i].Name == volumeName {
+				existed = true
+				break
+			}
+		}
+		if existed {
+			continue
+		}
+		template.Spec.Volumes = append(template.Spec.Volumes, volume)
+		// Mount empty dir to target path.
+		container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
+			Name:      volumeName,
+			MountPath: path,
+		})
+	}
+}
+func computeCacheMemSize(memLimit int, memTuningPolicy *v1alpha1.MarsWorkerMemoryTuningPolicy) int {
+	cacheSize := -1
+	if memTuningPolicy.WorkerCacheSize != nil {
+		cacheSize = int(memTuningPolicy.WorkerCacheSize.Value())
+	} else if memTuningPolicy.WorkerCachePercentage != nil {
+		percentage := int(*memTuningPolicy.WorkerCachePercentage)
+		if percentage > 100 {
+			percentage = 100
+		}
+		cacheSize = (memLimit * percentage) / 100
+	}
+	return cacheSize
+}
+func mountSharedCacheToPath(cacheSize int64, path string, template *corev1.PodTemplateSpec, container *corev1.Container) {
+	if path == "" {
+		return
+	}
+	const cacheVolumeName = "mars-shared-cache"
+	cacheVolumeSource := &corev1.EmptyDirVolumeSource{
+		Medium:    corev1.StorageMediumMemory,
+		SizeLimit: resource.NewQuantity(cacheSize, resource.DecimalSI),
+	}
+	hasVolume := false
+	for i := range template.Spec.Volumes {
+		if v := template.Spec.Volumes[i]; v.Name == cacheVolumeName {
+			hasVolume = true
+			// Cache volume found in pod template, override it with specific cache settings
+			// for data consistency.
+			v.VolumeSource = corev1.VolumeSource{EmptyDir: cacheVolumeSource}
+			break
+		}
+	}
+	if !hasVolume {
+		volume := corev1.Volume{
+			Name:         cacheVolumeName,
+			VolumeSource: corev1.VolumeSource{EmptyDir: cacheVolumeSource},
+		}
+		// Append a new memory-typed volume with given size and mount
+		// to container.
+		template.Spec.Volumes = append(template.Spec.Volumes, volume)
+	}
+	// Iterate volumes and find whether cache volume has mounted or not.
+	for i := range container.VolumeMounts {
+		if vm := container.VolumeMounts[i]; vm.Name == cacheVolumeName && vm.MountPath == path {
+			return
+		}
+	}
+	container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
+		Name:      cacheVolumeName,
+		MountPath: path,
+	})
 }
