@@ -69,21 +69,29 @@ func (r *MarsJobReconciler) reconcileIngressForWebservice(marsJob *v1alpha1.Mars
 		ingressSet.Insert(ingresses.Items[i].Name)
 	}
 
+	availableAddresses := make([]string, 0, len(svcs.Items))
 	for i := range svcs.Items {
 		svc := &svcs.Items[i]
 		if ingressSet.Has(svc.Name) {
 			continue
 		}
 		// Create new ingress instance and expose web service to external users.
-		if err = r.createNewIngressForWebservice(svc, *marsJob.Spec.WebHost, labels); err != nil {
+		addr, err := r.createNewIngressForWebservice(svc, *marsJob.Spec.WebHost, labels)
+		if err != nil {
 			return err
 		}
+		availableAddresses = append(availableAddresses, addr)
 	}
-	return nil
+
+	marsJobCpy := marsJob.DeepCopy()
+	marsJobCpy.Status.WebServiceAddresses = append(marsJob.Status.WebServiceAddresses, availableAddresses...)
+	return r.Client.Status().Patch(context.Background(), marsJobCpy,client.MergeFrom(marsJob))
 }
 
-func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host string, labels map[string]string) error {
+func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host string, labels map[string]string) (string, error) {
 	port := r.findDefaultPort(svc)
+	regexAPIPath := path.Join("/", "mars", svc.Namespace, svc.Name+"/(.*)")
+	indexPath := path.Join("/", "mars", svc.Namespace, svc.Name)
 
 	// Generate ingress instance by given service template, every ingress exposes a URL formatted as:
 	// http://{host}/mars/{namespace}/{svc.Name}/
@@ -116,14 +124,14 @@ func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host 
 						HTTP: &networkingv1beta.HTTPIngressRuleValue{
 							Paths: []networkingv1beta.HTTPIngressPath{
 								{
-									Path: path.Join("/", "mars", svc.Namespace, svc.Name+"/(.*)"),
+									Path: regexAPIPath,
 									Backend: networkingv1beta.IngressBackend{
 										ServiceName: svc.Name,
 										ServicePort: intstr.IntOrString{IntVal: port},
 									},
 								},
 								{
-									Path: path.Join("/", "mars", svc.Namespace, svc.Name),
+									Path: indexPath,
 									Backend: networkingv1beta.IngressBackend{
 										ServiceName: svc.Name,
 										ServicePort: intstr.IntOrString{IntVal: port},
@@ -136,7 +144,11 @@ func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host 
 			},
 		},
 	}
-	return r.Client.Create(context.Background(), &ingress)
+
+	if err := r.Client.Create(context.Background(), &ingress); err != nil {
+		return "", err
+	}
+	return path.Join(host, indexPath), nil
 }
 
 func (r *MarsJobReconciler) findDefaultPort(svc *v1.Service) int32 {
