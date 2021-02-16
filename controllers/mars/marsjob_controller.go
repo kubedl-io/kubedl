@@ -212,7 +212,7 @@ func (r *MarsJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.
 
 			// Convert memory tuning settings to environment variables so that worker processes
 			// can be perceived.
-			if rtype == strings.ToLower(string(kubedliov1beta1.MarsReplicaTypeWorker)) && marsJob.Spec.WorkerMemoryTuningPolicy != nil {
+			if strings.ToLower(rtype) == strings.ToLower(string(kubedliov1beta1.MarsReplicaTypeWorker)) && marsJob.Spec.WorkerMemoryTuningPolicy != nil {
 				memTuningPolicy := marsJob.Spec.WorkerMemoryTuningPolicy
 				if memTuningPolicy.SpillDirs != nil {
 					injectSpillDirsByGivenPaths(memTuningPolicy.SpillDirs, podTemplate, &podTemplate.Spec.Containers[i])
