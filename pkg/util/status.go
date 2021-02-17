@@ -17,9 +17,8 @@ const (
 	JobFailedReason = "JobFailed"
 	// JobRestarting is added in a job when it is restarting.
 	JobRestartingReason = "JobRestarting"
-
-	// labels for pods and servers.
-
+	// JobEvicted is added in a job when it is evicted.
+	JobEvictedReason = "JobEvicted"
 )
 
 // IsSucceeded checks if the job is succeeded.
@@ -42,9 +41,18 @@ func IsCreated(status apiv1.JobStatus) bool {
 	return HasCondition(status, apiv1.JobCreated)
 }
 
-// IsRestart checks if the job is restarting.
+// IsRestarting checks if the job is restarting.
 func IsRestarting(status apiv1.JobStatus) bool {
 	return HasCondition(status, apiv1.JobRestarting)
+}
+
+// IsEvicted checks if the job is evicted.
+func IsEvicted(status apiv1.JobStatus) bool {
+	cond := GetCondition(status, apiv1.JobFailed)
+	if cond != nil && cond.Reason == JobEvictedReason {
+		return true
+	}
+	return false
 }
 
 // UpdateJobConditions adds to the jobStatus a new condition if needed, with the conditionType, reason, and message.
