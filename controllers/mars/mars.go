@@ -75,7 +75,7 @@ func marsConfigInJson(marJob *v1alpha1.MarsJob, rtype, index string) (string, er
 	// Mars worker will perceive allocated resources and real-time usage inside worker
 	// process and report to scheduler.
 	if v1.ReplicaType(rtype) == v1alpha1.MarsReplicaTypeWorker {
-		resources := quota.ComputePodResourceRequest(&corev1.Pod{
+		resources := quota.GetPodResourceRequest(&corev1.Pod{
 			Spec: *marJob.Spec.MarsReplicaSpecs[v1.ReplicaType(rtype)].Template.Spec.DeepCopy(),
 		})
 		task.Resources = &workerResource{

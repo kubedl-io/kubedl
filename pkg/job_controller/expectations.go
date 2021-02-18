@@ -14,14 +14,18 @@ func (jc *JobController) SatisfyExpectations(job metav1.Object, specs map[apiv1.
 	if err != nil {
 		return false
 	}
+
 	for rtype := range specs {
 		// Check the expectations of the pods.
 		expectationPodsKey := GenExpectationPodsKey(key, string(rtype))
 		satisfied = satisfied && jc.Expectations.SatisfiedExpectations(expectationPodsKey)
+	}
 
-		// Check the expectations of the services.
+	for rtype := range specs {
+		// Check the expectations of the services, not all kinds of jobs create service for all
+		// replicas, so return true when at least one service adds/dels observed.
 		expectationServicesKey := GenExpectationServicesKey(key, string(rtype))
-		satisfied = satisfied && jc.Expectations.SatisfiedExpectations(expectationServicesKey)
+		satisfied = satisfied || jc.Expectations.SatisfiedExpectations(expectationServicesKey)
 	}
 	return satisfied
 }

@@ -13,3 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+package v1
+
+import v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+
+const (
+	// DefaultRestartPolicy is default RestartPolicy for ReplicaSpec.
+	DefaultRestartPolicy  = v1.RestartPolicyNever
+	DefaultCleanPodPolicy = v1.CleanPodPolicyRunning
+
+	DefaultContainerName = "mpi"
+	DefaultPortName      = "mpi-port"
+	DefaultPort          = 2222
+)

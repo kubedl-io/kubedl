@@ -13,3 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+package controllers
+
+import (
+	mpiv1 "github.com/alibaba/kubedl/apis/mpi/v1"
+	"github.com/alibaba/kubedl/controllers/mpi"
+	"github.com/alibaba/kubedl/pkg/job_controller"
+	ctrl "sigs.k8s.io/controller-runtime"
+)
+
+func init() {
+	SetupWithManagerMap[&mpiv1.MPIJob{}] = func(mgr ctrl.Manager, config job_controller.JobControllerConfiguration) error {
+		return mpi.NewReconciler(mgr, config).SetupWithManager(mgr)
+	}
+}
