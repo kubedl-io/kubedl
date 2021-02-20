@@ -58,6 +58,10 @@ type ReplicaStatus struct {
 
 	// The number of pods which reached phase Failed.
 	Failed int32 `json:"failed,omitempty"`
+
+	// The number of pods which reached phase Failed and reason is Evicted,
+	// it is included in the number of Failed.
+	Evicted int32 `json:"evicted,omitempty"`
 }
 
 // +k8s:deepcopy-gen=true

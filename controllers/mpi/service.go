@@ -13,3 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+package mpi
+
+import corev1 "k8s.io/api/core/v1"
+
+// MPIJob handles replicas-discovery by itself and does not depend on services.
+
+func (r *MPIJobReconciler) GetServicesForJob(job interface{}) ([]*corev1.Service, error) {
+	return nil, nil
+}
+
+func (r *MPIJobReconciler) CreateService(job interface{}, service *corev1.Service) error {
+	return nil
+}
+
+func (r *MPIJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
+	return nil
+}

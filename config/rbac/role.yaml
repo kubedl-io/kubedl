@@ -89,6 +89,26 @@ rules:
 - apiGroups:
   - kubeflow.org
   resources:
+  - mpijobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kubeflow.org
+  resources:
+  - mpijobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kubeflow.org
+  resources:
   - pytorchjobs
   verbs:
   - create
