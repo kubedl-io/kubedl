@@ -19,11 +19,11 @@ package v1alpha1
 import v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 
 const (
-	DefaultContainerName                 = "mars"
-	DefaultPortName                      = "mars-port"
-	DefaultPort                          = 11111
-	DefaultCacheMountPath                = "/dev/shm"
-	DefaultSchedulerRestartPolicy        = v1.RestartPolicyNever
-	DefaultWebServiceRestartPolicy       = v1.RestartPolicyAlways
-	DefaultWorkerRestartPolicy           = v1.RestartPolicyExitCode
+	DefaultContainerName           = "mars"
+	DefaultPortName                = "mars-port"
+	DefaultPort                    = 11111
+	DefaultCacheMountPath          = "/dev/shm"
+	DefaultSchedulerRestartPolicy  = v1.RestartPolicyNever
+	DefaultWebServiceRestartPolicy = v1.RestartPolicyAlways
+	DefaultWorkerRestartPolicy     = v1.RestartPolicyExitCode
 )

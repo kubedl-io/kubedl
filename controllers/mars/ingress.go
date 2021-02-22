@@ -85,7 +85,7 @@ func (r *MarsJobReconciler) reconcileIngressForWebservice(marsJob *v1alpha1.Mars
 
 	marsJobCpy := marsJob.DeepCopy()
 	marsJobCpy.Status.WebServiceAddresses = append(marsJob.Status.WebServiceAddresses, availableAddresses...)
-	return r.Client.Status().Patch(context.Background(), marsJobCpy,client.MergeFrom(marsJob))
+	return r.Client.Status().Patch(context.Background(), marsJobCpy, client.MergeFrom(marsJob))
 }
 
 func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host string, labels map[string]string) (string, error) {
