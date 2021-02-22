@@ -96,6 +96,6 @@ func (r *MarsJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatu
 
 	var jobCpy *v1alpha1.MarsJob
 	jobCpy = marsJob.DeepCopy()
-	jobCpy.Status = *jobStatus.DeepCopy()
+	jobCpy.Status.JobStatus = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
 }

@@ -140,7 +140,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 		reconciler.scheme.Default(marsJob)
 
 		msg := fmt.Sprintf("MarsJob %s is created.", e.Meta.GetName())
-		if err := commonutil.UpdateJobConditions(&marsJob.Status, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
+		if err := commonutil.UpdateJobConditions(&marsJob.Status.JobStatus, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
 			log.Error(err, "append job condition error")
 			return false
 		}

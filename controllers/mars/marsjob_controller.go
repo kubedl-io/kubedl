@@ -31,7 +31,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
@@ -103,7 +102,7 @@ func (r *MarsJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	r.scheme.Default(marsJob)
 
-	result, err := r.ctrl.ReconcileJobs(marsJob, marsJob.Spec.MarsReplicaSpecs, marsJob.Status, &marsJob.Spec.RunPolicy)
+	result, err := r.ctrl.ReconcileJobs(marsJob, marsJob.Spec.MarsReplicaSpecs, marsJob.Status.JobStatus, &marsJob.Spec.RunPolicy)
 	if err != nil {
 		log.Error(err, "mars job reconcile failed")
 		return result, err
@@ -188,89 +187,70 @@ func (r *MarsJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.
 			if len(podTemplate.Spec.Containers[i].Env) == 0 {
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
-			podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
-				Name:  "MARS_CPU_TOTAL",
-				Value: strconv.Itoa(int(podTemplate.Spec.Containers[i].Resources.Limits.Cpu().Value())),
-			}, corev1.EnvVar{
-				Name:  "MARS_MEMORY_TOTAL",
-				Value: strconv.Itoa(int(podTemplate.Spec.Containers[i].Resources.Limits.Memory().Value())),
-			}, corev1.EnvVar{
-				Name:  "MARS_CPU_USE_PROCESS_STAT",
-				Value: "1",
-			}, corev1.EnvVar{
-				Name:  "MARS_MEM_USE_CGROUP_STAT",
-				Value: "1",
-			}, corev1.EnvVar{
-				Name: "MARS_CONTAINER_IP",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "status.podIP",
-					},
+
+			cpuLimit := resourceRequestOrLimits(podTemplate.Spec.Containers[i].Resources, corev1.ResourceCPU)
+			memLimit := resourceRequestOrLimits(podTemplate.Spec.Containers[i].Resources, corev1.ResourceMemory)
+			envs := []corev1.EnvVar{
+				{Name: "MARS_CPU_TOTAL", Value: strconv.Itoa(cpuLimit)},
+				{Name: "MARS_MEMORY_TOTAL", Value: strconv.Itoa(memLimit)},
+				{Name: "MARS_CPU_USE_PROCESS_STAT", Value: "1"},
+				{Name: "MARS_MEM_USE_CGROUP_STAT", Value: "1"},
+				{Name: "MARS_BIND_PORT", Value: strconv.Itoa(kubedliov1beta1.DefaultPort)},
+				{Name: "MARS_K8S_GROUP_LABELS", Value: v1.JobNameLabel},
+				{Name: "MARS_CONTAINER_IP", ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{FieldPath: "status.podIP"}}},
+				{Name: "MARS_K8S_POD_NAME", ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"}}},
+				{Name: "MARS_K8S_POD_NAMESPACE", ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}},
 				},
-			}, corev1.EnvVar{
-				Name:  "MARS_BIND_PORT",
-				Value: strconv.Itoa(kubedliov1beta1.DefaultPort),
-			}, corev1.EnvVar{
-				Name:  "MARS_K8S_GROUP_LABELS",
-				Value: v1.JobNameLabel,
-			}, corev1.EnvVar{
-				Name: "MARS_K8S_POD_NAME",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "metadata.name",
-					},
-				},
-			}, corev1.EnvVar{
-				Name: "MARS_K8S_POD_NAMESPACE",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "metadata.namespace",
-					},
-				},
-			})
+			}
 
 			if cfg != "" {
-				podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
-					Name:  marsConfig,
-					Value: cfg,
-				})
+				envs = append(envs, corev1.EnvVar{Name: marsConfig, Value: cfg})
 			}
 
 			// Convert memory tuning settings to environment variables so that worker processes
 			// can be perceived.
-			if v1.ReplicaType(rtype) == kubedliov1beta1.MarsReplicaTypeWorker && marsJob.Spec.WorkerMemoryTuningPolicy != nil {
+			if strings.ToLower(rtype) == strings.ToLower(string(kubedliov1beta1.MarsReplicaTypeWorker)) && marsJob.Spec.WorkerMemoryTuningPolicy != nil {
 				memTuningPolicy := marsJob.Spec.WorkerMemoryTuningPolicy
 				if memTuningPolicy.SpillDirs != nil {
 					injectSpillDirsByGivenPaths(memTuningPolicy.SpillDirs, podTemplate, &podTemplate.Spec.Containers[i])
-					podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
+					envs = append(envs, corev1.EnvVar{
 						Name:  "MARS_SPILL_DIRS",
 						Value: strings.Join(memTuningPolicy.SpillDirs, ","),
 					})
 				}
-				if memTuningPolicy.PlasmaStore != nil {
-					podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
+				if memTuningPolicy.PlasmaStore != nil && *memTuningPolicy.PlasmaStore != "" {
+					envs = append(envs, corev1.EnvVar{
 						Name:  "MARS_PLASMA_DIRS",
 						Value: *memTuningPolicy.PlasmaStore,
 					})
 				}
-				if memTuningPolicy.WorkerCacheSize != nil {
-					podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
-						Name:  "MARS_CACHE_MEM_SIZE",
-						Value: strconv.Itoa(int(memTuningPolicy.WorkerCacheSize.Value())),
-					})
-				} else if memTuningPolicy.WorkerCachePercentage != nil {
-					podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
-						Name:  "MARS_CACHE_MEM_SIZE",
-						Value: strconv.Itoa(int(memTuningPolicy.WorkerCacheSize.Value())),
+				if memTuningPolicy.LockFreeFileIO != nil {
+					lockFree := 0
+					if *memTuningPolicy.LockFreeFileIO {
+						lockFree = 1
+					}
+					envs = append(envs, corev1.EnvVar{
+						Name:  "MARS_LOCK_FREE_FILEIO",
+						Value: strconv.Itoa(lockFree),
 					})
 				}
-				if memTuningPolicy.LockFreeFileIO != nil {
-					podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
-						Name:  "MARS_LOCK_FREE_FILEIO",
-						Value: strconv.FormatBool(*memTuningPolicy.LockFreeFileIO),
+				cacheSize := computeCacheMemSize(memLimit, memTuningPolicy)
+				if cacheSize > 0 {
+					envs = append(envs, corev1.EnvVar{
+						Name:  "MARS_CACHE_MEM_SIZE",
+						Value: strconv.Itoa(cacheSize),
 					})
+					mountPath := kubedliov1beta1.DefaultCacheMountPath
+					if memTuningPolicy.PlasmaStore != nil {
+						mountPath = *memTuningPolicy.PlasmaStore
+					}
+					mountSharedCacheToPath(int64(cacheSize), mountPath, podTemplate, &podTemplate.Spec.Containers[i])
 				}
 			}
+			appendOrOverrideEnvs(&podTemplate.Spec.Containers[i], envs...)
 			break
 		}
 	}
@@ -300,48 +280,30 @@ func (r *MarsJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 func (r *MarsJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaType, index int) bool {
 	return false
 }
-
-func injectSpillDirsByGivenPaths(paths []string, template *corev1.PodTemplateSpec, container *corev1.Container) {
-	if len(paths) == 0 {
-		return
+func appendOrOverrideEnvs(container *corev1.Container, envs ...corev1.EnvVar) {
+	// Map env name to its index for fast indexing.
+	envIndexes := make(map[string]int)
+	for i := range container.Env {
+		envIndexes[container.Env[i].Name] = i
 	}
-
-	var sizeLimit *resource.Quantity
-
-	if !container.Resources.Requests.StorageEphemeral().IsZero() {
-		q := resource.MustParse(strconv.Itoa(int(container.Resources.Requests.StorageEphemeral().Value()) / len(paths)))
-		sizeLimit = &q
+	for ei := range envs {
+		if index, ok := envIndexes[envs[ei].Name]; ok {
+			container.Env[index] = envs[ei]
+		} else {
+			container.Env = append(container.Env, envs[ei])
+		}
 	}
+}
 
-	for idx, path := range paths {
-		volumeName := "mars-empty-dir-" + strconv.Itoa(idx)
-		volume := corev1.Volume{
-			Name: volumeName,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		}
-		if sizeLimit != nil {
-			volume.VolumeSource.EmptyDir.SizeLimit = sizeLimit
-		}
-		template.Spec.Volumes = append(template.Spec.Volumes, volume)
-
-		// Check volume has not mounted yet inside container.
-		existed := false
-		for i := range container.VolumeMounts {
-			if container.VolumeMounts[i].Name == volumeName {
-				existed = true
-				break
-			}
-		}
-		if existed {
-			continue
-		}
-
-		// Mount empty dir to target path.
-		container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-			Name:      volumeName,
-			MountPath: path,
-		})
+// resourceRequestOrLimits prefers to take required resource from limits and then requests.
+func resourceRequestOrLimits(rr corev1.ResourceRequirements, rname corev1.ResourceName) int {
+	quant, ok := rr.Requests[rname]
+	if ok {
+		return int(quant.Value())
 	}
+	quant, ok = rr.Limits[rname]
+	if ok {
+		return int(quant.Value())
+	}
+	return 0
 }

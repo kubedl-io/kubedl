@@ -103,7 +103,7 @@ spec:
           - marsReplicaSpecs
           type: object
         status:
-          description: JobStatus represents the current observed state of the training Job.
+          description: MarsJobStatus defines the current observed state of MarsJob
           properties:
             completionTime:
               description: Represents time when the job was completed. It is not guaranteed to be set in happens-before order across separate operations. It is represented in RFC3339 form and is in UTC.
@@ -150,6 +150,11 @@ spec:
               description: Represents time when the job was acknowledged by the job controller. It is not guaranteed to be set in happens-before order across separate operations. It is represented in RFC3339 form and is in UTC.
               format: date-time
               type: string
+            webServiceAddresses:
+              description: WebServiceAddresses is a list of available webservices addresses for users, its length equals with WebServices.Replicas.
+              items:
+                type: string
+              type: array
           required:
           - conditions
           - replicaStatuses

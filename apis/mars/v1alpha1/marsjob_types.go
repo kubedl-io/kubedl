@@ -41,6 +41,14 @@ type MarsJobSpec struct {
 	MarsReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"marsReplicaSpecs"`
 }
 
+// MarsJobStatus defines the current observed state of MarsJob
+type MarsJobStatus struct {
+	commonv1.JobStatus `json:",inline"`
+	// WebServiceAddresses is a list of available webservices addresses for users, its length
+	// equals with WebServices.Replicas.
+	WebServiceAddresses []string `json:"webServiceAddresses,omitempty"`
+}
+
 // MarsWorkerMemoryTuningPolicy defines memory tuning policies that will be applied
 // to workers.
 type MarsWorkerMemoryTuningPolicy struct {
@@ -79,7 +87,7 @@ type MarsJob struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   MarsJobSpec        `json:"spec,omitempty"`
-	Status commonv1.JobStatus `json:"status,omitempty"`
+	Status MarsJobStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
