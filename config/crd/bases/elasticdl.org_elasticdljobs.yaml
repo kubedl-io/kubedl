@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.0
+    controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
   name: elasticdljobs.elasticdl.org
 spec:
@@ -40,6 +40,9 @@ spec:
           kind:
             description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
+          metadata:
+            description: Standard Kubernetes object's metadata.
+            type: object
           spec:
             description: Specification of the desired state of the ElasticDLJob.
             properties:
@@ -795,6 +798,7 @@ spec:
                                           description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                                           type: string
                                         protocol:
+                                          default: TCP
                                           description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
                                           type: string
                                       required:
@@ -1540,6 +1544,7 @@ spec:
                                           description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                                           type: string
                                         protocol:
+                                          default: TCP
                                           description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
                                           type: string
                                       required:
@@ -2289,6 +2294,7 @@ spec:
                                           description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                                           type: string
                                         protocol:
+                                          default: TCP
                                           description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
                                           type: string
                                       required:
@@ -3715,6 +3721,10 @@ spec:
                   properties:
                     active:
                       description: The number of actively running pods.
+                      format: int32
+                      type: integer
+                    evicted:
+                      description: The number of pods which reached phase Failed and reason is Evicted, it is included in the number of Failed.
                       format: int32
                       type: integer
                     failed:
