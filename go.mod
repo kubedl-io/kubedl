@@ -3,6 +3,7 @@ module github.com/alibaba/kubedl
 go 1.13
 
 require (
+	cloud.google.com/go v0.46.3 // indirect
 	github.com/aliyun/aliyun-log-go-sdk v0.1.6
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/frankban/quicktest v1.7.3 // indirect
@@ -12,10 +13,12 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
+	github.com/google/go-cmp v0.5.2 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jinzhu/gorm v1.9.12
 	github.com/kubernetes-sigs/kube-batch v0.0.0-20200402033359-1ebe60e4af4f
-	github.com/onsi/ginkgo v1.12.1
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/ginkgo v1.14.1
+	github.com/onsi/gomega v1.10.2
 	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.0.0
@@ -27,8 +30,10 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/tools v0.0.0-20200616195046-dc31b401abb5 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
-	k8s.io/api v0.18.15
-	k8s.io/apimachinery v0.18.15
+	google.golang.org/genproto v0.0.0-20191108220845-16a3f7862a1a // indirect
+	k8s.io/api v0.20.2
+	k8s.io/apiextensions-apiserver v0.20.2 // indirect
+	k8s.io/apimachinery v0.20.2
 	k8s.io/apiserver v0.18.15
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/klog v1.0.0
@@ -36,6 +41,7 @@ require (
 	k8s.io/kubernetes v1.18.15
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	sigs.k8s.io/controller-runtime v0.6.2
+	sigs.k8s.io/controller-tools v0.4.1 // indirect
 )
 
 replace (
