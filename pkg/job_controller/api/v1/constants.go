@@ -25,8 +25,14 @@ const (
 	AnnotationGitSyncConfig = KubeDLPrefix + "/git-sync-config"
 	// AnnotationTenancyInfo annotate tenancy information.
 	AnnotationTenancyInfo = KubeDLPrefix + "/tenancy"
+	// AnnotationNetworkMode annotate job network mode.
+	AnnotationNetworkMode = KubeDLPrefix + "/network-mode"
 )
 
+// NetworkMode defines network mode for intra job communicating.
+type NetworkMode string
+
 const (
-	DefaultKubeDLNamespace = "kubedl"
+	// HostNetworkMode indicates that replicas use host-network to communicate with each other.
+	HostNetworkMode NetworkMode = "host"
 )
