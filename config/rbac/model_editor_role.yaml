@@ -1,0 +1,24 @@
+# permissions for end users to edit models.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: model-editor-role
+rules:
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - models
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - models/status
+  verbs:
+  - get

@@ -1,0 +1,12 @@
+apiVersion: model.kubedl.io/v1alpha1
+kind: ModelVersion
+metadata:
+  name: mv-4
+  namespace: default
+spec:
+  modelName: model1
+  createdBy: user1
+  storage:
+    localStorage:
+      path: /foo
+      nodeName: kind-control-plane

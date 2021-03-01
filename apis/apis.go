@@ -44,6 +44,11 @@ limitations under the License.
 // Generate default for elasticdljob apis.
 //go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./elasticdljob/... -h ../hack/boilerplate.go.txt
 
+// Generate deepcopy for model apis.
+//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/deepcopy-gen/main.go -O zz_generated.deepcopy -i ./model/... -h ../hack/boilerplate.go.txt
+// Generate default for model apis.
+//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./model/... -h ../hack/boilerplate.go.txt
+
 package apis
 
 import (

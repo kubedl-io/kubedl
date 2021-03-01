@@ -118,6 +118,7 @@ rules:
   - configmaps
   - events
   - persistentvolumeclaims
+  - persistentvolumes
   - secrets
   - services
   verbs:
@@ -241,7 +242,48 @@ rules:
   - get
   - patch
   - update
-
+- apiGroups:
+    - model.kubedl.io
+  resources:
+    - models
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - model.kubedl.io
+  resources:
+    - models/status
+  verbs:
+    - get
+- apiGroups:
+    - model.kubedl.io
+  resources:
+    - models/status
+  verbs:
+    - get
+- apiGroups:
+    - model.kubedl.io
+  resources:
+    - modelversions
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - model.kubedl.io
+  resources:
+    - modelversions/status
+  verbs:
+    - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

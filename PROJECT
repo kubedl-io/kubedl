@@ -1,16 +1,23 @@
-version: "2"
 domain: kubedl.io
+multigroup: true
 repo: github.com/alibaba/kubedl
 resources:
 - group: kubeflow.org
-  version: v1
   kind: TFJob
-- group: xdl.kubedl.io
-  version: v1alpha1
-  kind: XDLJob
-- group: kubeflow.org
   version: v1
-  kind: PytorchJob
-- group: xgboostjob.kubeflow.org
+- group: xdl.kubedl.io
+  kind: XDLJob
   version: v1alpha1
+- group: kubeflow.org
+  kind: PytorchJob
+  version: v1
+- group: xgboostjob.kubeflow.org
   kind: XGBoostJob
+  version: v1alpha1
+- group: model
+  kind: Model
+  version: v1alpha1
+- group: model
+  kind: ModelVersion
+  version: v1alpha1
+version: "2"

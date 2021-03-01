@@ -1,0 +1,20 @@
+# permissions for end users to view modelversions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: modelversion-viewer-role
+rules:
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - modelversions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - modelversions/status
+  verbs:
+  - get
