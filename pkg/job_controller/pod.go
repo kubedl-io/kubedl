@@ -15,13 +15,12 @@
 package job_controller
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/golang/glog"
-	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -29,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/rand"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -36,6 +36,8 @@ import (
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	trainutil "github.com/alibaba/kubedl/pkg/util/train"
+	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -210,6 +212,7 @@ func (jc *JobController) GetPodSlices(pods []*v1.Pod, replicas int, logger *log.
 // ReconcilePods checks and updates pods for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods.
 func (jc *JobController) ReconcilePods(
+	ctx context.Context,
 	job interface{},
 	jobStatus *apiv1.JobStatus,
 	pods []*v1.Pod,
@@ -249,7 +252,7 @@ func (jc *JobController) ReconcilePods(
 
 			// check if this replica is the master role
 			masterRole = jc.Controller.IsMasterRole(replicas, rtype, index)
-			err = jc.createNewPod(job, rt, strconv.Itoa(index), spec, masterRole, replicas)
+			err = jc.createNewPod(ctx, job, rt, strconv.Itoa(index), spec, masterRole, replicas)
 			if err != nil {
 				// When controller tries to create a new pod but api-server returns a AlreadyExists error,
 				// there may comes with two case:
@@ -292,6 +295,12 @@ func (jc *JobController) ReconcilePods(
 					break
 				}
 			}
+			// Get and pass its container port by context if pod enables hostnetwork mode.
+			if enableHostNetwork(metaObject) {
+				storeHostNetworkPortToContext(ctx, rt, strconv.Itoa(index),
+					getContainerHostNetworkPort(pod, jc.Controller.GetDefaultContainerName(), jc.Controller.GetDefaultContainerPortName()))
+			}
+
 			// Check if the pod is retryable.
 			if spec.RestartPolicy == apiv1.RestartPolicyExitCode {
 				if pod.Status.Phase == v1.PodFailed && trainutil.IsRetryableExitCode(exitCode) {
@@ -310,7 +319,7 @@ func (jc *JobController) ReconcilePods(
 }
 
 // createNewPod creates a new pod for the given index and type.
-func (jc *JobController) createNewPod(job interface{}, rt, index string, spec *apiv1.ReplicaSpec, masterRole bool,
+func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, index string, spec *apiv1.ReplicaSpec, masterRole bool,
 	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
 
 	metaObject, ok := job.(metav1.Object)
@@ -343,6 +352,14 @@ func (jc *JobController) createNewPod(job interface{}, rt, index string, spec *a
 	}
 
 	podTemplate := spec.Template.DeepCopy()
+
+	if enableHostNetwork(metaObject) {
+		commonutil.LoggerForReplica(metaObject, rt).Infof("pod enable host network, name: %s, masterRole: %v",
+			metaObject.GetName(), masterRole)
+		if err = jc.setupHostNetwork(ctx, podTemplate, rt, index); err != nil {
+			return err
+		}
+	}
 
 	// Set name for the template.
 	podTemplate.Name = GenGeneralName(metaObject.GetName(), rt, index)
@@ -433,6 +450,24 @@ func (jc *JobController) createPod(nodeName, namespace string, template *v1.PodT
 		glog.V(4).Infof("Controller %v created pod %v", accessor.GetName(), pod.Name)
 		jc.Recorder.Eventf(object, v1.EventTypeNormal, SuccessfulCreatePodReason, "Created pod: %v", pod.Name)
 	}
+	return nil
+}
+
+func (jc *JobController) setupHostNetwork(ctx context.Context, spec *v1.PodTemplateSpec, rtype, index string) error {
+	const (
+		randomPortLowerBound = 30001
+		randomPortUpperBound = 65535
+	)
+
+	port := int32(rand.IntnRange(randomPortLowerBound, randomPortUpperBound))
+	// 1) enable pod hostnetwork mode.
+	spec.Spec.HostNetwork = true
+	// 2) [CRITICAL] setup dns policy with hostnet instead of ClusterFirst by default.
+	spec.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	// 3) setup container port with a random port ranged [30001, 65535).
+	setupContainerHostNetworkPort(spec, jc.Controller.GetDefaultContainerName(), jc.Controller.GetDefaultContainerPortName(), port)
+	// 4) record selected port by context keyed with replica-index.
+	storeHostNetworkPortToContext(ctx, rtype, index, port)
 	return nil
 }
 

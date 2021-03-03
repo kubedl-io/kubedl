@@ -1,12 +1,14 @@
 package job_controller
 
 import (
+	"context"
 	"strings"
 
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	log "github.com/sirupsen/logrus"
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -93,9 +96,13 @@ type JobController struct {
 
 	// Metrics is a metrics exporter that export single numerical counter values.
 	Metrics *metrics.JobMetrics
+
+	// patcher creates a new patch differentiated from old and new object.
+	patcher func(oldObj, newObj runtime.Object) error
 }
 
 func NewJobController(
+	cli client.Client,
 	controllerImpl apiv1.ControllerInterface,
 	config JobControllerConfiguration,
 	recorder record.EventRecorder,
@@ -108,6 +115,11 @@ func NewJobController(
 		BackoffStatesQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		Recorder:           recorder,
 		Metrics:            metrics,
+		patcher: func(oldObj, newObj runtime.Object) error {
+			// deepcopy new object avoid of in-memory modifications being override by in-cluster object.
+			newPatchObj := newObj.DeepCopyObject()
+			return cli.Patch(context.Background(), newPatchObj, client.MergeFrom(oldObj))
+		},
 	}
 }
 

@@ -14,18 +14,19 @@
 package job_controller
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller"
@@ -33,6 +34,7 @@ import (
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // When a service is created, enqueue the controller that manages it and update its expectations.
@@ -186,6 +188,7 @@ func (jc *JobController) GetServiceSlices(services []*v1.Service, replicas int, 
 // reconcileServices checks and updates services for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting services.
 func (jc *JobController) ReconcileServices(
+	ctx context.Context,
 	job metav1.Object,
 	services []*v1.Service,
 	rtype apiv1.ReplicaType,
@@ -205,12 +208,28 @@ func (jc *JobController) ReconcileServices(
 
 	for index, serviceSlice := range serviceSlices {
 		if len(serviceSlice) > 1 {
-			commonutil.LoggerForReplica(job, rt).Warningf("We have too many services for %s %d", rt, index)
+			commonutil.LoggerForReplica(job, rt).Warningf("we have too many services for %s %d", rt, index)
 		} else if len(serviceSlice) == 0 {
 			commonutil.LoggerForReplica(job, rt).Infof("need to create new service: %s-%d", rt, index)
-			err = jc.CreateNewService(job, rtype, spec, strconv.Itoa(index))
+			err = jc.CreateNewService(ctx, job, rtype, spec, strconv.Itoa(index))
 			if err != nil {
 				return err
+			}
+		} else if enableHostNetwork(job) { /* len(serviceSlice) == 1 */
+			service := serviceSlice[0]
+			hostPort, ok := getHostNetworkPortFromContext(ctx, rt, strconv.Itoa(index))
+			if ok && len(service.Spec.Ports) > 0 && service.Spec.Ports[0].TargetPort.IntVal != hostPort {
+				commonutil.LoggerForReplica(job, rt).Infof("update target service: %s-%d, new port: %d",
+					rt, index, hostPort)
+				// Update service target port to latest container host port, because replicas may fail-over
+				// and its host port changed, so we'd ensure that other replicas can reach it with correct
+				// target port.
+				newService := service.DeepCopy()
+				newService.Spec.Ports[0].TargetPort = intstr.FromInt(int(hostPort))
+				err = jc.patcher(service, newService)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -234,7 +253,7 @@ func (jc *JobController) GetPortFromJob(spec *apiv1.ReplicaSpec) (int32, error) 
 }
 
 // createNewService creates a new service for the given index and type.
-func (jc *JobController) CreateNewService(job metav1.Object, rtype apiv1.ReplicaType,
+func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object, rtype apiv1.ReplicaType,
 	spec *apiv1.ReplicaSpec, index string) error {
 	jobKey, err := KeyFunc(job)
 	if err != nil {
@@ -255,9 +274,18 @@ func (jc *JobController) CreateNewService(job metav1.Object, rtype apiv1.Replica
 	labels[apiv1.ReplicaTypeLabel] = rt
 	labels[apiv1.ReplicaIndexLabel] = index
 
-	port, err := jc.GetPortFromJob(spec)
+	svcPort, err := jc.GetPortFromJob(spec)
 	if err != nil {
 		return err
+	}
+	targetPort := svcPort
+
+	if enableHostNetwork(job) {
+		// retrieve selected host port with corresponding pods.
+		hostPort, ok := getHostNetworkPortFromContext(ctx, rt, index)
+		if ok {
+			targetPort = hostPort
+		}
 	}
 
 	service := &v1.Service{
@@ -266,8 +294,9 @@ func (jc *JobController) CreateNewService(job metav1.Object, rtype apiv1.Replica
 			Selector:  labels,
 			Ports: []v1.ServicePort{
 				{
-					Name: jc.Controller.GetDefaultContainerPortName(),
-					Port: port,
+					Name:       jc.Controller.GetDefaultContainerPortName(),
+					Port:       svcPort,
+					TargetPort: intstr.FromInt(int(targetPort)),
 				},
 			},
 		},

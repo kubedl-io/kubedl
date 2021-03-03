@@ -1,6 +1,7 @@
 package job_controller
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	elasticdlv1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
+	mpiv1 "github.com/alibaba/kubedl/apis/mpi/v1"
 	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
 	"github.com/alibaba/kubedl/pkg/code_sync"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -208,6 +210,8 @@ func (jc *JobController) ReconcileJobs(
 	replicasStatus := make(map[string]v1.PodPhase)
 	restart := false
 
+	ctx := context.WithValue(context.Background(), contextHostNetworkPorts, make(map[string]int32))
+
 	// Diff current active pods/services with replicas.
 	for _, rtype := range jc.Controller.GetReconcileOrders() {
 		spec, exist := replicas[rtype]
@@ -215,14 +219,15 @@ func (jc *JobController) ReconcileJobs(
 			continue
 		}
 
-		err = jc.ReconcilePods(metaObject, &jobStatus, pods, rtype, spec, replicasStatus, replicas, &restart)
+		err = jc.ReconcilePods(ctx, metaObject, &jobStatus, pods, rtype, spec, replicasStatus, replicas, &restart)
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
 			return result, err
 		}
 
-		// Skip service of ElasticDLJob
-		if jc.Controller.GetAPIGroupVersionKind().Kind == elasticdlv1alpha1.Kind {
+		// Skip service of ElasticDLJob and MPIJob.
+		if jc.Controller.GetAPIGroupVersionKind().Kind == elasticdlv1alpha1.Kind ||
+			jc.Controller.GetAPIGroupVersionKind().Kind == mpiv1.Kind {
 			continue
 		}
 
@@ -232,7 +237,7 @@ func (jc *JobController) ReconcileJobs(
 			continue
 		}
 
-		err = jc.ReconcileServices(metaObject, services, rtype, spec)
+		err = jc.ReconcileServices(ctx, metaObject, services, rtype, spec)
 		if err != nil {
 			log.Warnf("ReconcileServices error %v", err)
 			return result, err
