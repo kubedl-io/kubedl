@@ -25,6 +25,8 @@ func (ls *LocalStorageProvider) CreatePersistentVolume(storage *modelv1alpha1.St
 				},
 			},
 			Capacity: corev1.ResourceList{
+				// the 50Mi capacity is not enforced for local path volume.
+				// This is specified because api-server validation checks a capacity value to be present.
 				corev1.ResourceStorage: resource.MustParse("50Mi"),
 			},
 			StorageClassName: "model-local",

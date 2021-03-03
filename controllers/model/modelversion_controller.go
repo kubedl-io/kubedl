@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Alibaba Authors.
+Copyright 2021 The Alibaba Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	if err != nil {
 		if errors.IsNotFound(err) {
 			r.Log.Info("model doesn't exist", "model", modelVersion.Spec.ModelName)
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil
 		}
 		return reconcile.Result{}, err
 	} else {
