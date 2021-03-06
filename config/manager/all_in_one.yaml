@@ -18,6 +18,8 @@ rules:
   - kubeflow.org
   resources:
   - tfjobs
+  - pytorchjobs
+  - mpijobs
   verbs:
   - get
   - list
@@ -30,30 +32,8 @@ rules:
   - kubeflow.org
   resources:
   - tfjobs/status
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - kubeflow.org
-  resources:
-  - pytorchjobs
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - kubeflow.org
-  resources:
   - pytorchjobs/status
+  - mpijobs/status
   verbs:
   - get
   - list
