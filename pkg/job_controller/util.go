@@ -26,11 +26,6 @@ var (
 	errPortNotFound = fmt.Errorf("failed to found the port")
 )
 
-func GenGeneralName(jobName, rtype, index string) string {
-	n := jobName + "-" + rtype + "-" + index
-	return strings.Replace(n, "/", "-", -1)
-}
-
 // RecheckDeletionTimestamp returns a CanAdopt() function to recheck deletion.
 //
 // The CanAdopt() function calls getObject() to fetch the latest value,

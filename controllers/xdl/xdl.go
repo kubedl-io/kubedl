@@ -24,6 +24,7 @@ import (
 
 	"github.com/alibaba/kubedl/apis/xdl/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
+	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
 
 // XDLConfig is a struct representing the distributed XDL config.
@@ -92,7 +93,7 @@ func genClusterSpec(xdlJob *v1alpha1.XDLJob) (ClusterSpec, error) {
 			return nil, err
 		}
 		for i := int32(0); i < *spec.Replicas; i++ {
-			host := fmt.Sprintf("%s:%d", job_controller.GenGeneralName(xdlJob.Name, rt, fmt.Sprintf("%d", i)), port)
+			host := fmt.Sprintf("%s:%d", commonutil.GenGeneralName(xdlJob.Name, rt, fmt.Sprintf("%d", i)), port)
 			replicaNames = append(replicaNames, host)
 		}
 		clusterSpec[rt] = replicaNames

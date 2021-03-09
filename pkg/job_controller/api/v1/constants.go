@@ -27,6 +27,11 @@ const (
 	AnnotationTenancyInfo = KubeDLPrefix + "/tenancy"
 	// AnnotationNetworkMode annotate job network mode.
 	AnnotationNetworkMode = KubeDLPrefix + "/network-mode"
+
+	// AnnotationTensorBoardConfig annotate tensorboard configurations.
+	AnnotationTensorBoardConfig = KubeDLPrefix + "/tensorboard-config"
+	// ReplicaTypeTensorBoard is the type for TensorBoard.
+	ReplicaTypeTensorBoard ReplicaType = "TensorBoard"
 )
 
 // NetworkMode defines network mode for intra job communicating.

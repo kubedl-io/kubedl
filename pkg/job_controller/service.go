@@ -255,19 +255,9 @@ func (jc *JobController) GetPortFromJob(spec *apiv1.ReplicaSpec) (int32, error) 
 // createNewService creates a new service for the given index and type.
 func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object, rtype apiv1.ReplicaType,
 	spec *apiv1.ReplicaSpec, index string) error {
-	jobKey, err := KeyFunc(job)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("couldn't get key for job object %#v: %v", job, err))
-		return err
-	}
 
 	// Convert ReplicaType to lower string.
 	rt := strings.ToLower(string(rtype))
-	expectationServicesKey := GenExpectationServicesKey(jobKey, rt)
-	err = jc.Expectations.ExpectCreations(expectationServicesKey, 1)
-	if err != nil {
-		return err
-	}
 
 	// Append ReplicaTypeLabel and ReplicaIndexLabel labels.
 	labels := jc.GenLabels(job.GetName())
@@ -302,7 +292,32 @@ func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object
 		},
 	}
 
-	service.Name = GenGeneralName(job.GetName(), rt, index)
+	return jc.CreateCommonService(job, rtype, service, index)
+}
+
+// CreateCommonService creates a new common service for the given index and type.
+func (jc *JobController) CreateCommonService(job metav1.Object, rtype apiv1.ReplicaType,
+	service *v1.Service, index string) error {
+	jobKey, err := KeyFunc(job)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("couldn't get key for job object %#v: %v", job, err))
+		return err
+	}
+
+	// Convert ReplicaType to lower string.
+	rt := strings.ToLower(string(rtype))
+	expectationServicesKey := GenExpectationServicesKey(jobKey, rt)
+	err = jc.Expectations.ExpectCreations(expectationServicesKey, 1)
+	if err != nil {
+		return err
+	}
+
+	// Append ReplicaTypeLabel and ReplicaIndexLabel labels.
+	labels := jc.GenLabels(job.GetName())
+	labels[apiv1.ReplicaTypeLabel] = rt
+	labels[apiv1.ReplicaIndexLabel] = index
+
+	service.Name = commonutil.GenGeneralName(job.GetName(), rt, index)
 	service.Labels = labels
 	// Create OwnerReference.
 	controllerRef := jc.GenOwnerReference(job)

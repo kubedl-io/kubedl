@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -72,4 +73,9 @@ func RandString(n int) string {
 	}
 
 	return string(b)
+}
+
+func GenGeneralName(jobName, rtype, index string) string {
+	n := jobName + "-" + rtype + "-" + index
+	return strings.Replace(n, "/", "-", -1)
 }
