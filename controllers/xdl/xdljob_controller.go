@@ -189,7 +189,7 @@ func (r *XDLJobReconciler) GetGroupNameLabelValue() string {
 }
 
 // SetClusterSpec sets the cluster spec for the pod
-func (r *XDLJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (r *XDLJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	xdlJob, ok := job.(*xdlv1alpha1.XDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of XDLJob", job)

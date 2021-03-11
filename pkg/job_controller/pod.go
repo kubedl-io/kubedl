@@ -296,7 +296,7 @@ func (jc *JobController) ReconcilePods(
 				}
 			}
 			// Get and pass its container port by context if pod enables hostnetwork mode.
-			if enableHostNetwork(metaObject) {
+			if EnableHostNetwork(metaObject) {
 				storeHostNetworkPortToContext(ctx, rt, strconv.Itoa(index),
 					getContainerHostNetworkPort(pod, jc.Controller.GetDefaultContainerName(), jc.Controller.GetDefaultContainerPortName()))
 			}
@@ -344,7 +344,7 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		labels[apiv1.JobRoleLabel] = "master"
 	}
 
-	if enableHostNetwork(metaObject) {
+	if EnableHostNetwork(metaObject) {
 		commonutil.LoggerForReplica(metaObject, rt).Infof("pod enable host network, name: %s, masterRole: %v",
 			metaObject.GetName(), masterRole)
 		if err := jc.setupHostNetwork(ctx, podTemplate, rt, index); err != nil {
@@ -354,7 +354,7 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 
 	podTemplate.Labels = commonutil.MergeMap(podTemplate.Labels, labels)
 
-	if err := jc.Controller.SetClusterSpec(job, podTemplate, rt, index); err != nil {
+	if err := jc.Controller.SetClusterSpec(ctx, job, podTemplate, rt, index); err != nil {
 		return err
 	}
 

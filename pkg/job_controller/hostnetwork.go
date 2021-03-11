@@ -26,19 +26,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func enableHostNetwork(job metav1.Object) bool {
+func EnableHostNetwork(job metav1.Object) bool {
 	return job.GetAnnotations()[v1.AnnotationNetworkMode] == string(v1.HostNetworkMode)
+}
+
+func GetHostNetworkPortFromContext(ctx context.Context, rtype, index string) (int32, bool) {
+	ports := ctx.Value(contextHostNetworkPorts).(map[string]int32)
+	port, ok := ports[fmt.Sprintf("%s-%s", rtype, index)]
+	return port, ok
 }
 
 func storeHostNetworkPortToContext(ctx context.Context, rtype, index string, port int32) {
 	ports := ctx.Value(contextHostNetworkPorts).(map[string]int32)
 	ports[fmt.Sprintf("%s-%s", rtype, index)] = port
-}
-
-func getHostNetworkPortFromContext(ctx context.Context, rtype, index string) (int32, bool) {
-	ports := ctx.Value(contextHostNetworkPorts).(map[string]int32)
-	port, ok := ports[fmt.Sprintf("%s-%s", rtype, index)]
-	return port, ok
 }
 
 func setupContainerHostNetworkPort(spec *corev1.PodTemplateSpec, defaultContainerName, defaultPortName string, port int32) {

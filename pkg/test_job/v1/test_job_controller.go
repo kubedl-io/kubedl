@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"context"
+
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -114,7 +116,7 @@ func (t *TestJobController) DeletePod(job interface{}, pod *corev1.Pod) error {
 	return nil
 }
 
-func (t *TestJobController) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (t *TestJobController) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	return nil
 }
 

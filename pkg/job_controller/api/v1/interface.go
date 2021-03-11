@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"context"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -56,7 +58,7 @@ type ControllerInterface interface {
 	DeletePod(job interface{}, pod *corev1.Pod) error
 
 	// SetClusterSpec sets the cluster spec for the pod
-	SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error
+	SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error
 
 	// Returns the default container name in pod
 	GetDefaultContainerName() string
