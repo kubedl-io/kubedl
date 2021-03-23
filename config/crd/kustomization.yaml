@@ -6,6 +6,9 @@ resources:
 - bases/kubeflow.org_pytorchjobs.yaml
 - bases/xdl.kubedl.io_xdljobs.yaml
 - bases/xgboostjob.kubeflow.org_xgboostjobs.yaml
+- bases/elasticdl.org_elasticdljobs.yaml
+- bases/kubedl.io_marsjobs.yaml
+- bases/kubeflow.org_mpijobs.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
