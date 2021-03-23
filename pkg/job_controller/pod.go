@@ -335,6 +335,15 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 
 	podTemplate := spec.Template.DeepCopy()
 
+	// Set type and index for the worker.
+	labels := jc.GenLabels(metaObject.GetName())
+	labels[apiv1.ReplicaTypeLabel] = rt
+	labels[apiv1.ReplicaIndexLabel] = index
+
+	if masterRole {
+		labels[apiv1.JobRoleLabel] = "master"
+	}
+
 	if enableHostNetwork(metaObject) {
 		commonutil.LoggerForReplica(metaObject, rt).Infof("pod enable host network, name: %s, masterRole: %v",
 			metaObject.GetName(), masterRole)
@@ -342,6 +351,8 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 			return err
 		}
 	}
+
+	podTemplate.Labels = commonutil.MergeMap(podTemplate.Labels, labels)
 
 	if err := jc.Controller.SetClusterSpec(job, podTemplate, rt, index); err != nil {
 		return err
@@ -392,28 +403,11 @@ func (jc *JobController) CreatePod(job interface{}, rt, index string, podTemplat
 		return err
 	}
 
-	// Set type and index for the worker.
-	labels := jc.GenLabels(metaObject.GetName())
-	labels[apiv1.ReplicaTypeLabel] = rt
-	labels[apiv1.ReplicaIndexLabel] = index
-
-	if masterRole {
-		labels[apiv1.JobRoleLabel] = "master"
-	}
-
 	// Set name for the template.
 	podTemplate.Name = commonutil.GenGeneralName(metaObject.GetName(), rt, index)
 	// Compatible with the naming convention of ElasticDL
 	if jc.Controller.ControllerName() == "ElasticDLController" && masterRole {
 		podTemplate.Name = "elasticdl-" + metaObject.GetName() + "-master"
-	}
-
-	if podTemplate.Labels == nil {
-		podTemplate.Labels = make(map[string]string)
-	}
-
-	for key, value := range labels {
-		podTemplate.Labels[key] = value
 	}
 
 	controllerRef := jc.GenOwnerReference(metaObject)

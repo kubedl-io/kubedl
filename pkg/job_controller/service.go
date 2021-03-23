@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -291,6 +291,7 @@ func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object
 			},
 		},
 	}
+	service.Labels = commonutil.MergeMap(service.Labels, labels)
 
 	return jc.CreateCommonService(job, rtype, service, index)
 }
@@ -312,13 +313,7 @@ func (jc *JobController) CreateCommonService(job metav1.Object, rtype apiv1.Repl
 		return err
 	}
 
-	// Append ReplicaTypeLabel and ReplicaIndexLabel labels.
-	labels := jc.GenLabels(job.GetName())
-	labels[apiv1.ReplicaTypeLabel] = rt
-	labels[apiv1.ReplicaIndexLabel] = index
-
 	service.Name = commonutil.GenGeneralName(job.GetName(), rt, index)
-	service.Labels = labels
 	// Create OwnerReference.
 	controllerRef := jc.GenOwnerReference(job)
 

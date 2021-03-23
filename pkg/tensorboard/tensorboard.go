@@ -183,10 +183,11 @@ func syncPod(jc job_controller.JobController, c client.Client, metaObj metav1.Ob
 	template := spec.Template.DeepCopy()
 	template.Spec.RestartPolicy = corev1.RestartPolicyAlways
 
-	labels := jc.GenLabels(metaObj.GetName())
+	labels := map[string]string{}
 	labels[apiv1.ReplicaTypeLabel] = tbRT
 	labels[apiv1.ReplicaIndexLabel] = index
-	template.Labels = labels
+	labels[apiv1.ReplicaNameLabel] = name
+	template.Labels = commonutil.MergeMap(template.Labels, labels)
 
 	if template.Annotations == nil {
 		template.Annotations = map[string]string{}
@@ -197,37 +198,6 @@ func syncPod(jc job_controller.JobController, c client.Client, metaObj metav1.Ob
 	if opts.Ingress != nil && opts.Ingress.PathPrefix != nil {
 		pathPrefix = *opts.Ingress.PathPrefix
 	}
-
-	if template.Spec.Affinity == nil {
-		template.Spec.Affinity = &corev1.Affinity{
-			PodAffinity: &corev1.PodAffinity{},
-		}
-	}
-	if template.Spec.Affinity.PodAffinity == nil {
-		template.Spec.Affinity.PodAffinity = &corev1.PodAffinity{}
-	}
-	template.Spec.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution =
-		append(template.Spec.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution,
-			corev1.PodAffinityTerm{
-				LabelSelector: &metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
-						{
-							Key:      apiv1.JobNameLabel,
-							Operator: metav1.LabelSelectorOpIn,
-							Values:   []string{strings.Replace(metaObj.GetName(), "/", "-", -1)},
-						}, {
-							Key:      apiv1.ReplicaTypeLabel,
-							Operator: metav1.LabelSelectorOpIn,
-							Values:   []string{strings.ToLower(string(masterType))},
-						}, {
-							Key:      apiv1.ReplicaIndexLabel,
-							Operator: metav1.LabelSelectorOpIn,
-							Values:   []string{index},
-						},
-					},
-				},
-				TopologyKey: corev1.LabelHostname,
-			})
 
 	for i := range template.Spec.Containers {
 		c := &template.Spec.Containers[i]
@@ -282,9 +252,10 @@ func syncService(jc job_controller.JobController, c client.Client,
 	log.Infof("TensorBoard %v sync service not found.", name)
 
 	// service not found
-	labels := jc.GenLabels(metaObj.GetName())
+	labels := map[string]string{}
 	labels[apiv1.ReplicaTypeLabel] = tbRT
 	labels[apiv1.ReplicaIndexLabel] = index
+	labels[apiv1.ReplicaNameLabel] = name
 
 	service = &corev1.Service{
 		Spec: corev1.ServiceSpec{
@@ -298,6 +269,7 @@ func syncService(jc job_controller.JobController, c client.Client,
 			},
 		},
 	}
+	service.Labels = commonutil.MergeMap(service.Labels, labels)
 
 	if err := jc.CreateCommonService(metaObj, apiv1.ReplicaTypeTensorBoard, service, index); err != nil {
 		return err

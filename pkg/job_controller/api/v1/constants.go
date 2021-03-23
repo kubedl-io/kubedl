@@ -7,6 +7,9 @@ const (
 	// ReplicaTypeLabel represents the label key for the replica-type, e.g. the value is ps , worker etc.
 	ReplicaTypeLabel = "replica-type"
 
+	// ReplicaNameLabel represents the label key for the replica-name, the value is replica name.
+	ReplicaNameLabel = "replica-name"
+
 	// GroupNameLabel represents the label key for group name, e.g. the value is kubeflow.org
 	GroupNameLabel = "group-name"
 

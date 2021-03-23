@@ -75,7 +75,22 @@ func RandString(n int) string {
 	return string(b)
 }
 
+// GenGeneralName generate a name from the given jobName rtype and index.
 func GenGeneralName(jobName, rtype, index string) string {
 	n := jobName + "-" + rtype + "-" + index
 	return strings.Replace(n, "/", "-", -1)
+}
+
+// MergeMap merge b to a and return a
+func MergeMap(a, b map[string]string) map[string]string {
+	if b == nil {
+		return a
+	}
+	if a == nil {
+		a = map[string]string{}
+	}
+	for key, value := range b {
+		a[key] = value
+	}
+	return a
 }
