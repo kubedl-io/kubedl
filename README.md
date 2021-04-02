@@ -22,8 +22,8 @@ Currently, KubeDL supports the following ML/DL jobs:
 
 
 ## Features
-- Support running prevalent DeepLearning workloads in a single operator and maintains API compatibility with kubeflow job operators.
-- Support running jobs with [custom artifacts downloaded from remote repository](./docs/sync_code.md ) such as github, saving users from manually baking the artificats into the image. 
+- Support running prevalent DeepLearning workloads in a single operator.
+- Support running jobs with [custom artifacts from remote repository](./docs/sync_code.md ) such as github, saving users from manually baking the artificats into the image. 
 - Instrumented with unified [prometheus metrics](./docs/metrics.md)  for different types of DL jobs, such as job launch delay, number of pending/running jobs.
 - Support job metadata persistency with a pluggable storage backend such as Mysql.
 - Provide more granular information on kubectl command line to show job status.
