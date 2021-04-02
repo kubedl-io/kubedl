@@ -30,6 +30,7 @@ import (
 	"github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
+	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 	"github.com/sirupsen/logrus"
 )
@@ -114,7 +115,7 @@ func SetPodEnv(job interface{}, podTemplate *corev1.PodTemplateSpec, index strin
 		return err
 	}
 
-	masterAddr := job_controller.GenGeneralName(xgboostjob.Name, strings.ToLower(string(v1alpha1.XGBoostReplicaTypeMaster)), strconv.Itoa(0))
+	masterAddr := commonutil.GenGeneralName(xgboostjob.Name, strings.ToLower(string(v1alpha1.XGBoostReplicaTypeMaster)), strconv.Itoa(0))
 	masterPort, err := job_controller.GetPortFromJob(xgboostjob.Spec.XGBReplicaSpecs, v1alpha1.XGBoostReplicaTypeMaster, v1alpha1.DefaultContainerName, v1alpha1.DefaultContainerPortName)
 	if err != nil {
 		return err

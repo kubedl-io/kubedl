@@ -42,6 +42,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 )
 
@@ -193,7 +194,7 @@ func (r *PytorchJobReconciler) SetClusterSpec(job interface{}, podTemplate *core
 		return err
 	}
 
-	masterAddr := job_controller.GenGeneralName(pytorchJob.Name, strings.ToLower(string(pytorchv1.PyTorchReplicaTypeMaster)), strconv.Itoa(0))
+	masterAddr := commonutil.GenGeneralName(pytorchJob.Name, strings.ToLower(string(pytorchv1.PyTorchReplicaTypeMaster)), strconv.Itoa(0))
 	if rtype == strings.ToLower(string(pytorchv1.PyTorchReplicaTypeMaster)) {
 		if rank != 0 {
 			return fmt.Errorf("invalid config: There should be only a single master with index=0")

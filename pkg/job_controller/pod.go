@@ -277,7 +277,7 @@ func (jc *JobController) ReconcilePods(
 					jc.Expectations.CreationObserved(expectationServiceKey)
 
 					logger.Infof("try create new pod %s but got a AlreadyExists error, generate a new expectation",
-						GenGeneralName(metaObject.GetName(), rt, strconv.Itoa(index)))
+						commonutil.GenGeneralName(metaObject.GetName(), rt, strconv.Itoa(index)))
 				}
 				return err
 			}
@@ -330,17 +330,10 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 	if !ok {
 		return fmt.Errorf("job is not a runtime.Object type")
 	}
-	jobKey, err := KeyFunc(metaObject)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("couldn't get key for job object %#v: %v", job, err))
-		return err
-	}
-	expectationPodsKey := GenExpectationPodsKey(jobKey, rt)
-	err = jc.Expectations.ExpectCreations(expectationPodsKey, 1)
-	if err != nil {
-		return err
-	}
+
 	logger := commonutil.LoggerForReplica(metaObject, rt)
+
+	podTemplate := spec.Template.DeepCopy()
 
 	// Set type and index for the worker.
 	labels := jc.GenLabels(metaObject.GetName())
@@ -351,30 +344,15 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		labels[apiv1.JobRoleLabel] = "master"
 	}
 
-	podTemplate := spec.Template.DeepCopy()
-
 	if enableHostNetwork(metaObject) {
 		commonutil.LoggerForReplica(metaObject, rt).Infof("pod enable host network, name: %s, masterRole: %v",
 			metaObject.GetName(), masterRole)
-		if err = jc.setupHostNetwork(ctx, podTemplate, rt, index); err != nil {
+		if err := jc.setupHostNetwork(ctx, podTemplate, rt, index); err != nil {
 			return err
 		}
 	}
 
-	// Set name for the template.
-	podTemplate.Name = GenGeneralName(metaObject.GetName(), rt, index)
-	// Compatible with the naming convention of ElasticDL
-	if jc.Controller.ControllerName() == "ElasticDLController" && masterRole {
-		podTemplate.Name = "elasticdl-" + metaObject.GetName() + "-master"
-	}
-
-	if podTemplate.Labels == nil {
-		podTemplate.Labels = make(map[string]string)
-	}
-
-	for key, value := range labels {
-		podTemplate.Labels[key] = value
-	}
+	podTemplate.Labels = commonutil.MergeMap(podTemplate.Labels, labels)
 
 	if err := jc.Controller.SetClusterSpec(job, podTemplate, rt, index); err != nil {
 		return err
@@ -400,6 +378,38 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 			return err
 		}
 	}
+
+	return jc.CreatePod(job, rt, index, podTemplate, masterRole)
+}
+
+// CreatePod creates a new common pod for the given index and type.
+func (jc *JobController) CreatePod(job interface{}, rt, index string, podTemplate *v1.PodTemplateSpec, masterRole bool) error {
+	metaObject, ok := job.(metav1.Object)
+	if !ok {
+		return fmt.Errorf("job is not a metav1.Object type")
+	}
+	runtimeObject, ok := job.(runtime.Object)
+	if !ok {
+		return fmt.Errorf("job is not a runtime.Object type")
+	}
+	jobKey, err := KeyFunc(metaObject)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("couldn't get key for job object %#v: %v", job, err))
+		return err
+	}
+	expectationPodsKey := GenExpectationPodsKey(jobKey, rt)
+	err = jc.Expectations.ExpectCreations(expectationPodsKey, 1)
+	if err != nil {
+		return err
+	}
+
+	// Set name for the template.
+	podTemplate.Name = commonutil.GenGeneralName(metaObject.GetName(), rt, index)
+	// Compatible with the naming convention of ElasticDL
+	if jc.Controller.ControllerName() == "ElasticDLController" && masterRole {
+		podTemplate.Name = "elasticdl-" + metaObject.GetName() + "-master"
+	}
+
 	controllerRef := jc.GenOwnerReference(metaObject)
 
 	err = jc.createPodWithControllerRef(metaObject.GetNamespace(), podTemplate, runtimeObject, controllerRef)

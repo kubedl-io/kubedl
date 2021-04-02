@@ -19,15 +19,16 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"strconv"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	"github.com/alibaba/kubedl/apis/mars/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
+	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/quota"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 const marsConfig = "MARS_TASK_DETAIL"
@@ -109,7 +110,7 @@ func genClusterSpec(marsJob *v1alpha1.MarsJob) (ClusterSpec, error) {
 			// Headless service assigned a DNS A record for a name of the form "my-svc.my-namespace.svc.cluster.local".
 			// And the last part "svc.cluster.local" is called cluster domain
 			// which maybe different between kubernetes clusters.
-			hostname := job_controller.GenGeneralName(marsJob.Name, rt, fmt.Sprintf("%d", i))
+			hostname := commonutil.GenGeneralName(marsJob.Name, rt, fmt.Sprintf("%d", i))
 			svcName := hostname + "." + marsJob.Namespace + ".svc"
 			endpoint := fmt.Sprintf("%s:%d", svcName, port)
 			endpoints = append(endpoints, endpoint)

@@ -41,6 +41,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/alibaba/kubedl/pkg/tensorboard"
 )
 
 const (
@@ -87,6 +88,7 @@ type TFJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=kubeflow.org,resources=tfjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=kubeflow.org,resources=tfjobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 
 func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch the TFJob tfJob
@@ -119,6 +121,14 @@ func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	result, err := r.ctrl.ReconcileJobs(tfJob, tfJob.Spec.TFReplicaSpecs, tfJob.Status, &tfJob.Spec.RunPolicy)
 	if err != nil {
 		log.Error(err, "tensorflow job reconcile failed")
+		return result, err
+	}
+
+	// sync tensorboard using chief or worker spec.
+	masterType, masterSpec := r.getMasterSpec(tfJob.Spec.TFReplicaSpecs)
+	if err := tensorboard.ReconcileTensorBoard(r.ctrl, r.Client, tfJob,
+		masterType, masterSpec, tfJob.Status, &result); err != nil {
+		log.Error(err, "ReconcileTensorBoard error %v")
 		return result, err
 	}
 	return result, err
@@ -274,4 +284,15 @@ func (r *TFJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 // MasterRole pod will have "job-role=master" set in its label
 func (r *TFJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaType, index int) bool {
 	return tfv1.IsChieforMaster(rtype)
+}
+
+// getMasterSpec returns chief or worker spec.
+func (r *TFJobReconciler) getMasterSpec(replicas map[v1.ReplicaType]*v1.ReplicaSpec) (v1.ReplicaType, *v1.ReplicaSpec) {
+	if spec, ok := replicas[tfv1.TFReplicaTypeChief]; ok {
+		return tfv1.TFReplicaTypeChief, spec
+	}
+	if spec, ok := replicas[tfv1.TFReplicaTypeMaster]; ok {
+		return tfv1.TFReplicaTypeMaster, spec
+	}
+	return tfv1.TFReplicaTypeWorker, replicas[tfv1.TFReplicaTypeWorker]
 }
