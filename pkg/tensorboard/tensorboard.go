@@ -152,7 +152,7 @@ func syncPod(jc job_controller.JobController, c client.Client, metaObj metav1.Ob
 			Namespace: metaObj.GetNamespace(),
 			Name:      name},
 		pod); err == nil {
-		if !isOwnerReferences(pod, metaObj) {
+		if !metav1.IsControlledBy(pod, metaObj) {
 			return fmt.Errorf("sync TensorBoard %v pod conflict", metaObj.GetName())
 		}
 
@@ -241,7 +241,8 @@ func syncService(jc job_controller.JobController, c client.Client,
 			Namespace: metaObj.GetNamespace(),
 			Name:      name},
 		service); err == nil {
-		if !isOwnerReferences(service, metaObj) {
+
+		if !metav1.IsControlledBy(service, metaObj) {
 			return fmt.Errorf("sync TensorBoard %v service conflict", metaObj.GetName())
 		}
 		return nil
@@ -300,7 +301,7 @@ func syncIngress(jc job_controller.JobController, c client.Client,
 			Namespace: metaObj.GetNamespace(),
 			Name:      name},
 		in); err == nil {
-		if !isOwnerReferences(in, metaObj) {
+		if !metav1.IsControlledBy(in, metaObj) {
 			return fmt.Errorf("sync TensorBoard %v ingress conflict", metaObj.GetName())
 		}
 
@@ -389,7 +390,7 @@ func deleteTensorBoard(jc job_controller.JobController, c client.Client, metaObj
 		types.NamespacedName{
 			Namespace: metaObj.GetNamespace(),
 			Name:      name},
-		&in); err == nil && isOwnerReferences(&in, metaObj) {
+		&in); err == nil && metav1.IsControlledBy(&in, metaObj) {
 		if err := c.Delete(context.Background(), &in); err != nil {
 			return err
 		}
@@ -403,7 +404,7 @@ func deleteTensorBoard(jc job_controller.JobController, c client.Client, metaObj
 		types.NamespacedName{
 			Namespace: metaObj.GetNamespace(),
 			Name:      name},
-		&service); err == nil && isOwnerReferences(&service, metaObj) {
+		&service); err == nil && metav1.IsControlledBy(&service, metaObj) {
 		if err := c.Delete(context.Background(), &service); err != nil {
 			return err
 		}
@@ -417,7 +418,7 @@ func deleteTensorBoard(jc job_controller.JobController, c client.Client, metaObj
 		types.NamespacedName{
 			Namespace: metaObj.GetNamespace(),
 			Name:      name},
-		&pod); err == nil && isOwnerReferences(&pod, metaObj) {
+		&pod); err == nil && metav1.IsControlledBy(&pod, metaObj) {
 		if err := c.Delete(context.Background(), &pod); err != nil {
 			return err
 		}
@@ -426,15 +427,6 @@ func deleteTensorBoard(jc job_controller.JobController, c client.Client, metaObj
 	}
 
 	return nil
-}
-
-func isOwnerReferences(obj, owner metav1.Object) bool {
-	for _, o := range obj.GetOwnerReferences() {
-		if o.UID == owner.GetUID() {
-			return true
-		}
-	}
-	return false
 }
 
 func setEnv(env []corev1.EnvVar, key, value string) []corev1.EnvVar {

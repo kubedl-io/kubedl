@@ -291,5 +291,8 @@ func (r *TFJobReconciler) getMasterSpec(replicas map[v1.ReplicaType]*v1.ReplicaS
 	if spec, ok := replicas[tfv1.TFReplicaTypeChief]; ok {
 		return tfv1.TFReplicaTypeChief, spec
 	}
+	if spec, ok := replicas[tfv1.TFReplicaTypeMaster]; ok {
+		return tfv1.TFReplicaTypeMaster, spec
+	}
 	return tfv1.TFReplicaTypeWorker, replicas[tfv1.TFReplicaTypeWorker]
 }
