@@ -17,6 +17,7 @@ Currently, KubeDL supports the following ML/DL jobs:
 - [XGBoost](https://github.com/dmlc/xgboost)
 - [XDL](https://github.com/alibaba/x-deeplearning/)
 - [Mars](https://github.com/mars-project/mars)
+-  MPI Job
 
 ## Features
 - Support running prevalent ML/DL workloads in a single operator and maintains API compatibility with kubeflow job operators.
