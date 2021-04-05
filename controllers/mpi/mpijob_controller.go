@@ -205,7 +205,7 @@ func (r *MPIJobReconciler) GetGroupNameLabelValue() string {
 }
 
 // SetClusterSpec generates and sets for the given podTemplateSpec.
-func (r *MPIJobReconciler) SetClusterSpec(job interface{}, podTemplateSpec *corev1.PodTemplateSpec, rt, index string) error {
+func (r *MPIJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplateSpec *corev1.PodTemplateSpec, rt, index string) error {
 	mpiJob, ok := job.(*mpiv1.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of MPIJob", job)

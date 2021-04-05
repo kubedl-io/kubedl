@@ -169,7 +169,7 @@ func (r *MarsJobReconciler) GetGroupNameLabelValue() string {
 	return kubedliov1beta1.GroupName
 }
 
-func (r *MarsJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	marsJob, ok := job.(*kubedliov1beta1.MarsJob)
 	if !ok {
 		return fmt.Errorf("%+v is not type of MarsJob", job)

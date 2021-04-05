@@ -215,9 +215,9 @@ func (jc *JobController) ReconcileServices(
 			if err != nil {
 				return err
 			}
-		} else if enableHostNetwork(job) { /* len(serviceSlice) == 1 */
+		} else if EnableHostNetwork(job) { /* len(serviceSlice) == 1 */
 			service := serviceSlice[0]
-			hostPort, ok := getHostNetworkPortFromContext(ctx, rt, strconv.Itoa(index))
+			hostPort, ok := GetHostNetworkPortFromContext(ctx, rt, strconv.Itoa(index))
 			if ok && len(service.Spec.Ports) > 0 && service.Spec.Ports[0].TargetPort.IntVal != hostPort {
 				commonutil.LoggerForReplica(job, rt).Infof("update target service: %s-%d, new port: %d",
 					rt, index, hostPort)
@@ -269,10 +269,15 @@ func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object
 		return err
 	}
 	targetPort := svcPort
+	clusterIP := "None"
 
-	if enableHostNetwork(job) {
+	if EnableHostNetwork(job) {
+		// Communications between replicas use headless services by default, as for hostnetwork mode,
+		// headless service can not forward traffic from one port to another, so we use normal service
+		// when hostnetwork enabled.
+		clusterIP = ""
 		// retrieve selected host port with corresponding pods.
-		hostPort, ok := getHostNetworkPortFromContext(ctx, rt, index)
+		hostPort, ok := GetHostNetworkPortFromContext(ctx, rt, index)
 		if ok {
 			targetPort = hostPort
 		}
@@ -280,7 +285,7 @@ func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object
 
 	service := &v1.Service{
 		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
+			ClusterIP: clusterIP,
 			Selector:  labels,
 			Ports: []v1.ServicePort{
 				{

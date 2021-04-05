@@ -196,6 +196,6 @@ func (r *XgboostJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 }
 
 // SetClusterSpec sets the cluster spec for the pod
-func (r *XgboostJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (r *XgboostJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	return SetPodEnv(job, podTemplate, index)
 }

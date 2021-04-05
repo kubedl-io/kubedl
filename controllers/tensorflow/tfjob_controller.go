@@ -195,7 +195,7 @@ func (r *TFJobReconciler) GetGroupNameLabelValue() string {
 }
 
 // SetClusterSpec generates and sets TF_CONFIG for the given podTemplateSpec.
-func (r *TFJobReconciler) SetClusterSpec(job interface{}, podTemplateSpec *corev1.PodTemplateSpec, rt, index string) error {
+func (r *TFJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplateSpec *corev1.PodTemplateSpec, rt, index string) error {
 	tfJob, ok := job.(*tfv1.TFJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of TFJob", job)
@@ -206,7 +206,7 @@ func (r *TFJobReconciler) SetClusterSpec(job interface{}, podTemplateSpec *corev
 		return nil
 	}
 	// Generate TF_CONFIG JSON string.
-	tfConfigStr, err := genTFConfigJSONStr(tfJob, rt, index)
+	tfConfigStr, err := genTFConfigJSONStr(ctx, tfJob, rt, index)
 	if err != nil {
 		return err
 	}

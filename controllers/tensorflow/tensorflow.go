@@ -16,6 +16,7 @@
 package tensorflow
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -71,14 +72,14 @@ type TaskSpec struct {
 //         },
 //     }
 // }
-func genTFConfigJSONStr(tfjob *tfv1.TFJob, rtype, index string) (string, error) {
+func genTFConfigJSONStr(ctx context.Context, tfjob *tfv1.TFJob, rtype, index string) (string, error) {
 	// Configure the TFCONFIG environment variable.
 	i, err := strconv.ParseInt(index, 0, 32)
 	if err != nil {
 		return "", err
 	}
 
-	cluster, err := genClusterSpec(tfjob)
+	cluster, err := genClusterSpec(ctx, tfjob, rtype, index)
 	if err != nil {
 		return "", err
 	}
@@ -104,10 +105,10 @@ func genTFConfigJSONStr(tfjob *tfv1.TFJob, rtype, index string) (string, error) 
 }
 
 // genClusterSpec will generate ClusterSpec.
-func genClusterSpec(tfjob *tfv1.TFJob) (ClusterSpec, error) {
+func genClusterSpec(ctx context.Context, tfJob *tfv1.TFJob, selfType, selfIndex string) (ClusterSpec, error) {
 	clusterSpec := make(ClusterSpec)
 
-	for rtype, spec := range tfjob.Spec.TFReplicaSpecs {
+	for rtype, spec := range tfJob.Spec.TFReplicaSpecs {
 		if rtype == tfv1.TFReplicaTypeEval {
 			// https://www.tensorflow.org/api_docs/python/tf/estimator/RunConfig
 			// evaluator is not part of training cluster
@@ -116,7 +117,7 @@ func genClusterSpec(tfjob *tfv1.TFJob) (ClusterSpec, error) {
 		rt := strings.ToLower(string(rtype))
 		replicaNames := make([]string, 0, *spec.Replicas)
 
-		port, err := job_controller.GetPortFromJob(tfjob.Spec.TFReplicaSpecs, rtype, tfv1.DefaultContainerName, tfv1.DefaultPortName)
+		port, err := job_controller.GetPortFromJob(tfJob.Spec.TFReplicaSpecs, rtype, tfv1.DefaultContainerName, tfv1.DefaultPortName)
 		if err != nil {
 			return nil, err
 		}
@@ -125,14 +126,22 @@ func genClusterSpec(tfjob *tfv1.TFJob) (ClusterSpec, error) {
 			// Headless service assigned a DNS A record for a name of the form "my-svc.my-namespace.svc.cluster.local".
 			// And the last part "svc.cluster.local" is called cluster domain
 			// which maybe different between kubernetes clusters.
-			hostName := commonutil.GenGeneralName(tfjob.Name, rt, fmt.Sprintf("%d", i))
-			svcName := hostName + "." + tfjob.Namespace + "." + "svc"
+			hostName := commonutil.GenGeneralName(tfJob.Name, rt, fmt.Sprintf("%d", i))
+			svcName := hostName + "." + tfJob.Namespace + "." + "svc"
 			cluserDomain := os.Getenv(EnvCustomClusterDomain)
 			if len(cluserDomain) > 0 {
 				svcName += "." + cluserDomain
 			}
-
-			endpoint := fmt.Sprintf("%s:%d", svcName, port)
+			selfPort := port
+			// Set endpoint port as selected hostnetwork port so that tensorflow worker process could listen
+			// to correct port by TF_CONFIG[cluster].
+			if job_controller.EnableHostNetwork(tfJob) && rt == selfType && strconv.Itoa(int(i)) == selfIndex {
+				hostPort, ok := job_controller.GetHostNetworkPortFromContext(ctx, selfType, selfIndex)
+				if ok {
+					selfPort = hostPort
+				}
+			}
+			endpoint := fmt.Sprintf("%s:%d", svcName, selfPort)
 			replicaNames = append(replicaNames, endpoint)
 		}
 

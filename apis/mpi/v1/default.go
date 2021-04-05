@@ -19,7 +19,6 @@ package v1
 import (
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	corev1 "k8s.io/api/core/v1"
-
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -80,14 +79,21 @@ func setDefaultsTypeWorker(spec *v1.ReplicaSpec) {
 
 func SetDefaults_MPIJob(mpiJob *MPIJob) {
 	// Set default cleanpod policy to None.
-	if mpiJob.Spec.CleanPodPolicy == nil {
+	if mpiJob.Spec.MPIJobLegacySpec != nil && mpiJob.Spec.MPIJobLegacySpec.RunPolicy == nil {
+		mpiJob.Spec.MPIJobLegacySpec.RunPolicy = &v1.RunPolicy{}
+	}
+	if mpiJob.Spec.MPIJobLegacySpec != nil && mpiJob.Spec.MPIJobLegacySpec.CleanPodPolicy == nil {
 		policy := DefaultCleanPodPolicy
 		mpiJob.Spec.CleanPodPolicy = &policy
 	}
 
 	// set default to Launcher
-	setDefaultsTypeLauncher(mpiJob.Spec.MPIReplicaSpecs[MPIReplicaTypeLauncher])
+	if mpiJob.Spec.MPIReplicaSpecs[MPIReplicaTypeLauncher] != nil {
+		setDefaultsTypeLauncher(mpiJob.Spec.MPIReplicaSpecs[MPIReplicaTypeLauncher])
+	}
 
 	// set default to Worker
-	setDefaultsTypeWorker(mpiJob.Spec.MPIReplicaSpecs[MPIReplicaTypeWorker])
+	if mpiJob.Spec.MPIReplicaSpecs[MPIReplicaTypeWorker] != nil {
+		setDefaultsTypeWorker(mpiJob.Spec.MPIReplicaSpecs[MPIReplicaTypeWorker])
+	}
 }

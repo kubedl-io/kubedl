@@ -191,6 +191,6 @@ func (r *ElasticDLJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.Re
 }
 
 // SetClusterSpec sets the cluster spec for the pod
-func (r *ElasticDLJobReconciler) SetClusterSpec(job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (r *ElasticDLJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	return nil
 }
