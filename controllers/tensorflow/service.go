@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )
@@ -72,7 +72,7 @@ func (r *TFJobReconciler) CreateService(job interface{}, service *corev1.Service
 
 // DeleteService deletes the service
 func (r *TFJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	tfJob, ok := job.(*tfv1.TFJob)
+	tfJob, ok := job.(*training.TFJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of TFJob", job)
 	}

@@ -25,13 +25,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	elasticdlv1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
 
 // updateGeneralJobStatus updates the status of job with given replica specs and job status.
-func (r *ElasticDLJobReconciler) updateGeneralJobStatus(elasticdlJob *elasticdlv1alpha1.ElasticDLJob,
+func (r *ElasticDLJobReconciler) updateGeneralJobStatus(elasticdlJob *training.ElasticDLJob,
 	replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	log.Info("Updating status", "ElasticDLJob name", elasticdlJob.Name, "restart", restart)
 
@@ -45,7 +45,7 @@ func (r *ElasticDLJobReconciler) updateGeneralJobStatus(elasticdlJob *elasticdlv
 	previousFailed := commonutil.IsFailed(*jobStatus)
 
 	// An ElasticDLJob only contains a master replica spec.
-	rtype := elasticdlv1alpha1.ElasticDLReplicaTypeMaster
+	rtype := training.ElasticDLReplicaTypeMaster
 	if ContainMasterSpec(elasticdlJob) {
 		replicas := *replicaSpecs[rtype].Replicas
 		status := jobStatus.ReplicaStatuses[rtype]
@@ -118,7 +118,7 @@ func (r *ElasticDLJobReconciler) updateGeneralJobStatus(elasticdlJob *elasticdlv
 
 func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		elasticdlJob, ok := e.Meta.(*elasticdlv1alpha1.ElasticDLJob)
+		elasticdlJob, ok := e.Meta.(*training.ElasticDLJob)
 		if !ok {
 			return true
 		}

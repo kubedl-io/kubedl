@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/kubedl/apis/xdl/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
@@ -88,7 +88,7 @@ func genClusterSpec(xdlJob *v1alpha1.XDLJob) (ClusterSpec, error) {
 		rt := strings.ToLower(string(rtype))
 		replicaNames := make([]string, 0, *spec.Replicas)
 
-		port, err := job_controller.GetPortFromJob(xdlJob.Spec.XDLReplicaSpecs, rtype, v1alpha1.DefaultContainerName, v1alpha1.DefaultContainerPortName)
+		port, err := job_controller.GetPortFromJob(xdlJob.Spec.XDLReplicaSpecs, rtype, v1alpha1.XDLJobDefaultContainerName, v1alpha1.XDLJobDefaultContainerPortName)
 		if err != nil {
 			return nil, err
 		}

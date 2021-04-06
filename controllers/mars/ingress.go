@@ -22,7 +22,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/alibaba/kubedl/apis/mars/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 
 	v1 "k8s.io/api/core/v1"
@@ -153,7 +153,7 @@ func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host 
 
 func (r *MarsJobReconciler) findDefaultPort(svc *v1.Service) int32 {
 	if len(svc.Spec.Ports) == 0 {
-		return v1alpha1.DefaultPort
+		return v1alpha1.MarsJobDefaultPort
 	}
 	port := svc.Spec.Ports[0].Port
 	for i := 1; i < len(svc.Spec.Ports); i++ {

@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	mpiv1 "github.com/alibaba/kubedl/apis/mpi/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
@@ -34,7 +34,7 @@ import (
 )
 
 func (r *MPIJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
-	job := &mpiv1.MPIJob{}
+	job := &training.MPIJob{}
 	// Default reader for PytorchJob is cache reader.
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
@@ -49,7 +49,7 @@ func (r *MPIJobReconciler) GetJobFromInformerCache(namespace, name string) (meta
 }
 
 func (r *MPIJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
-	job := &mpiv1.MPIJob{}
+	job := &training.MPIJob{}
 	// Forcibly use client reader.
 	clientReader, err := util.GetClientReaderFromClient(r.Client)
 	if err != nil {
@@ -68,7 +68,7 @@ func (r *MPIJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.O
 }
 
 func (r *MPIJobReconciler) DeleteJob(job interface{}) error {
-	mpiJob, ok := job.(*mpiv1.MPIJob)
+	mpiJob, ok := job.(*training.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of MPIJob", mpiJob)
 	}
@@ -83,15 +83,15 @@ func (r *MPIJobReconciler) DeleteJob(job interface{}) error {
 }
 
 func (r *MPIJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
-	mpiJob, ok := job.(*mpiv1.MPIJob)
+	mpiJob, ok := job.(*training.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not type of MPIJob", job)
 	}
 
 	previousRestarting := util.IsRestarting(*jobStatus)
 	previousFailed := util.IsFailed(*jobStatus)
-	launcherStatus := jobStatus.ReplicaStatuses[mpiv1.MPIReplicaTypeLauncher]
-	workerStatus := jobStatus.ReplicaStatuses[mpiv1.MPIReplicaTypeWorker]
+	launcherStatus := jobStatus.ReplicaStatuses[training.MPIReplicaTypeLauncher]
+	workerStatus := jobStatus.ReplicaStatuses[training.MPIReplicaTypeWorker]
 
 	if launcherStatus != nil {
 		if launcherStatus.Succeeded > 0 {
@@ -132,7 +132,7 @@ func (r *MPIJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.Repl
 	}
 
 	if workerStatus != nil {
-		workerReplicas := *replicas[mpiv1.MPIReplicaTypeWorker].Replicas
+		workerReplicas := *replicas[training.MPIReplicaTypeWorker].Replicas
 		// Append and broadcast Evict event if evicted workers occurs.
 		if workerStatus.Evicted > 0 {
 			msg := fmt.Sprintf("%d/%d workers are evicted.", workerStatus.Evicted, workerReplicas)
@@ -169,12 +169,12 @@ func (r *MPIJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.Repl
 }
 
 func (r *MPIJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus *v1.JobStatus) error {
-	mpiJob, ok := job.(*mpiv1.MPIJob)
+	mpiJob, ok := job.(*training.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not type of MarsJob", mpiJob)
 	}
 
-	var jobCpy *mpiv1.MPIJob
+	var jobCpy *training.MPIJob
 	jobCpy = mpiJob.DeepCopy()
 	jobCpy.Status = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
@@ -182,7 +182,7 @@ func (r *MPIJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus
 
 func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		mpiJob, ok := e.Meta.(*mpiv1.MPIJob)
+		mpiJob, ok := e.Meta.(*training.MPIJob)
 		if !ok {
 			return false
 		}

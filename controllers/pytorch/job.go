@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
@@ -32,7 +32,7 @@ import (
 
 // GetJobFromInformerCache returns the Job from Informer Cache
 func (r *PytorchJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
-	job := &pytorchv1.PyTorchJob{}
+	job := &training.PyTorchJob{}
 	// Default reader for PytorchJob is cache reader.
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
@@ -48,7 +48,7 @@ func (r *PytorchJobReconciler) GetJobFromInformerCache(namespace, name string) (
 
 // GetJobFromAPIClient returns the Job from API server
 func (r *PytorchJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
-	job := &pytorchv1.PyTorchJob{}
+	job := &training.PyTorchJob{}
 	// Forcibly use client reader.
 	clientReader, err := util.GetClientReaderFromClient(r.Client)
 	if err != nil {
@@ -68,7 +68,7 @@ func (r *PytorchJobReconciler) GetJobFromAPIClient(namespace, name string) (meta
 
 // DeleteJob deletes the job
 func (r *PytorchJobReconciler) DeleteJob(job interface{}) error {
-	pytorchJob, ok := job.(*pytorchv1.PyTorchJob)
+	pytorchJob, ok := job.(*training.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", pytorchJob)
 	}
@@ -84,7 +84,7 @@ func (r *PytorchJobReconciler) DeleteJob(job interface{}) error {
 
 // UpdateJobStatus updates the job status and job conditions
 func (r *PytorchJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
-	pytorchJob, ok := job.(*pytorchv1.PyTorchJob)
+	pytorchJob, ok := job.(*training.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", pytorchJob)
 	}
@@ -93,11 +93,11 @@ func (r *PytorchJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 
 // UpdateJobStatusInApiServer updates the job status in API server
 func (r *PytorchJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus *v1.JobStatus) error {
-	pytorchJob, ok := job.(*pytorchv1.PyTorchJob)
+	pytorchJob, ok := job.(*training.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", pytorchJob)
 	}
-	var jobCpy *pytorchv1.PyTorchJob
+	var jobCpy *training.PyTorchJob
 	// Job status passed in differs with status in job, update in basis of the passed in one.
 	jobCpy = pytorchJob.DeepCopy()
 	jobCpy.Status = *jobStatus.DeepCopy()

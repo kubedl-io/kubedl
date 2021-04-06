@@ -19,11 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kubedl/apis/mars/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"

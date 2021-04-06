@@ -1,0 +1,24 @@
+# permissions for end users to edit pytorchjobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pytorchjob-editor-role
+rules:
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - pytorchjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - pytorchjobs/status
+  verbs:
+  - get

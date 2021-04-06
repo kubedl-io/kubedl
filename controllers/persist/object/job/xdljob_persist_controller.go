@@ -19,7 +19,7 @@ package job
 import (
 	"context"
 
-	"github.com/alibaba/kubedl/apis/xdl/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/controllers/persist/util"
 
 	"k8s.io/apimachinery/pkg/api/errors"

@@ -36,7 +36,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
+	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -65,7 +65,7 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(xdlv1alpha1.Kind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(xdlv1alpha1.XDLJobKind, r.Client))
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -89,8 +89,8 @@ type XDLJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=xdl.kubedl.io,resources=xdljobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=xdl.kubedl.io,resources=xdljobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=xdljobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=xdljobs/status,verbs=get;update;patch
 
 func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the latest xdlJob instance.
@@ -175,7 +175,7 @@ func (r *XDLJobReconciler) ControllerName() string {
 
 // GetAPIGroupVersionKind returns the GroupVersionKind of the API
 func (r *XDLJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return xdlv1alpha1.SchemeGroupVersionKind
+	return xdlv1alpha1.SchemeGroupVersion.WithKind(xdlv1alpha1.XDLJobKind)
 }
 
 // GetAPIGroupVersion returns the GroupVersion of the API
@@ -185,7 +185,7 @@ func (r *XDLJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
 
 // GetGroupNameLabelValue returns the Group Name(value) in the labels of the job
 func (r *XDLJobReconciler) GetGroupNameLabelValue() string {
-	return xdlv1alpha1.GroupName
+	return r.GetAPIGroupVersion().Group
 }
 
 // SetClusterSpec sets the cluster spec for the pod
@@ -219,17 +219,17 @@ func (r *XDLJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, 
 
 // GetDefaultContainerName returns the default container name in pod
 func (r *XDLJobReconciler) GetDefaultContainerName() string {
-	return xdlv1alpha1.DefaultContainerName
+	return xdlv1alpha1.XDLJobDefaultContainerName
 }
 
 // GetDefaultContainerPortName Get the default container port name
 func (r *XDLJobReconciler) GetDefaultContainerPortName() string {
-	return xdlv1alpha1.DefaultContainerPortName
+	return xdlv1alpha1.XDLJobDefaultContainerPortName
 }
 
 // GetDefaultContainerPortNumber get the default container port number
 func (r *XDLJobReconciler) GetDefaultContainerPortNumber() int32 {
-	return xdlv1alpha1.DefaultPort
+	return xdlv1alpha1.XDLJobDefaultPort
 }
 
 func (r *XDLJobReconciler) GetReconcileOrders() []v1.ReplicaType {

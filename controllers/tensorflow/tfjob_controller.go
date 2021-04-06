@@ -35,7 +35,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -62,7 +62,7 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(tfv1.Kind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(training.TFJobKind, r.Client))
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -86,13 +86,13 @@ type TFJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=kubeflow.org,resources=tfjobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=kubeflow.org,resources=tfjobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=tfjobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=tfjobs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 
 func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch the TFJob tfJob
-	sharedTfJob := &tfv1.TFJob{}
+	sharedTfJob := &training.TFJob{}
 	err := r.Get(context.Background(), req.NamespacedName, sharedTfJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -146,7 +146,7 @@ func (r *TFJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch owner resource with create event filter.
-	if err = c.Watch(&source.Kind{Type: &tfv1.TFJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	if err = c.Watch(&source.Kind{Type: &training.TFJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
 	}); err != nil {
 		return err
@@ -154,7 +154,7 @@ func (r *TFJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Watch managed resource with owner and create/delete event filter.
 	if err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &tfv1.TFJob{},
+		OwnerType:    &training.TFJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnPodCreateFunc,
@@ -165,7 +165,7 @@ func (r *TFJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &tfv1.TFJob{},
+		OwnerType:    &training.TFJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnServiceCreateFunc,
@@ -181,22 +181,22 @@ func (r *TFJobReconciler) ControllerName() string {
 
 // GetAPIGroupVersionKind returns the GroupVersionKind of the API
 func (r *TFJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return tfv1.SchemeGroupVersionKind
+	return training.SchemeGroupVersion.WithKind(training.TFJobKind)
 }
 
 // GetAPIGroupVersion returns the GroupVersion of the API
 func (r *TFJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
-	return tfv1.SchemeGroupVersion
+	return training.SchemeGroupVersion
 }
 
 // GetGroupNameLabelValue returns the Group Name(value) in the labels of the job
 func (r *TFJobReconciler) GetGroupNameLabelValue() string {
-	return tfv1.GroupName
+	return training.SchemeGroupVersion.Group
 }
 
 // SetClusterSpec generates and sets TF_CONFIG for the given podTemplateSpec.
 func (r *TFJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplateSpec *corev1.PodTemplateSpec, rt, index string) error {
-	tfJob, ok := job.(*tfv1.TFJob)
+	tfJob, ok := job.(*training.TFJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of TFJob", job)
 	}
@@ -216,7 +216,7 @@ func (r *TFJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, p
 	}
 	// Add TF_CONFIG environment variable to tensorflow container in the pod.
 	for i := range podTemplateSpec.Spec.Containers {
-		if podTemplateSpec.Spec.Containers[i].Name == tfv1.DefaultContainerName {
+		if podTemplateSpec.Spec.Containers[i].Name == training.TFJobDefaultContainerName {
 			if len(podTemplateSpec.Spec.Containers[i].Env) == 0 {
 				podTemplateSpec.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
@@ -232,15 +232,15 @@ func (r *TFJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, p
 
 // isDistributed returns if the TFJob is a distributed training job.
 // Ref https://github.com/kubeflow/tf-operator/issues/1078.
-func isDistributed(tfJob *tfv1.TFJob) bool {
+func isDistributed(tfJob *training.TFJob) bool {
 	replicas := tfJob.Spec.TFReplicaSpecs
 	distributionCount := 0
 	allTypes := []v1.ReplicaType{
-		tfv1.TFReplicaTypeChief,
-		tfv1.TFReplicaTypeEval,
-		tfv1.TFReplicaTypeMaster,
-		tfv1.TFReplicaTypePS,
-		tfv1.TFReplicaTypeWorker,
+		training.TFReplicaTypeChief,
+		training.TFReplicaTypeEval,
+		training.TFReplicaTypeMaster,
+		training.TFReplicaTypePS,
+		training.TFReplicaTypeWorker,
 	}
 	// Check if there is only one replica.
 	for _, typ := range allTypes {
@@ -257,42 +257,42 @@ func isDistributed(tfJob *tfv1.TFJob) bool {
 
 // GetDefaultContainerName returns the default container name in pod
 func (r *TFJobReconciler) GetDefaultContainerName() string {
-	return tfv1.DefaultContainerName
+	return training.TFJobDefaultContainerName
 }
 
 // GetDefaultContainerPortName Get the default container port name
 func (r *TFJobReconciler) GetDefaultContainerPortName() string {
-	return tfv1.DefaultPortName
+	return training.TFJobDefaultPortName
 }
 
 // GetDefaultContainerPortNumber get the default container port number
 func (r *TFJobReconciler) GetDefaultContainerPortNumber() int32 {
-	return tfv1.DefaultPort
+	return training.TFJobDefaultPort
 }
 
 // Get replicas reconcile orders so that replica type with higher priority can be created earlier.
 func (r *TFJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 	return []v1.ReplicaType{
-		tfv1.TFReplicaTypePS,
-		tfv1.TFReplicaTypeMaster,
-		tfv1.TFReplicaTypeChief,
-		tfv1.TFReplicaTypeWorker,
+		training.TFReplicaTypePS,
+		training.TFReplicaTypeMaster,
+		training.TFReplicaTypeChief,
+		training.TFReplicaTypeWorker,
 	}
 }
 
 // IsMasterRole returns if this replica type with index specified is a master role.
 // MasterRole pod will have "job-role=master" set in its label
 func (r *TFJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaType, index int) bool {
-	return tfv1.IsChieforMaster(rtype)
+	return training.IsTFJobChieforMaster(rtype)
 }
 
 // getMasterSpec returns chief or worker spec.
 func (r *TFJobReconciler) getMasterSpec(replicas map[v1.ReplicaType]*v1.ReplicaSpec) (v1.ReplicaType, *v1.ReplicaSpec) {
-	if spec, ok := replicas[tfv1.TFReplicaTypeChief]; ok {
-		return tfv1.TFReplicaTypeChief, spec
+	if spec, ok := replicas[training.TFReplicaTypeChief]; ok {
+		return training.TFReplicaTypeChief, spec
 	}
-	if spec, ok := replicas[tfv1.TFReplicaTypeMaster]; ok {
-		return tfv1.TFReplicaTypeMaster, spec
+	if spec, ok := replicas[training.TFReplicaTypeMaster]; ok {
+		return training.TFReplicaTypeMaster, spec
 	}
-	return tfv1.TFReplicaTypeWorker, replicas[tfv1.TFReplicaTypeWorker]
+	return training.TFReplicaTypeWorker, replicas[training.TFReplicaTypeWorker]
 }

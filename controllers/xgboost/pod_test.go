@@ -16,11 +16,12 @@ limitations under the License.
 package xgboostjob
 
 import (
-	"github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
+	"testing"
+
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 func NewXGBoostJobWithMaster(worker int) *v1alpha1.XGBoostJob {
@@ -38,7 +39,7 @@ func NewXGoostJob(worker int) *v1alpha1.XGBoostJob {
 
 	job := &v1alpha1.XGBoostJob{
 		TypeMeta: metav1.TypeMeta{
-			Kind: v1alpha1.Kind,
+			Kind: v1alpha1.XGBoostJobKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-xgboostjob",
@@ -66,13 +67,13 @@ func NewXGBoostReplicaSpecTemplate() corev1.PodTemplateSpec {
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				corev1.Container{
-					Name:  v1alpha1.DefaultContainerName,
+					Name:  v1alpha1.XGBoostJobDefaultContainerName,
 					Image: "test-image-for-kubeflow-xgboost-operator:latest",
 					Args:  []string{"Fake", "Fake"},
 					Ports: []corev1.ContainerPort{
 						corev1.ContainerPort{
-							Name:          v1alpha1.DefaultContainerPortName,
-							ContainerPort: v1alpha1.DefaultPort,
+							Name:          v1alpha1.XGBoostJobDefaultContainerPortName,
+							ContainerPort: v1alpha1.XGBoostJobDefaultPort,
 						},
 					},
 				},

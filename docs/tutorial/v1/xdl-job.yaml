@@ -22,7 +22,7 @@ data:
       }
     }
 ---
-apiVersion: xdl.kubedl.io/v1alpha1
+apiVersion: training.kubedl.io/v1alpha1
 kind: XDLJob
 metadata:
   name: xdl-mnist-example

@@ -19,11 +19,12 @@ package mpi
 import (
 	"context"
 	"fmt"
-	"k8s.io/klog"
-	"k8s.io/kubernetes/pkg/controller"
 	"strings"
 
-	mpiv1 "github.com/alibaba/kubedl/apis/mpi/v1"
+	"k8s.io/klog"
+	"k8s.io/kubernetes/pkg/controller"
+
+	mpiv1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"

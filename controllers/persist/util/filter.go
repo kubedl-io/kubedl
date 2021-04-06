@@ -17,10 +17,7 @@ limitations under the License.
 package util
 
 import (
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
-	xgboostv1alpha1 "github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
 
@@ -28,7 +25,7 @@ import (
 )
 
 func IsKubeDLManagedJobKind(kind string) bool {
-	return kind == tfv1.Kind || kind == pytorchv1.Kind || kind == xdlv1alpha1.Kind || kind == xgboostv1alpha1.Kind
+	return kind == trainingv1alpha1.TFJobKind || kind == trainingv1alpha1.PyTorchJobKind || kind == trainingv1alpha1.XDLJobKind || kind == trainingv1alpha1.XGBoostJobKind
 }
 
 func IsKubeDLManagedPod(pod *corev1.Pod) bool {

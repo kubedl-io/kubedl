@@ -19,7 +19,7 @@ package elasticdl
 import (
 	"context"
 
-	elasticdlv1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,7 +52,7 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(elasticdlv1alpha1.Kind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(training.ElasticDLJobKind, r.Client))
 	return r
 }
 
@@ -68,12 +68,12 @@ type ElasticDLJobReconciler struct {
 }
 
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=elasticdl.org,resources=elasticdljobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=elasticdl.org,resources=elasticdljobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=elasticdljobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=elasticdljobs/status,verbs=get;update;patch
 
 func (r *ElasticDLJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest elasticdl job instance.
-	sharedElasticDLJob := &elasticdlv1alpha1.ElasticDLJob{}
+	sharedElasticDLJob := &training.ElasticDLJob{}
 	err := r.Get(context.Background(), req.NamespacedName, sharedElasticDLJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -117,7 +117,7 @@ func (r *ElasticDLJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch owner resource with create event filter.
-	if err = c.Watch(&source.Kind{Type: &elasticdlv1alpha1.ElasticDLJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	if err = c.Watch(&source.Kind{Type: &training.ElasticDLJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
 	}); err != nil {
 		return err
@@ -125,7 +125,7 @@ func (r *ElasticDLJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Watch managed resource with owner and create/delete event filter.
 	if err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &elasticdlv1alpha1.ElasticDLJob{},
+		OwnerType:    &training.ElasticDLJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnPodCreateFunc,
@@ -136,7 +136,7 @@ func (r *ElasticDLJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &elasticdlv1alpha1.ElasticDLJob{},
+		OwnerType:    &training.ElasticDLJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnServiceCreateFunc,
@@ -151,43 +151,43 @@ func (r *ElasticDLJobReconciler) ControllerName() string {
 
 // GetAPIGroupVersionKind returns the GroupVersionKind of the API
 func (r *ElasticDLJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return elasticdlv1alpha1.GroupVersionKind
+	return training.SchemeGroupVersion.WithKind(training.ElasticDLJobKind)
 }
 
 // GetAPIGroupVersion returns the GroupVersion of the API
 func (r *ElasticDLJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
-	return elasticdlv1alpha1.SchemeGroupVersion
+	return training.SchemeGroupVersion
 }
 
 // GetGroupNameLabelValue returns the Group Name(value) in the labels of the job
 func (r *ElasticDLJobReconciler) GetGroupNameLabelValue() string {
-	return elasticdlv1alpha1.GroupName
+	return training.SchemeGroupVersion.Group
 }
 
 // GetDefaultContainerName returns the default container name in pod
 func (r *ElasticDLJobReconciler) GetDefaultContainerName() string {
-	return elasticdlv1alpha1.DefaultContainerName
+	return training.ElasticDLJobDefaultContainerName
 }
 
 // GetDefaultContainerPortName Get the default container port name
 func (r *ElasticDLJobReconciler) GetDefaultContainerPortName() string {
-	return elasticdlv1alpha1.DefaultPortName
+	return training.ElasticDLJobDefaultPortName
 }
 
 // GetDefaultContainerPortNumber get the default container port number
 func (r *ElasticDLJobReconciler) GetDefaultContainerPortNumber() int32 {
-	return elasticdlv1alpha1.DefaultPort
+	return training.ElasticDLJobDefaultPort
 }
 
 func (r *ElasticDLJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 	return []v1.ReplicaType{
-		elasticdlv1alpha1.ElasticDLReplicaTypeMaster,
+		training.ElasticDLReplicaTypeMaster,
 	}
 }
 
 func (r *ElasticDLJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaType, index int) bool {
-	_, ok := replicas[elasticdlv1alpha1.ElasticDLReplicaTypeMaster]
-	return ok && rtype == elasticdlv1alpha1.ElasticDLReplicaTypeMaster
+	_, ok := replicas[training.ElasticDLReplicaTypeMaster]
+	return ok && rtype == training.ElasticDLReplicaTypeMaster
 }
 
 // SetClusterSpec sets the cluster spec for the pod

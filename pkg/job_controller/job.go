@@ -13,9 +13,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	elasticdlv1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
-	mpiv1 "github.com/alibaba/kubedl/apis/mpi/v1"
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/code_sync"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
@@ -226,14 +224,14 @@ func (jc *JobController) ReconcileJobs(
 		}
 
 		// Skip service of ElasticDLJob and MPIJob.
-		if jc.Controller.GetAPIGroupVersionKind().Kind == elasticdlv1alpha1.Kind ||
-			jc.Controller.GetAPIGroupVersionKind().Kind == mpiv1.Kind {
+		if jc.Controller.GetAPIGroupVersionKind().Kind == training.ElasticDLJobKind ||
+			jc.Controller.GetAPIGroupVersionKind().Kind == training.MPIJobKind {
 			continue
 		}
 
 		// Service is in need only for Master
-		if jc.Controller.GetAPIGroupVersionKind().Kind == pytorchv1.Kind &&
-			rtype != pytorchv1.PyTorchReplicaTypeMaster {
+		if jc.Controller.GetAPIGroupVersionKind().Kind == training.PyTorchJobKind &&
+			rtype != training.PyTorchReplicaTypeMaster {
 			continue
 		}
 

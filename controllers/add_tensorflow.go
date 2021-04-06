@@ -17,15 +17,14 @@ limitations under the License.
 package controllers
 
 import (
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/controllers/tensorflow"
 	"github.com/alibaba/kubedl/pkg/job_controller"
-
-	"sigs.k8s.io/controller-runtime"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 func init() {
-	SetupWithManagerMap[&tfv1.TFJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+	SetupWithManagerMap[&training.TFJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
 		return tensorflow.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
 }

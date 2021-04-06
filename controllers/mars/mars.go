@@ -25,7 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/alibaba/kubedl/apis/mars/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/quota"
@@ -108,7 +108,7 @@ func genClusterSpec(marsJob *v1alpha1.MarsJob) (ClusterSpec, error) {
 		rt := strings.ToLower(string(rtype))
 		endpoints := make([]string, 0, *spec.Replicas)
 
-		port, err := job_controller.GetPortFromJob(marsJob.Spec.MarsReplicaSpecs, rtype, v1alpha1.DefaultContainerName, v1alpha1.DefaultPortName)
+		port, err := job_controller.GetPortFromJob(marsJob.Spec.MarsReplicaSpecs, rtype, v1alpha1.MarsJobDefaultContainerName, v1alpha1.MarsJobDefaultPortName)
 		if err != nil {
 			return nil, err
 		}

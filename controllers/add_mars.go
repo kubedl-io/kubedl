@@ -14,7 +14,7 @@ limitations under the License.
 package controllers
 
 import (
-	"github.com/alibaba/kubedl/apis/mars/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	controllers "github.com/alibaba/kubedl/controllers/mars"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 

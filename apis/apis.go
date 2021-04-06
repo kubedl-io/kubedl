@@ -14,36 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Generate deepcopy for xdl apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/deepcopy-gen/main.go -O zz_generated.deepcopy -i ./xdl/... -h ../hack/boilerplate.go.txt
-// Generate default for xdl apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./xdl/... -h ../hack/boilerplate.go.txt
-
-// Generate deepcopy for tensorflow apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/deepcopy-gen/main.go -O zz_generated.deepcopy -i ./tensorflow/... -h ../hack/boilerplate.go.txt
-// Generate default for tensorflow apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./tensorflow/... -h ../hack/boilerplate.go.txt
-
-// Generate deepcopy for pytorch apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/deepcopy-gen/main.go -O zz_generated.deepcopy -i ./pytorch/... -h ../hack/boilerplate.go.txt
-// Generate default for pytorch apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./pytorch/... -h ../hack/boilerplate.go.txt
-
-// Generate deepcopy for xgboost apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/deepcopy-gen/main.go -O zz_generated.deepcopy -i ./xgboost/... -h ../hack/boilerplate.go.txt
-// Generate default for xgboost apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./xgboost/... -h ../hack/boilerplate.go.txt
-
-// Generate deepcopy for marsjob apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/deepcopy-gen/main.go -O zz_generated.deepcopy -i ./marsjob/... -h ../hack/boilerplate.go.txt
-// Generate default for elasticdljob apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./marsjob/... -h ../hack/boilerplate.go.txt
-
-// Generate deepcopy for elasticdljob apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/deepcopy-gen/main.go -O zz_generated.deepcopy -i ./elasticdljob/... -h ../hack/boilerplate.go.txt
-// Generate default for elasticdljob apis.
-//go:generate go run $GOPATH/src/k8s.io/code-generator/cmd/defaulter-gen/main.go -O zz_generated.defaults -i ./elasticdljob/... -h ../hack/boilerplate.go.txt
-
 package apis
 
 import (

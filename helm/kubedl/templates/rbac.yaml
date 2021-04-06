@@ -1,8 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
-  name: kubedl-manager-role
+  name: {{ include "kubedl.fullname" . }}-role
 rules:
 - apiGroups:
   - kubeflow.org
@@ -197,38 +196,6 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - apps.kruise.io
-  resources:
-  - statefulsets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-    - apps
-  resources:
-    - statefulsets
-  verbs:
-    - get
-    - list
-    - watch
-    - create
-    - update
-    - patch
-    - delete
-- apiGroups:
-    - apps
-  resources:
-    - statefulsets/status
-  verbs:
-    - get
-    - update
-    - patch
-- apiGroups:
   - admissionregistration.k8s.io
   resources:
   - mutatingwebhookconfigurations
@@ -265,17 +232,28 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - "networking.k8s.io"
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  creationTimestamp: null
-  name: kubedl-manager-rolebinding
+  name: {{ include "kubedl.fullname" . }}-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kubedl-manager-role
+  name: {{ include "kubedl.fullname" . }}-role
 subjects:
   - kind: ServiceAccount
     name: {{ include "kubedl.serviceAccountName" . }}
-    namespace: {{ .Values.kubedlSysNamespace }}
+    namespace: {{ .Release.Namespace }}

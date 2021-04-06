@@ -1,0 +1,24 @@
+# permissions for end users to edit marsjobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: marsjob-editor-role
+rules:
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - marsjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - marsjobs/status
+  verbs:
+  - get

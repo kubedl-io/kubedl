@@ -27,7 +27,7 @@ import (
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )
@@ -72,7 +72,7 @@ func (r *TFJobReconciler) CreatePod(job interface{}, pod *corev1.Pod) error {
 
 // DeletePod deletes the pod
 func (r *TFJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
-	tfJob, ok := job.(*tfv1.TFJob)
+	tfJob, ok := job.(*training.TFJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of TFJob", job)
 	}

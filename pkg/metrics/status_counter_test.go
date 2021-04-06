@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/alibaba/kubedl/apis"
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
 	. "github.com/onsi/ginkgo"
@@ -71,19 +71,19 @@ var _ = BeforeSuite(func(done Done) {
 var _ = Describe("PodControl", func() {
 	It("Running status counting", func() {
 		now := v1.Now()
-		toCreate := tfv1.TFJob{
+		toCreate := trainingv1alpha1.TFJob{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "foo",
 				Namespace: "default",
 			},
-			Spec: tfv1.TFJobSpec{TFReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{}},
+			Spec: trainingv1alpha1.TFJobSpec{TFReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{}},
 			Status: apiv1.JobStatus{
 				ReplicaStatuses: map[apiv1.ReplicaType]*apiv1.ReplicaStatus{},
 				StartTime:       &now,
 			},
 		}
 		_ = util.UpdateJobConditions(&toCreate.Status, apiv1.JobCreated, "", "")
-		pending, err := JobStatusCounter(tfv1.Kind, k8sClient, func(status apiv1.JobStatus) bool {
+		pending, err := JobStatusCounter(trainingv1alpha1.TFJobKind, k8sClient, func(status apiv1.JobStatus) bool {
 			return util.IsCreated(status) && len(status.Conditions) == 1
 		})
 		Expect(err).Should(Succeed())
@@ -91,13 +91,13 @@ var _ = Describe("PodControl", func() {
 
 		err = k8sClient.Create(context.Background(), &toCreate)
 		Expect(err).Should(Succeed())
-		pending, err = JobStatusCounter(tfv1.Kind, k8sClient, func(status apiv1.JobStatus) bool {
+		pending, err = JobStatusCounter(trainingv1alpha1.TFJobKind, k8sClient, func(status apiv1.JobStatus) bool {
 			return util.IsCreated(status) && len(status.Conditions) == 1
 		})
 		Expect(err).Should(Succeed())
 		Expect(pending).Should(Equal(int32(1)))
 
-		fetched := &tfv1.TFJob{}
+		fetched := &trainingv1alpha1.TFJob{}
 		err = k8sClient.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, fetched)
 		Expect(err).Should(Succeed())
 
@@ -107,12 +107,12 @@ var _ = Describe("PodControl", func() {
 
 	It("Pending status counting", func() {
 		now := v1.Now()
-		toCreate := tfv1.TFJob{
+		toCreate := trainingv1alpha1.TFJob{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "foo",
 				Namespace: "default",
 			},
-			Spec: tfv1.TFJobSpec{TFReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{}},
+			Spec: trainingv1alpha1.TFJobSpec{TFReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{}},
 			Status: apiv1.JobStatus{
 				ReplicaStatuses: map[apiv1.ReplicaType]*apiv1.ReplicaStatus{},
 				StartTime:       &now,
@@ -120,17 +120,17 @@ var _ = Describe("PodControl", func() {
 		}
 		_ = util.UpdateJobConditions(&toCreate.Status, apiv1.JobCreated, "", "")
 		_ = util.UpdateJobConditions(&toCreate.Status, apiv1.JobRunning, "", "")
-		running, err := JobStatusCounter(tfv1.Kind, k8sClient, util.IsRunning)
+		running, err := JobStatusCounter(trainingv1alpha1.TFJobKind, k8sClient, util.IsRunning)
 		Expect(err).Should(Succeed())
 		Expect(running).Should(Equal(int32(0)))
 
 		err = k8sClient.Create(context.Background(), &toCreate)
 		Expect(err).Should(Succeed())
-		running, err = JobStatusCounter(tfv1.Kind, k8sClient, util.IsRunning)
+		running, err = JobStatusCounter(trainingv1alpha1.TFJobKind, k8sClient, util.IsRunning)
 		Expect(err).Should(Succeed())
 		Expect(running).Should(Equal(int32(1)))
 
-		fetched := &tfv1.TFJob{}
+		fetched := &trainingv1alpha1.TFJob{}
 		err = k8sClient.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, fetched)
 		Expect(err).Should(Succeed())
 

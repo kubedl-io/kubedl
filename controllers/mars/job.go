@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alibaba/kubedl/apis/mars/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"

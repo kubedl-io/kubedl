@@ -17,10 +17,11 @@ limitations under the License.
 package job_controller
 
 import (
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
-	v1 "k8s.io/api/core/v1"
 	"reflect"
 	"testing"
+
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestAppendOrOverrideContainerPort(t *testing.T) {
@@ -36,18 +37,18 @@ func TestAppendOrOverrideContainerPort(t *testing.T) {
 			name: "single container with default names",
 			spec: newPodTemplateSpec([]simpleContainerPort{
 				{
-					containerName: tfv1.DefaultContainerName,
-					portName:      tfv1.DefaultPortName,
-					port:          tfv1.DefaultPort,
+					containerName: trainingv1alpha1.TFJobDefaultContainerName,
+					portName:      trainingv1alpha1.TFJobDefaultPortName,
+					port:          trainingv1alpha1.TFJobDefaultPort,
 				},
 			}),
-			containerName: tfv1.DefaultContainerName,
-			portName:      tfv1.DefaultPortName,
+			containerName: trainingv1alpha1.TFJobDefaultContainerName,
+			portName:      trainingv1alpha1.TFJobDefaultPortName,
 			port:          1111,
 			expected: newPodTemplateSpec([]simpleContainerPort{
 				{
-					containerName: tfv1.DefaultContainerName,
-					portName:      tfv1.DefaultPortName,
+					containerName: trainingv1alpha1.TFJobDefaultContainerName,
+					portName:      trainingv1alpha1.TFJobDefaultPortName,
 					port:          1111,
 				},
 			}),
@@ -57,17 +58,17 @@ func TestAppendOrOverrideContainerPort(t *testing.T) {
 			spec: newPodTemplateSpec([]simpleContainerPort{
 				{
 					containerName: "main",
-					portName:      tfv1.DefaultPortName,
-					port:          tfv1.DefaultPort,
+					portName:      trainingv1alpha1.TFJobDefaultPortName,
+					port:          trainingv1alpha1.TFJobDefaultPort,
 				},
 			}),
-			containerName: tfv1.DefaultContainerName,
-			portName:      tfv1.DefaultPortName,
+			containerName: trainingv1alpha1.TFJobDefaultContainerName,
+			portName:      trainingv1alpha1.TFJobDefaultPortName,
 			port:          1111,
 			expected: newPodTemplateSpec([]simpleContainerPort{
 				{
 					containerName: "main",
-					portName:      tfv1.DefaultPortName,
+					portName:      trainingv1alpha1.TFJobDefaultPortName,
 					port:          1111,
 				},
 			}),
@@ -76,9 +77,9 @@ func TestAppendOrOverrideContainerPort(t *testing.T) {
 			name: "multiple container with default names",
 			spec: newPodTemplateSpec([]simpleContainerPort{
 				{
-					containerName: tfv1.DefaultContainerName,
-					portName:      tfv1.DefaultPortName,
-					port:          tfv1.DefaultPort,
+					containerName: trainingv1alpha1.TFJobDefaultContainerName,
+					portName:      trainingv1alpha1.TFJobDefaultPortName,
+					port:          trainingv1alpha1.TFJobDefaultPort,
 				},
 				{
 					containerName: "other",
@@ -86,13 +87,13 @@ func TestAppendOrOverrideContainerPort(t *testing.T) {
 					port:          1111,
 				},
 			}),
-			containerName: tfv1.DefaultContainerName,
-			portName:      tfv1.DefaultPortName,
+			containerName: trainingv1alpha1.TFJobDefaultContainerName,
+			portName:      trainingv1alpha1.TFJobDefaultPortName,
 			port:          1234,
 			expected: newPodTemplateSpec([]simpleContainerPort{
 				{
-					containerName: tfv1.DefaultContainerName,
-					portName:      tfv1.DefaultPortName,
+					containerName: trainingv1alpha1.TFJobDefaultContainerName,
+					portName:      trainingv1alpha1.TFJobDefaultPortName,
 					port:          1234,
 				},
 				{
@@ -109,13 +110,13 @@ func TestAppendOrOverrideContainerPort(t *testing.T) {
 					containerName: "custom",
 				},
 			}),
-			containerName: tfv1.DefaultContainerName,
-			portName:      tfv1.DefaultPortName,
+			containerName: trainingv1alpha1.TFJobDefaultContainerName,
+			portName:      trainingv1alpha1.TFJobDefaultPortName,
 			port:          1234,
 			expected: newPodTemplateSpec([]simpleContainerPort{
 				{
 					containerName: "custom",
-					portName:      tfv1.DefaultPortName,
+					portName:      trainingv1alpha1.TFJobDefaultPortName,
 					port:          1234,
 				},
 			}),

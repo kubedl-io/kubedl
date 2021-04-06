@@ -1,0 +1,7 @@
+apiVersion: training.kubedl.io/v1alpha1
+kind: PyTorchJob
+metadata:
+  name: pytorchjob-sample
+spec:
+  # Add fields here
+  foo: bar

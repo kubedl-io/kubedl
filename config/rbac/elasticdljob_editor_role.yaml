@@ -1,0 +1,24 @@
+# permissions for end users to edit elasticdljobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: elasticdljob-editor-role
+rules:
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - elasticdljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - elasticdljobs/status
+  verbs:
+  - get

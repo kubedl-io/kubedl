@@ -59,7 +59,7 @@ kubectl apply -f https://raw.githubusercontent.com/alibaba/kubedl/master/config/
 Create a YAML spec that describes the requirements of a MarsJob such as the worker, scheduler, WebService like below
 
 ```yaml
-apiVersion: kubedl.io/v1alpha1
+apiVersion: training.kubedl.io/v1alpha1
 kind: MarsJob
 metadata:
   name: mars-test-demo
@@ -203,7 +203,7 @@ Mars supports running jobs in different memory usage scenarios. For example, swa
 users can set above options in `job.spec.memoryTuningPolicy` field: 
 
 ```yaml
-apiVersion: kubedl.io/v1alpha1
+apiVersion: training.kubedl.io/v1alpha1
 kind: MarsJob
 metadata:
   name: mars-test-demo

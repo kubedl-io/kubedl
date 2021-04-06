@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	elasticdlv1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 )
 
@@ -41,7 +41,7 @@ func (r *ElasticDLJobReconciler) CreateService(job interface{}, service *corev1.
 
 // DeleteService deletes the service
 func (r *ElasticDLJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	elasticdlJob, ok := job.(*elasticdlv1alpha1.ElasticDLJob)
+	elasticdlJob, ok := job.(*training.ElasticDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
 	}

@@ -25,13 +25,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
 
 // updateGeneralJobStatus updates the status of job with given replica specs and job status.
-func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTorchJob,
+func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *training.PyTorchJob,
 	replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	log.Info("Updating status", "PytorchJob name", pytorchJob.Name, "restart", restart)
 
@@ -61,7 +61,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 			"ReplicaType", rtype, "expected", expected, "running", running, "failed", failed)
 
 		if ContainMasterSpec(pytorchJob) {
-			if rtype == pytorchv1.PyTorchReplicaTypeMaster {
+			if rtype == training.PyTorchReplicaTypeMaster {
 				if running > 0 {
 					msg := fmt.Sprintf("PyTorchJob %s is running.", pytorchJob.Name)
 					err := commonutil.UpdateJobConditions(jobStatus, v1.JobRunning, commonutil.JobRunningReason, msg)
@@ -126,7 +126,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *pytorchv1.PyTo
 
 func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		pytorchJob, ok := e.Meta.(*pytorchv1.PyTorchJob)
+		pytorchJob, ok := e.Meta.(*training.PyTorchJob)
 		if !ok {
 			return true
 		}

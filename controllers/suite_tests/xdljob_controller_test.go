@@ -19,7 +19,7 @@ package suite_tests
 import (
 	"time"
 
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
+	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/net/context"
