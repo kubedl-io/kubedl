@@ -73,6 +73,12 @@ type MarsJobReconciler struct {
 	ctrl     job_controller.JobController
 }
 
+// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create
+// +kubebuilder:rbac:groups="networking.k8s.io",resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=marsjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=marsjobs/status,verbs=get;update;patch
 

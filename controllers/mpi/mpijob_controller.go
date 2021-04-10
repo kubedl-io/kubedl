@@ -92,6 +92,9 @@ type MPIJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=mpijobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=mpijobs/status,verbs=get;update;patch
 
