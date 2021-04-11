@@ -38,7 +38,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	mpiv1 "github.com/alibaba/kubedl/apis/mpi/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -70,7 +70,7 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(mpiv1.Kind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(training.MPIJobKind, r.Client))
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -92,8 +92,11 @@ type MPIJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=kubeflow.org,resources=mpijobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=kubeflow.org,resources=mpijobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=mpijobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=mpijobs/status,verbs=get;update;patch
 
 // Reconcile reads that state of the cluster for a MPIJob object and makes changes based on the state read
 // and what is in the MPIJob.Spec
@@ -104,7 +107,7 @@ func (r *MPIJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	)
 
 	// Fetch the latest mpi job.
-	sharedMPIJob := &mpiv1.MPIJob{}
+	sharedMPIJob := &training.MPIJob{}
 	err = r.Get(context.Background(), req.NamespacedName, sharedMPIJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -157,7 +160,7 @@ func (r *MPIJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch owner resource with create event filter.
-	if err = c.Watch(&source.Kind{Type: &mpiv1.MPIJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	if err = c.Watch(&source.Kind{Type: &training.MPIJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
 	}); err != nil {
 		return err
@@ -165,7 +168,7 @@ func (r *MPIJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Watch managed resource with owner and create/delete event filter.
 	if err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &mpiv1.MPIJob{},
+		OwnerType:    &training.MPIJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnPodCreateFunc,
@@ -176,7 +179,7 @@ func (r *MPIJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	if err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &mpiv1.MPIJob{},
+		OwnerType:    &training.MPIJob{},
 		IsController: true,
 	}); err != nil {
 		return err
@@ -191,30 +194,30 @@ func (r *MPIJobReconciler) ControllerName() string {
 
 // GetAPIGroupVersionKind returns the GroupVersionKind of the API
 func (r *MPIJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return mpiv1.SchemeGroupVersionKind
+	return training.SchemeGroupVersion.WithKind(training.MPIJobKind)
 }
 
 // GetAPIGroupVersion returns the GroupVersion of the API
 func (r *MPIJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
-	return mpiv1.SchemeGroupVersion
+	return training.SchemeGroupVersion
 }
 
 // GetGroupNameLabelValue returns the Group Name(value) in the labels of the job
 func (r *MPIJobReconciler) GetGroupNameLabelValue() string {
-	return mpiv1.GroupName
+	return training.SchemeGroupVersion.Group
 }
 
 // SetClusterSpec generates and sets for the given podTemplateSpec.
 func (r *MPIJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplateSpec *corev1.PodTemplateSpec, rt, index string) error {
-	mpiJob, ok := job.(*mpiv1.MPIJob)
+	mpiJob, ok := job.(*training.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of MPIJob", job)
 	}
 
 	switch rt {
-	case strings.ToLower(string(mpiv1.MPIReplicaTypeWorker)):
+	case strings.ToLower(string(training.MPIReplicaTypeWorker)):
 		r.setupMPIWorker(mpiJob, podTemplateSpec)
-	case strings.ToLower(string(mpiv1.MPIReplicaTypeLauncher)):
+	case strings.ToLower(string(training.MPIReplicaTypeLauncher)):
 		r.setupMPILauncher(mpiJob, podTemplateSpec)
 	}
 
@@ -223,25 +226,25 @@ func (r *MPIJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, 
 
 // GetDefaultContainerName returns the default container name in pod
 func (r *MPIJobReconciler) GetDefaultContainerName() string {
-	return mpiv1.DefaultContainerName
+	return training.MPIJobDefaultContainerName
 }
 
 // GetDefaultContainerPortName Get the default container port name
 func (r *MPIJobReconciler) GetDefaultContainerPortName() string {
-	return mpiv1.DefaultPortName
+	return training.MPIJobDefaultPortName
 }
 
 // GetDefaultContainerPortNumber get the default container port number
 func (r *MPIJobReconciler) GetDefaultContainerPortNumber() int32 {
-	return mpiv1.DefaultPort
+	return training.MPIJobDefaultPort
 }
 
 // Get replicas reconcile orders so that replica type with higher priority can be created earlier.
 func (r *MPIJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 	// MPI requires worker created before launcher.
 	return []v1.ReplicaType{
-		mpiv1.MPIReplicaTypeWorker,
-		mpiv1.MPIReplicaTypeLauncher,
+		training.MPIReplicaTypeWorker,
+		training.MPIReplicaTypeLauncher,
 	}
 }
 
@@ -251,7 +254,7 @@ func (r *MPIJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaS
 	return false
 }
 
-func (r *MPIJobReconciler) setupMPIWorker(mpiJob *mpiv1.MPIJob, podTemplateSpec *corev1.PodTemplateSpec) {
+func (r *MPIJobReconciler) setupMPIWorker(mpiJob *training.MPIJob, podTemplateSpec *corev1.PodTemplateSpec) {
 	// We need the kubexec.sh script here because Open MPI checks for the path
 	// in every rank.
 	mode := int32(0555)
@@ -286,7 +289,7 @@ func (r *MPIJobReconciler) setupMPIWorker(mpiJob *mpiv1.MPIJob, podTemplateSpec 
 	}
 }
 
-func (r *MPIJobReconciler) setupMPILauncher(mpiJob *mpiv1.MPIJob, podTemplateSpec *corev1.PodTemplateSpec) {
+func (r *MPIJobReconciler) setupMPILauncher(mpiJob *training.MPIJob, podTemplateSpec *corev1.PodTemplateSpec) {
 	if len(podTemplateSpec.Spec.Containers) == 0 {
 		msg := fmt.Sprintf("launcher pod does not have any containers in its spec")
 		log.Error(stderrors.New(msg), msg)
@@ -360,7 +363,7 @@ func (r *MPIJobReconciler) setupMPILauncher(mpiJob *mpiv1.MPIJob, podTemplateSpe
 	})
 }
 
-func setupLauncherMainContainers(mpiJob *mpiv1.MPIJob, container *corev1.Container) {
+func setupLauncherMainContainers(mpiJob *training.MPIJob, container *corev1.Container) {
 	// Different MPI frameworks use different environment variables
 	// to specify the path of the remote task launcher and hostfile file.
 	mpiRshExecPathEnvName := "OMPI_MCA_plm_rsh_agent"
@@ -371,10 +374,10 @@ func setupLauncherMainContainers(mpiJob *mpiv1.MPIJob, container *corev1.Contain
 		mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2.MPIDistribution != nil {
 		distribution := *mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2.MPIDistribution
 
-		if distribution == mpiv1.MPIDistributionTypeIntelMPI {
+		if distribution == training.MPIDistributionTypeIntelMPI {
 			mpiRshExecPathEnvName = "I_MPI_HYDRA_BOOTSTRAP_EXEC"
 			mpiHostfilePathEnvName = "I_MPI_HYDRA_HOST_FILE"
-		} else if distribution == mpiv1.MPIDistributionTypeMPICH {
+		} else if distribution == training.MPIDistributionTypeMPICH {
 			mpiRshExecPathEnvName = "HYDRA_LAUNCHER_EXEC"
 			mpiHostfilePathEnvName = "HYDRA_HOST_FILE"
 		}

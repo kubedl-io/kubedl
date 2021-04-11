@@ -16,7 +16,7 @@ limitations under the License.
 package controllers
 
 import (
-	"github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	xgboostjob "github.com/alibaba/kubedl/controllers/xgboost"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 

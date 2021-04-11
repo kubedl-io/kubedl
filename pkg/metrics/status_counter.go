@@ -19,10 +19,7 @@ package metrics
 import (
 	"context"
 
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
-	"github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,33 +46,33 @@ func JobStatusCounter(kind string, reader client.Reader, filter func(status v1.J
 
 var (
 	listObjectMap = map[string]runtime.Object{
-		tfv1.Kind:        &tfv1.TFJobList{},
-		pytorchv1.Kind:   &pytorchv1.PyTorchJobList{},
-		xdlv1alpha1.Kind: &xdlv1alpha1.XDLJobList{},
-		v1alpha1.Kind:    &v1alpha1.XGBoostJobList{},
+		trainingv1alpha1.TFJobKind:      &trainingv1alpha1.TFJobList{},
+		trainingv1alpha1.PyTorchJobKind: &trainingv1alpha1.PyTorchJobList{},
+		trainingv1alpha1.XDLJobKind:     &trainingv1alpha1.XDLJobList{},
+		trainingv1alpha1.XGBoostJobKind: &trainingv1alpha1.XGBoostJobList{},
 	}
 )
 
 func getJobStatusList(obj runtime.Object, kind string) []*v1.JobStatus {
 	statuses := make([]*v1.JobStatus, 0)
 	switch kind {
-	case tfv1.Kind:
-		tfList := obj.(*tfv1.TFJobList)
+	case trainingv1alpha1.TFJobKind:
+		tfList := obj.(*trainingv1alpha1.TFJobList)
 		for idx := range tfList.Items {
 			statuses = append(statuses, &tfList.Items[idx].Status)
 		}
-	case pytorchv1.Kind:
-		pytorchList := obj.(*pytorchv1.PyTorchJobList)
+	case trainingv1alpha1.PyTorchJobKind:
+		pytorchList := obj.(*trainingv1alpha1.PyTorchJobList)
 		for idx := range pytorchList.Items {
 			statuses = append(statuses, &pytorchList.Items[idx].Status)
 		}
-	case xdlv1alpha1.Kind:
-		xdlList := obj.(*xdlv1alpha1.XDLJobList)
+	case trainingv1alpha1.XDLJobKind:
+		xdlList := obj.(*trainingv1alpha1.XDLJobList)
 		for idx := range xdlList.Items {
 			statuses = append(statuses, &xdlList.Items[idx].Status)
 		}
-	case v1alpha1.Kind:
-		xgbList := obj.(*v1alpha1.XGBoostJobList)
+	case trainingv1alpha1.XGBoostJobKind:
+		xgbList := obj.(*trainingv1alpha1.XGBoostJobList)
 		for idx := range xgbList.Items {
 			statuses = append(statuses, &xgbList.Items[idx].Status.JobStatus)
 		}

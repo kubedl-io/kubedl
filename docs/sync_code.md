@@ -12,7 +12,7 @@ downloaded and saved in the container's `working dir` by default. Please use the
 rather than the git repo's web url.
 
 ```yaml
-    apiVersion: "kubeflow.org/v1"
+    apiVersion: training.kubedl.io/v1alpha1
     kind: "TFJob"
     metadata:
       name: "mnist"

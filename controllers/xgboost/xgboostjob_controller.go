@@ -30,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -51,7 +51,7 @@ func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfi
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(v1alpha1.Kind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(v1alpha1.XGBoostJobKind, r.Client))
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -77,8 +77,9 @@ type XgboostJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=xgboostjob.kubeflow.org,resources=xgboostjobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=xgboostjob.kubeflow.org,resources=xgboostjobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=xgboostjobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=xgboostjobs/status,verbs=get;update;patch
 
 func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
 	// Fetch the XGBoostJob instance
@@ -159,7 +160,7 @@ func (r *XgboostJobReconciler) ControllerName() string {
 }
 
 func (r *XgboostJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return v1alpha1.SchemeGroupVersionKind
+	return v1alpha1.SchemeGroupVersion.WithKind(v1alpha1.XGBoostJobKind)
 }
 
 func (r *XgboostJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
@@ -167,19 +168,19 @@ func (r *XgboostJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
 }
 
 func (r *XgboostJobReconciler) GetGroupNameLabelValue() string {
-	return v1alpha1.GroupName
+	return v1alpha1.SchemeGroupVersion.Group
 }
 
 func (r *XgboostJobReconciler) GetDefaultContainerName() string {
-	return v1alpha1.DefaultContainerName
+	return v1alpha1.XGBoostJobDefaultContainerName
 }
 
 func (r *XgboostJobReconciler) GetDefaultContainerPortNumber() int32 {
-	return v1alpha1.DefaultPort
+	return v1alpha1.XGBoostJobDefaultPort
 }
 
 func (r *XgboostJobReconciler) GetDefaultContainerPortName() string {
-	return v1alpha1.DefaultContainerPortName
+	return v1alpha1.XGBoostJobDefaultContainerPortName
 }
 
 func (r *XgboostJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec,

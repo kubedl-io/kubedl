@@ -19,7 +19,7 @@ package job
 import (
 	"context"
 
-	v1 "github.com/alibaba/kubedl/apis/pytorch/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/controllers/persist/util"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,7 +32,7 @@ import (
 )
 
 func init() {
-	jobPersistCtrlMap[&v1.PyTorchJob{}] = NewPytorchJobPersistController
+	jobPersistCtrlMap[&training.PyTorchJob{}] = NewPytorchJobPersistController
 }
 
 func NewPytorchJobPersistController(mgr ctrl.Manager, handler *jobPersistHandler) PersistController {
@@ -57,7 +57,7 @@ func (pc *PytorchJobPersistController) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, err
 	}
 
-	pytorchJob := v1.PyTorchJob{}
+	pytorchJob := training.PyTorchJob{}
 	err = pc.client.Get(context.Background(), types.NamespacedName{
 		Namespace: req.Namespace,
 		Name:      name,
@@ -87,7 +87,7 @@ func (pc *PytorchJobPersistController) SetupWithManager(mgr ctrl.Manager) error 
 	}
 
 	// Watch events with event events-handler.
-	if err = c.Watch(&source.Kind{Type: &v1.PyTorchJob{}}, &enqueueForJob{}); err != nil {
+	if err = c.Watch(&source.Kind{Type: &training.PyTorchJob{}}, &enqueueForJob{}); err != nil {
 		return err
 	}
 	return nil

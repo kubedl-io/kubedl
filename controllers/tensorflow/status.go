@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -32,7 +32,7 @@ import (
 // onOwnerCreateFunc modify creation condition.
 func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		tfJob, ok := e.Meta.(*tfv1.TFJob)
+		tfJob, ok := e.Meta.(*training.TFJob)
 		if !ok {
 			return true
 		}
@@ -53,7 +53,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 }
 
 // updateGeneralJobStatus updates the status of job with given replica specs and job status.
-func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec,
+func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *training.TFJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec,
 	jobStatus *v1.JobStatus, restart bool) error {
 	log.Info("Updating status", "TFJob name", tfJob.Name)
 
@@ -71,7 +71,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 	}
 
 	// Get all pods for workers.
-	pods, err = r.ctrl.FilterPodsForReplicaType(pods, strings.ToLower(string(tfv1.TFReplicaTypeWorker)))
+	pods, err = r.ctrl.FilterPodsForReplicaType(pods, strings.ToLower(string(training.TFReplicaTypeWorker)))
 	if err != nil {
 		log.Error(err, "FilterPodsForReplicaType error")
 		return err
@@ -88,7 +88,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 			var exitCode int32 = 0xbeef // magic number
 			for _, status := range pod.Status.ContainerStatuses {
 				state := status.State
-				if status.Name == tfv1.DefaultContainerName && state.Terminated != nil {
+				if status.Name == training.TFJobDefaultContainerName && state.Terminated != nil {
 					exitCode = state.Terminated.ExitCode
 					break
 				}
@@ -125,7 +125,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 		// If the TFJob contains Chief or Master spec, then we will update the status
 		// according to the Chief/Master spec.
 		if ContainChieforMasterSpec(tfJob) {
-			if tfv1.IsChieforMaster(rtype) {
+			if training.IsTFJobChieforMaster(rtype) {
 				if running > 0 {
 					msg := fmt.Sprintf("TFJob %s is running.", tfJob.Name)
 					err := commonutil.UpdateJobConditions(jobStatus, v1.JobRunning, commonutil.JobRunningReason, msg)
@@ -150,12 +150,12 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *tfv1.TFJob, replicaSpecs
 				}
 			}
 		} else {
-			if rtype == tfv1.TFReplicaTypeWorker {
+			if rtype == training.TFReplicaTypeWorker {
 				// All workers are succeeded or worker 0 completed, leave a succeeded condition.
 				// Leave a succeeded condition for the following two cases:
 				// 1. If default success policy is used and worker 0 has completed.
 				// 2. If `SuccessPolicyAllWorkers` success policy is used and all workers are succeeded.
-				if expected == 0 || (worker0Completed && *tfJob.Spec.SuccessPolicy != tfv1.SuccessPolicyAllWorkers) {
+				if expected == 0 || (worker0Completed && *tfJob.Spec.SuccessPolicy != training.SuccessPolicyAllWorkers) {
 					msg := fmt.Sprintf("TFJob %s successfully completed.", tfJob.Name)
 					r.recorder.Event(tfJob, corev1.EventTypeNormal, commonutil.JobSucceededReason, msg)
 					if jobStatus.CompletionTime == nil {

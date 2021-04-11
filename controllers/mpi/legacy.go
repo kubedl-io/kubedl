@@ -19,7 +19,7 @@ package mpi
 import (
 	"fmt"
 
-	mpiv1 "github.com/alibaba/kubedl/apis/mpi/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 
 	v1 "k8s.io/api/core/v1"
@@ -29,7 +29,7 @@ import (
 
 // LegacyMPIJobToV1MPIJob handles legacy fields deserialized from json object
 // and transferred to a combined v1 mpi-job to be reconciled.
-func LegacyMPIJobToV1MPIJob(mpiJob *mpiv1.MPIJob) error {
+func LegacyMPIJobToV1MPIJob(mpiJob *training.MPIJob) error {
 	if mpiJob.Spec.MPIJobLegacySpec == nil {
 		return nil
 	}
@@ -52,18 +52,18 @@ func LegacyMPIJobToV1MPIJob(mpiJob *mpiv1.MPIJob) error {
 			mpiJob.Spec.SlotsPerWorker = &unitsPerWorker
 		}
 		// The computed worker will be converted to MPIReplicaSpecs struct.
-		if spec := mpiJob.Spec.MPIReplicaSpecs[mpiv1.MPIReplicaTypeWorker]; (spec == nil || spec.Replicas == nil) &&
+		if spec := mpiJob.Spec.MPIReplicaSpecs[training.MPIReplicaTypeWorker]; (spec == nil || spec.Replicas == nil) &&
 			workerReplicas > 0 {
 			if spec == nil {
 				spec = &apiv1.ReplicaSpec{}
 			}
 			spec.Replicas = &workerReplicas
 			spec.Template = v1alpha1.Template
-			mpiJob.Spec.MPIReplicaSpecs[mpiv1.MPIReplicaTypeWorker] = spec
+			mpiJob.Spec.MPIReplicaSpecs[training.MPIReplicaTypeWorker] = spec
 		}
 
-		if spec := mpiJob.Spec.MPIReplicaSpecs[mpiv1.MPIReplicaTypeLauncher]; spec == nil {
-			mpiJob.Spec.MPIReplicaSpecs[mpiv1.MPIReplicaTypeLauncher] = &apiv1.ReplicaSpec{
+		if spec := mpiJob.Spec.MPIReplicaSpecs[training.MPIReplicaTypeLauncher]; spec == nil {
+			mpiJob.Spec.MPIReplicaSpecs[training.MPIReplicaTypeLauncher] = &apiv1.ReplicaSpec{
 				Replicas: pointer.Int32Ptr(1),
 				Template: v1alpha1.Template,
 			}
@@ -77,7 +77,7 @@ func LegacyMPIJobToV1MPIJob(mpiJob *mpiv1.MPIJob) error {
 	return nil
 }
 
-func processingUnitsPerWorker(v1alpha1 *mpiv1.LegacyV1Alpha1) (workerReplicas, unitsPerWorker int32, err error) {
+func processingUnitsPerWorker(v1alpha1 *training.LegacyV1Alpha1) (workerReplicas, unitsPerWorker int32, err error) {
 	if v1alpha1.DeprecatedGPUs != nil && v1alpha1.ProcessingUnits != nil {
 		return 0, 0, fmt.Errorf("cannot specify both GPUs and ProcessingUnits at the same time")
 	}

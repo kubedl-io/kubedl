@@ -19,7 +19,7 @@ package job
 import (
 	"context"
 
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/controllers/persist/util"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,7 +32,7 @@ import (
 )
 
 func init() {
-	jobPersistCtrlMap[&tfv1.TFJob{}] = NewTFJobPersistController
+	jobPersistCtrlMap[&training.TFJob{}] = NewTFJobPersistController
 }
 
 func NewTFJobPersistController(mgr ctrl.Manager, handler *jobPersistHandler) PersistController {
@@ -57,7 +57,7 @@ func (pc *TFJobPersistController) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		return ctrl.Result{}, err
 	}
 
-	tfJob := tfv1.TFJob{}
+	tfJob := training.TFJob{}
 	err = pc.client.Get(context.Background(), types.NamespacedName{
 		Namespace: req.Namespace,
 		Name:      name,
@@ -87,7 +87,7 @@ func (pc *TFJobPersistController) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch events with event events-handler.
-	if err = c.Watch(&source.Kind{Type: &tfv1.TFJob{}}, &enqueueForJob{}); err != nil {
+	if err = c.Watch(&source.Kind{Type: &training.TFJob{}}, &enqueueForJob{}); err != nil {
 		return err
 	}
 	return nil

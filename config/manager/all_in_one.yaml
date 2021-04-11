@@ -8,6 +8,7 @@ kind: Namespace
 metadata:
   name: kubedl-system
 ---
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -15,176 +16,75 @@ metadata:
   name: kubedl-manager-role
 rules:
 - apiGroups:
-  - kubeflow.org
+  - ""
   resources:
-  - tfjobs
-  - pytorchjobs
-  - mpijobs
+  - configmaps
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
+  - update
+  - watch
 - apiGroups:
-  - kubeflow.org
+  - ""
   resources:
-  - tfjobs/status
-  - pytorchjobs/status
-  - mpijobs/status
+  - configmaps/status
   verbs:
   - get
-  - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
+  - update
 - apiGroups:
-  - xdl.kubedl.io
+  - ""
   resources:
-  - xdljobs
+  - events
   verbs:
-  - get
-  - list
-  - watch
   - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - xdl.kubedl.io
-  resources:
-  - xdljobs/status
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - xgboostjob.kubeflow.org
-  resources:
-  - xgboostjobs
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - xgboostjob.kubeflow.org
-  resources:
-  - xgboostjobs/status
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
 - apiGroups:
   - ""
   resources:
   - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - pods/status
-  - configmaps
-  - events
-  - persistentvolumeclaims
-  - secrets
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
   - services
   verbs:
-  - get
-  - list
-  - watch
   - create
-  - update
-  - patch
   - delete
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - ""
   resources:
-  - pods/status
+  - services/status
   verbs:
   - get
-  - update
   - patch
-- apiGroups:
-  - apps
-  resources:
-  - controllerrevisions
-  verbs:
-  - get
-  - list
-  - watch
-  - create
   - update
-  - patch
-  - delete
 - apiGroups:
-  - apps.kruise.io
+  - networking.k8s.io
   resources:
-  - statefulsets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - mutatingwebhookconfigurations
-  - validatingwebhookconfigurations
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - kubedl.io
-  resources:
-  - marsjobs
+  - ingresses
   verbs:
   - create
   - delete
@@ -194,15 +94,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kubedl.io
-  resources:
-  - marsjobs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - elasticdl.org
+  - training.kubedl.io
   resources:
   - elasticdljobs
   verbs:
@@ -214,13 +106,134 @@ rules:
   - update
   - watch
 - apiGroups:
-  - elasticdl.org
+  - training.kubedl.io
   resources:
   - elasticdljobs/status
   verbs:
   - get
   - patch
   - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - marsjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - marsjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - mpijobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - mpijobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - pytorchjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - pytorchjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - tfjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - tfjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xdljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xdljobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xgboostjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xgboostjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -232,6 +245,52 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: kubedl-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: kubedl-system
+---
+# permissions to do leader election.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: leader-election-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps/status
+    verbs:
+      - get
+      - update
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: leader-election-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: leader-election-role
 subjects:
   - kind: ServiceAccount
     name: default

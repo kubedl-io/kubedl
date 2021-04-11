@@ -1,0 +1,24 @@
+# permissions for end users to edit xdljobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: xdljob-editor-role
+rules:
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xdljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xdljobs/status
+  verbs:
+  - get

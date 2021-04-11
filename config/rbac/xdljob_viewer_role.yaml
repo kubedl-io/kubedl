@@ -1,0 +1,20 @@
+# permissions for end users to view xdljobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: xdljob-viewer-role
+rules:
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xdljobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xdljobs/status
+  verbs:
+  - get

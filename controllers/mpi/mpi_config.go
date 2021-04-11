@@ -20,12 +20,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	mpiv1 "github.com/alibaba/kubedl/apis/mpi/v1"
+	"strings"
+
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"strings"
 )
 
 const (
@@ -40,11 +41,11 @@ const (
 )
 
 var (
-	launcherSuffix = "-" + strings.ToLower(string(mpiv1.MPIReplicaTypeLauncher))
-	workerSuffix   = "-" + strings.ToLower(string(mpiv1.MPIReplicaTypeWorker))
+	launcherSuffix = "-" + strings.ToLower(string(training.MPIReplicaTypeLauncher))
+	workerSuffix   = "-" + strings.ToLower(string(training.MPIReplicaTypeWorker))
 )
 
-func (r *MPIJobReconciler) getOrCreateJobConfig(mpiJob *mpiv1.MPIJob, workerReplicas int32, isGPULauncher bool) (*corev1.ConfigMap, error) {
+func (r *MPIJobReconciler) getOrCreateJobConfig(mpiJob *training.MPIJob, workerReplicas int32, isGPULauncher bool) (*corev1.ConfigMap, error) {
 	cm := corev1.ConfigMap{}
 	err := r.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: mpiJob.Namespace,
@@ -64,7 +65,7 @@ func (r *MPIJobReconciler) getOrCreateJobConfig(mpiJob *mpiv1.MPIJob, workerRepl
 // newConfigMap creates a new ConfigMap containing configurations for an MPIJob
 // resource. It also sets the appropriate OwnerReferences on the resource so
 // handleObject can discover the MPIJob resource that 'owns' it.
-func newJobConfigMap(mpiJob *mpiv1.MPIJob, workerReplicas int32, isGPULauncher bool) *corev1.ConfigMap {
+func newJobConfigMap(mpiJob *training.MPIJob, workerReplicas int32, isGPULauncher bool) *corev1.ConfigMap {
 	kubexec := fmt.Sprintf(`#!/bin/sh
 set -x
 POD_NAME=$1
@@ -91,8 +92,8 @@ shift
 		// But for Open MPI, use "slots=" syntax to achieve this function.
 		if mpiJob.Spec.MPIJobLegacySpec != nil && mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2 != nil &&
 			mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2.MPIDistribution != nil &&
-			(*mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2.MPIDistribution == mpiv1.MPIDistributionTypeIntelMPI ||
-				*mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2.MPIDistribution == mpiv1.MPIDistributionTypeMPICH) {
+			(*mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2.MPIDistribution == training.MPIDistributionTypeIntelMPI ||
+				*mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2.MPIDistribution == training.MPIDistributionTypeMPICH) {
 			buffer.WriteString(fmt.Sprintf("%s%s-%d:%d\n", mpiJob.Name, workerSuffix, i, slots))
 		} else {
 			buffer.WriteString(fmt.Sprintf("%s%s-%d slots=%d\n", mpiJob.Name, workerSuffix, i, slots))
@@ -107,7 +108,7 @@ shift
 				"app": mpiJob.Name,
 			},
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(mpiJob, mpiv1.SchemeGroupVersionKind),
+				*metav1.NewControllerRef(mpiJob, training.SchemeGroupVersion.WithKind(training.MPIJobKind)),
 			},
 		},
 		Data: map[string]string{
@@ -117,6 +118,6 @@ shift
 	}
 }
 
-func jobConfigName(mpiJob *mpiv1.MPIJob) string {
+func jobConfigName(mpiJob *training.MPIJob) string {
 	return fmt.Sprintf("%s-config", mpiJob.Name)
 }

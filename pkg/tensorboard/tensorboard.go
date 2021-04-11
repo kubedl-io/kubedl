@@ -67,7 +67,6 @@ func ReconcileTensorBoard(jc job_controller.JobController, c client.Client, meta
 		}
 	} else {
 		// annotation not found ,try to delete tensorboard
-		log.Infof("tensorboard config not found, try delete it")
 		if err := deleteTensorBoard(jc, c, metaObj); err != nil {
 			return err
 		}
@@ -382,18 +381,20 @@ func syncIngress(jc job_controller.JobController, c client.Client,
 // deleteTensorBoard delete tensorboard ingress service and pod.
 func deleteTensorBoard(jc job_controller.JobController, c client.Client, metaObj metav1.Object) error {
 	index := strconv.Itoa(0)
+	ns := metaObj.GetNamespace()
 	name := commonutil.GenGeneralName(metaObj.GetName(), tbRT, index)
 
 	// delete ingress
 	in := v1beta1.Ingress{}
 	if err := c.Get(context.Background(),
 		types.NamespacedName{
-			Namespace: metaObj.GetNamespace(),
+			Namespace: ns,
 			Name:      name},
 		&in); err == nil && metav1.IsControlledBy(&in, metaObj) {
 		if err := c.Delete(context.Background(), &in); err != nil {
 			return err
 		}
+		log.Infof("delete tensorboard %s/%s ingress success.", ns, name)
 	} else if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -402,12 +403,13 @@ func deleteTensorBoard(jc job_controller.JobController, c client.Client, metaObj
 	service := corev1.Service{}
 	if err := c.Get(context.Background(),
 		types.NamespacedName{
-			Namespace: metaObj.GetNamespace(),
+			Namespace: ns,
 			Name:      name},
 		&service); err == nil && metav1.IsControlledBy(&service, metaObj) {
 		if err := c.Delete(context.Background(), &service); err != nil {
 			return err
 		}
+		log.Infof("delete tensorboard %s/%s service success.", ns, name)
 	} else if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
@@ -416,12 +418,13 @@ func deleteTensorBoard(jc job_controller.JobController, c client.Client, metaObj
 	pod := corev1.Pod{}
 	if err := c.Get(context.Background(),
 		types.NamespacedName{
-			Namespace: metaObj.GetNamespace(),
+			Namespace: ns,
 			Name:      name},
 		&pod); err == nil && metav1.IsControlledBy(&pod, metaObj) {
 		if err := c.Delete(context.Background(), &pod); err != nil {
 			return err
 		}
+		log.Infof("delete tensorboard %s/%s pod success.", ns, name)
 	} else if err != nil && !errors.IsNotFound(err) {
 		return err
 	}

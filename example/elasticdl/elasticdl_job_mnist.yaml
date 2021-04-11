@@ -1,4 +1,4 @@
-apiVersion: "elasticdl.org/v1alpha1"
+apiVersion: training.kubedl.io/v1alpha1
 kind: "ElasticDLJob"
 metadata:
   name: "test-mnist"

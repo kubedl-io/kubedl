@@ -1,7 +1,7 @@
 package suite_tests
 
 import (
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/net/context"
@@ -29,7 +29,7 @@ var _ = Describe("TFJob Controller", func() {
 				Namespace: "default",
 			}
 
-			instance := &tfv1.TFJob{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "default"}}
+			instance := &training.TFJob{ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "default"}}
 
 			// Create
 			err := k8sClient.Create(context.Background(), instance)
@@ -43,14 +43,14 @@ var _ = Describe("TFJob Controller", func() {
 			// Get
 			By("Expecting created tf job")
 			Eventually(func() error {
-				job := &tfv1.TFJob{}
+				job := &training.TFJob{}
 				return k8sClient.Get(context.Background(), key, job)
 			}, timeout).Should(BeNil())
 
 			// Delete
 			By("Deleting tf job")
 			Eventually(func() error {
-				job := &tfv1.TFJob{}
+				job := &training.TFJob{}
 				err := k8sClient.Get(context.Background(), key, job)
 				if err != nil {
 					return err

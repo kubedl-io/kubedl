@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/alibaba/kubedl/apis"
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -37,12 +37,12 @@ type TFJobReconcilerTest struct {
 }
 
 func (r *TFJobReconcilerTest) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
-	job := &tfv1.TFJob{}
+	job := &training.TFJob{}
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	return job, err
 }
 
-func (r *TFJobReconcilerTest) satisfiedExpectations(tfJob *tfv1.TFJob) bool {
+func (r *TFJobReconcilerTest) satisfiedExpectations(tfJob *training.TFJob) bool {
 	// during unit test, no watch events will happen, hence always return true to trigger reconcile
 	return true
 }
@@ -74,7 +74,7 @@ func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 		Config:             config,
 		BackoffStatesQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		Recorder:           r.recorder,
-		Metrics:            metrics.NewJobMetrics(tfv1.Kind, r.Client),
+		Metrics:            metrics.NewJobMetrics(training.TFJobKind, r.Client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -179,16 +179,16 @@ func markPodStatus(podName string, status corev1.PodPhase, tfJobReconciler *TFJo
 	_ = tfJobReconciler.Status().Update(context.Background(), pod)
 }
 
-func createTFJob(jobName string, replicas int32) *tfv1.TFJob {
-	successPolicy := tfv1.SuccessPolicyAllWorkers
-	tfjob1 := &tfv1.TFJob{
+func createTFJob(jobName string, replicas int32) *training.TFJob {
+	successPolicy := training.SuccessPolicyAllWorkers
+	tfjob1 := &training.TFJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      jobName,
 			Namespace: "default",
 			UID:       "12345",
 		},
 
-		Spec: tfv1.TFJobSpec{
+		Spec: training.TFJobSpec{
 			TFReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{
 				"Worker": {
 					Replicas:      &replicas,
@@ -213,10 +213,10 @@ func createTFJob(jobName string, replicas int32) *tfv1.TFJob {
 }
 
 // not used, maybe using later..
-func createPodForJob(podName string, job *tfv1.TFJob) *corev1.Pod {
+func createPodForJob(podName string, job *training.TFJob) *corev1.Pod {
 	labelGroupName := v1.GroupNameLabel
 	labelJobName := v1.JobNameLabel
-	groupName := tfv1.GroupName
+	groupName := training.SchemeGroupVersion.Group
 	labels := map[string]string{
 		labelGroupName: groupName,
 		labelJobName:   strings.Replace(job.Name, "/", "-", -1),

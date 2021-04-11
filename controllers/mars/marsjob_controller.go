@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	kubedliov1beta1 "github.com/alibaba/kubedl/apis/mars/v1alpha1"
+	kubedliov1beta1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -56,7 +56,7 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(kubedliov1beta1.Kind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(kubedliov1beta1.MarsJobKind, r.Client))
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -73,8 +73,14 @@ type MarsJobReconciler struct {
 	ctrl     job_controller.JobController
 }
 
-// +kubebuilder:rbac:groups=kubedl.io,resources=marsjobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=kubedl.io,resources=marsjobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create
+// +kubebuilder:rbac:groups="networking.k8s.io",resources=ingresses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=marsjobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=marsjobs/status,verbs=get;update;patch
 
 func (r *MarsJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest mars job instance.
@@ -158,7 +164,7 @@ func (r *MarsJobReconciler) ControllerName() string {
 }
 
 func (r *MarsJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return kubedliov1beta1.GroupVersionKind
+	return kubedliov1beta1.SchemeGroupVersion.WithKind(kubedliov1beta1.MarsJobKind)
 }
 
 func (r *MarsJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
@@ -166,7 +172,7 @@ func (r *MarsJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
 }
 
 func (r *MarsJobReconciler) GetGroupNameLabelValue() string {
-	return kubedliov1beta1.GroupName
+	return kubedliov1beta1.SchemeGroupVersion.Group
 }
 
 func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
@@ -183,7 +189,7 @@ func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job interface{},
 
 	// Inject MARS_CONFIG env variable to mars container in the pod.
 	for i := range podTemplate.Spec.Containers {
-		if podTemplate.Spec.Containers[i].Name == kubedliov1beta1.DefaultContainerName {
+		if podTemplate.Spec.Containers[i].Name == kubedliov1beta1.MarsJobDefaultContainerName {
 			if len(podTemplate.Spec.Containers[i].Env) == 0 {
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
@@ -195,7 +201,7 @@ func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job interface{},
 				{Name: "MARS_MEMORY_TOTAL", Value: strconv.Itoa(memLimit)},
 				{Name: "MARS_CPU_USE_PROCESS_STAT", Value: "1"},
 				{Name: "MARS_MEM_USE_CGROUP_STAT", Value: "1"},
-				{Name: "MARS_BIND_PORT", Value: strconv.Itoa(kubedliov1beta1.DefaultPort)},
+				{Name: "MARS_BIND_PORT", Value: strconv.Itoa(kubedliov1beta1.MarsJobDefaultPort)},
 				{Name: "MARS_K8S_GROUP_LABELS", Value: v1.JobNameLabel},
 				{Name: "MARS_CONTAINER_IP", ValueFrom: &corev1.EnvVarSource{
 					FieldRef: &corev1.ObjectFieldSelector{FieldPath: "status.podIP"}}},
@@ -243,7 +249,7 @@ func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job interface{},
 						Name:  "MARS_CACHE_MEM_SIZE",
 						Value: strconv.Itoa(cacheSize),
 					})
-					mountPath := kubedliov1beta1.DefaultCacheMountPath
+					mountPath := kubedliov1beta1.MarsJobDefaultCacheMountPath
 					if memTuningPolicy.PlasmaStore != nil {
 						mountPath = *memTuningPolicy.PlasmaStore
 					}
@@ -258,15 +264,15 @@ func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job interface{},
 }
 
 func (r *MarsJobReconciler) GetDefaultContainerName() string {
-	return kubedliov1beta1.DefaultContainerName
+	return kubedliov1beta1.MarsJobDefaultContainerName
 }
 
 func (r *MarsJobReconciler) GetDefaultContainerPortName() string {
-	return kubedliov1beta1.DefaultPortName
+	return kubedliov1beta1.MarsJobDefaultPortName
 }
 
 func (r *MarsJobReconciler) GetDefaultContainerPortNumber() int32 {
-	return kubedliov1beta1.DefaultPort
+	return kubedliov1beta1.MarsJobDefaultPort
 }
 
 func (r *MarsJobReconciler) GetReconcileOrders() []v1.ReplicaType {

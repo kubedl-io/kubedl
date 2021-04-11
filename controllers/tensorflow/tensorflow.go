@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
@@ -72,7 +72,7 @@ type TaskSpec struct {
 //         },
 //     }
 // }
-func genTFConfigJSONStr(ctx context.Context, tfjob *tfv1.TFJob, rtype, index string) (string, error) {
+func genTFConfigJSONStr(ctx context.Context, tfjob *training.TFJob, rtype, index string) (string, error) {
 	// Configure the TFCONFIG environment variable.
 	i, err := strconv.ParseInt(index, 0, 32)
 	if err != nil {
@@ -105,11 +105,11 @@ func genTFConfigJSONStr(ctx context.Context, tfjob *tfv1.TFJob, rtype, index str
 }
 
 // genClusterSpec will generate ClusterSpec.
-func genClusterSpec(ctx context.Context, tfJob *tfv1.TFJob, selfType, selfIndex string) (ClusterSpec, error) {
+func genClusterSpec(ctx context.Context, tfJob *training.TFJob, selfType, selfIndex string) (ClusterSpec, error) {
 	clusterSpec := make(ClusterSpec)
 
 	for rtype, spec := range tfJob.Spec.TFReplicaSpecs {
-		if rtype == tfv1.TFReplicaTypeEval {
+		if rtype == training.TFReplicaTypeEval {
 			// https://www.tensorflow.org/api_docs/python/tf/estimator/RunConfig
 			// evaluator is not part of training cluster
 			continue
@@ -117,7 +117,7 @@ func genClusterSpec(ctx context.Context, tfJob *tfv1.TFJob, selfType, selfIndex 
 		rt := strings.ToLower(string(rtype))
 		replicaNames := make([]string, 0, *spec.Replicas)
 
-		port, err := job_controller.GetPortFromJob(tfJob.Spec.TFReplicaSpecs, rtype, tfv1.DefaultContainerName, tfv1.DefaultPortName)
+		port, err := job_controller.GetPortFromJob(tfJob.Spec.TFReplicaSpecs, rtype, training.TFJobDefaultContainerName, training.TFJobDefaultPortName)
 		if err != nil {
 			return nil, err
 		}

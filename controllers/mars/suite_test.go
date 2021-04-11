@@ -17,8 +17,9 @@ limitations under the License.
 package controllers
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
+
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,7 +29,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	kubedliov1beta1 "github.com/alibaba/kubedl/apis/mars/v1alpha1"
+	kubedliov1beta1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

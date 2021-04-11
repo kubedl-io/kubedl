@@ -19,16 +19,14 @@ package converters
 import (
 	"encoding/json"
 	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 	"k8s.io/utils/pointer"
 
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
-	xgboostv1alpha1 "github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
-	"github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
 	"github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/tenancy"
@@ -86,14 +84,14 @@ func ConvertJobToDMOJob(job metav1.Object, kind string, specs map[v1.ReplicaType
 // ExtractTypedJobInfos extract common-api struct and infos from different typed job objects.
 func ExtractTypedJobInfos(job metav1.Object) (kind string, spec map[v1.ReplicaType]*v1.ReplicaSpec, status v1.JobStatus, err error) {
 	switch typed := job.(type) {
-	case *tfv1.TFJob:
-		return tfv1.Kind, typed.Spec.TFReplicaSpecs, typed.Status, nil
-	case *pytorchv1.PyTorchJob:
-		return pytorchv1.Kind, typed.Spec.PyTorchReplicaSpecs, typed.Status, nil
-	case *xgboostv1alpha1.XGBoostJob:
-		return xgboostv1alpha1.Kind, typed.Spec.XGBReplicaSpecs, typed.Status.JobStatus, nil
-	case *xdlv1alpha1.XDLJob:
-		return xdlv1alpha1.Kind, typed.Spec.XDLReplicaSpecs, typed.Status, nil
+	case *trainingv1alpha1.TFJob:
+		return trainingv1alpha1.TFJobKind, typed.Spec.TFReplicaSpecs, typed.Status, nil
+	case *trainingv1alpha1.PyTorchJob:
+		return trainingv1alpha1.PyTorchJobKind, typed.Spec.PyTorchReplicaSpecs, typed.Status, nil
+	case *trainingv1alpha1.XGBoostJob:
+		return trainingv1alpha1.XGBoostJobKind, typed.Spec.XGBReplicaSpecs, typed.Status.JobStatus, nil
+	case *trainingv1alpha1.XDLJob:
+		return trainingv1alpha1.XDLJobKind, typed.Spec.XDLReplicaSpecs, typed.Status, nil
 	}
 	return "", nil, v1.JobStatus{}, fmt.Errorf("unkonwn job kind, %s/%s", job.GetNamespace(), job.GetName())
 }

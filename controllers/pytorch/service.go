@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )
@@ -72,7 +72,7 @@ func (r *PytorchJobReconciler) CreateService(job interface{}, service *corev1.Se
 
 // DeleteService deletes the service
 func (r *PytorchJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	pytorchJob, ok := job.(*pytorchv1.PyTorchJob)
+	pytorchJob, ok := job.(*training.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", job)
 	}

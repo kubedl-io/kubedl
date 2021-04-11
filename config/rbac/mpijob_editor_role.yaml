@@ -1,0 +1,24 @@
+# permissions for end users to edit mpijobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mpijob-editor-role
+rules:
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - mpijobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - mpijobs/status
+  verbs:
+  - get

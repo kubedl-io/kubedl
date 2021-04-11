@@ -36,7 +36,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -58,7 +58,7 @@ func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfigur
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(pytorchv1.Kind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(training.PyTorchJobKind, r.Client))
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -82,12 +82,13 @@ type PytorchJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=kubeflow.org,resources=pytorchjobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=kubeflow.org,resources=pytorchjobs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=events,verbs=create
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=pytorchjobs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=training.kubedl.io,resources=pytorchjobs/status,verbs=get;update;patch
 
 func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest pytorch job instance.
-	sharedPytorchJob := &pytorchv1.PyTorchJob{}
+	sharedPytorchJob := &training.PyTorchJob{}
 	err := r.Get(context.Background(), req.NamespacedName, sharedPytorchJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -131,7 +132,7 @@ func (r *PytorchJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch owner resource with create event filter.
-	if err = c.Watch(&source.Kind{Type: &pytorchv1.PyTorchJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	if err = c.Watch(&source.Kind{Type: &training.PyTorchJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
 	}); err != nil {
 		return err
@@ -139,7 +140,7 @@ func (r *PytorchJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Watch managed resource with owner and create/delete event filter.
 	if err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &pytorchv1.PyTorchJob{},
+		OwnerType:    &training.PyTorchJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnPodCreateFunc,
@@ -150,7 +151,7 @@ func (r *PytorchJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &pytorchv1.PyTorchJob{},
+		OwnerType:    &training.PyTorchJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnServiceCreateFunc,
@@ -165,22 +166,22 @@ func (r *PytorchJobReconciler) ControllerName() string {
 
 // GetAPIGroupVersionKind returns the GroupVersionKind of the API
 func (r *PytorchJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return pytorchv1.SchemeGroupVersionKind
+	return training.SchemeGroupVersion.WithKind(training.PyTorchJobKind)
 }
 
 // GetAPIGroupVersion returns the GroupVersion of the API
 func (r *PytorchJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
-	return pytorchv1.SchemeGroupVersion
+	return training.SchemeGroupVersion
 }
 
 // GetGroupNameLabelValue returns the Group Name(value) in the labels of the job
 func (r *PytorchJobReconciler) GetGroupNameLabelValue() string {
-	return pytorchv1.GroupName
+	return training.SchemeGroupVersion.Group
 }
 
 // SetClusterSpec sets the cluster spec for the pod
 func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
-	pytorchJob, ok := job.(*pytorchv1.PyTorchJob)
+	pytorchJob, ok := job.(*training.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", job)
 	}
@@ -189,13 +190,13 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 		return err
 	}
 
-	masterPort, err := job_controller.GetPortFromJob(pytorchJob.Spec.PyTorchReplicaSpecs, pytorchv1.PyTorchReplicaTypeMaster, pytorchv1.DefaultContainerName, pytorchv1.DefaultPortName)
+	masterPort, err := job_controller.GetPortFromJob(pytorchJob.Spec.PyTorchReplicaSpecs, training.PyTorchReplicaTypeMaster, training.PyTorchJobDefaultContainerName, training.PyTorchJobDefaultPortName)
 	if err != nil {
 		return err
 	}
 
-	masterAddr := commonutil.GenGeneralName(pytorchJob.Name, strings.ToLower(string(pytorchv1.PyTorchReplicaTypeMaster)), strconv.Itoa(0))
-	if rtype == strings.ToLower(string(pytorchv1.PyTorchReplicaTypeMaster)) {
+	masterAddr := commonutil.GenGeneralName(pytorchJob.Name, strings.ToLower(string(training.PyTorchReplicaTypeMaster)), strconv.Itoa(0))
+	if rtype == strings.ToLower(string(training.PyTorchReplicaTypeMaster)) {
 		if rank != 0 {
 			return fmt.Errorf("invalid config: There should be only a single master with index=0")
 		}
@@ -236,29 +237,29 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 
 // GetDefaultContainerName returns the default container name in pod
 func (r *PytorchJobReconciler) GetDefaultContainerName() string {
-	return pytorchv1.DefaultContainerName
+	return training.PyTorchJobDefaultContainerName
 }
 
 // GetDefaultContainerPortName Get the default container port name
 func (r *PytorchJobReconciler) GetDefaultContainerPortName() string {
-	return pytorchv1.DefaultPortName
+	return training.PyTorchJobDefaultPortName
 }
 
 // GetDefaultContainerPortNumber get the default container port number
 func (r *PytorchJobReconciler) GetDefaultContainerPortNumber() int32 {
-	return pytorchv1.DefaultPort
+	return training.PyTorchJobDefaultPort
 }
 
 func (r *PytorchJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 	return []v1.ReplicaType{
-		pytorchv1.PyTorchReplicaTypeMaster,
-		pytorchv1.PyTorchReplicaTypeWorker,
+		training.PyTorchReplicaTypeMaster,
+		training.PyTorchReplicaTypeWorker,
 	}
 }
 
 // IsMasterRole returns if this replica type with index specified is a master role.
 // MasterRole pod will have "job-role=master" set in its label
 func (r *PytorchJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaType, index int) bool {
-	_, ok := replicas[pytorchv1.PyTorchReplicaTypeMaster]
-	return ok && rtype == pytorchv1.PyTorchReplicaTypeMaster
+	_, ok := replicas[training.PyTorchReplicaTypeMaster]
+	return ok && rtype == training.PyTorchReplicaTypeMaster
 }

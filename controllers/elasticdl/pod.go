@@ -27,7 +27,7 @@ import (
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	elasticdlv1alpha1 "github.com/alibaba/kubedl/apis/elasticdl/v1alpha1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )
@@ -73,7 +73,7 @@ func (r *ElasticDLJobReconciler) CreatePod(job interface{}, pod *corev1.Pod) err
 
 // DeletePod deletes the pod
 func (r *ElasticDLJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
-	elasticdlJob, ok := job.(*elasticdlv1alpha1.ElasticDLJob)
+	elasticdlJob, ok := job.(*training.ElasticDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
 	}

@@ -1,0 +1,20 @@
+# permissions for end users to view xgboostjobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: xgboostjob-viewer-role
+rules:
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xgboostjobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xgboostjobs/status
+  verbs:
+  - get

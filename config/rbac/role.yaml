@@ -9,6 +9,32 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
   - pods
   verbs:
   - create
@@ -47,106 +73,6 @@ rules:
   - patch
   - update
 - apiGroups:
-  - elasticdl.org
-  resources:
-  - elasticdljobs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - elasticdl.org
-  resources:
-  - elasticdljobs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kubedl.io
-  resources:
-  - marsjobs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kubedl.io
-  resources:
-  - marsjobs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kubeflow.org
-  resources:
-  - mpijobs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kubeflow.org
-  resources:
-  - mpijobs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kubeflow.org
-  resources:
-  - pytorchjobs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kubeflow.org
-  resources:
-  - pytorchjobs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - kubeflow.org
-  resources:
-  - tfjobs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - kubeflow.org
-  resources:
-  - tfjobs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
   - networking.k8s.io
   resources:
   - ingresses
@@ -159,7 +85,107 @@ rules:
   - update
   - watch
 - apiGroups:
-  - xdl.kubedl.io
+  - training.kubedl.io
+  resources:
+  - elasticdljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - elasticdljobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - marsjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - marsjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - mpijobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - mpijobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - pytorchjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - pytorchjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - tfjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - tfjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
   resources:
   - xdljobs
   verbs:
@@ -171,7 +197,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - xdl.kubedl.io
+  - training.kubedl.io
   resources:
   - xdljobs/status
   verbs:
@@ -179,7 +205,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - xgboostjob.kubeflow.org
+  - training.kubedl.io
   resources:
   - xgboostjobs
   verbs:
@@ -191,7 +217,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - xgboostjob.kubeflow.org
+  - training.kubedl.io
   resources:
   - xgboostjobs/status
   verbs:

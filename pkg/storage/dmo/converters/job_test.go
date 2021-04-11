@@ -20,10 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
-	"github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
 	"github.com/alibaba/kubedl/pkg/util"
@@ -48,7 +45,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 		{
 			name: "tfjob with created status",
 			args: args{
-				job: &tfv1.TFJob{
+				job: &trainingv1alpha1.TFJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              "tfjob-test",
 						Namespace:         testNamespace,
@@ -59,7 +56,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 					Status: apiv1.JobStatus{
 						StartTime: &metav1.Time{Time: testTime("2019-02-11T12:27:00Z")},
 					},
-					Spec: tfv1.TFJobSpec{
+					Spec: trainingv1alpha1.TFJobSpec{
 						TFReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{
 							"Worker": {
 								Template: v1.PodTemplateSpec{
@@ -85,7 +82,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 			want: &dmo.Job{
 				Name:         "tfjob-test",
 				JobID:        "6f06d2fd-22c6-11e9-96bb-0242ac1d5327",
-				Kind:         tfv1.Kind,
+				Kind:         trainingv1alpha1.TFJobKind,
 				Status:       apiv1.JobCreated,
 				Namespace:    testNamespace,
 				DeployRegion: pointer.StringPtr(testRegion),
@@ -100,7 +97,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 		}, {
 			name: "tfjob with region",
 			args: args{
-				job: &tfv1.TFJob{
+				job: &trainingv1alpha1.TFJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              "tfjob-test",
 						Namespace:         testNamespace,
@@ -115,7 +112,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 						CompletionTime: &metav1.Time{Time: testTime("2019-02-11T12:27:00Z")},
 						Conditions:     []apiv1.JobCondition{{Type: apiv1.JobSucceeded}},
 					},
-					Spec: tfv1.TFJobSpec{
+					Spec: trainingv1alpha1.TFJobSpec{
 						TFReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{
 							"Worker": {
 								Replicas: pointer.Int32Ptr(1),
@@ -147,7 +144,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 			want: &dmo.Job{
 				Name:         "tfjob-test",
 				JobID:        "6f06d2fd-22c6-11e9-96bb-0242ac1d5327",
-				Kind:         tfv1.Kind,
+				Kind:         trainingv1alpha1.TFJobKind,
 				Status:       apiv1.JobSucceeded,
 				Namespace:    testNamespace,
 				DeployRegion: pointer.StringPtr(testRegion),
@@ -163,7 +160,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 		}, {
 			name: "xdljob with status succeed",
 			args: args{
-				job: &xdlv1alpha1.XDLJob{
+				job: &trainingv1alpha1.XDLJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              "xdljob-test",
 						Namespace:         testNamespace,
@@ -175,7 +172,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 						CompletionTime: &metav1.Time{Time: testTime("2019-02-11T12:27:00Z")},
 						Conditions:     []apiv1.JobCondition{{Type: apiv1.JobSucceeded}},
 					},
-					Spec: xdlv1alpha1.XDLJobSpec{
+					Spec: trainingv1alpha1.XDLJobSpec{
 						XDLReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{
 							"Master": {
 								Replicas: pointer.Int32Ptr(1),
@@ -200,7 +197,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 			want: &dmo.Job{
 				Name:        "xdljob-test",
 				JobID:       "6f06d2fd-22c6-11e9-96bb-0242ac1d5327",
-				Kind:        xdlv1alpha1.Kind,
+				Kind:        trainingv1alpha1.XDLJobKind,
 				Status:      apiv1.JobSucceeded,
 				Namespace:   testNamespace,
 				Tenant:      pointer.StringPtr(""),
@@ -215,7 +212,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 		}, {
 			name: "pytorchjob with succeed status",
 			args: args{
-				job: &pytorchv1.PyTorchJob{
+				job: &trainingv1alpha1.PyTorchJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              "pytorchjob-test",
 						Namespace:         testNamespace,
@@ -227,7 +224,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 						CompletionTime: &metav1.Time{Time: testTime("2019-02-11T12:27:00Z")},
 						Conditions:     []apiv1.JobCondition{{Type: apiv1.JobSucceeded}},
 					},
-					Spec: pytorchv1.PyTorchJobSpec{
+					Spec: trainingv1alpha1.PyTorchJobSpec{
 						PyTorchReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{
 							"Worker": {
 								Replicas: pointer.Int32Ptr(1),
@@ -252,7 +249,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 			want: &dmo.Job{
 				Name:        "pytorchjob-test",
 				JobID:       "6f06d2fd-22c6-11e9-96bb-0242ac1d5327",
-				Kind:        pytorchv1.Kind,
+				Kind:        trainingv1alpha1.PyTorchJobKind,
 				Status:      apiv1.JobSucceeded,
 				Namespace:   testNamespace,
 				Tenant:      pointer.StringPtr(""),
@@ -267,7 +264,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 		}, {
 			name: "xgboostjob with region",
 			args: args{
-				job: &v1alpha1.XGBoostJob{
+				job: &trainingv1alpha1.XGBoostJob{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              "xgboostjob-test",
 						Namespace:         testNamespace,
@@ -275,13 +272,13 @@ func TestConvertJobToDMOJob(t *testing.T) {
 						ResourceVersion:   "3",
 						CreationTimestamp: metav1.Time{Time: testTime("2019-02-10T12:27:00Z")},
 					},
-					Status: v1alpha1.XGBoostJobStatus{
+					Status: trainingv1alpha1.XGBoostJobStatus{
 						JobStatus: apiv1.JobStatus{
 							CompletionTime: &metav1.Time{Time: testTime("2019-02-11T12:27:00Z")},
 							Conditions:     []apiv1.JobCondition{{Type: apiv1.JobSucceeded}},
 						},
 					},
-					Spec: v1alpha1.XGBoostJobSpec{
+					Spec: trainingv1alpha1.XGBoostJobSpec{
 						XGBReplicaSpecs: map[apiv1.ReplicaType]*apiv1.ReplicaSpec{
 							"Worker": {
 								Replicas: pointer.Int32Ptr(1),
@@ -306,7 +303,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 			want: &dmo.Job{
 				Name:        "xgboostjob-test",
 				JobID:       "6f06d2fd-22c6-11e9-96bb-0242ac1d5327",
-				Kind:        v1alpha1.Kind,
+				Kind:        trainingv1alpha1.XGBoostJobKind,
 				Status:      apiv1.JobSucceeded,
 				Namespace:   testNamespace,
 				Tenant:      pointer.StringPtr(""),

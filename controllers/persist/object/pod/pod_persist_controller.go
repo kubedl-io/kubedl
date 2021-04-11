@@ -21,10 +21,7 @@ import (
 	stderrors "errors"
 	"fmt"
 
-	pytorchv1 "github.com/alibaba/kubedl/apis/pytorch/v1"
-	tfv1 "github.com/alibaba/kubedl/apis/tensorflow/v1"
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/xdl/v1alpha1"
-	xgboostv1alpha1 "github.com/alibaba/kubedl/apis/xgboost/v1alpha1"
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	persistutil "github.com/alibaba/kubedl/controllers/persist/util"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
 	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
@@ -127,14 +124,14 @@ func (pc *PodPersistController) SetupWithManager(mgr ctrl.Manager) error {
 
 func matchDefaultContainerName(kind string) string {
 	switch kind {
-	case tfv1.Kind:
-		return tfv1.DefaultContainerName
-	case pytorchv1.Kind:
-		return pytorchv1.DefaultContainerName
-	case xdlv1alpha1.Kind:
-		return xdlv1alpha1.DefaultContainerName
-	case xgboostv1alpha1.Kind:
-		return xgboostv1alpha1.DefaultContainerName
+	case trainingv1alpha1.TFJobKind:
+		return trainingv1alpha1.TFJobDefaultContainerName
+	case trainingv1alpha1.PyTorchJobKind:
+		return trainingv1alpha1.PyTorchJobDefaultContainerName
+	case trainingv1alpha1.XDLJobKind:
+		return trainingv1alpha1.XDLJobDefaultContainerName
+	case trainingv1alpha1.XGBoostJobKind:
+		return trainingv1alpha1.XGBoostJobDefaultContainerName
 	}
 	return ""
 }
