@@ -30,7 +30,7 @@ var (
 
 const (
 	// GroupName is the group name use in this package.
-	GroupName = "kubeflow.org"
+	GroupName = "kubedl.io"
 	// Kind is the kind name.
 	Kind = "TestJob"
 	// GroupVersion is the version.
@@ -40,7 +40,7 @@ const (
 	// Singular is the singular for TestJob.
 	Singular = "testjob"
 	// TESTCRD is the CRD name for TestJob.
-	TESTCRD = "testjobs.kubeflow.org"
+	TESTCRD = "testjobs.kubedl.io"
 )
 
 var (

@@ -13,7 +13,6 @@ spec:
           containers:
             - name: pytorch
               image: kubedl/pytorch-dist-example
-              imagePullPolicy: Always
     Worker:
       replicas: 2
       restartPolicy: ExitCode
@@ -22,4 +21,3 @@ spec:
           containers:
             - name: pytorch
               image: kubedl/pytorch-dist-example
-              imagePullPolicy: Always

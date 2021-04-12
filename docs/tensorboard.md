@@ -10,7 +10,7 @@ After that, users can access the tensorboard through this URL `http://<ingress h
 
 For example:
 ```yaml
-    apiVersion: "kubeflow.org/v1"
+    apiVersion: "training.kubedl.io/v1alpha1"
     kind: "TFJob"
     metadata:
       name: "mnist"

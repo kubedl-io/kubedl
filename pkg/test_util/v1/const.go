@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	TestImageName = "test-image-for-kubeflow-pkg:latest"
+	TestImageName = "test-image-for-pkg:latest"
 	TestJobName   = "test-job"
 	LabelWorker   = "worker"
 
