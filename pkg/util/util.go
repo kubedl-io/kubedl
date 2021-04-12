@@ -25,11 +25,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	// EnvKubeflowNamespace is a environment variable for namespace when deployed on kubernetes
-	EnvKubeflowNamespace = "KUBEFLOW_NAMESPACE"
-)
-
 // Pformat returns a pretty format output of any value that can be marshaled to JSON.
 func Pformat(value interface{}) string {
 	if s, ok := value.(string); ok {

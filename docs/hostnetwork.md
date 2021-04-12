@@ -13,7 +13,7 @@ KubeDL provide a feature-gate to enable `hostnetwork` mode for jobs, users only 
 `kubedl.io/network-mode: host` to job specifications, for example:
 
 ```yaml
-    apiVersion: "kubeflow.org/v1"
+    apiVersion: "training.kubedl.io/v1alpha1"
     kind: "TFJob"
     metadata:
       name: "mnist"

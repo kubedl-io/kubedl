@@ -19,8 +19,6 @@ import (
 )
 
 const (
-	// EnvKubeflowNamespace is ENV for kubeflow namespace specified by user.
-	EnvKubeflowNamespace = "KUBEFLOW_NAMESPACE"
 
 	// DefaultPortName is name of the port used to communicate between workers.
 	DefaultPortName = "job-port"
