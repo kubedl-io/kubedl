@@ -314,7 +314,7 @@ spec:
         app: kubedl
     spec:
       containers:
-      - image: kubedl/kubedl:v0.2.0
+      - image: kubedl/kubedl:v0.3.0
         imagePullPolicy: Always
         name: kubedl-manager
         ports:
