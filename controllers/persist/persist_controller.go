@@ -30,13 +30,13 @@ import (
 func init() {
 	flag.StringVar(&region, "region", "", "region of kubedl deployed")
 	flag.StringVar(&eventStorage, "event-storage", "", "event storage backend plugin name, persist events into backend if it's specified")
-	flag.StringVar(&objectStorage, "object-storage", "", "object storage backend plugin name, persist jobs and pods into backend if it's specified")
+	flag.StringVar(&metaStorage, "meta-storage", "", "object storage backend plugin name, persist jobs and pods into backend if it's specified")
 }
 
 var (
-	region        string
-	eventStorage  string
-	objectStorage string
+	region       string
+	eventStorage string
+	metaStorage  string
 )
 
 func SetupWithManager(mgr ctrl.Manager) error {
@@ -54,15 +54,15 @@ func SetupWithManager(mgr ctrl.Manager) error {
 		}
 	}
 
-	if objectStorage != "" {
-		jobPersistController, err := job.NewJobPersistControllers(mgr, objectStorage, region)
+	if metaStorage != "" {
+		jobPersistController, err := job.NewJobPersistControllers(mgr, metaStorage, region)
 		if err != nil {
 			return err
 		}
 		if err = jobPersistController.SetupWithManager(mgr); err != nil {
 			return err
 		}
-		podPersistController, err := pod.NewPodPersistController(mgr, objectStorage, region)
+		podPersistController, err := pod.NewPodPersistController(mgr, metaStorage, region)
 		if err != nil {
 			return err
 		}
