@@ -108,7 +108,7 @@ func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Resul
 	// Set default properties for xgboost job
 	r.scheme.Default(xgboostjob)
 
-	result, err := r.ctrl.ReconcileJobs(xgboostjob, xgboostjob.Spec.XGBReplicaSpecs, xgboostjob.Status.JobStatus, &xgboostjob.Spec.RunPolicy)
+	result, err := r.ctrl.ReconcileJobs(xgboostjob, xgboostjob.Spec.XGBReplicaSpecs, xgboostjob.Status.JobStatus, &xgboostjob.Spec.RunPolicy, nil)
 	if err != nil {
 		log.Error(err, "xgboost job reconcile failed")
 		return result, err
@@ -199,4 +199,8 @@ func (r *XgboostJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 // SetClusterSpec sets the cluster spec for the pod
 func (r *XgboostJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	return SetPodEnv(job, podTemplate, index)
+}
+
+func (r *XgboostJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+	return ""
 }

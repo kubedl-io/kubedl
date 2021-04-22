@@ -99,6 +99,9 @@ type JobController struct {
 
 	// patcher creates a new patch differentiated from old and new object.
 	patcher func(oldObj, newObj runtime.Object) error
+
+	// Client talks to api-server
+	Client client.Client
 }
 
 func NewJobController(
@@ -120,6 +123,7 @@ func NewJobController(
 			newPatchObj := newObj.DeepCopyObject()
 			return cli.Patch(context.Background(), newPatchObj, client.MergeFrom(oldObj))
 		},
+		Client: cli,
 	}
 }
 

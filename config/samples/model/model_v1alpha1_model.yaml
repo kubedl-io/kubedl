@@ -1,0 +1,10 @@
+apiVersion: model.kubedl.io/v1alpha1
+kind: Model
+metadata:
+  name: model1
+spec:
+  storage:
+    localStorage:
+      path: /foo
+      nodeName: kind-control-plane
+  imageRepo: jianhe6/kaniko

@@ -76,6 +76,19 @@ type PytorchJobReconciler struct {
 	ctrl     job_controller.JobController
 }
 
+func (r *PytorchJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+	for _, pod := range pods {
+		rtype := pod.Labels[v1.ReplicaTypeLabel]
+		rIndex, _ := strconv.Atoi(pod.Labels[v1.ReplicaIndexLabel])
+		if rtype == strings.ToLower(string(training.PyTorchReplicaTypeMaster)) && rIndex == 0 {
+			log.Info("select %s for model output", pod.Spec.NodeName)
+			return pod.Spec.NodeName
+		}
+	}
+	log.Info(fmt.Sprintf("no master replica type, select node %s for model output", pods[0].Spec.NodeName))
+	return pods[0].Spec.NodeName
+}
+
 // Reconcile reads that state of the cluster for a PytorchJob object and makes changes based on the state read
 // and what is in the TFJob.Spec
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
@@ -114,7 +127,7 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// Set default properties for pytorch job.
 	r.scheme.Default(pytorchJob)
 
-	result, err := r.ctrl.ReconcileJobs(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs, pytorchJob.Status, &pytorchJob.Spec.RunPolicy)
+	result, err := r.ctrl.ReconcileJobs(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs, pytorchJob.Status, &pytorchJob.Spec.RunPolicy, pytorchJob.Spec.ModelVersion)
 	if err != nil {
 		log.Error(err, "pytorch job reconcile failed")
 		return result, err

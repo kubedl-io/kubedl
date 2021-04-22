@@ -20,6 +20,8 @@ package tensorflow
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -80,6 +82,41 @@ type TFJobReconciler struct {
 	ctrl     job_controller.JobController
 }
 
+func (r *TFJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+	var chiefPod *corev1.Pod
+	var masterPod *corev1.Pod
+	var worker0Pod *corev1.Pod
+
+	for _, pod := range pods {
+		rtype := pod.Labels[v1.ReplicaTypeLabel]
+		rIndex, _ := strconv.Atoi(pod.Labels[v1.ReplicaIndexLabel])
+		if rtype == strings.ToLower(string(training.TFReplicaTypeMaster)) && rIndex == 0 {
+			log.Info(fmt.Sprintf("select %s for model output", pod.Spec.NodeName))
+			masterPod = pod
+		}
+		if rtype == strings.ToLower(string(training.TFReplicaTypeChief)) && rIndex == 0 {
+			log.Info(fmt.Sprintf("select %s for model output", pod.Spec.NodeName))
+			chiefPod = pod
+		}
+		if rtype == strings.ToLower(string(training.TFReplicaTypeWorker)) && rIndex == 0 {
+			log.Info(fmt.Sprintf("select %s for model output", pod.Spec.NodeName))
+			worker0Pod = pod
+		}
+	}
+	if chiefPod != nil {
+		return chiefPod.Spec.NodeName
+	}
+	if masterPod != nil {
+		return masterPod.Spec.NodeName
+	}
+	if worker0Pod != nil {
+		return worker0Pod.Spec.NodeName
+
+	}
+	log.Info("no node selected for model output")
+	return ""
+}
+
 // Reconcile reads that state of the cluster for a XDLJob object and makes changes based on the state read
 // and what is in the TFJob.Spec
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
@@ -119,7 +156,7 @@ func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Set default properties for tensorflow job.
 	r.scheme.Default(tfJob)
 
-	result, err := r.ctrl.ReconcileJobs(tfJob, tfJob.Spec.TFReplicaSpecs, tfJob.Status, &tfJob.Spec.RunPolicy)
+	result, err := r.ctrl.ReconcileJobs(tfJob, tfJob.Spec.TFReplicaSpecs, tfJob.Status, &tfJob.Spec.RunPolicy, tfJob.Spec.ModelVersion)
 	if err != nil {
 		log.Error(err, "tensorflow job reconcile failed")
 		return result, err

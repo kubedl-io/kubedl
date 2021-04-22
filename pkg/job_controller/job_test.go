@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/test_job/v1"
 	"github.com/stretchr/testify/assert"
@@ -234,4 +235,51 @@ func newService(name string) *corev1.Service {
 		},
 	}
 	return service
+}
+
+func TestPodTemplateAddModelPathEnv(T *testing.T) {
+	replicas := map[apiv1.ReplicaType]*apiv1.ReplicaSpec{
+		"Worker": {
+			RestartPolicy: "Never",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "tensorflow",
+							Image: "kubedl/tf-mnist-with-summaries:1.0",
+							Env: []corev1.EnvVar{
+								{
+									Name:  "test",
+									Value: "value",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	modelVersion := &v1alpha1.ModelVersion{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   "default",
+			Name:        "versionName",
+			UID:         "9423255b-4600-11e7-af6a-28d2447dc82b",
+			Labels:      make(map[string]string, 0),
+			Annotations: make(map[string]string, 0),
+		},
+		Spec: v1alpha1.ModelVersionSpec{
+			ModelName: "modelName",
+			CreatedBy: "user1",
+			Storage: &v1alpha1.Storage{
+				LocalStorage: &v1alpha1.LocalStorage{
+					Path:     "/tmp/model",
+					NodeName: "localhost",
+				},
+			},
+		},
+		Status: v1alpha1.ModelVersionStatus{},
+	}
+	addModelPathEnv(replicas, &modelVersion.Spec)
+	assert.Equal(T, v1alpha1.KubeDLModelPath, replicas["Worker"].Template.Spec.Containers[0].Env[1].Name)
 }

@@ -108,7 +108,7 @@ func (r *MarsJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	r.scheme.Default(marsJob)
 
-	result, err := r.ctrl.ReconcileJobs(marsJob, marsJob.Spec.MarsReplicaSpecs, marsJob.Status.JobStatus, &marsJob.Spec.RunPolicy)
+	result, err := r.ctrl.ReconcileJobs(marsJob, marsJob.Spec.MarsReplicaSpecs, marsJob.Status.JobStatus, &marsJob.Spec.RunPolicy, nil)
 	if err != nil {
 		log.Error(err, "mars job reconcile failed")
 		return result, err
@@ -312,4 +312,8 @@ func resourceRequestOrLimits(rr corev1.ResourceRequirements, rname corev1.Resour
 		return int(quant.Value())
 	}
 	return 0
+}
+
+func (r *MarsJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+	return ""
 }

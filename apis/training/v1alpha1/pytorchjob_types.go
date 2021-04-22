@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	common "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -42,6 +43,10 @@ type PyTorchJobSpec struct {
 	//     "Worker": PyTorchReplicaSpec,
 	//   }
 	PyTorchReplicaSpecs map[common.ReplicaType]*common.ReplicaSpec `json:"pytorchReplicaSpecs"`
+
+	// ModelVersion represents the model output by this job run.
+	// +optional
+	ModelVersion *v1alpha1.ModelVersionSpec `json:"modelVersion"`
 }
 
 // PyTorchJobStatus defines the observed state of PyTorchJob
@@ -58,6 +63,7 @@ type PyTorchJobStatus struct {
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 // +kubebuilder:printcolumn:name="Finished-TTL",type=integer,JSONPath=`.spec.ttlSecondsAfterFinished`
 // +kubebuilder:printcolumn:name="Max-Lifetime",type=integer,JSONPath=`.spec.activeDeadlineSeconds`
+// +kubebuilder:printcolumn:name="Model-Version",type=string,JSONPath=`.status.modelVersionName`
 
 // PyTorchJob is the Schema for the pytorchjobs API
 type PyTorchJob struct {

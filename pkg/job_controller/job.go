@@ -7,13 +7,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
+	"github.com/alibaba/kubedl/controllers/model/storage"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	model "github.com/alibaba/kubedl/controllers/model"
 	"github.com/alibaba/kubedl/pkg/code_sync"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
@@ -54,11 +59,8 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 
 // ReconcileJobs checks and updates replicas for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods/services.
-func (jc *JobController) ReconcileJobs(
-	job interface{},
-	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec,
-	jobStatus apiv1.JobStatus,
-	runPolicy *apiv1.RunPolicy) (result reconcile.Result, err error) {
+func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus apiv1.JobStatus,
+	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec) (result reconcile.Result, err error) {
 
 	metaObject, ok := job.(metav1.Object)
 	jobName := metaObject.GetName()
@@ -197,7 +199,14 @@ func (jc *JobController) ReconcileJobs(
 				jobStatus.ReplicaStatuses[rtype].Succeeded += jobStatus.ReplicaStatuses[rtype].Active
 				jobStatus.ReplicaStatuses[rtype].Active = 0
 			}
+
+			// job finished, create the model version
+			err = jc.createModelVersion(metaObject, modelVersion, pods, &jobStatus)
+			if err != nil {
+				return reconcile.Result{Requeue: true}, err
+			}
 		}
+
 		if !reflect.DeepEqual(*oldStatus, jobStatus) {
 			return result, jc.Controller.UpdateJobStatusInApiServer(job, &jobStatus)
 		}
@@ -208,8 +217,10 @@ func (jc *JobController) ReconcileJobs(
 	replicasStatus := make(map[string]v1.PodPhase)
 	restart := false
 
-	ctx := context.WithValue(context.Background(), contextHostNetworkPorts, make(map[string]int32))
+	// add model path to container env
+	addModelPathEnv(replicas, modelVersion)
 
+	ctx := context.WithValue(context.Background(), contextHostNetworkPorts, make(map[string]int32))
 	// Diff current active pods/services with replicas.
 	for _, rtype := range jc.Controller.GetReconcileOrders() {
 		spec, exist := replicas[rtype]
@@ -272,6 +283,78 @@ func (jc *JobController) ReconcileJobs(
 		return result, jc.Controller.UpdateJobStatusInApiServer(job, &jobStatus)
 	}
 	return result, nil
+}
+
+// addModelPathEnv add the model path into each container's env
+// can be moved to webhook
+func addModelPathEnv(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, modelVersion *v1alpha1.ModelVersionSpec) {
+	if modelVersion == nil {
+		return
+	}
+	provider := storage.GetStorageProvider(modelVersion.Storage)
+	modelPath := provider.GetModelPath(modelVersion.Storage)
+	for _, spec := range replicas {
+		containerList := spec.Template.Spec.Containers
+		for key, container := range containerList{
+			exists := false
+			for _, env := range container.Env {
+				if env.Name == v1alpha1.KubeDLModelPath {
+					exists = true
+					break
+				}
+			}
+			// append if not exists
+			if !exists {
+				containerList[key].Env = append(containerList[key].Env, v1.EnvVar{
+					Name:  v1alpha1.KubeDLModelPath,
+					Value: modelPath,
+				})
+			}
+		}
+	}
+}
+
+func (jc *JobController) createModelVersion(job metav1.Object,
+	modelVersion *v1alpha1.ModelVersionSpec, pods []*v1.Pod, jobStatus *apiv1.JobStatus) error {
+	mv := &v1alpha1.ModelVersion{}
+	err := jc.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: job.GetNamespace(),
+		Name:      model.GetJobModelVersionName(job.GetName()),
+	}, mv)
+
+	if err == nil {
+		// already exists, delete it
+		err = jc.Client.Delete(context.Background(), mv)
+		if err != nil {
+			log.Errorf("failed to delete model version %s", mv.Name)
+			return err
+		}
+	} else {
+		if !errors.IsNotFound(err) {
+			log.Errorf("failed to get model version %s", mv.Name)
+			return err
+		}
+	}
+
+	// create the new model version
+	mv.Namespace = job.GetNamespace()
+	mv.Name = model.GetJobModelVersionName(job.GetName())
+	mv.Spec = *modelVersion
+	mv.Spec.CreatedBy = job.GetName()
+
+	if mv.Spec.Storage != nil && mv.Spec.Storage.LocalStorage != nil {
+		if mv.Spec.Storage.LocalStorage.NodeName != "" {
+			mv.Spec.Storage.LocalStorage.NodeName = jc.Controller.GetNodeForModelOutput(pods)
+		}
+	}
+	err = jc.Client.Create(context.Background(), mv)
+	if err != nil {
+		log.Errorf("failed to create model version %s", mv.Name)
+		return err
+	}
+
+	jobStatus.ModelVersionName = mv.Name
+	return nil
 }
 
 // pastActiveDeadline checks if job has ActiveDeadlineSeconds field set and if it is exceeded.
