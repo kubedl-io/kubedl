@@ -201,7 +201,9 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			}
 
 			// job finished, create the model version
-			err = jc.createModelVersion(metaObject, modelVersion, pods, &jobStatus)
+			if modelVersion != nil {
+				err = jc.createModelVersion(metaObject, modelVersion, pods, &jobStatus)
+			}
 			if err != nil {
 				return reconcile.Result{Requeue: true}, err
 			}

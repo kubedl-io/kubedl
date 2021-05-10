@@ -53,7 +53,7 @@ type ModelVersionReconciler struct {
 // +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 
-// ModelVersionController creates a kaniko container that builds a container image inclding the model.
+// ModelVersionController creates a kaniko container that builds a container image including the model.
 func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	//Get the modelVersion
 	modelVersion := &modelv1alpha1.ModelVersion{}

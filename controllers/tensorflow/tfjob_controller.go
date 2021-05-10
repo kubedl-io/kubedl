@@ -82,7 +82,7 @@ type TFJobReconciler struct {
 	ctrl     job_controller.JobController
 }
 
-func (r *TFJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+func (r *TFJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) string {
 	var chiefPod *corev1.Pod
 	var masterPod *corev1.Pod
 	var worker0Pod *corev1.Pod
@@ -91,30 +91,32 @@ func (r *TFJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName st
 		rtype := pod.Labels[v1.ReplicaTypeLabel]
 		rIndex, _ := strconv.Atoi(pod.Labels[v1.ReplicaIndexLabel])
 		if rtype == strings.ToLower(string(training.TFReplicaTypeMaster)) && rIndex == 0 {
-			log.Info(fmt.Sprintf("select %s for model output", pod.Spec.NodeName))
 			masterPod = pod
 		}
 		if rtype == strings.ToLower(string(training.TFReplicaTypeChief)) && rIndex == 0 {
-			log.Info(fmt.Sprintf("select %s for model output", pod.Spec.NodeName))
 			chiefPod = pod
 		}
 		if rtype == strings.ToLower(string(training.TFReplicaTypeWorker)) && rIndex == 0 {
-			log.Info(fmt.Sprintf("select %s for model output", pod.Spec.NodeName))
 			worker0Pod = pod
 		}
 	}
+	nodeName := ""
 	if chiefPod != nil {
-		return chiefPod.Spec.NodeName
+		nodeName = chiefPod.Spec.NodeName
 	}
 	if masterPod != nil {
-		return masterPod.Spec.NodeName
+		nodeName = masterPod.Spec.NodeName
 	}
 	if worker0Pod != nil {
-		return worker0Pod.Spec.NodeName
-
+		nodeName = worker0Pod.Spec.NodeName
 	}
-	log.Info("no node selected for model output")
-	return ""
+	if nodeName != "" {
+		log.Info(fmt.Sprintf("select %s for model output", nodeName))
+		return nodeName
+	} else {
+		log.Info("no node selected for model output")
+		return nodeName
+	}
 }
 
 // Reconcile reads that state of the cluster for a XDLJob object and makes changes based on the state read
