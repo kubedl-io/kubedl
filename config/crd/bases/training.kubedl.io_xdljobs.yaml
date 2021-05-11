@@ -2795,6 +2795,8 @@ spec:
               lastReconcileTime:
                 format: date-time
                 type: string
+              modelVersionName:
+                type: string
               replicaStatuses:
                 additionalProperties:
                   properties:

@@ -139,7 +139,7 @@ func (r *MPIJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Set default properties for tensorflow job.
 	r.scheme.Default(mpiJob)
 
-	result, err = r.ctrl.ReconcileJobs(mpiJob, mpiJob.Spec.MPIReplicaSpecs, mpiJob.Status, &mpiJob.Spec.RunPolicy)
+	result, err = r.ctrl.ReconcileJobs(mpiJob, mpiJob.Spec.MPIReplicaSpecs, mpiJob.Status, &mpiJob.Spec.RunPolicy, nil)
 	if err != nil {
 		log.Error(err, "mpi job reconcile failed")
 		return result, err
@@ -403,4 +403,8 @@ func setupLauncherMainContainers(mpiJob *training.MPIJob, container *corev1.Cont
 			Name:      configVolumeName,
 			MountPath: configVolumeMountPath,
 		})
+}
+
+func (r *MPIJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+	return ""
 }

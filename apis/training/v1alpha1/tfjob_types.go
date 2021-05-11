@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	commonv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -49,6 +50,10 @@ type TFJobSpec struct {
 	//     "Worker": ReplicaSpec,
 	//   }
 	TFReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"tfReplicaSpecs"`
+
+	// ModelVersion represents the model output by this job run.
+	// +optional
+	ModelVersion *v1alpha1.ModelVersionSpec `json:"modelVersion"`
 }
 
 // +genclient
@@ -59,6 +64,7 @@ type TFJobSpec struct {
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 // +kubebuilder:printcolumn:name="Finished-TTL",type=integer,JSONPath=`.spec.ttlSecondsAfterFinished`
 // +kubebuilder:printcolumn:name="Max-Lifetime",type=integer,JSONPath=`.spec.activeDeadlineSeconds`
+// +kubebuilder:printcolumn:name="Model-Version",type=string,JSONPath=`.status.modelVersionName`
 
 // TFJob is the Schema for the tfjobs API
 type TFJob struct {

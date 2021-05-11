@@ -1,0 +1,24 @@
+# permissions for end users to edit modelversions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: modelversion-editor-role
+rules:
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - modelversions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - modelversions/status
+  verbs:
+  - get

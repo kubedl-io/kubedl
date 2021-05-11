@@ -121,7 +121,7 @@ func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 	// Set default properties for xdl job.
 	r.scheme.Default(xdlJob)
 
-	result, err := r.ctrl.ReconcileJobs(xdlJob, xdlJob.Spec.XDLReplicaSpecs, xdlJob.Status, &xdlJob.Spec.RunPolicy)
+	result, err := r.ctrl.ReconcileJobs(xdlJob, xdlJob.Spec.XDLReplicaSpecs, xdlJob.Status, &xdlJob.Spec.RunPolicy, nil)
 	if err != nil {
 		log.Error(err, "xdl job reconcile failed.")
 		return result, err
@@ -247,4 +247,8 @@ func (r *XDLJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 func (r *XDLJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaType, index int) bool {
 	// No master role in xdl job for now.
 	return false
+}
+
+func (r *XDLJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+	return ""
 }

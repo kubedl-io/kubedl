@@ -22,5 +22,10 @@ resources:
   version: v1alpha1
 - group: training
   kind: ElasticDLJob
+- group: model
+  kind: Model
+  version: v1alpha1
+- group: model
+  kind: ModelVersion
   version: v1alpha1
 version: "2"

@@ -29,6 +29,9 @@ spec:
     - jsonPath: .spec.activeDeadlineSeconds
       name: Max-Lifetime
       type: integer
+    - jsonPath: .status.modelVersionName
+      name: Model-Version
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -49,6 +52,38 @@ spec:
                 type: integer
               cleanPodPolicy:
                 type: string
+              modelVersion:
+                properties:
+                  createdBy:
+                    type: string
+                  imageRepo:
+                    type: string
+                  modelName:
+                    type: string
+                  storage:
+                    properties:
+                      aliCloudNas:
+                        properties:
+                          attributes:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          path:
+                            type: string
+                          server:
+                            type: string
+                          vers:
+                            type: string
+                        type: object
+                      localStorage:
+                        properties:
+                          nodeName:
+                            type: string
+                          path:
+                            type: string
+                        type: object
+                    type: object
+                type: object
               schedulingPolicy:
                 properties:
                   minAvailable:
@@ -2790,6 +2825,8 @@ spec:
                 type: array
               lastReconcileTime:
                 format: date-time
+                type: string
+              modelVersionName:
                 type: string
               replicaStatuses:
                 additionalProperties:

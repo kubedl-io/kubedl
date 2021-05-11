@@ -103,7 +103,7 @@ func (r *ElasticDLJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	// Set default properties for elasicdl job.
 	r.scheme.Default(elasticdlJob)
 
-	result, err := r.ctrl.ReconcileJobs(elasticdlJob, elasticdlJob.Spec.ElasticDLReplicaSpecs, elasticdlJob.Status, &elasticdlJob.Spec.RunPolicy)
+	result, err := r.ctrl.ReconcileJobs(elasticdlJob, elasticdlJob.Spec.ElasticDLReplicaSpecs, elasticdlJob.Status, &elasticdlJob.Spec.RunPolicy, nil)
 	if err != nil {
 		log.Error(err, "elasticdl job reconcile failed")
 		return result, err
@@ -197,4 +197,8 @@ func (r *ElasticDLJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.Re
 // SetClusterSpec sets the cluster spec for the pod
 func (r *ElasticDLJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	return nil
+}
+
+func (r *ElasticDLJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+	return ""
 }

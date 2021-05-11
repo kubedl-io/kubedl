@@ -36,6 +36,10 @@ type ControllerInterface interface {
 	// i.e. all services created by the job will come with label "job-name" = <this_job_name>
 	GetServicesForJob(job interface{}) ([]*corev1.Service, error)
 
+	// GetNodeForModelOutput returns the nodeName where the model is output, in case of local storage.
+	// If model is output in remote storage, this will return "Any".
+	GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string)
+
 	// DeleteJob deletes the job
 	DeleteJob(job interface{}) error
 

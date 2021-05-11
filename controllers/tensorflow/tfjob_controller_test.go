@@ -7,12 +7,15 @@ import (
 	"testing"
 
 	"github.com/alibaba/kubedl/apis"
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/controllers/model"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/util"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,6 +59,10 @@ func (fe FakeJobExpectations) SatisfiedExpectations(controllerKey string) bool {
 	return true
 }
 
+func tearDown() {
+	prometheus.DefaultRegisterer = prometheus.NewRegistry()
+}
+
 // NewReconciler returns a new reconcile.Reconciler
 func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 	recorder record.EventRecorder,
@@ -75,6 +82,7 @@ func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 		BackoffStatesQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		Recorder:           r.recorder,
 		Metrics:            metrics.NewJobMetrics(training.TFJobKind, r.Client),
+		Client:             client,
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -92,6 +100,7 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = apis.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
+	defer tearDown()
 
 	// a job with 2 replicas
 	tfjob := createTFJob("job1", 2)
@@ -137,6 +146,57 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 	// two workers succeeded, the jobs is succeeded
 	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
 	assert.True(t, util.HasCondition(tfjob.Status, v1.JobSucceeded))
+}
+
+// Test the tfjob will create a modelVersion after it finishes.
+func TestJobCreateModel(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = apis.AddToScheme(scheme)
+	_ = corev1.AddToScheme(scheme)
+	defer tearDown()
+
+	// a job with 2 replicas
+	tfjob := createTFJob("job1", 1)
+	tfjob.Spec.ModelVersion = &v1alpha1.ModelVersionSpec{
+		ModelName: "tfjob-model",
+		Storage: &v1alpha1.Storage{
+			LocalStorage: &v1alpha1.LocalStorage{
+				Path:     "/tmp/model",
+				NodeName: "localhost",
+			},
+		},
+	}
+	fakeClient := fake.NewFakeClientWithScheme(scheme, tfjob)
+	jobControllerConfig := job_controller.JobControllerConfiguration{}
+	eventBroadcaster := record.NewBroadcaster()
+	recorder := eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"})
+	tfJobReconciler := NewReconcilerTest(fakeClient, scheme, recorder, jobControllerConfig)
+
+	jobRequest := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      "job1",
+			Namespace: "default",
+		},
+	}
+	// reconcile the job, it should create 2 replicas
+	_, _ = tfJobReconciler.Reconcile(jobRequest)
+
+	// make job1-worker-0 succeed
+	markPodStatus("job1-worker-0", corev1.PodSucceeded, tfJobReconciler)
+	// reconcile
+	_, _ = tfJobReconciler.Reconcile(jobRequest)
+	// the jobs is succeeded
+	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
+	assert.True(t, util.HasCondition(tfjob.Status, v1.JobSucceeded))
+	_, _ = tfJobReconciler.Reconcile(jobRequest)
+
+	modelVersion := &v1alpha1.ModelVersion{}
+	_ = tfJobReconciler.Get(context.TODO(), types.NamespacedName{
+		Namespace: "default",
+		Name:      controllers.GetJobModelVersionName(tfjob.GetName()),
+	}, modelVersion)
+	// the modelVersion is created
+	assert.Equal(t, controllers.GetJobModelVersionName(tfjob.GetName()), modelVersion.Name)
 }
 
 func markPodStatus(podName string, status corev1.PodPhase, tfJobReconciler *TFJobReconcilerTest) {

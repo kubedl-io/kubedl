@@ -19,6 +19,10 @@ type TestJobController struct {
 	services []*corev1.Service
 }
 
+func (t TestJobController) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
+	return ""
+}
+
 func (t TestJobController) GetReconcileOrders() []apiv1.ReplicaType {
 	return []apiv1.ReplicaType{
 		testv1.TestReplicaTypeMaster,
