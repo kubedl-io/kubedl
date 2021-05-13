@@ -2,7 +2,6 @@ package tensorflow
 
 import (
 	"context"
-	"flag"
 	"strings"
 	"testing"
 
@@ -16,7 +15,9 @@ import (
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/util"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,8 +32,8 @@ import (
 
 func init() {
 	// Enable klog which is used in dependencies
-	_ = flag.Set("logtostderr", "true")
-	_ = flag.Set("v", "10")
+	_ = pflag.Set("logtostderr", "true")
+	_ = pflag.Set("v", "10")
 }
 
 type TFJobReconcilerTest struct {
@@ -240,7 +241,7 @@ func markPodStatus(podName string, status corev1.PodPhase, tfJobReconciler *TFJo
 }
 
 func createTFJob(jobName string, replicas int32) *training.TFJob {
-	successPolicy := training.SuccessPolicyAllWorkers
+	successPolicy := v1.SuccessPolicyAllWorkers
 	tfjob1 := &training.TFJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      jobName,

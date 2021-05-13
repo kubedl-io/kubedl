@@ -52,7 +52,7 @@ func expectedTFJob(cleanPodPolicy common.CleanPodPolicy, restartPolicy common.Re
 		)
 	}
 
-	defaultSuccessPolicy := SuccessPolicyDefault
+	defaultSuccessPolicy := common.SuccessPolicyDefault
 
 	return &TFJob{
 		Spec: TFJobSpec{

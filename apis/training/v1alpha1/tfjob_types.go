@@ -22,9 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // TFJobSpec defines the desired state of TFJob
 type TFJobSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -41,7 +38,7 @@ type TFJobSpec struct {
 	// Value "AllWorkers" means the job is succeeded if all workers are succeeded.
 	// Default to ""
 	// +optional
-	SuccessPolicy *SuccessPolicy `json:"successPolicy,omitempty"`
+	SuccessPolicy *commonv1.SuccessPolicy `json:"successPolicy,omitempty"`
 
 	// A map of TFReplicaType (type) to ReplicaSpec (value). Specifies the TF cluster configuration.
 	// For example,
@@ -74,16 +71,6 @@ type TFJob struct {
 	Spec   TFJobSpec          `json:"spec,omitempty"`
 	Status commonv1.JobStatus `json:"status,omitempty"`
 }
-
-// SuccessPolicy is the policy to mark the job as succeeded, when the job does not contain the chief or master role.
-type SuccessPolicy string
-
-const (
-	// SuccessPolicyDefault indicates the job is succeeded if all workers are succeeded or worker 0 completed
-	SuccessPolicyDefault SuccessPolicy = ""
-	// SuccessPolicyAllWorkers indicates the job is succeeded if all workers are succeeded.
-	SuccessPolicyAllWorkers SuccessPolicy = "AllWorkers"
-)
 
 // TFReplicaType is the type for TFReplica. Can be one of: "Chief"/"Master" (semantically equivalent),
 // "Worker", "PS", or "Evaluator".

@@ -1,16 +1,19 @@
-// Copyright 2018 The Kubeflow Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+Copyright 2021 The Alibaba Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package v1
 
 import (
@@ -18,8 +21,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +k8s:deepcopy-gen=true
 // JobStatus represents the current observed state of the training Job.
+// +k8s:deepcopy-gen=true
 type JobStatus struct {
 	// Conditions is an array of current observed job conditions.
 	Conditions []JobCondition `json:"conditions"`
@@ -67,8 +70,8 @@ type ReplicaStatus struct {
 	Evicted int32 `json:"evicted,omitempty"`
 }
 
+// ReplicaSpec is a description of the replica.
 // +k8s:deepcopy-gen=true
-// ReplicaSpec is a description of the replica
 type ReplicaSpec struct {
 	// Replicas is the desired number of replicas of the given template.
 	// If unspecified, defaults to 1.
@@ -83,10 +86,16 @@ type ReplicaSpec struct {
 	// One of Always, OnFailure, Never and ExitCode.
 	// Default to Never.
 	RestartPolicy RestartPolicy `json:"restartPolicy,omitempty"`
+
+	// DependOn represents a list of upstream vertex conditions to be dependent on for this RepicaType to start.
+	// For example, in TensorFlow workers depend on ps to start first. If not set, KubeDL will populates the
+	// default DependOn based on each framework's requirements. This feature is enabled by default, and can be
+	// disabled with DAGScheduling feature gate.
+	DependOn []DAGCondition `json:"-"`
 }
 
-// +k8s:deepcopy-gen=true
 // JobCondition describes the state of the job at a certain point.
+// +k8s:deepcopy-gen=true
 type JobCondition struct {
 	// Type of job condition.
 	Type JobConditionType `json:"type"`
@@ -133,6 +142,16 @@ const (
 	JobFailed JobConditionType = "Failed"
 )
 
+// SuccessPolicy is the policy to mark the job as succeeded, when the job does not contain the chief or master role.
+type SuccessPolicy string
+
+const (
+	// SuccessPolicyDefault indicates the job is succeeded if all workers are succeeded or worker 0 completed
+	SuccessPolicyDefault SuccessPolicy = ""
+	// SuccessPolicyAllWorkers indicates the job is succeeded if all workers are succeeded.
+	SuccessPolicyAllWorkers SuccessPolicy = "AllWorkers"
+)
+
 // CleanPodPolicy describes how to deal with pods when the job is finished.
 type CleanPodPolicy string
 
@@ -162,10 +181,10 @@ const (
 	RestartPolicyExitCode RestartPolicy = "ExitCode"
 )
 
-// +k8s:deepcopy-gen=true
 // RunPolicy encapsulates various runtime policies of the distributed training
 // job, for example how to clean up resources and how long the job can stay
 // active.
+// +k8s:deepcopy-gen=true
 type RunPolicy struct {
 	// CleanPodPolicy defines the policy to kill pods after the job completes.
 	// Default to Running.
@@ -195,4 +214,11 @@ type RunPolicy struct {
 // job, for example `minAvailable` for gang-scheduling.
 type SchedulingPolicy struct {
 	MinAvailable *int32 `json:"minAvailable,omitempty"`
+}
+
+type DAGCondition struct {
+	// Upstream defines which replica type is the source tigger.
+	Upstream ReplicaType `json:"upstream"`
+	// OnPhase defines at which phase the upstream replica will trigger this condition.
+	OnPhase v1.PodPhase `json:"onPhase"`
 }

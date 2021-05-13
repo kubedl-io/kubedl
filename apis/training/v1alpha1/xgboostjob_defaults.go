@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/alibaba/kubedl/pkg/features"
 	"strings"
 
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -86,6 +87,19 @@ func setDefaults_XGBoostJobReplicas(spec *v1.ReplicaSpec) {
 	}
 }
 
+func setDefaultXGBoostDAGConditions(job *XGBoostJob) {
+	// DAG scheduling flow for xgboost job:
+	//
+	//  Master
+	//  |--> Worker
+	if job.Spec.XGBReplicaSpecs[XGBoostReplicaTypeMaster] != nil &&
+		job.Spec.XGBReplicaSpecs[XGBoostReplicaTypeWorker] != nil {
+		job.Spec.XGBReplicaSpecs[XGBoostReplicaTypeWorker].DependOn = []v1.DAGCondition{
+			{Upstream: XGBoostReplicaTypeMaster, OnPhase: corev1.PodRunning},
+		}
+	}
+}
+
 // SetDefaults_XGBoostJob sets any unspecified values to defaults.
 func SetDefaults_XGBoostJob(xgbJob *XGBoostJob) {
 	setDefaults_XGBoostJobSpec(&xgbJob.Spec)
@@ -96,5 +110,9 @@ func SetDefaults_XGBoostJob(xgbJob *XGBoostJob) {
 		setDefaults_XGBoostJobReplicas(spec)
 		// Set default container port for xgboost containers
 		setDefaults_XGBoostJobPort(&spec.Template.Spec)
+	}
+
+	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
+		setDefaultXGBoostDAGConditions(xgbJob)
 	}
 }

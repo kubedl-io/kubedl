@@ -3,6 +3,7 @@ package job_controller
 import (
 	"context"
 	"fmt"
+	"github.com/alibaba/kubedl/pkg/features"
 	"reflect"
 	"strings"
 	"time"
@@ -230,6 +231,14 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			continue
 		}
 
+		log.Infof("reconciles for replica type: %s", rtype)
+		// If DAG scheduling has been enabled and current replica has upstream vertex(replica:phase),
+		// wait util all upstream replicas ready then trigger next reconciling.
+		if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) && len(spec.DependOn) > 0 &&
+			!jc.dagConditionsReady(metaObject, replicas, pods, spec.DependOn) {
+			continue
+		}
+
 		err = jc.ReconcilePods(ctx, metaObject, &jobStatus, pods, rtype, spec, replicasStatus, replicas, &restart)
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
@@ -297,7 +306,7 @@ func addModelPathEnv(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, modelVer
 	modelPath := provider.GetModelPath(modelVersion.Storage)
 	for _, spec := range replicas {
 		containerList := spec.Template.Spec.Containers
-		for key, container := range containerList{
+		for key, container := range containerList {
 			exists := false
 			for _, env := range container.Env {
 				if env.Name == v1alpha1.KubeDLModelPath {

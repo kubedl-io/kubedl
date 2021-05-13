@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"flag"
+	"github.com/alibaba/kubedl/pkg/features"
 	"os"
 
 	"github.com/alibaba/kubedl/apis"
@@ -27,6 +27,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	backendregistry "github.com/alibaba/kubedl/pkg/storage/backends/registry"
+	"github.com/spf13/pflag"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -53,13 +54,14 @@ func main() {
 		metricsAddr          int
 		enableLeaderElection bool
 	)
-	flag.StringVar(&ctrlMetricsAddr, "controller-metrics-addr", ":8080", "The address the controller metric endpoint binds to.")
-	flag.IntVar(&metricsAddr, "metrics-addr", 8443, "The address the default endpoints binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", true,
+	pflag.StringVar(&ctrlMetricsAddr, "controller-metrics-addr", ":8080", "The address the controller metric endpoint binds to.")
+	pflag.IntVar(&metricsAddr, "metrics-addr", 8443, "The address the default endpoints binds to.")
+	pflag.BoolVar(&enableLeaderElection, "enable-leader-election", true,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	flag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "", "specify the name of gang scheduler")
-	flag.IntVar(&options.CtrlConfig.MaxConcurrentReconciles, "max-reconciles", 1, "specify the number of max concurrent reconciles of each controller")
-	flag.Parse()
+	pflag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "", "specify the name of gang scheduler")
+	pflag.IntVar(&options.CtrlConfig.MaxConcurrentReconciles, "max-reconciles", 1, "specify the number of max concurrent reconciles of each controller")
+	features.KubeDLFeatureGates.AddFlag(pflag.CommandLine)
+	pflag.Parse()
 
 	options.CtrlConfig.EnableGangScheduling = options.CtrlConfig.GangSchedulerName != ""
 

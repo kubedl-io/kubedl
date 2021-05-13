@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"strings"
 
+	"github.com/alibaba/kubedl/pkg/features"
 	common "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 
 	v1 "k8s.io/api/core/v1"
@@ -89,6 +90,26 @@ func setDefaults_MarsJobWorkerMemTuningPolicy(job *MarsJob) {
 	}
 }
 
+func setDefaultMarsDAGConditions(job *MarsJob) {
+	// DAG scheduling flow for mars job:
+	//
+	// Scheduler
+	//  |---> Web
+	//  |---> Worker
+	if job.Spec.MarsReplicaSpecs[MarsReplicaTypeWorker] != nil &&
+		job.Spec.MarsReplicaSpecs[MarsReplicaTypeScheduler] != nil {
+		job.Spec.MarsReplicaSpecs[MarsReplicaTypeWorker].DependOn = []common.DAGCondition{
+			{Upstream: MarsReplicaTypeScheduler, OnPhase: v1.PodRunning},
+		}
+	}
+	if job.Spec.MarsReplicaSpecs[MarsReplicaTypeWebService] != nil &&
+		job.Spec.MarsReplicaSpecs[MarsReplicaTypeScheduler] != nil {
+		job.Spec.MarsReplicaSpecs[MarsReplicaTypeWebService].DependOn = []common.DAGCondition{
+			{Upstream: MarsReplicaTypeScheduler, OnPhase: v1.PodRunning},
+		}
+	}
+}
+
 // setTypeNames_MarsJob sets the name of all replica types from any case to correct case.
 func setTypeNames_MarsJob(job *MarsJob) {
 	setTypeName_MarsJob(job, MarsReplicaTypeScheduler)
@@ -118,6 +139,9 @@ func SetDefaults_MarsJob(job *MarsJob) {
 
 	// Update the key of PyTorchReplicaSpecs to camel case.
 	setTypeNames_MarsJob(job)
+	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
+		setDefaultMarsDAGConditions(job)
+	}
 
 	for rType, spec := range job.Spec.MarsReplicaSpecs {
 		setDefaults_MarsJobPort(&spec.Template.Spec)
