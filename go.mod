@@ -23,6 +23,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.0.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
 	go.uber.org/zap v1.13.0 // indirect
 	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
@@ -36,6 +37,7 @@ require (
 	k8s.io/apiserver v0.18.15
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/code-generator v0.18.15
+	k8s.io/component-base v0.18.15
 	k8s.io/klog v1.0.0
 	k8s.io/kubernetes v1.18.15
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451

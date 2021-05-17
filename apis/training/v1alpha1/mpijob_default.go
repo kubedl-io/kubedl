@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/alibaba/kubedl/pkg/features"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -66,6 +67,19 @@ func setDefaults_MPIJobWorkerReplica(spec *v1.ReplicaSpec) {
 	}
 }
 
+func setDefaultMPIDAGConditions(job *MPIJob) {
+	// DAG scheduling flow for mpi job:
+	//
+	// Worker
+	//  |---> Launcher
+	if job.Spec.MPIReplicaSpecs[MPIReplicaTypeWorker] != nil &&
+		job.Spec.MPIReplicaSpecs[MPIReplicaTypeLauncher] != nil {
+		job.Spec.MPIReplicaSpecs[MPIReplicaTypeLauncher].DependOn = []v1.DAGCondition{
+			{Upstream: MPIReplicaTypeLauncher, OnPhase: corev1.PodRunning},
+		}
+	}
+}
+
 func SetDefaults_MPIJob(mpiJob *MPIJob) {
 	// Set default cleanpod policy to None.
 	if mpiJob.Spec.MPIJobLegacySpec != nil && mpiJob.Spec.MPIJobLegacySpec.RunPolicy == nil {
@@ -84,5 +98,9 @@ func SetDefaults_MPIJob(mpiJob *MPIJob) {
 	// set default to Worker
 	if mpiJob.Spec.MPIReplicaSpecs[MPIReplicaTypeWorker] != nil {
 		setDefaults_MPIJobWorkerReplica(mpiJob.Spec.MPIReplicaSpecs[MPIReplicaTypeWorker])
+	}
+
+	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
+		setDefaultMPIDAGConditions(mpiJob)
 	}
 }

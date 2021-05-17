@@ -643,7 +643,7 @@ func (in *TFJobSpec) DeepCopyInto(out *TFJobSpec) {
 	in.RunPolicy.DeepCopyInto(&out.RunPolicy)
 	if in.SuccessPolicy != nil {
 		in, out := &in.SuccessPolicy, &out.SuccessPolicy
-		*out = new(SuccessPolicy)
+		*out = new(v1.SuccessPolicy)
 		**out = **in
 	}
 	if in.TFReplicaSpecs != nil {

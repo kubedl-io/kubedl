@@ -19,7 +19,6 @@ package mpi
 import (
 	"context"
 	stderrors "errors"
-	"flag"
 	"fmt"
 	"strings"
 
@@ -44,11 +43,12 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/spf13/pflag"
 )
 
 func init() {
-	flag.StringVar(&kubectlDeliveryImage, "kubectl-delivery-image", defaultKubectlDeliveryImage, "utility image to delivery kubectl binary")
-	flag.BoolVar(&launcherRunsWorkload, "launcher-runs-workloads", true, "Set launcher run the workload when launcher has GPU")
+	pflag.StringVar(&kubectlDeliveryImage, "kubectl-delivery-image", defaultKubectlDeliveryImage, "utility image to delivery kubectl binary")
+	pflag.BoolVar(&launcherRunsWorkload, "launcher-runs-workloads", true, "Set launcher run the workload when launcher has GPU")
 }
 
 const (

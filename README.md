@@ -30,6 +30,7 @@ Currently, KubeDL supports the following ML/DL jobs:
 - Support advanced scheduling features such as gang scheduling with pluggable backend schedulers.
 - A modular architecture that can be easily extended for more types of DL/ML workloads with shared libraries, see [how to add a custom job workload](https://github.com/alibaba/kubedl/blob/master/docs/how-to-add-a-custom-workload.md).
 - Run jobs with Host network.
+- DAG scheduling strategy across different roles in distributed machine learning.
 ### Build right away
 
 ```bash

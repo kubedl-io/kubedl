@@ -23,9 +23,6 @@ import (
 	common "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // PyTorchJobSpec defines the desired state of PyTorchJob
 type PyTorchJobSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster

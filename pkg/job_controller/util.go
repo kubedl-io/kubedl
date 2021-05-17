@@ -66,3 +66,11 @@ func GetPortFromJob(spec map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaTyp
 	}
 	return -1, errPortNotFound
 }
+
+func ReplicaTypes(specs map[v1.ReplicaType]*v1.ReplicaSpec) []v1.ReplicaType {
+	replicas := make([]v1.ReplicaType, 0, len(specs))
+	for rtype := range specs {
+		replicas = append(replicas, rtype)
+	}
+	return replicas
+}

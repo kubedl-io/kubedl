@@ -17,20 +17,20 @@ limitations under the License.
 package persist
 
 import (
-	"flag"
 	"os"
 
 	"github.com/alibaba/kubedl/controllers/persist/event"
 	"github.com/alibaba/kubedl/controllers/persist/object/job"
 	"github.com/alibaba/kubedl/controllers/persist/object/pod"
+	"github.com/spf13/pflag"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 func init() {
-	flag.StringVar(&region, "region", "", "region of kubedl deployed")
-	flag.StringVar(&eventStorage, "event-storage", "", "event storage backend plugin name, persist events into backend if it's specified")
-	flag.StringVar(&metaStorage, "meta-storage", "", "object storage backend plugin name, persist jobs and pods into backend if it's specified")
+	pflag.StringVar(&region, "region", "", "region of kubedl deployed")
+	pflag.StringVar(&eventStorage, "event-storage", "", "event storage backend plugin name, persist events into backend if it's specified")
+	pflag.StringVar(&metaStorage, "meta-storage", "", "object storage backend plugin name, persist jobs and pods into backend if it's specified")
 }
 
 var (

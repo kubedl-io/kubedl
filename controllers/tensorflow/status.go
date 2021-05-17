@@ -155,7 +155,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *training.TFJob, replicaS
 				// Leave a succeeded condition for the following two cases:
 				// 1. If default success policy is used and worker 0 has completed.
 				// 2. If `SuccessPolicyAllWorkers` success policy is used and all workers are succeeded.
-				if expected == 0 || (worker0Completed && *tfJob.Spec.SuccessPolicy != training.SuccessPolicyAllWorkers) {
+				if expected == 0 || (worker0Completed && *tfJob.Spec.SuccessPolicy != v1.SuccessPolicyAllWorkers) {
 					msg := fmt.Sprintf("TFJob %s successfully completed.", tfJob.Name)
 					r.recorder.Event(tfJob, corev1.EventTypeNormal, commonutil.JobSucceededReason, msg)
 					if jobStatus.CompletionTime == nil {

@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"github.com/alibaba/kubedl/pkg/features"
 	"strings"
 
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -47,15 +48,6 @@ func setDefaults_TFJobPort(spec *corev1.PodSpec) {
 	}
 }
 
-func setDefaultReplicas(spec *v1.ReplicaSpec) {
-	if spec.Replicas == nil {
-		spec.Replicas = pointer.Int32Ptr(1)
-	}
-	if spec.RestartPolicy == "" {
-		spec.RestartPolicy = TFJobDefaultRestartPolicy
-	}
-}
-
 // setTypeNames_TFJob sets the name of all replica types from any case to correct case.
 func setTypeNames_TFJob(tfJob *TFJob) {
 	setTypeName_TFJob(tfJob, TFReplicaTypePS)
@@ -74,6 +66,33 @@ func setTypeName_TFJob(tfJob *TFJob, typ v1.ReplicaType) {
 			delete(tfJob.Spec.TFReplicaSpecs, t)
 			tfJob.Spec.TFReplicaSpecs[typ] = spec
 			return
+		}
+	}
+}
+
+func setDefaultTFDAGCondition(job *TFJob) {
+	// DAG scheduling flow for tensorflow job:
+	//
+	//  PS
+	//  |---> Worker
+	//  |---> Chief
+	//  |---> Master
+	if job.Spec.TFReplicaSpecs[TFReplicaTypeWorker] != nil &&
+		job.Spec.TFReplicaSpecs[TFReplicaTypePS] != nil {
+		job.Spec.TFReplicaSpecs[TFReplicaTypeWorker].DependOn = []v1.DAGCondition{
+			{Upstream: TFReplicaTypePS, OnPhase: corev1.PodRunning},
+		}
+	}
+	if job.Spec.TFReplicaSpecs[TFReplicaTypeChief] != nil &&
+		job.Spec.TFReplicaSpecs[TFReplicaTypePS] != nil {
+		job.Spec.TFReplicaSpecs[TFReplicaTypeChief].DependOn = []v1.DAGCondition{
+			{Upstream: TFReplicaTypePS, OnPhase: corev1.PodRunning},
+		}
+	}
+	if job.Spec.TFReplicaSpecs[TFReplicaTypeMaster] != nil &&
+		job.Spec.TFReplicaSpecs[TFReplicaTypePS] != nil {
+		job.Spec.TFReplicaSpecs[TFReplicaTypeMaster].DependOn = []v1.DAGCondition{
+			{Upstream: TFReplicaTypePS, OnPhase: corev1.PodRunning},
 		}
 	}
 }
@@ -97,12 +116,16 @@ func SetDefaults_TFJob(tfjob *TFJob) {
 
 	// Set default success policy to "".
 	if tfjob.Spec.SuccessPolicy == nil {
-		defaultPolicy := SuccessPolicyDefault
+		defaultPolicy := v1.SuccessPolicyDefault
 		tfjob.Spec.SuccessPolicy = &defaultPolicy
 	}
 
 	// Update the key of TFReplicaSpecs to camel case.
 	setTypeNames_TFJob(tfjob)
+
+	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
+		setDefaultTFDAGCondition(tfjob)
+	}
 
 	for _, spec := range tfjob.Spec.TFReplicaSpecs {
 		// Set default replicas to 1.

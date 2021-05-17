@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"github.com/alibaba/kubedl/pkg/features"
 	"strings"
 
 	common "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -82,6 +83,19 @@ func setTypeName_PyTorchJob(job *PyTorchJob, typ common.ReplicaType) {
 	}
 }
 
+func setDefaultPyTorchDAGConditions(job *PyTorchJob) {
+	// DAG scheduling flow for pytorch job:
+	//
+	//  Master
+	//  |--> Worker
+	if job.Spec.PyTorchReplicaSpecs[PyTorchReplicaTypeWorker] != nil &&
+		job.Spec.PyTorchReplicaSpecs[PyTorchReplicaTypeMaster] != nil {
+		job.Spec.PyTorchReplicaSpecs[PyTorchReplicaTypeWorker].DependOn = []common.DAGCondition{
+			{Upstream: PyTorchReplicaTypeMaster, OnPhase: v1.PodRunning},
+		}
+	}
+}
+
 // SetDefaults_PyTorchJob sets any unspecified values to defaults.
 func SetDefaults_PyTorchJob(job *PyTorchJob) {
 	// Set default cleanpod policy to None.
@@ -92,6 +106,10 @@ func SetDefaults_PyTorchJob(job *PyTorchJob) {
 
 	// Update the key of PyTorchReplicaSpecs to camel case.
 	setTypeNames_PyTorchJob(job)
+
+	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
+		setDefaultPyTorchDAGConditions(job)
+	}
 
 	for rType, spec := range job.Spec.PyTorchReplicaSpecs {
 		// Set default replicas and restart policy.

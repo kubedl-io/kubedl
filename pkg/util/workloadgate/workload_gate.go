@@ -1,9 +1,10 @@
 package workloadgate
 
 import (
-	"flag"
 	"os"
 	"strings"
+
+	"github.com/spf13/pflag"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -19,7 +20,7 @@ const (
 )
 
 var (
-	workloads       = flag.String("workloads", autoDetectOption, "List of workloads to be enabled in cluster, `*` indicates enables all, and `-foo` indicates disable workload foo.")
+	workloads       = pflag.String("workloads", autoDetectOption, "List of workloads to be enabled in cluster, `*` indicates enables all, and `-foo` indicates disable workload foo.")
 	discoveryClient discovery.DiscoveryInterface
 )
 

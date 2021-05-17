@@ -18,11 +18,11 @@ package controllers
 
 import (
 	"context"
-	"flag"
 	"testing"
 
 	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,8 +35,8 @@ import (
 
 func init() {
 	// Enable klog which is used in dependencies
-	_ = flag.Set("logtostderr", "true")
-	_ = flag.Set("v", "10")
+	_ = pflag.Set("logtostderr", "true")
+	_ = pflag.Set("v", "10")
 }
 
 func TestCreateModelVersion(t *testing.T) {
