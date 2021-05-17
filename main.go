@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	modelcontroller "github.com/alibaba/kubedl/controllers/model"
+	servingcontroller "github.com/alibaba/kubedl/controllers/serving"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -118,6 +119,14 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ModelVersion")
+		os.Exit(1)
+	}
+	if err = (&servingcontroller.ServingServiceReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("ServingService"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ServingService")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
