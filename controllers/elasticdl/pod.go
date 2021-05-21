@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/pkg/controller"
@@ -66,11 +65,6 @@ func (r *ElasticDLJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, 
 	return cm.ClaimPods(pods)
 }
 
-// CreatePod creates the pod
-func (r *ElasticDLJobReconciler) CreatePod(job interface{}, pod *corev1.Pod) error {
-	return r.Create(context.Background(), pod)
-}
-
 // DeletePod deletes the pod
 func (r *ElasticDLJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 	elasticdlJob, ok := job.(*training.ElasticDLJob)
@@ -78,11 +72,6 @@ func (r *ElasticDLJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) err
 		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
 	}
 
-	log.Info("Deleting pod", "controller name", r.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
-	if err := r.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
-		r.recorder.Eventf(elasticdlJob, corev1.EventTypeWarning, job_controller.FailedDeletePodReason, "Error deleting: %v", err)
-		return err
-	}
-	r.recorder.Eventf(elasticdlJob, corev1.EventTypeNormal, job_controller.SuccessfulDeletePodReason, "Deleted pod: %v", pod.Name)
+	r.ctrl.BroadcastDeletePod(elasticdlJob, pod)
 	return nil
 }

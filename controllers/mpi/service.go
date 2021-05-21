@@ -24,10 +24,6 @@ func (r *MPIJobReconciler) GetServicesForJob(job interface{}) ([]*corev1.Service
 	return nil, nil
 }
 
-func (r *MPIJobReconciler) CreateService(job interface{}, service *corev1.Service) error {
-	return nil
-}
-
 func (r *MPIJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
 	return nil
 }

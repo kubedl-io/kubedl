@@ -32,7 +32,6 @@ import (
 	"github.com/alibaba/kubedl/pkg/util/quota"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -86,21 +85,12 @@ func (r *MPIJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error)
 	return cm.ClaimPods(pods)
 }
 
-func (r *MPIJobReconciler) CreatePod(job interface{}, pod *corev1.Pod) error {
-	return r.Create(context.Background(), pod)
-}
-
 func (r *MPIJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 	mpiJob, ok := job.(*mpiv1.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not type of MPIJob", job)
 	}
 
-	log.Info("Deleting pod", "controller name", r.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
-	if err := r.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
-		r.recorder.Eventf(mpiJob, corev1.EventTypeWarning, job_controller.FailedDeletePodReason, "Error deleting: %v", err)
-		return err
-	}
-	r.recorder.Eventf(mpiJob, corev1.EventTypeNormal, job_controller.SuccessfulDeletePodReason, "Deleted pod: %v", pod.Name)
+	r.ctrl.BroadcastDeletePod(mpiJob, pod)
 	return nil
 }

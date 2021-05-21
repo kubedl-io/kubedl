@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/pkg/controller"
@@ -66,11 +65,6 @@ func (r *PytorchJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, er
 	return cm.ClaimPods(pods)
 }
 
-// CreatePod creates the pod
-func (r *PytorchJobReconciler) CreatePod(job interface{}, pod *corev1.Pod) error {
-	return r.Create(context.Background(), pod)
-}
-
 // DeletePod deletes the pod
 func (r *PytorchJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 	pytorchJob, ok := job.(*training.PyTorchJob)
@@ -78,11 +72,6 @@ func (r *PytorchJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error
 		return fmt.Errorf("%+v is not a type of PytorchJob", job)
 	}
 
-	log.Info("Deleting pod", "controller name", r.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
-	if err := r.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
-		r.recorder.Eventf(pytorchJob, corev1.EventTypeWarning, job_controller.FailedDeletePodReason, "Error deleting: %v", err)
-		return err
-	}
-	r.recorder.Eventf(pytorchJob, corev1.EventTypeNormal, job_controller.SuccessfulDeletePodReason, "Deleted pod: %v", pod.Name)
+	r.ctrl.BroadcastDeletePod(pytorchJob, pod)
 	return nil
 }

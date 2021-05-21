@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -65,11 +64,6 @@ func (r *XDLJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Service
 	return cm.ClaimServices(services)
 }
 
-// CreateService creates the service
-func (r *XDLJobReconciler) CreateService(job interface{}, service *corev1.Service) error {
-	return r.Create(context.Background(), service)
-}
-
 // DeleteService deletes the service
 func (r *XDLJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
 	xdlJob, ok := job.(*xdlv1alpha1.XDLJob)
@@ -77,12 +71,6 @@ func (r *XDLJobReconciler) DeleteService(job interface{}, name string, namespace
 		return fmt.Errorf("%+v is not a type of XDLJob", job)
 	}
 
-	service := &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}}
-	log.Info("Deleting service", "controller name", r.ControllerName(), "service name", namespace+"/"+name)
-	if err := r.Delete(context.Background(), service); err != nil && !errors.IsNotFound(err) {
-		r.recorder.Eventf(xdlJob, corev1.EventTypeWarning, job_controller.FailedDeleteServiceReason, "Error deleting: %v", err)
-		return fmt.Errorf("unable to delete service: %v", err)
-	}
-	r.recorder.Eventf(xdlJob, corev1.EventTypeNormal, job_controller.SuccessfulDeleteServiceReason, "Deleted service: %v", name)
+	r.ctrl.BroadcastDeleteService(xdlJob, name, namespace)
 	return nil
 }

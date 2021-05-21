@@ -318,6 +318,11 @@ func (jc *JobController) ReconcilePods(
 	return nil
 }
 
+// CreatePod creates the pod
+func (jc *JobController) CreatePod(job interface{}, pod *v1.Pod) error {
+	return jc.Client.Create(context.Background(), pod)
+}
+
 // createNewPod creates a new pod for the given index and type.
 func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, index string, spec *apiv1.ReplicaSpec, masterRole bool,
 	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
@@ -379,11 +384,11 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		}
 	}
 
-	return jc.CreatePod(job, rt, index, podTemplate, masterRole)
+	return jc.CreateCommonPod(job, rt, index, podTemplate, masterRole)
 }
 
-// CreatePod creates a new common pod for the given index and type.
-func (jc *JobController) CreatePod(job interface{}, rt, index string, podTemplate *v1.PodTemplateSpec, masterRole bool) error {
+// CreateCommonPod creates a new common pod for the given index and type.
+func (jc *JobController) CreateCommonPod(job interface{}, rt, index string, podTemplate *v1.PodTemplateSpec, masterRole bool) error {
 	metaObject, ok := job.(metav1.Object)
 	if !ok {
 		return fmt.Errorf("job is not a metav1.Object type")
@@ -448,7 +453,7 @@ func (jc *JobController) createPod(nodeName, namespace string, template *v1.PodT
 	if labels.Set(pod.Labels).AsSelectorPreValidated().Empty() {
 		return fmt.Errorf("unable to create pods, no labels")
 	}
-	if err := jc.Controller.CreatePod(object, pod); err != nil {
+	if err := jc.CreatePod(object, pod); err != nil {
 		jc.Recorder.Eventf(object, v1.EventTypeWarning, FailedCreatePodReason, "Error creating: %v", err)
 		return err
 	} else {
@@ -488,4 +493,14 @@ func setRestartPolicy(podTemplateSpec *v1.PodTemplateSpec, spec *apiv1.ReplicaSp
 	} else {
 		podTemplateSpec.Spec.RestartPolicy = v1.RestartPolicy(spec.RestartPolicy)
 	}
+}
+
+func (jc *JobController) BroadcastDeletePod(job runtime.Object, pod *v1.Pod) error {
+	log.Info("Deleting pod", "controller name", jc.Controller.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
+	if err := jc.Client.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
+		jc.Recorder.Eventf(job, v1.EventTypeWarning, FailedDeletePodReason, "Error deleting: %v", err)
+		return err
+	}
+	jc.Recorder.Eventf(job, v1.EventTypeNormal, SuccessfulDeletePodReason, "Deleted pod: %v", pod.Name)
+	return nil
 }

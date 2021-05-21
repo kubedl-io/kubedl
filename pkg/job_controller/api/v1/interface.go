@@ -50,13 +50,13 @@ type ControllerInterface interface {
 	UpdateJobStatusInApiServer(job interface{}, jobStatus *JobStatus) error
 
 	// CreateService creates the service
-	CreateService(job interface{}, service *corev1.Service) error
+	// CreateService(job interface{}, service *corev1.Service) error
 
 	// DeleteService deletes the service
 	DeleteService(job interface{}, name string, namespace string) error
 
 	// CreatePod creates the pod
-	CreatePod(job interface{}, pod *corev1.Pod) error
+	// CreatePod(job interface{}, pod *corev1.Pod) error
 
 	// DeletePod deletes the pod
 	DeletePod(job interface{}, pod *corev1.Pod) error

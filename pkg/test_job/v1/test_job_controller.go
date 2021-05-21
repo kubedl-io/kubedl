@@ -104,7 +104,7 @@ func (t *TestJobController) DeleteService(job interface{}, name string, namespac
 	return nil
 }
 
-func (t *TestJobController) CreatePod(job interface{}, pod *corev1.Pod) error {
+func (in *TestJobController) CreatePod(job interface{}, pod *corev1.Pod) error {
 	return nil
 }
 

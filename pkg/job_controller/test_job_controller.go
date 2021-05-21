@@ -74,6 +74,10 @@ func (t *TestJobController) GetJobFromAPIClient(namespace, name string) (v1.Obje
 	return t.job, nil
 }
 
+func (t TestJobController) CreatePod(job interface{}, pod *corev1.Pod) error {
+	return nil
+}
+
 func (t *TestJobController) DeleteJob(job interface{}) error {
 	log.Info("Delete job")
 	t.job = nil
@@ -102,10 +106,6 @@ func (t *TestJobController) DeleteService(job interface{}, name string, namespac
 		}
 	}
 	t.services = remainingServices
-	return nil
-}
-
-func (t *TestJobController) CreatePod(job interface{}, pod *corev1.Pod) error {
 	return nil
 }
 

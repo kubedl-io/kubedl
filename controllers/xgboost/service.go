@@ -30,21 +30,6 @@ import (
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
 
-// CreateService creates the service
-func (r *XgboostJobReconciler) CreateService(job interface{}, service *corev1.Service) error {
-	xgboostjob, ok := job.(*v1alpha1.XGBoostJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of XGBoostJob", xgboostjob)
-	}
-
-	logrus.Info("Creating service ", " Controller name ", xgboostjob.GetName(), " Service name ", service.Namespace+"/"+service.Name)
-
-	if err := r.Create(context.Background(), service); err != nil {
-		logrus.Warnf("Create service error %s", xgboostjob.Name)
-	}
-	return nil
-}
-
 // DeleteService deletes the service
 func (r *XgboostJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
 	xgboostjob, ok := job.(*v1alpha1.XGBoostJob)

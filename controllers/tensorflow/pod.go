@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/pkg/controller"
@@ -65,11 +64,6 @@ func (r *TFJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error) 
 	return cm.ClaimPods(pods)
 }
 
-// CreatePod creates the pod
-func (r *TFJobReconciler) CreatePod(job interface{}, pod *corev1.Pod) error {
-	return r.Create(context.Background(), pod)
-}
-
 // DeletePod deletes the pod
 func (r *TFJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 	tfJob, ok := job.(*training.TFJob)
@@ -77,11 +71,6 @@ func (r *TFJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 		return fmt.Errorf("%+v is not a type of TFJob", job)
 	}
 
-	log.Info("Deleting pod", "controller name", tfJob.GetName(), "pod name", pod.Namespace+"/"+pod.Name)
-	if err := r.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
-		r.recorder.Eventf(tfJob, corev1.EventTypeWarning, job_controller.FailedDeletePodReason, "Error deleting: %v", err)
-		return err
-	}
-	r.recorder.Eventf(tfJob, corev1.EventTypeNormal, job_controller.SuccessfulDeletePodReason, "Deleted pod: %v", pod.Name)
+	r.ctrl.BroadcastDeletePod(tfJob, pod)
 	return nil
 }

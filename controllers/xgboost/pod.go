@@ -35,22 +35,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// CreatePod creates the pod
-func (r *XgboostJobReconciler) CreatePod(job interface{}, pod *corev1.Pod) error {
-	xgboostjob, ok := job.(*v1alpha1.XGBoostJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of XGBoostJob", xgboostjob)
-	}
-
-	logrus.Info("Creating pod ", " Controller name : ", xgboostjob.GetName(), " Pod name: ", pod.Namespace+"/"+pod.Name)
-
-	if err := r.Create(context.Background(), pod); err != nil {
-		log.Info("Error building a pod via XGBoost operator: %s", err.Error())
-		return err
-	}
-	return nil
-}
-
 // DeletePod deletes the pod
 func (r *XgboostJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 	xgboostjob, ok := job.(*v1alpha1.XGBoostJob)

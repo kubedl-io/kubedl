@@ -252,6 +252,11 @@ func (jc *JobController) GetPortFromJob(spec *apiv1.ReplicaSpec) (int32, error) 
 	return -1, fmt.Errorf("failed to find the port")
 }
 
+// CreateService creates the service
+func (jc *JobController) CreateService(job interface{}, service *v1.Service) error {
+	return jc.Client.Create(context.Background(), service)
+}
+
 // createNewService creates a new service for the given index and type.
 func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object, rtype apiv1.ReplicaType,
 	spec *apiv1.ReplicaSpec, index string) error {
@@ -356,7 +361,7 @@ func (jc *JobController) createServices(namespace string, service *v1.Service, o
 	}
 	serviceWithOwner.Namespace = namespace
 
-	err = jc.Controller.CreateService(object, serviceWithOwner)
+	err = jc.CreateService(object, serviceWithOwner)
 	if err != nil {
 		jc.Recorder.Eventf(object, v1.EventTypeWarning, FailedCreateServiceReason, "Error creating: %v", err)
 		return fmt.Errorf("unable to create services: %v", err)
@@ -370,5 +375,17 @@ func (jc *JobController) createServices(namespace string, service *v1.Service, o
 	log.Infof("Controller %v created service %v", accessor.GetName(), serviceWithOwner.Name)
 	jc.Recorder.Eventf(object, v1.EventTypeNormal, SuccessfulCreateServiceReason, "Created service: %v", serviceWithOwner.Name)
 
+	return nil
+}
+
+func (jc *JobController) BroadcastDeleteService(job runtime.Object, name string, namespace string) error {
+
+	service := &v1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}}
+	log.Info("Deleting service", "controller name", jc.Controller.ControllerName(), "service name", namespace+"/"+name)
+	if err := jc.Client.Delete(context.Background(), service); err != nil && !errors.IsNotFound(err) {
+		jc.Recorder.Eventf(job, v1.EventTypeWarning, FailedDeleteServiceReason, "Error deleting: %v", err)
+		return fmt.Errorf("unable to delete service: %v", err)
+	}
+	jc.Recorder.Eventf(job, v1.EventTypeNormal, SuccessfulDeleteServiceReason, "Deleted service: %v", name)
 	return nil
 }
