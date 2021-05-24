@@ -71,6 +71,6 @@ func (r *TFJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 		return fmt.Errorf("%+v is not a type of TFJob", job)
 	}
 
-	r.ctrl.BroadcastDeletePod(tfJob, pod)
+	r.ctrl.DeletePod(tfJob, pod)
 	return nil
 }

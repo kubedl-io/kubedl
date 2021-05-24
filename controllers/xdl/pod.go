@@ -72,6 +72,6 @@ func (r *XDLJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 		return fmt.Errorf("%+v is not a type of XDLJob", job)
 	}
 
-	r.ctrl.BroadcastDeletePod(xdlJob, pod)
+	r.ctrl.DeletePod(xdlJob, pod)
 	return nil
 }

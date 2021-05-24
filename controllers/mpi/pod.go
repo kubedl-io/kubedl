@@ -91,6 +91,6 @@ func (r *MPIJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 		return fmt.Errorf("%+v is not type of MPIJob", job)
 	}
 
-	r.ctrl.BroadcastDeletePod(mpiJob, pod)
+	r.ctrl.DeletePod(mpiJob, pod)
 	return nil
 }

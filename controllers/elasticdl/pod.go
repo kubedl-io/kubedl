@@ -72,6 +72,6 @@ func (r *ElasticDLJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) err
 		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
 	}
 
-	r.ctrl.BroadcastDeletePod(elasticdlJob, pod)
+	r.ctrl.DeletePod(elasticdlJob, pod)
 	return nil
 }
