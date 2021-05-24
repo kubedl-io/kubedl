@@ -318,11 +318,6 @@ func (jc *JobController) ReconcilePods(
 	return nil
 }
 
-// CreatePod creates the pod
-func (jc *JobController) CreatePod(job interface{}, pod *v1.Pod) error {
-	return jc.Client.Create(context.Background(), pod)
-}
-
 // createNewPod creates a new pod for the given index and type.
 func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, index string, spec *apiv1.ReplicaSpec, masterRole bool,
 	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
@@ -453,7 +448,7 @@ func (jc *JobController) createPod(nodeName, namespace string, template *v1.PodT
 	if labels.Set(pod.Labels).AsSelectorPreValidated().Empty() {
 		return fmt.Errorf("unable to create pods, no labels")
 	}
-	if err := jc.CreatePod(object, pod); err != nil {
+	if err := jc.Client.Create(context.Background(), pod); err != nil {
 		jc.Recorder.Eventf(object, v1.EventTypeWarning, FailedCreatePodReason, "Error creating: %v", err)
 		return err
 	} else {

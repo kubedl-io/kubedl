@@ -68,6 +68,6 @@ func (r *MarsJobReconciler) DeleteService(job interface{}, name string, namespac
 		return fmt.Errorf("%+v is not a type of MarsJob", job)
 	}
 
-	r.ctrl.BroadcastDeleteService(marsJob, name, namespace)
+	r.ctrl.DeleteService(marsJob, name, namespace)
 	return nil
 }

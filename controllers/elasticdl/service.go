@@ -36,6 +36,6 @@ func (r *ElasticDLJobReconciler) DeleteService(job interface{}, name string, nam
 		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
 	}
 
-	r.ctrl.BroadcastDeleteService(elasticdlJob, name, namespace)
+	r.ctrl.DeleteService(elasticdlJob, name, namespace)
 	return nil
 }

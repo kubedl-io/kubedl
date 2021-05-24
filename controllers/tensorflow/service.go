@@ -71,6 +71,6 @@ func (r *TFJobReconciler) DeleteService(job interface{}, name string, namespace 
 		return fmt.Errorf("%+v is not a type of TFJob", job)
 	}
 
-	r.ctrl.BroadcastDeleteService(tfJob, name, namespace)
+	r.ctrl.DeleteService(tfJob, name, namespace)
 	return nil
 }

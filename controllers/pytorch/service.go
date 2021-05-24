@@ -71,6 +71,6 @@ func (r *PytorchJobReconciler) DeleteService(job interface{}, name string, names
 		return fmt.Errorf("%+v is not a type of PytorchJob", job)
 	}
 
-	r.ctrl.BroadcastDeleteService(pytorchJob, name, namespace)
+	r.ctrl.DeleteService(pytorchJob, name, namespace)
 	return nil
 }

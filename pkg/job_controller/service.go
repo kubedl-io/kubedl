@@ -378,7 +378,7 @@ func (jc *JobController) createServices(namespace string, service *v1.Service, o
 	return nil
 }
 
-func (jc *JobController) BroadcastDeleteService(job runtime.Object, name string, namespace string) error {
+func (jc *JobController) DeleteService(job runtime.Object, name string, namespace string) error {
 
 	service := &v1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}}
 	log.Info("Deleting service", "controller name", jc.Controller.ControllerName(), "service name", namespace+"/"+name)

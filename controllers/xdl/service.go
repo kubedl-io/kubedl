@@ -71,6 +71,6 @@ func (r *XDLJobReconciler) DeleteService(job interface{}, name string, namespace
 		return fmt.Errorf("%+v is not a type of XDLJob", job)
 	}
 
-	r.ctrl.BroadcastDeleteService(xdlJob, name, namespace)
+	r.ctrl.DeleteService(xdlJob, name, namespace)
 	return nil
 }
