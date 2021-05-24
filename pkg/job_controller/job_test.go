@@ -8,6 +8,7 @@ import (
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/test_job/v1"
+	utilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,6 +47,7 @@ func TestDeletePodsAndServices(T *testing.T) {
 		succeededPodService := newService("succeededPod")
 		allServices := []*corev1.Service{runningPodService, succeededPodService}
 
+		TestJob := utilv1.NewTestJob(2)
 		testJobController := v1.TestJobController{
 			Pods:     allPods,
 			Services: allServices,
@@ -54,12 +56,44 @@ func TestDeletePodsAndServices(T *testing.T) {
 		mainJobController := JobController{
 			Controller: &testJobController,
 		}
+
 		runPolicy := apiv1.RunPolicy{
 			CleanPodPolicy: &tc.cleanPodPolicy,
 		}
 
-		var job interface{}
-		err := mainJobController.deletePodsAndServices(&runPolicy, job, allPods)
+		//var job = v1.TestJob{
+		//	TypeMeta: metav1.TypeMeta{
+		//		Kind: v1.Kind,
+		//	},
+		//	ObjectMeta: metav1.ObjectMeta{
+		//		Name:      "test-job",
+		//		Namespace: metav1.NamespaceDefault,
+		//	},
+		//	Spec: v1.TestJobSpec{
+		//		TestReplicaSpecs: make(map[apiv1.ReplicaType]*apiv1.ReplicaSpec),
+		//	},
+		//}
+		//var worker = 2
+		//if worker > 0 {
+		//	worker := int32(worker)
+		//	workerReplicaSpec := &apiv1.ReplicaSpec{
+		//		Replicas: &worker,
+		//		Template: utilv1.NewTestReplicaSpecTemplate(),
+		//	}
+		//	job.Spec.TestReplicaSpecs[v1.TestReplicaTypeWorker] = workerReplicaSpec
+		//}
+		////var job = utilv1.NewTestJob(2)
+		//// job, ok := job.(runtime.Object)
+		//type InternalSimple interface {
+		//	GetObjectKind() schema.ObjectKind
+		//	DeepCopyObject() runtime.Object
+		//}
+		//type TestJob struct {}
+		//func (t *TestJob) GetObjectKind() schema.ObjectKind {}
+		//func (t *TestJob) DeepCopyObject() runtime.Object {}
+		//var _ InternalSimple = &TestJob{}
+		//testjob := runtime.Object(TestJob)
+		err := mainJobController.deletePodsAndServices(&runPolicy, TestJob, allPods)
 
 		if assert.NoError(T, err) {
 			if tc.deleteRunningPodAndService {

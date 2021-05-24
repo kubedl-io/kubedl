@@ -17,9 +17,6 @@ limitations under the License.
 package elasticdl
 
 import (
-	"fmt"
-
-	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -27,15 +24,4 @@ import (
 // i.e. all services created by the job will come with label "job-name" = <this_job_name>
 func (r *ElasticDLJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Service, error) {
 	return []*corev1.Service{}, nil
-}
-
-// DeleteService deletes the service
-func (r *ElasticDLJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	elasticdlJob, ok := job.(*training.ElasticDLJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
-	}
-
-	r.ctrl.DeleteService(elasticdlJob, name, namespace)
-	return nil
 }

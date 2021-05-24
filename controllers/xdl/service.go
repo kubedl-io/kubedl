@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )
@@ -62,15 +61,4 @@ func (r *XDLJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Service
 	})
 	cm := job_controller.NewServiceControllerRefManager(job_controller.NewServiceControl(r.Client, r.recorder), job, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimServices(services)
-}
-
-// DeleteService deletes the service
-func (r *XDLJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	xdlJob, ok := job.(*xdlv1alpha1.XDLJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of XDLJob", job)
-	}
-
-	r.ctrl.DeleteService(xdlJob, name, namespace)
-	return nil
 }

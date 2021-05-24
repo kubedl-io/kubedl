@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )
@@ -62,15 +61,4 @@ func (r *PytorchJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Ser
 	})
 	cm := job_controller.NewServiceControllerRefManager(job_controller.NewServiceControl(r.Client, r.recorder), job, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimServices(services)
-}
-
-// DeleteService deletes the service
-func (r *PytorchJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	pytorchJob, ok := job.(*training.PyTorchJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of PytorchJob", job)
-	}
-
-	r.ctrl.DeleteService(pytorchJob, name, namespace)
-	return nil
 }

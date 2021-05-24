@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -60,14 +59,4 @@ func (r *MarsJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error
 	})
 	cm := controller.NewPodControllerRefManager(job_controller.NewPodControl(r.Client, r.recorder), job, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimPods(pods)
-}
-
-func (r *MarsJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
-	marsJob, ok := job.(*v1alpha1.MarsJob)
-	if !ok {
-		return fmt.Errorf("%+v is not type of MarsJob", job)
-	}
-
-	r.ctrl.DeletePod(marsJob, pod)
-	return nil
 }

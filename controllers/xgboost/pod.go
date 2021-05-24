@@ -32,26 +32,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/util"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
-	"github.com/sirupsen/logrus"
 )
-
-// DeletePod deletes the pod
-func (r *XgboostJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
-	xgboostjob, ok := job.(*v1alpha1.XGBoostJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of XGBoostJob", xgboostjob)
-	}
-
-	if err := r.Delete(context.Background(), pod); err != nil {
-		r.recorder.Eventf(xgboostjob, corev1.EventTypeWarning, job_controller.FailedDeletePodReason, "Error deleting: %v", err)
-		return err
-	}
-	r.recorder.Eventf(xgboostjob, corev1.EventTypeNormal, job_controller.SuccessfulDeletePodReason, "Deleted pod: %v", pod.Name)
-
-	logrus.Info("Controller: ", xgboostjob.GetName(), " delete pod: ", pod.Namespace+"/"+pod.Name)
-
-	return nil
-}
 
 // GetPodsForJob returns the pods managed by the job. This can be achieved by selecting pods using label key "job-name"
 // i.e. all pods created by the job will come with label "job-name" = <this_job_name>

@@ -19,43 +19,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
-
-// DeleteService deletes the service
-func (r *XgboostJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	xgboostjob, ok := job.(*v1alpha1.XGBoostJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of XGBoostJob", xgboostjob)
-	}
-
-	service := &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}}
-
-	logrus.Info("Deleting service ", " Controller name ", xgboostjob.GetName(), " Service name ", service.Namespace+"/"+service.Name)
-
-	if err := r.Delete(context.Background(), service); err != nil {
-		if commonutil.IsSucceeded(xgboostjob.Status.JobStatus) {
-			r.recorder.Eventf(xgboostjob, corev1.EventTypeNormal, job_controller.SuccessfulDeleteServiceReason, "Deleted service: %v", name)
-			return nil
-		}
-
-		r.recorder.Eventf(xgboostjob, corev1.EventTypeWarning, job_controller.FailedDeleteServiceReason, "Error deleting: %v", err)
-		return fmt.Errorf("unable to delete service: %v", err)
-	}
-
-	r.recorder.Eventf(xgboostjob, corev1.EventTypeNormal, job_controller.SuccessfulDeleteServiceReason, "Deleted service: %v", name)
-
-	return nil
-
-}
 
 // GetServicesForJob returns the services managed by the job. This can be achieved by selecting services using label key "job-name"
 // i.e. all services created by the job will come with label "job-name" = <this_job_name>

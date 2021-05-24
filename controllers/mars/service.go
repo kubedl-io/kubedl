@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 
@@ -60,14 +59,4 @@ func (r *MarsJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Servic
 	})
 	cm := job_controller.NewServiceControllerRefManager(job_controller.NewServiceControl(r.Client, r.recorder), job, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimServices(services)
-}
-
-func (r *MarsJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	marsJob, ok := job.(*v1alpha1.MarsJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of MarsJob", job)
-	}
-
-	r.ctrl.DeleteService(marsJob, name, namespace)
-	return nil
 }

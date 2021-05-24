@@ -84,13 +84,3 @@ func (r *MPIJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error)
 	cm := controller.NewPodControllerRefManager(job_controller.NewPodControl(r.Client, r.recorder), mpiJob, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimPods(pods)
 }
-
-func (r *MPIJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
-	mpiJob, ok := job.(*mpiv1.MPIJob)
-	if !ok {
-		return fmt.Errorf("%+v is not type of MPIJob", job)
-	}
-
-	r.ctrl.DeletePod(mpiJob, pod)
-	return nil
-}

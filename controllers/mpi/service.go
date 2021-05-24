@@ -23,7 +23,3 @@ import corev1 "k8s.io/api/core/v1"
 func (r *MPIJobReconciler) GetServicesForJob(job interface{}) ([]*corev1.Service, error) {
 	return nil, nil
 }
-
-func (r *MPIJobReconciler) DeleteService(job interface{}, name string, namespace string) error {
-	return nil
-}

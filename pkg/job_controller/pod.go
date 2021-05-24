@@ -38,6 +38,8 @@ import (
 	trainutil "github.com/alibaba/kubedl/pkg/util/train"
 	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
+
+	"k8s.io/klog"
 )
 
 const (
@@ -305,7 +307,11 @@ func (jc *JobController) ReconcilePods(
 			if spec.RestartPolicy == apiv1.RestartPolicyExitCode {
 				if pod.Status.Phase == v1.PodFailed && trainutil.IsRetryableExitCode(exitCode) {
 					logger.Infof("Need to restart the pod: %v.%v", pod.Namespace, pod.Name)
-					if err := jc.Controller.DeletePod(job, pod); err != nil {
+					job, ok := job.(runtime.Object)
+					if !ok {
+						return fmt.Errorf("%+v is not a job", job)
+					}
+					if err := jc.DeletePod(job, pod); err != nil {
 						return err
 					}
 					*restart = true
@@ -492,7 +498,12 @@ func setRestartPolicy(podTemplateSpec *v1.PodTemplateSpec, spec *apiv1.ReplicaSp
 
 func (jc *JobController) DeletePod(job runtime.Object, pod *v1.Pod) error {
 	log.Info("Deleting pod", "controller name", jc.Controller.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
-	if err := jc.Client.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
+	klog.Infof("Content of contextBackground %+v",
+		context.Background())
+	klog.Infof("Address of pod %+v, the content %+v",
+		&pod, pod)
+	err := jc.Client.Delete(context.Background(), pod)
+	if err != nil && !errors.IsNotFound(err) {
 		jc.Recorder.Eventf(job, v1.EventTypeWarning, FailedDeletePodReason, "Error deleting: %v", err)
 		return err
 	}

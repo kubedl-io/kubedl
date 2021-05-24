@@ -26,7 +26,6 @@ import (
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
 )
@@ -63,15 +62,4 @@ func (r *ElasticDLJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, 
 	})
 	cm := controller.NewPodControllerRefManager(job_controller.NewPodControl(r.Client, r.recorder), job, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimPods(pods)
-}
-
-// DeletePod deletes the pod
-func (r *ElasticDLJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
-	elasticdlJob, ok := job.(*training.ElasticDLJob)
-	if !ok {
-		return fmt.Errorf("%+v is not a type of ElasticDLJob", job)
-	}
-
-	r.ctrl.DeletePod(elasticdlJob, pod)
-	return nil
 }
