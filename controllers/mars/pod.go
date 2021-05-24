@@ -68,6 +68,6 @@ func (r *MarsJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
 		return fmt.Errorf("%+v is not type of MarsJob", job)
 	}
 
-	r.ctrl.BroadcastDeletePod(marsJob, pod)
+	r.ctrl.DeletePod(marsJob, pod)
 	return nil
 }

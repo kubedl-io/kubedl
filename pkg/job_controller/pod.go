@@ -384,11 +384,11 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		}
 	}
 
-	return jc.CreateCommonPod(job, rt, index, podTemplate, masterRole)
+	return jc.CreatePodReplica(job, rt, index, podTemplate, masterRole)
 }
 
-// CreateCommonPod creates a new common pod for the given index and type.
-func (jc *JobController) CreateCommonPod(job interface{}, rt, index string, podTemplate *v1.PodTemplateSpec, masterRole bool) error {
+// CreatePodReplica creates a new common pod for the given index and type.
+func (jc *JobController) CreatePodReplica(job interface{}, rt, index string, podTemplate *v1.PodTemplateSpec, masterRole bool) error {
 	metaObject, ok := job.(metav1.Object)
 	if !ok {
 		return fmt.Errorf("job is not a metav1.Object type")
@@ -495,7 +495,7 @@ func setRestartPolicy(podTemplateSpec *v1.PodTemplateSpec, spec *apiv1.ReplicaSp
 	}
 }
 
-func (jc *JobController) BroadcastDeletePod(job runtime.Object, pod *v1.Pod) error {
+func (jc *JobController) DeletePod(job runtime.Object, pod *v1.Pod) error {
 	log.Info("Deleting pod", "controller name", jc.Controller.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
 	if err := jc.Client.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
 		jc.Recorder.Eventf(job, v1.EventTypeWarning, FailedDeletePodReason, "Error deleting: %v", err)

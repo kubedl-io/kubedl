@@ -220,7 +220,7 @@ func syncPod(jc job_controller.JobController, c client.Client, metaObj metav1.Ob
 		}
 	}
 
-	if err := jc.CreateCommonPod(metaObj, tbRT, index, template, false); err != nil {
+	if err := jc.CreatePodReplica(metaObj, tbRT, index, template, false); err != nil {
 		return err
 	}
 

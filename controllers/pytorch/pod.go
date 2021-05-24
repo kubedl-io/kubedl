@@ -72,6 +72,6 @@ func (r *PytorchJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error
 		return fmt.Errorf("%+v is not a type of PytorchJob", job)
 	}
 
-	r.ctrl.BroadcastDeletePod(pytorchJob, pod)
+	r.ctrl.DeletePod(pytorchJob, pod)
 	return nil
 }
