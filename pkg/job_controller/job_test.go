@@ -1,6 +1,11 @@
 package job_controller
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
 	"strconv"
 	"testing"
 	"time"
@@ -8,7 +13,6 @@ import (
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/test_job/v1"
-	utilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,52 +51,89 @@ func TestDeletePodsAndServices(T *testing.T) {
 		succeededPodService := newService("succeededPod")
 		allServices := []*corev1.Service{runningPodService, succeededPodService}
 
-		TestJob := utilv1.NewTestJob(2)
+		worker := 2
+		TestJob := &v1.TestJob{
+			TypeMeta: metav1.TypeMeta{
+				Kind: v1.Kind,
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-job",
+				Namespace: metav1.NamespaceDefault,
+			},
+			Spec: v1.TestJobSpec{
+				TestReplicaSpecs: make(map[apiv1.ReplicaType]*apiv1.ReplicaSpec),
+			},
+		}
+
+		if worker > 0 {
+			worker := int32(worker)
+			workerReplicaSpec := &apiv1.ReplicaSpec{
+				Replicas: &worker,
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							corev1.Container{
+								Name:  v1.DefaultContainerName,
+								Image: "test-image-for-pkg:latest",
+								Args:  []string{"Fake", "Fake"},
+								Ports: []corev1.ContainerPort{
+									corev1.ContainerPort{
+										Name:          v1.DefaultPortName,
+										ContainerPort: v1.DefaultPort,
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			TestJob.Spec.TestReplicaSpecs[v1.TestReplicaTypeWorker] = workerReplicaSpec
+		}
 		testJobController := v1.TestJobController{
 			Pods:     allPods,
 			Services: allServices,
 		}
 
+		klog.Infof("TestJob: %v", TestJob)
+		//expected := &v1.TestJob{
+		//	TypeMeta: metav1.TypeMeta{
+		//		Kind:       v1.Kind,
+		//		APIVersion: "training.kubedl.io/v1alpha1",
+		//	},
+		//	ObjectMeta: metav1.ObjectMeta{
+		//		Name:            "foo",
+		//		Namespace:       "default",
+		//		ResourceVersion: "1",
+		//	},
+		//	Spec: v1.TestJobSpec{
+		//		TestReplicaSpecs: make(map[apiv1.ReplicaType]*apiv1.ReplicaSpec),
+		//	},
+		//	Status: apiv1.JobStatus{
+		//		ReplicaStatuses: map[apiv1.ReplicaType]*apiv1.ReplicaStatus{},
+		//	},
+		//}
+		//var _ runtime.Object = &v1.TestJob{}
+		//TestJob = expected.(runtime.Object)
+		//scheme.Scheme.Default(expected)
+		//scheme := runtime.NewScheme()
+		//scheme.
+
+		scheme := runtime.NewScheme()
+		//_ = apis.AddToScheme(scheme)
+		_ = corev1.AddToScheme(scheme)
+		_ = v1.AddToScheme(scheme)
+
+		eventBroadcaster := record.NewBroadcaster()
 		mainJobController := JobController{
 			Controller: &testJobController,
+			Recorder:   eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
+			Client:     fake.NewFakeClientWithScheme(scheme, TestJob),
 		}
 
 		runPolicy := apiv1.RunPolicy{
 			CleanPodPolicy: &tc.cleanPodPolicy,
 		}
 
-		//var job = v1.TestJob{
-		//	TypeMeta: metav1.TypeMeta{
-		//		Kind: v1.Kind,
-		//	},
-		//	ObjectMeta: metav1.ObjectMeta{
-		//		Name:      "test-job",
-		//		Namespace: metav1.NamespaceDefault,
-		//	},
-		//	Spec: v1.TestJobSpec{
-		//		TestReplicaSpecs: make(map[apiv1.ReplicaType]*apiv1.ReplicaSpec),
-		//	},
-		//}
-		//var worker = 2
-		//if worker > 0 {
-		//	worker := int32(worker)
-		//	workerReplicaSpec := &apiv1.ReplicaSpec{
-		//		Replicas: &worker,
-		//		Template: utilv1.NewTestReplicaSpecTemplate(),
-		//	}
-		//	job.Spec.TestReplicaSpecs[v1.TestReplicaTypeWorker] = workerReplicaSpec
-		//}
-		////var job = utilv1.NewTestJob(2)
-		//// job, ok := job.(runtime.Object)
-		//type InternalSimple interface {
-		//	GetObjectKind() schema.ObjectKind
-		//	DeepCopyObject() runtime.Object
-		//}
-		//type TestJob struct {}
-		//func (t *TestJob) GetObjectKind() schema.ObjectKind {}
-		//func (t *TestJob) DeepCopyObject() runtime.Object {}
-		//var _ InternalSimple = &TestJob{}
-		//testjob := runtime.Object(TestJob)
 		err := mainJobController.deletePodsAndServices(&runPolicy, TestJob, allPods)
 
 		if assert.NoError(T, err) {

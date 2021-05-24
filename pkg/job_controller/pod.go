@@ -38,8 +38,6 @@ import (
 	trainutil "github.com/alibaba/kubedl/pkg/util/train"
 	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
-
-	"k8s.io/klog"
 )
 
 const (
@@ -496,17 +494,24 @@ func setRestartPolicy(podTemplateSpec *v1.PodTemplateSpec, spec *apiv1.ReplicaSp
 	}
 }
 
+func newPodt(name string, phase v1.PodPhase) *v1.Pod {
+	pod := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Status: v1.PodStatus{
+			Phase: phase,
+		},
+	}
+	return pod
+}
+
 func (jc *JobController) DeletePod(job runtime.Object, pod *v1.Pod) error {
 	log.Info("Deleting pod", "controller name", jc.Controller.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
-	klog.Infof("Content of contextBackground %+v",
-		context.Background())
-	klog.Infof("Address of pod %+v, the content %+v",
-		&pod, pod)
-	err := jc.Client.Delete(context.Background(), pod)
-	if err != nil && !errors.IsNotFound(err) {
+	if err := jc.Client.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
 		jc.Recorder.Eventf(job, v1.EventTypeWarning, FailedDeletePodReason, "Error deleting: %v", err)
 		return err
 	}
-	jc.Recorder.Eventf(job, v1.EventTypeNormal, SuccessfulDeletePodReason, "Deleted pod: %v", pod.Name)
+	jc.Recorder.Eventf(job, v1.EventTypeNormal, SuccessfulDeletePodReason, "Deleted pod: ") //%v",  pod.Name)
 	return nil
 }
