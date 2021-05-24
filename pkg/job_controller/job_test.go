@@ -1,9 +1,9 @@
 package job_controller
 
 import (
+	"context"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"strconv"
@@ -94,7 +94,7 @@ func TestDeletePodsAndServices(T *testing.T) {
 			Services: allServices,
 		}
 
-		klog.Infof("TestJob: %v", TestJob)
+		//klog.Infof("TestJob: %v", TestJob)
 		//expected := &v1.TestJob{
 		//	TypeMeta: metav1.TypeMeta{
 		//		Kind:       v1.Kind,
@@ -139,22 +139,38 @@ func TestDeletePodsAndServices(T *testing.T) {
 		if assert.NoError(T, err) {
 			if tc.deleteRunningPodAndService {
 				// should delete the running pod and its service
-				assert.NotContains(T, testJobController.Pods, runningPod)
-				assert.NotContains(T, testJobController.Services, runningPodService)
+				var podList = corev1.PodList{}
+				mainJobController.Client.List(context.Background(), &podList)
+				assert.NotContains(T, podList.Items, runningPod)
+				var serviceList = corev1.ServiceList{}
+				mainJobController.Client.List(context.Background(), &serviceList)
+				assert.NotContains(T, serviceList.Items, runningPodService)
 			} else {
 				// should NOT delete the running pod and its service
-				assert.Contains(T, testJobController.Pods, runningPod)
-				assert.Contains(T, testJobController.Services, runningPodService)
+				var podList = corev1.PodList{}
+				mainJobController.Client.List(context.Background(), &podList)
+				assert.Contains(T, podList.Items, runningPod)
+				var serviceList = corev1.ServiceList{}
+				mainJobController.Client.List(context.Background(), &serviceList)
+				assert.Contains(T, serviceList.Items, runningPodService)
 			}
 
 			if tc.deleteSucceededPodAndService {
 				// should delete the SUCCEEDED pod and its service
-				assert.NotContains(T, testJobController.Pods, succeededPod)
-				assert.NotContains(T, testJobController.Services, succeededPodService)
+				var podList = corev1.PodList{}
+				mainJobController.Client.List(context.Background(), &podList)
+				assert.NotContains(T, podList.Items, succeededPod)
+				var serviceList = corev1.ServiceList{}
+				mainJobController.Client.List(context.Background(), &serviceList)
+				assert.NotContains(T, serviceList.Items, succeededPodService)
 			} else {
 				// should NOT delete the SUCCEEDED pod and its service
-				assert.Contains(T, testJobController.Pods, succeededPod)
-				assert.Contains(T, testJobController.Services, succeededPodService)
+				var podList = corev1.PodList{}
+				mainJobController.Client.List(context.Background(), &podList)
+				assert.Contains(T, podList.Items, succeededPod)
+				var serviceList = corev1.ServiceList{}
+				mainJobController.Client.List(context.Background(), &serviceList)
+				assert.Contains(T, serviceList.Items, succeededPodService)
 			}
 		}
 	}
