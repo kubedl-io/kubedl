@@ -90,6 +90,7 @@ func TestDeletePodsAndServices(T *testing.T) {
 			TestJob.Spec.TestReplicaSpecs[v1.TestReplicaTypeWorker] = workerReplicaSpec
 		}
 		testJobController := v1.TestJobController{
+			Job: TestJob,
 			Pods:     allPods,
 			Services: allServices,
 		}
@@ -155,7 +156,8 @@ func TestDeletePodsAndServices(T *testing.T) {
 			} else {
 				// should NOT delete the SUCCEEDED pod and its service
 				var podList = corev1.PodList{}
-				mainJobController.Client.List(context.Background(), &podList)
+				err:=mainJobController.Client.List(context.Background(), &podList)
+				assert.NoError(T, err)
 				PodList, _ := mainJobController.Controller.GetPodsForJob(TestJob)
 				_ = PodList
 				assert.Contains(T, podList.Items, succeededPod)
