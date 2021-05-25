@@ -47,15 +47,15 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 		if *runPolicy.CleanPodPolicy == apiv1.CleanPodPolicyRunning && pod.Status.Phase != v1.PodRunning {
 			continue
 		}
-		job, ok := job.(runtime.Object)
+		runtimeJob, ok := job.(runtime.Object)
 		if !ok {
-			return fmt.Errorf("%+v is not a job", job)
+			return fmt.Errorf("%+v is not a runtime job", runtimeJob)
 		}
-		if err := jc.DeletePod(job, pod); err != nil {
+		if err := jc.DeletePod(runtimeJob, pod); err != nil {
 			return err
 		}
 		// Pod and service have the same name, thus the service could be deleted using pod's name.
-		if err := jc.DeleteService(job, pod.Name, pod.Namespace); err != nil {
+		if err := jc.DeleteService(runtimeJob, pod.Name, pod.Namespace); err != nil {
 			return err
 		}
 	}

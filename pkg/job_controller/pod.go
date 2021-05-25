@@ -305,11 +305,11 @@ func (jc *JobController) ReconcilePods(
 			if spec.RestartPolicy == apiv1.RestartPolicyExitCode {
 				if pod.Status.Phase == v1.PodFailed && trainutil.IsRetryableExitCode(exitCode) {
 					logger.Infof("Need to restart the pod: %v.%v", pod.Namespace, pod.Name)
-					job, ok := job.(runtime.Object)
+					runtimeJob, ok := job.(runtime.Object)
 					if !ok {
-						return fmt.Errorf("%+v is not a job", job)
+						return fmt.Errorf("%+v is not a runtime job", runtimeJob)
 					}
-					if err := jc.DeletePod(job, pod); err != nil {
+					if err := jc.DeletePod(runtimeJob, pod); err != nil {
 						return err
 					}
 					*restart = true
