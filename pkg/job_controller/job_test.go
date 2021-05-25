@@ -49,7 +49,7 @@ func TestDeletePodsAndServices(T *testing.T) {
 		allPods := []*corev1.Pod{runningPod, succeededPod}
 		runningPodService := newService("runningPod")
 		succeededPodService := newService("succeededPod")
-		allServices := []*corev1.Service{runningPodService, succeededPodService}
+		// allServices := []*corev1.Service{runningPodService, succeededPodService}
 
 		worker := 2
 		TestJob := &v1.TestJob{
@@ -91,8 +91,8 @@ func TestDeletePodsAndServices(T *testing.T) {
 		}
 		testJobController := v1.TestJobController{
 			Job: TestJob,
-			Pods:     allPods,
-			Services: allServices,
+			//Pods:     allPods,
+			//Services: allServices,
 		}
 
 		scheme := runtime.NewScheme()
@@ -100,11 +100,17 @@ func TestDeletePodsAndServices(T *testing.T) {
 		_ = corev1.AddToScheme(scheme)
 		_ = v1.AddToScheme(scheme)
 
+		fakeClient := fake.NewFakeClientWithScheme(scheme, TestJob)
+		fakeClient.Create(context.Background(), runningPod)
+		fakeClient.Create(context.Background(), succeededPod)
+		fakeClient.Create(context.Background(), runningPodService)
+		fakeClient.Create(context.Background(), succeededPodService)
+
 		eventBroadcaster := record.NewBroadcaster()
 		mainJobController := JobController{
 			Controller: &testJobController,
 			Recorder:   eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
-			Client:     fake.NewFakeClientWithScheme(scheme, TestJob),
+			Client:     fakeClient,
 		}
 
 		runPolicy := apiv1.RunPolicy{
@@ -129,41 +135,41 @@ func TestDeletePodsAndServices(T *testing.T) {
 				// should delete the running pod and its service
 				var podList = corev1.PodList{}
 				mainJobController.Client.List(context.Background(), &podList)
-				assert.NotContains(T, podList.Items, runningPod)
+				assert.NotContains(T, podList.Items, *runningPod)
 				var serviceList = corev1.ServiceList{}
 				mainJobController.Client.List(context.Background(), &serviceList)
-				assert.NotContains(T, serviceList.Items, runningPodService)
+				assert.NotContains(T, serviceList.Items, *runningPodService)
 			} else {
 				// should NOT delete the running pod and its service
 				var podList = corev1.PodList{}
 				mainJobController.Client.List(context.Background(), &podList)
 				PodList, _ := mainJobController.Controller.GetPodsForJob(TestJob)
 				_ = PodList
-				assert.Contains(T, podList.Items, runningPod)
+				assert.Contains(T, podList.Items, *runningPod)
 				var serviceList = corev1.ServiceList{}
 				mainJobController.Client.List(context.Background(), &serviceList)
-				assert.Contains(T, serviceList.Items, runningPodService)
+				assert.Contains(T, serviceList.Items, *runningPodService)
 			}
 
 			if tc.deleteSucceededPodAndService {
 				// should delete the SUCCEEDED pod and its service
 				var podList = corev1.PodList{}
 				mainJobController.Client.List(context.Background(), &podList)
-				assert.NotContains(T, podList.Items, succeededPod)
+				assert.NotContains(T, podList.Items, *succeededPod)
 				var serviceList = corev1.ServiceList{}
 				mainJobController.Client.List(context.Background(), &serviceList)
-				assert.NotContains(T, serviceList.Items, succeededPodService)
+				assert.NotContains(T, serviceList.Items, *succeededPodService)
 			} else {
 				// should NOT delete the SUCCEEDED pod and its service
 				var podList = corev1.PodList{}
-				err:=mainJobController.Client.List(context.Background(), &podList)
+				err := mainJobController.Client.List(context.Background(), &podList)
 				assert.NoError(T, err)
 				PodList, _ := mainJobController.Controller.GetPodsForJob(TestJob)
 				_ = PodList
-				assert.Contains(T, podList.Items, succeededPod)
+				assert.Contains(T, podList.Items, *succeededPod)
 				var serviceList = corev1.ServiceList{}
 				mainJobController.Client.List(context.Background(), &serviceList)
-				assert.Contains(T, serviceList.Items, succeededPodService)
+				assert.Contains(T, serviceList.Items, *succeededPodService)
 			}
 		}
 	}
