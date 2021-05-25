@@ -494,18 +494,6 @@ func setRestartPolicy(podTemplateSpec *v1.PodTemplateSpec, spec *apiv1.ReplicaSp
 	}
 }
 
-func newPodt(name string, phase v1.PodPhase) *v1.Pod {
-	pod := &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Status: v1.PodStatus{
-			Phase: phase,
-		},
-	}
-	return pod
-}
-
 func (jc *JobController) DeletePod(job runtime.Object, pod *v1.Pod) error {
 	log.Info("Deleting pod", "controller name", jc.Controller.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
 	if err := jc.Client.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
