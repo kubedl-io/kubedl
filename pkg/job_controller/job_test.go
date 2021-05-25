@@ -94,30 +94,6 @@ func TestDeletePodsAndServices(T *testing.T) {
 			Services: allServices,
 		}
 
-		//klog.Infof("TestJob: %v", TestJob)
-		//expected := &v1.TestJob{
-		//	TypeMeta: metav1.TypeMeta{
-		//		Kind:       v1.Kind,
-		//		APIVersion: "training.kubedl.io/v1alpha1",
-		//	},
-		//	ObjectMeta: metav1.ObjectMeta{
-		//		Name:            "foo",
-		//		Namespace:       "default",
-		//		ResourceVersion: "1",
-		//	},
-		//	Spec: v1.TestJobSpec{
-		//		TestReplicaSpecs: make(map[apiv1.ReplicaType]*apiv1.ReplicaSpec),
-		//	},
-		//	Status: apiv1.JobStatus{
-		//		ReplicaStatuses: map[apiv1.ReplicaType]*apiv1.ReplicaStatus{},
-		//	},
-		//}
-		//var _ runtime.Object = &v1.TestJob{}
-		//TestJob = expected.(runtime.Object)
-		//scheme.Scheme.Default(expected)
-		//scheme := runtime.NewScheme()
-		//scheme.
-
 		scheme := runtime.NewScheme()
 		//_ = apis.AddToScheme(scheme)
 		_ = corev1.AddToScheme(scheme)
@@ -134,7 +110,18 @@ func TestDeletePodsAndServices(T *testing.T) {
 			CleanPodPolicy: &tc.cleanPodPolicy,
 		}
 
+		var podList = corev1.PodList{}
+		var serviceList = corev1.ServiceList{}
+		PodList, _ := mainJobController.Controller.GetPodsForJob(v1.TestJob{})
+		_ = PodList
+		mainJobController.Client.List(context.Background(), &serviceList)
+
 		err := mainJobController.deletePodsAndServices(&runPolicy, TestJob, allPods)
+
+		PodList2, _ := mainJobController.Controller.GetPodsForJob(v1.TestJob{})
+		_ = PodList2
+		mainJobController.Client.List(context.Background(), &podList)
+		mainJobController.Client.List(context.Background(), &serviceList)
 
 		if assert.NoError(T, err) {
 			if tc.deleteRunningPodAndService {
@@ -149,6 +136,8 @@ func TestDeletePodsAndServices(T *testing.T) {
 				// should NOT delete the running pod and its service
 				var podList = corev1.PodList{}
 				mainJobController.Client.List(context.Background(), &podList)
+				PodList, _ := mainJobController.Controller.GetPodsForJob(TestJob)
+				_ = PodList
 				assert.Contains(T, podList.Items, runningPod)
 				var serviceList = corev1.ServiceList{}
 				mainJobController.Client.List(context.Background(), &serviceList)
@@ -167,6 +156,8 @@ func TestDeletePodsAndServices(T *testing.T) {
 				// should NOT delete the SUCCEEDED pod and its service
 				var podList = corev1.PodList{}
 				mainJobController.Client.List(context.Background(), &podList)
+				PodList, _ := mainJobController.Controller.GetPodsForJob(TestJob)
+				_ = PodList
 				assert.Contains(T, podList.Items, succeededPod)
 				var serviceList = corev1.ServiceList{}
 				mainJobController.Client.List(context.Background(), &serviceList)
