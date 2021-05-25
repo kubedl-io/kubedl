@@ -2,10 +2,7 @@ package job_controller
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
+	"github.com/alibaba/kubedl/pkg/metrics"
 	"strconv"
 	"testing"
 	"time"
@@ -16,6 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func TestDeletePodsAndServices(T *testing.T) {
@@ -106,11 +106,13 @@ func TestDeletePodsAndServices(T *testing.T) {
 		fakeClient.Create(context.Background(), succeededPodService)
 
 		eventBroadcaster := record.NewBroadcaster()
-		mainJobController := JobController{
-			Controller: &testJobController,
-			Recorder:   eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
-			Client:     fakeClient,
-		}
+		mainJobController := NewJobController(
+			fakeClient,
+			&testJobController,
+			JobControllerConfiguration{},
+			eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
+			&metrics.JobMetrics{},
+		)
 
 		runPolicy := apiv1.RunPolicy{
 			CleanPodPolicy: &tc.cleanPodPolicy,
