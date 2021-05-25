@@ -1,6 +1,8 @@
 package job_controller
 
 import (
+	"context"
+	"github.com/alibaba/kubedl/pkg/metrics"
 	"strconv"
 	"testing"
 	"time"
@@ -11,6 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func TestDeletePodsAndServices(T *testing.T) {
@@ -44,42 +49,104 @@ func TestDeletePodsAndServices(T *testing.T) {
 		allPods := []*corev1.Pod{runningPod, succeededPod}
 		runningPodService := newService("runningPod")
 		succeededPodService := newService("succeededPod")
-		allServices := []*corev1.Service{runningPodService, succeededPodService}
+		worker := 2
+		var podList = corev1.PodList{}
+		var serviceList = corev1.ServiceList{}
+
+		testJob := &v1.TestJob{
+			TypeMeta: metav1.TypeMeta{
+				Kind: v1.Kind,
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-job",
+				Namespace: metav1.NamespaceDefault,
+			},
+			Spec: v1.TestJobSpec{
+				TestReplicaSpecs: make(map[apiv1.ReplicaType]*apiv1.ReplicaSpec),
+			},
+		}
+
+		if worker > 0 {
+			worker := int32(worker)
+			workerReplicaSpec := &apiv1.ReplicaSpec{
+				Replicas: &worker,
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							corev1.Container{
+								Name:  v1.DefaultContainerName,
+								Image: "test-image-for-pkg:latest",
+								Args:  []string{"Fake", "Fake"},
+								Ports: []corev1.ContainerPort{
+									corev1.ContainerPort{
+										Name:          v1.DefaultPortName,
+										ContainerPort: v1.DefaultPort,
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			testJob.Spec.TestReplicaSpecs[v1.TestReplicaTypeWorker] = workerReplicaSpec
+		}
 
 		testJobController := v1.TestJobController{
-			Pods:     allPods,
-			Services: allServices,
+			Job: testJob,
 		}
 
-		mainJobController := JobController{
-			Controller: &testJobController,
-		}
+		scheme := runtime.NewScheme()
+		_ = corev1.AddToScheme(scheme)
+		_ = v1.AddToScheme(scheme)
+
+		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
+		fakeClient.Create(context.Background(), runningPod)
+		fakeClient.Create(context.Background(), succeededPod)
+		fakeClient.Create(context.Background(), runningPodService)
+		fakeClient.Create(context.Background(), succeededPodService)
+
+		eventBroadcaster := record.NewBroadcaster()
+		mainJobController := NewJobController(
+			fakeClient,
+			&testJobController,
+			JobControllerConfiguration{},
+			eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
+			&metrics.JobMetrics{},
+		)
+
 		runPolicy := apiv1.RunPolicy{
 			CleanPodPolicy: &tc.cleanPodPolicy,
 		}
 
-		var job interface{}
-		err := mainJobController.deletePodsAndServices(&runPolicy, job, allPods)
+		err := mainJobController.deletePodsAndServices(&runPolicy, testJob, allPods)
 
 		if assert.NoError(T, err) {
 			if tc.deleteRunningPodAndService {
 				// should delete the running pod and its service
-				assert.NotContains(T, testJobController.Pods, runningPod)
-				assert.NotContains(T, testJobController.Services, runningPodService)
+				mainJobController.Client.List(context.Background(), &podList)
+				mainJobController.Client.List(context.Background(), &serviceList)
+				assert.NotContains(T, podList.Items, *runningPod)
+				assert.NotContains(T, serviceList.Items, *runningPodService)
 			} else {
 				// should NOT delete the running pod and its service
-				assert.Contains(T, testJobController.Pods, runningPod)
-				assert.Contains(T, testJobController.Services, runningPodService)
+				mainJobController.Client.List(context.Background(), &podList)
+				mainJobController.Client.List(context.Background(), &serviceList)
+				assert.Contains(T, podList.Items, *runningPod)
+				assert.Contains(T, serviceList.Items, *runningPodService)
 			}
 
 			if tc.deleteSucceededPodAndService {
 				// should delete the SUCCEEDED pod and its service
-				assert.NotContains(T, testJobController.Pods, succeededPod)
-				assert.NotContains(T, testJobController.Services, succeededPodService)
+				mainJobController.Client.List(context.Background(), &podList)
+				mainJobController.Client.List(context.Background(), &serviceList)
+				assert.NotContains(T, podList.Items, *succeededPod)
+				assert.NotContains(T, serviceList.Items, *succeededPodService)
 			} else {
 				// should NOT delete the SUCCEEDED pod and its service
-				assert.Contains(T, testJobController.Pods, succeededPod)
-				assert.Contains(T, testJobController.Services, succeededPodService)
+				mainJobController.Client.List(context.Background(), &podList)
+				mainJobController.Client.List(context.Background(), &serviceList)
+				assert.Contains(T, podList.Items, *succeededPod)
+				assert.Contains(T, serviceList.Items, *succeededPodService)
 			}
 		}
 	}

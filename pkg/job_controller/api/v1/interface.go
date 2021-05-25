@@ -49,18 +49,6 @@ type ControllerInterface interface {
 	// UpdateJobStatusInApiServer updates the job status in API server
 	UpdateJobStatusInApiServer(job interface{}, jobStatus *JobStatus) error
 
-	// CreateService creates the service
-	CreateService(job interface{}, service *corev1.Service) error
-
-	// DeleteService deletes the service
-	DeleteService(job interface{}, name string, namespace string) error
-
-	// CreatePod creates the pod
-	CreatePod(job interface{}, pod *corev1.Pod) error
-
-	// DeletePod deletes the pod
-	DeletePod(job interface{}, pod *corev1.Pod) error
-
 	// SetClusterSpec sets the cluster spec for the pod
 	SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error
 

@@ -20,11 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	"github.com/alibaba/kubedl/pkg/util"
-	"k8s.io/apimachinery/pkg/api/errors"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,23 +59,4 @@ func (r *MarsJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error
 	})
 	cm := controller.NewPodControllerRefManager(job_controller.NewPodControl(r.Client, r.recorder), job, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimPods(pods)
-}
-
-func (r *MarsJobReconciler) CreatePod(job interface{}, pod *corev1.Pod) error {
-	return r.Create(context.Background(), pod)
-}
-
-func (r *MarsJobReconciler) DeletePod(job interface{}, pod *corev1.Pod) error {
-	marsJob, ok := job.(*v1alpha1.MarsJob)
-	if !ok {
-		return fmt.Errorf("%+v is not type of MarsJob", job)
-	}
-
-	log.Info("Deleting pod", "controller name", r.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
-	if err := r.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
-		r.recorder.Eventf(marsJob, corev1.EventTypeWarning, job_controller.FailedDeletePodReason, "Error deleting: %v", err)
-		return err
-	}
-	r.recorder.Eventf(marsJob, corev1.EventTypeNormal, job_controller.SuccessfulDeletePodReason, "Deleted pod: %v", pod.Name)
-	return nil
 }

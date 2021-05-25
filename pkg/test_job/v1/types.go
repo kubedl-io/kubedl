@@ -17,6 +17,7 @@ package v1
 import (
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // +genclient
@@ -39,6 +40,8 @@ type TestJob struct {
 	// Read-only.
 	Status apiv1.JobStatus `json:"status,omitempty"`
 }
+
+var _ runtime.Object = &TestJob{}
 
 // TestJobSpec is a desired state description of the TestJob.
 type TestJobSpec struct {
