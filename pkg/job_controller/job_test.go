@@ -53,7 +53,7 @@ func TestDeletePodsAndServices(T *testing.T) {
 		var podList = corev1.PodList{}
 		var serviceList = corev1.ServiceList{}
 
-		TestJob := &v1.TestJob{
+		testJob := &v1.TestJob{
 			TypeMeta: metav1.TypeMeta{
 				Kind: v1.Kind,
 			},
@@ -88,18 +88,18 @@ func TestDeletePodsAndServices(T *testing.T) {
 					},
 				},
 			}
-			TestJob.Spec.TestReplicaSpecs[v1.TestReplicaTypeWorker] = workerReplicaSpec
+			testJob.Spec.TestReplicaSpecs[v1.TestReplicaTypeWorker] = workerReplicaSpec
 		}
 
 		testJobController := v1.TestJobController{
-			Job: TestJob,
+			Job: testJob,
 		}
 
 		scheme := runtime.NewScheme()
 		_ = corev1.AddToScheme(scheme)
 		_ = v1.AddToScheme(scheme)
 
-		fakeClient := fake.NewFakeClientWithScheme(scheme, TestJob)
+		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
 		fakeClient.Create(context.Background(), runningPod)
 		fakeClient.Create(context.Background(), succeededPod)
 		fakeClient.Create(context.Background(), runningPodService)
@@ -116,7 +116,7 @@ func TestDeletePodsAndServices(T *testing.T) {
 			CleanPodPolicy: &tc.cleanPodPolicy,
 		}
 
-		err := mainJobController.deletePodsAndServices(&runPolicy, TestJob, allPods)
+		err := mainJobController.deletePodsAndServices(&runPolicy, testJob, allPods)
 
 		if assert.NoError(T, err) {
 			if tc.deleteRunningPodAndService {
