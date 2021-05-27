@@ -18,8 +18,10 @@ package registry
 
 import (
 	"github.com/alibaba/kubedl/pkg/gang_schedule/batch_scheduler"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/coscheduler"
 )
 
 func init() {
 	NewGangSchedulers = append(NewGangSchedulers, batch_scheduler.NewKubeBatchScheduler)
+	NewGangSchedulers = append(NewGangSchedulers, coscheduler.NewKubeCoscheduler)
 }
