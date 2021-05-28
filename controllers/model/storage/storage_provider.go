@@ -8,9 +8,9 @@ import (
 var StorageProviders = make(map[string]StorageProvider)
 
 func init() {
-	StorageProviders["AlibabaCloudNas"] = NewAliCloudNasProvider()
+	StorageProviders["NFS"] = NewNFSProvider()
 	StorageProviders["LocalStorage"] = NewLocalStorageProvider()
-
+	StorageProviders["AWSEfs"] = NewAWSEfsProvider()
 }
 
 type StorageProvider interface {
@@ -22,11 +22,14 @@ type StorageProvider interface {
 }
 
 func GetStorageProvider(storage *modelv1alpha1.Storage) StorageProvider {
-	if storage.AlibabaCloudNas != nil {
-		return StorageProviders["AlibabaCloudNas"]
+	if storage.NFS != nil {
+		return StorageProviders["NFS"]
 	}
 	if storage.LocalStorage != nil {
 		return StorageProviders["LocalStorage"]
+	}
+	if storage.AWSEfs != nil {
+		return StorageProviders["AWSEfs"]
 	}
 	return nil
 }

@@ -39,7 +39,7 @@ func init() {
 	_ = pflag.Set("v", "10")
 }
 
-func TestCreateModelVersion(t *testing.T) {
+func TestCreateModelVersionWithLocalStorage(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = apis.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)

@@ -295,7 +295,7 @@ func (r *ModelVersionReconciler) createPVAndPVCForModelVersion(modelVersion *mod
 }
 
 func createPVC(pv *v1.PersistentVolume, name, namespace string) *v1.PersistentVolumeClaim {
-	className := "model-local"
+	className := ""
 	pvc := &v1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -353,7 +353,7 @@ func createImgBuildPod(model *modelv1alpha1.ModelVersion, pvc *v1.PersistentVolu
 			Containers: []v1.Container{
 				{
 					Name:  imgBuildPodName,
-					Image: "gcr.io/kaniko-project/executor:latest",
+					Image: "kubedl/kaniko:latest",
 					Args: []string{
 						"--dockerfile=/workspace/dockerfile",
 						"--context=dir:///workspace/",
