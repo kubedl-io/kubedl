@@ -20,6 +20,7 @@ import (
 	"context"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -78,7 +79,7 @@ type ElasticDLJobReconciler struct {
 func (r *ElasticDLJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest elasticdl job instance.
 	sharedElasticDLJob := &training.ElasticDLJob{}
-	err := r.Get(context.Background(), req.NamespacedName, sharedElasticDLJob)
+	err := util.GetObjectByPassCache(r.Client, req.NamespacedName, sharedElasticDLJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

@@ -102,7 +102,7 @@ func (r *PytorchJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeNa
 func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest pytorch job instance.
 	sharedPytorchJob := &training.PyTorchJob{}
-	err := r.Get(context.Background(), req.NamespacedName, sharedPytorchJob)
+	err := commonutil.GetObjectByPassCache(r.Client, req.NamespacedName, sharedPytorchJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

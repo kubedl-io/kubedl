@@ -28,6 +28,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/alibaba/kubedl/pkg/util"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -85,7 +86,7 @@ type MarsJobReconciler struct {
 func (r *MarsJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest mars job instance.
 	sharedMarsJob := &kubedliov1beta1.MarsJob{}
-	err := r.Get(context.Background(), req.NamespacedName, sharedMarsJob)
+	err := util.GetObjectByPassCache(r.Client, req.NamespacedName, sharedMarsJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

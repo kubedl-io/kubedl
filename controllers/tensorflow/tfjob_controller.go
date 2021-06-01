@@ -44,6 +44,7 @@ import (
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/tensorboard"
+	"github.com/alibaba/kubedl/pkg/util"
 )
 
 const (
@@ -133,7 +134,7 @@ func (r *TFJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) string {
 func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch the TFJob tfJob
 	sharedTfJob := &training.TFJob{}
-	err := r.Get(context.Background(), req.NamespacedName, sharedTfJob)
+	err := util.GetObjectByPassCache(r.Client, req.NamespacedName, sharedTfJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

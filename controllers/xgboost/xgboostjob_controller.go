@@ -36,6 +36,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/alibaba/kubedl/pkg/util"
 )
 
 const (
@@ -44,7 +45,7 @@ const (
 
 var log = logf.Log.WithName("xgb-controller")
 
-// newReconciler returns a new reconcile.Reconciler
+// NewReconciler returns a new reconcile.Reconciler
 func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfiguration) *XgboostJobReconciler {
 	r := &XgboostJobReconciler{
 		Client: mgr.GetClient(),
@@ -84,7 +85,7 @@ type XgboostJobReconciler struct {
 func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
 	// Fetch the XGBoostJob instance
 	xgboostjob := &v1alpha1.XGBoostJob{}
-	err := r.Get(context.Background(), req.NamespacedName, xgboostjob)
+	err := util.GetObjectByPassCache(r.Client, req.NamespacedName, xgboostjob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

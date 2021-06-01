@@ -17,14 +17,29 @@ limitations under the License.
 package util
 
 import (
+	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// getClientReaderFromClient try to extract client reader from client, client
+// GetObjectByPassCache try to fetch latest object bypass cache to avoid status stale
+// for the reason of etcd slow-watch.
+func GetObjectByPassCache(cli client.Client, nn types.NamespacedName, obj runtime.Object) error {
+	var reader client.Reader
+
+	reader = cli
+	if noCache, err := GetClientReaderFromClient(cli); err == nil {
+		reader = noCache
+	}
+	return reader.Get(context.Background(), nn, obj)
+}
+
+// GetClientReaderFromClient try to extract client reader from client, client
 // reader reads cluster info from api client.
 func GetClientReaderFromClient(c client.Client) (client.Reader, error) {
 	if dr, err := getDelegatingReader(c); err != nil {

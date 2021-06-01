@@ -43,6 +43,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/alibaba/kubedl/pkg/util"
 	"github.com/spf13/pflag"
 )
 
@@ -108,7 +109,7 @@ func (r *MPIJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Fetch the latest mpi job.
 	sharedMPIJob := &training.MPIJob{}
-	err = r.Get(context.Background(), req.NamespacedName, sharedMPIJob)
+	err = util.GetObjectByPassCache(r.Client, req.NamespacedName, sharedMPIJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())
