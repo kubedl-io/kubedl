@@ -17,8 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"github.com/alibaba/kubedl/pkg/features"
 	"os"
+
+	"github.com/alibaba/kubedl/pkg/features"
 
 	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/cmd/options"
@@ -60,6 +61,7 @@ func main() {
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	pflag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "", "specify the name of gang scheduler")
 	pflag.IntVar(&options.CtrlConfig.MaxConcurrentReconciles, "max-reconciles", 1, "specify the number of max concurrent reconciles of each controller")
+	pflag.StringVar(&options.CtrlConfig.ContainerImageBuilder, "container-image-builder", "kubedl/kaniko:latest","The image name of container builder.")
 	features.KubeDLFeatureGates.AddFlag(pflag.CommandLine)
 	pflag.Parse()
 

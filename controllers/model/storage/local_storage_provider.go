@@ -33,7 +33,7 @@ func (ls *LocalStorageProvider) CreatePersistentVolume(storage *modelv1alpha1.St
 				// This is specified because api-server validation checks a capacity value to be present.
 				corev1.ResourceStorage: resource.MustParse("500Mi"),
 			},
-			StorageClassName: "model-local",
+			StorageClassName: "",
 		},
 	}
 	pv.Spec.NodeAffinity = &corev1.VolumeNodeAffinity{

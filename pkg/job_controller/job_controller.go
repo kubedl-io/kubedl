@@ -46,6 +46,9 @@ type JobControllerConfiguration struct {
 
 	// Name of global default gang scheduler.
 	GangSchedulerName string
+
+	// The container builder image name, Kaniko image
+	ContainerImageBuilder string
 }
 
 // JobController abstracts other operators to manage the lifecycle of Jobs.
