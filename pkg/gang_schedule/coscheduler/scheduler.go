@@ -94,7 +94,7 @@ func (kbs *kubeCoscheduler) BindPodToGang(obj metav1.Object, entity runtime.Obje
 	// The newly-created pods should be submitted to target gang scheduler.
 	if podSpec.Spec.SchedulerName == "" || podSpec.Spec.SchedulerName != kbs.Name() {
 		podSpec.Spec.SchedulerName = kbs.Name()
-		podGroup.Status.Running =  podGroup.Status.Running + 1
+		podGroup.Status.Running = podGroup.Status.Running + 1
 	}
 
 	return nil
