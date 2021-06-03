@@ -18,6 +18,7 @@ package coscheduler
 
 import (
 	"context"
+	"sigs.k8s.io/scheduler-plugins/pkg/apis/scheduling/v1alpha1"
 
 	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
@@ -32,8 +33,6 @@ import (
 	"k8s.io/utils/pointer"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	v1alpha1 "sigs.k8s.io/scheduler-plugins/pkg/apis/scheduling/v1alpha1"
 )
 
 func init() {
