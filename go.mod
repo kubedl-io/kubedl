@@ -12,7 +12,6 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jinzhu/gorm v1.9.12
 	github.com/kubernetes-sigs/kube-batch v0.0.0-20200402033359-1ebe60e4af4f
 	github.com/onsi/ginkgo v1.14.1
@@ -32,11 +31,18 @@ require (
 	k8s.io/apiextensions-apiserver v0.20.2 // indirect
 	k8s.io/apimachinery v0.20.2
 	k8s.io/apiserver v0.19.9
+	k8s.io/cli-runtime v0.18.15 // indirect
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/code-generator v0.19.9
 	k8s.io/component-base v0.19.9
+	k8s.io/cri-api v0.0.0 // indirect
 	k8s.io/klog v1.0.0
+	k8s.io/kube-controller-manager v0.0.0 // indirect
+	k8s.io/kube-proxy v0.0.0 // indirect
+	k8s.io/kubelet v0.0.0 // indirect
 	k8s.io/kubernetes v1.19.9
+	k8s.io/metrics v0.19.0 // indirect
+	k8s.io/sample-cli-plugin v0.0.0-00010101000000-000000000000 // indirect
 	k8s.io/utils v0.0.0-20200729134348-d5654de09c73
 	sigs.k8s.io/controller-runtime v0.6.2
 	sigs.k8s.io/scheduler-plugins v0.19.9 // indirect
