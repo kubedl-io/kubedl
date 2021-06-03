@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	tfv1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/features"
-	"github.com/kubernetes-sigs/kube-batch/pkg/apis/scheduling/v1alpha1"
+	"sigs.k8s.io/scheduler-plugins/pkg/apis/scheduling/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	"testing"

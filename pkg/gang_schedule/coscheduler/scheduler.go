@@ -23,7 +23,6 @@ import (
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
-	"github.com/kubernetes-sigs/kube-batch/pkg/apis/scheduling/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -33,6 +32,8 @@ import (
 	"k8s.io/utils/pointer"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	v1alpha1 "sigs.k8s.io/scheduler-plugins/pkg/apis/scheduling/v1alpha1"
 )
 
 func init() {
@@ -90,11 +91,10 @@ func (kbs *kubeCoscheduler) CreateGang(job metav1.Object, replicas map[apiv1.Rep
 
 func (kbs *kubeCoscheduler) BindPodToGang(obj metav1.Object, entity runtime.Object) error {
 	podSpec := obj.(*v1.PodTemplateSpec)
-	podGroup := entity.(*v1alpha1.PodGroup)
+	// podGroup := entity.(*v1alpha1.PodGroup)
 	// The newly-created pods should be submitted to target gang scheduler.
 	if podSpec.Spec.SchedulerName == "" || podSpec.Spec.SchedulerName != kbs.Name() {
 		podSpec.Spec.SchedulerName = kbs.Name()
-		podGroup.Status.Running = podGroup.Status.Running + 1
 	}
 
 	return nil
