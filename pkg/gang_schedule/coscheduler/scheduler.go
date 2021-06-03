@@ -52,7 +52,7 @@ type kubeCoscheduler struct {
 }
 
 func (kbs *kubeCoscheduler) Name() string {
-	return "kube-batch"
+	return "kube-coscheduler"
 }
 
 func (kbs *kubeCoscheduler) CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) (runtime.Object, error) {
@@ -90,10 +90,13 @@ func (kbs *kubeCoscheduler) CreateGang(job metav1.Object, replicas map[apiv1.Rep
 
 func (kbs *kubeCoscheduler) BindPodToGang(obj metav1.Object, entity runtime.Object) error {
 	podSpec := obj.(*v1.PodTemplateSpec)
+	podGroup := entity.(*v1alpha1.PodGroup)
 	// The newly-created pods should be submitted to target gang scheduler.
 	if podSpec.Spec.SchedulerName == "" || podSpec.Spec.SchedulerName != kbs.Name() {
 		podSpec.Spec.SchedulerName = kbs.Name()
+		podGroup.Status.Running =  podGroup.Status.Running + 1
 	}
+
 	return nil
 }
 
