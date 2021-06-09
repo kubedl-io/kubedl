@@ -2,9 +2,9 @@ package quota
 
 import (
 	v1 "k8s.io/api/core/v1"
+	quota "k8s.io/apiserver/pkg/quota/v1"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	"k8s.io/kubernetes/pkg/features"
-	"k8s.io/kubernetes/pkg/quota/v1"
 )
 
 const (

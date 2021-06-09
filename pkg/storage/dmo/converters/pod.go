@@ -24,7 +24,7 @@ import (
 	"time"
 
 	v1 "k8s.io/api/core/v1"
-	quotav1 "k8s.io/kubernetes/pkg/quota/v1"
+	quotav1 "k8s.io/apiserver/pkg/quota/v1"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
