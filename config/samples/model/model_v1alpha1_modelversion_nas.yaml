@@ -1,0 +1,13 @@
+apiVersion: model.kubedl.io/v1alpha1
+kind: ModelVersion
+metadata:
+  name: mv-4
+  namespace: default
+spec:
+  modelName: model1
+  createdBy: user1
+  imageRepo: jianhe6/kaniko
+  storage:
+    nfs:
+      path: /
+      server:

@@ -62,17 +62,13 @@ spec:
                     type: string
                   storage:
                     properties:
-                      aliCloudNas:
+                      AWSEfs:
                         properties:
                           attributes:
                             additionalProperties:
                               type: string
                             type: object
-                          path:
-                            type: string
-                          server:
-                            type: string
-                          vers:
+                          volumeHandle:
                             type: string
                         type: object
                       localStorage:
@@ -80,6 +76,13 @@ spec:
                           nodeName:
                             type: string
                           path:
+                            type: string
+                        type: object
+                      nfs:
+                        properties:
+                          path:
+                            type: string
+                          server:
                             type: string
                         type: object
                     type: object

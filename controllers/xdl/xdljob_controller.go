@@ -42,6 +42,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/alibaba/kubedl/pkg/util"
 )
 
 const (
@@ -96,7 +97,7 @@ type XDLJobReconciler struct {
 func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the latest xdlJob instance.
 	sharedXdlJob := &xdlv1alpha1.XDLJob{}
-	err := r.Get(context.Background(), request.NamespacedName, sharedXdlJob)
+	err := util.GetObjectByPassCache(r.Client, request.NamespacedName, sharedXdlJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", request.String())

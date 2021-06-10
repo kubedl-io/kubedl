@@ -62,11 +62,14 @@ type ModelVersionStatus struct {
 }
 
 type Storage struct {
-	// AlibabaCloudNas represents the alibaba cloud nas storage
-	AlibabaCloudNas *AlibabaCloudNas `json:"aliCloudNas,omitempty"`
+	// NFS represents the alibaba cloud nas storage
+	NFS *NFS `json:"nfs,omitempty"`
 
 	// LocalStorage represents the local host storage
 	LocalStorage *LocalStorage `json:"localStorage,omitempty"`
+
+	// AWSEfs represents the AWS Elastic FileSystem
+	AWSEfs *AWSEfs `json:"AWSEfs,omitempty"`
 }
 
 // LocalStorage defines the local storage for storing the model version.
@@ -81,15 +84,26 @@ type LocalStorage struct {
 	NodeName string `json:"nodeName,omitempty"`
 }
 
-// AlibabaCloudNas represents the Alibaba Cloud Nas storage
-type AlibabaCloudNas struct {
-	// Nas server address
+type AWSEfs struct {
+	// VolumeHandle indicates the backend EFS volume. Check the link for details
+	// https://github.com/kubernetes-sigs/aws-efs-csi-driver/tree/master/examples/kubernetes
+	// It is of the form "[FileSystemId]:[Subpath]:[AccessPointId]"
+	// e.g. FilesystemId with subpath and access point Id:  fs-e8a95a42:/my/subpath:fsap-19f752f0068c22464.
+	// FilesystemId with access point Id:   fs-e8a95a42::fsap-068c22f0246419f75
+	// FileSystemId with subpath: 	 fs-e8a95a42:/dir1
+	VolumeHandle string `json:"volumeHandle,omitempty"`
+
+	// The attributes passed to the backend EFS
+	Attributes map[string]string `json:"attributes,omitempty"`
+}
+
+// NFS represents the Alibaba Cloud Nas storage
+type NFS struct {
+	// NFS server address, e.g. "***.cn-beijing.nas.aliyuncs.com"
 	Server string `json:"server,omitempty"`
 
 	// The path under which the model is stored, e.g. /models/my_model1
-	Path       string            `json:"path,omitempty"`
-	Vers       string            `json:"vers,omitempty"`
-	Attributes map[string]string `json:"attributes,omitempty"`
+	Path string `json:"path,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
