@@ -22,6 +22,7 @@ import (
 	"time"
 
 	modelv1alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers/model/storage"
 	"github.com/go-logr/logr"
 	log "github.com/sirupsen/logrus"
@@ -353,7 +354,7 @@ func createImgBuildPod(model *modelv1alpha1.ModelVersion, pvc *v1.PersistentVolu
 			Containers: []v1.Container{
 				{
 					Name:  imgBuildPodName,
-					Image: "kubedl/kaniko:latest",
+					Image: options.CtrlConfig.ModelImageBuilder,
 					Args: []string{
 						"--dockerfile=/workspace/dockerfile",
 						"--context=dir:///workspace/",

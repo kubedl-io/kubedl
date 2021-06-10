@@ -65,7 +65,7 @@ var (
 )
 
 // NewReconciler returns a new reconcile.Reconciler
-func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfiguration) *MPIJobReconciler {
+func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) *MPIJobReconciler {
 	r := &MPIJobReconciler{
 		Client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),

@@ -15,14 +15,13 @@ package controllers
 
 import (
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
 	controllers "github.com/alibaba/kubedl/controllers/mars"
 	controllerruntime "sigs.k8s.io/controller-runtime"
-
-	"github.com/alibaba/kubedl/pkg/job_controller"
 )
 
 func init() {
-	SetupWithManagerMap[&v1alpha1.MarsJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+	SetupWithManagerMap[&v1alpha1.MarsJob{}] = func(mgr controllerruntime.Manager, config options.JobControllerConfiguration) error {
 		return controllers.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
 }

@@ -17,7 +17,7 @@ limitations under the License.
 package controllers
 
 import (
-	"github.com/alibaba/kubedl/pkg/job_controller"
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/util/workloadgate"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,10 +26,10 @@ import (
 )
 
 // SetupWithManagerFunc is a list of functions to setup all controllers to the manager.
-var SetupWithManagerMap = make(map[runtime.Object]func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error)
+var SetupWithManagerMap = make(map[runtime.Object]func(mgr controllerruntime.Manager, config options.JobControllerConfiguration) error)
 
 // SetupWithManager setups all controllers to the manager.
-func SetupWithManager(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+func SetupWithManager(mgr controllerruntime.Manager, config options.JobControllerConfiguration) error {
 	for workload, f := range SetupWithManagerMap {
 		kind, enabled := workloadgate.IsWorkloadEnable(workload, mgr.GetScheme())
 		if !enabled {

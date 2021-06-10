@@ -46,7 +46,7 @@ const (
 var log = logf.Log.WithName("xgb-controller")
 
 // NewReconciler returns a new reconcile.Reconciler
-func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfiguration) *XgboostJobReconciler {
+func NewReconciler(mgr manager.Manager, config options.JobControllerConfiguration) *XgboostJobReconciler {
 	r := &XgboostJobReconciler{
 		Client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),

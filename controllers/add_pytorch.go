@@ -18,14 +18,13 @@ package controllers
 
 import (
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers/pytorch"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 func init() {
-	SetupWithManagerMap[&training.PyTorchJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+	SetupWithManagerMap[&training.PyTorchJob{}] = func(mgr controllerruntime.Manager, config options.JobControllerConfiguration) error {
 		return pytorch.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
 }

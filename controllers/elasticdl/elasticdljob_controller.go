@@ -47,7 +47,7 @@ const (
 
 var log = logf.Log.WithName("elasticdl-controller")
 
-func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfiguration) *ElasticDLJobReconciler {
+func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) *ElasticDLJobReconciler {
 	r := &ElasticDLJobReconciler{
 		Client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),
