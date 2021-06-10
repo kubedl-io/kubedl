@@ -17,15 +17,9 @@ require (
 	github.com/prometheus/client_golang v1.9.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.4.0
-	go.uber.org/zap v1.13.0 // indirect
-	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
-	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6 // indirect
-	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
-	golang.org/x/tools v0.0.0-20200616195046-dc31b401abb5 // indirect
-	google.golang.org/appengine v1.6.5 // indirect
-	google.golang.org/genproto v0.0.0-20191108220845-16a3f7862a1a // indirect
-	k8s.io/api v0.20.2
+	github.com/stretchr/testify v1.7.0
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+	k8s.io/api v0.20.7
 	k8s.io/apiextensions-apiserver v0.20.2 // indirect
 	k8s.io/apimachinery v0.20.7
 	k8s.io/apiserver v0.20.7
