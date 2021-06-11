@@ -18,19 +18,17 @@ package coscheduler
 
 import (
 	"context"
+	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 	"sigs.k8s.io/scheduler-plugins/pkg/apis/scheduling/v1alpha1"
 
 	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -66,35 +64,18 @@ func (kbs *kubeCoscheduler) CreateGang(job metav1.Object, replicas map[apiv1.Rep
 			MinMember: k8sutil.GetTotalReplicas(replicas),
 		},
 	}
-	// Extract api version and kind information from job.
-	accessor, err := meta.TypeAccessor(job)
-	if err != nil {
-		return nil, err
-	}
-	apiVersion := accessor.GetAPIVersion()
-	kind := accessor.GetKind()
-
-	// Inject binding relationship into pod group by append owner reference.
-	gang_schedule.AppendOwnerReference(podGroup, metav1.OwnerReference{
-		APIVersion:         apiVersion,
-		Kind:               kind,
-		Name:               job.GetName(),
-		UID:                job.GetUID(),
-		BlockOwnerDeletion: pointer.BoolPtr(true),
-		Controller:         pointer.BoolPtr(true),
-	})
-
-	err = kbs.client.Create(context.Background(), podGroup)
+	err := kbs.client.Create(context.Background(), podGroup)
 	return podGroup, err
 }
 
 func (kbs *kubeCoscheduler) BindPodToGang(obj metav1.Object, entity runtime.Object) error {
 	podSpec := obj.(*v1.PodTemplateSpec)
-	// podGroup := entity.(*v1alpha1.PodGroup)
+	podGroup := entity.(*v1alpha1.PodGroup)
 	// The newly-created pods should be submitted to target gang scheduler.
 	if podSpec.Spec.SchedulerName == "" || podSpec.Spec.SchedulerName != kbs.Name() {
 		podSpec.Spec.SchedulerName = kbs.Name()
 	}
+	podSpec.Labels["pod-group.scheduling.sigs.k8s.io"] = podGroup.Name
 
 	return nil
 }
