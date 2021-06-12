@@ -45,8 +45,8 @@ type InferenceSpec struct {
 
 // InferenceStatus defines the observed state of Inference
 type InferenceStatus struct {
-	// InferenceEndpoints exposes a list of available serving service endpoints.
-	InferenceEndpoints []string `json:"inferenceEndpoints,omitempty"`
+	// InferenceEndpoints exposes available serving service endpoint.
+	InferenceEndpoint string `json:"inferenceEndpoint,omitempty"`
 	// PredictorStatuses exposes current observed status for each predictor.
 	PredictorStatuses []PredictorStatus `json:"predictorStatuses,omitempty"`
 }
@@ -63,8 +63,8 @@ type PredictorSpec struct {
 	// Replicas specify the expected predictor replicas.
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// CanaryTrafficPercent defines the traffic split percentage.
-	CanaryTrafficPercent *int32 `json:"canaryTrafficPercent,omitempty"`
+	// TrafficPercent defines the traffic split percentage.
+	TrafficPercent *int32 `json:"trafficPercent,omitempty"`
 
 	// Template describes a template of predictor pod with its properties.
 	Template corev1.PodTemplateSpec `json:"template"`

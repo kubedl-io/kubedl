@@ -151,7 +151,7 @@ rules:
 - apiGroups:
   - serving.kubedl.io
   resources:
-  - servingservices
+  - inferences
   verbs:
   - create
   - delete
@@ -163,7 +163,7 @@ rules:
 - apiGroups:
   - serving.kubedl.io
   resources:
-  - servingservices/status
+  - inferences/status
   verbs:
   - get
   - patch

@@ -112,7 +112,7 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		r.Log.Error(err, "storage is undefined", "modelversion", modelVersion.Name)
 		return reconcile.Result{}, nil
 	} else {
-		err = r.createPVAndPVCForModelVersion(modelVersion, model, pv, pvc)
+		err = r.createPVAndPVCForModelVersion(modelVersion, pv, pvc)
 		if err != nil {
 			r.Log.Error(err, "failed to create pv/pvc for modelversion", "modelversion", modelVersion.Name)
 			return reconcile.Result{Requeue: true}, err
@@ -139,6 +139,11 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 			modelVersionStatus.Image = modelVersion.Spec.ImageRepo + ":v" + versionId
 			modelVersionStatus.ImageBuildPhase = modelv1alpha1.ImageBuilding
 			modelVersionStatus.Message = "Image building started."
+			imgBuildDockerfile := createImageBuildDockerfile(modelVersion.Namespace)
+			err = r.Create(context.Background(), imgBuildDockerfile)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
 			imgBuildPod = createImgBuildPod(modelVersion, pvc, imgBuildPodName, modelVersionStatus.Image)
 			err = r.Create(context.Background(), imgBuildPod)
 			if err != nil {
@@ -207,10 +212,10 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	return ctrl.Result{}, nil
 }
 
-// LocalStorage is treated different from remote storage.
-// For local storage, each node will be provisioned with its own pv and pvc, and append nodeName as the pv/pvc name.
-// whereas remote storage only has a single pv and pvc.
-func (r *ModelVersionReconciler) createPVAndPVCForModelVersion(modelVersion *modelv1alpha1.ModelVersion, model *modelv1alpha1.Model,
+// createPVAndPVCForModelVersion creates pv and its pvc to be bound for specific model version.
+// LocalStorage is treated different from remote storage. For local storage, each node will be provisioned with its
+// own pv and pvc, and append nodeName as the pv/pvc name, whereas remote storage only has a single pv and pvc.
+func (r *ModelVersionReconciler) createPVAndPVCForModelVersion(modelVersion *modelv1alpha1.ModelVersion,
 	pv *v1.PersistentVolume, pvc *v1.PersistentVolumeClaim) (error error) {
 
 	pvName := ""
@@ -267,7 +272,7 @@ func (r *ModelVersionReconciler) createPVAndPVCForModelVersion(modelVersion *mod
 		pvcName = GetModelVersionPVClaimName(modelVersion.Name)
 	}
 	// Does the pvc for the version already exist
-	err = r.Get(context.Background(), types.NamespacedName{Namespace: model.Namespace, Name: pvcName}, pvc)
+	err = r.Get(context.Background(), types.NamespacedName{Namespace: modelVersion.Namespace, Name: pvcName}, pvc)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			pvc = createPVC(pv, pvcName, modelVersion.Namespace)
@@ -283,12 +288,12 @@ func (r *ModelVersionReconciler) createPVAndPVCForModelVersion(modelVersion *mod
 
 			err = r.Create(context.Background(), pvc)
 			if err != nil {
-				r.Log.Info("failed to create pvc for model version", "pvc", pvc.Name, "modelversion", modelVersion.Name)
+				log.Info("failed to create pvc for model version", "pvc", pvc.Name, "modelversion", modelVersion.Name)
 				return err
 			}
-			r.Log.Info("created pvc for model version", "pvc", pvc.Name, "modelversion", modelVersion.Name)
+			log.Info("created pvc for model version", "pvc", pvc.Name, "modelversion", modelVersion.Name)
 		} else {
-			r.Log.Error(err, fmt.Sprintf("modelversion %s failed too get pvc", modelVersion.Name))
+			log.Error(err, fmt.Sprintf("modelversion %s failed too get pvc", modelVersion.Name))
 			return err
 		}
 	}
@@ -422,6 +427,21 @@ func createImgBuildPod(model *modelv1alpha1.ModelVersion, pvc *v1.PersistentVolu
 		UID:        model.UID,
 	})
 	return podSpec
+}
+
+// createImageBuildDockerfile creates a configmap mounted with dockerfile commands
+// to build a minimum image contains model artifacts.
+func createImageBuildDockerfile(ns string) *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dockerfile",
+			Namespace: ns,
+		},
+		Data: map[string]string{
+			"dockerfile": fmt.Sprintf(`FROM busybox
+    COPY build/ %s`, modelv1alpha1.DefaultModelInImagePath),
+		},
+	}
 }
 
 func (r *ModelVersionReconciler) SetupWithManager(mgr ctrl.Manager) error {

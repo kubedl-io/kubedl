@@ -37,7 +37,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	modelcontroller "github.com/alibaba/kubedl/controllers/model"
-	servingcontroller "github.com/alibaba/kubedl/controllers/serving"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -63,6 +62,7 @@ func main() {
 	pflag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "", "specify the name of gang scheduler")
 	pflag.IntVar(&options.CtrlConfig.MaxConcurrentReconciles, "max-reconciles", 1, "specify the number of max concurrent reconciles of each controller")
 	pflag.StringVar(&options.CtrlConfig.ModelImageBuilder, "model-image-builder", "kubedl/kaniko:latest", "The image name of container builder for building the model image")
+
 	features.KubeDLFeatureGates.AddFlag(pflag.CommandLine)
 	pflag.Parse()
 
@@ -113,20 +113,13 @@ func main() {
 	// Start monitoring for default registry.
 	metrics.StartMonitoringForDefaultRegistry(metricsAddr)
 
+	// Start model/modelversion controller.
 	if err = (&modelcontroller.ModelVersionReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("ModelVersion"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ModelVersion")
-		os.Exit(1)
-	}
-	if err = (&servingcontroller.ServingServiceReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ServingService"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ServingService")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

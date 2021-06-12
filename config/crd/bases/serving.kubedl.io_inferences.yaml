@@ -72,9 +72,6 @@ spec:
                       required:
                       - batchSize
                       type: object
-                    canaryTrafficPercent:
-                      format: int32
-                      type: integer
                     modelVersion:
                       type: string
                     name:
@@ -2770,6 +2767,9 @@ spec:
                           - containers
                           type: object
                       type: object
+                    trafficPercent:
+                      format: int32
+                      type: integer
                   required:
                   - modelVersion
                   - name
@@ -2782,10 +2782,8 @@ spec:
             type: object
           status:
             properties:
-              inferenceEndpoints:
-                items:
-                  type: string
-                type: array
+              inferenceEndpoint:
+                type: string
               predictorStatuses:
                 items:
                   properties:
