@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Alibaba Authors.
+Copyright 2021 The Alibaba Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@ limitations under the License.
 package registry
 
 import (
-	"github.com/alibaba/kubedl/pkg/gang_schedule/batch_scheduler"
+	"github.com/alibaba/kubedl/pkg/gang_schedule/coscheduler"
 )
 
 func init() {
-	NewGangSchedulers = append(NewGangSchedulers, batch_scheduler.NewKubeBatchScheduler)
+	NewGangSchedulers = append(NewGangSchedulers, coscheduler.NewKubeCoscheduler)
 }
