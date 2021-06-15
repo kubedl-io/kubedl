@@ -49,7 +49,7 @@ type JobControllerConfiguration struct {
 
 	// The container builder image name, Kaniko image
 	ContainerImageBuilder string
-}
+}1
 
 // JobController abstracts other operators to manage the lifecycle of Jobs.
 // User need to first implement the ControllerInterface(objectA) and then initialize a JobController(objectB) struct with objectA
