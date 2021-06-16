@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
@@ -27,30 +28,6 @@ var (
 	KeyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
 )
 
-// JobControllerConfiguration contains configuration of operator.
-type JobControllerConfiguration struct {
-	// Enable gang scheduling by abstract GangScheduler.
-	EnableGangScheduling bool
-
-	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run.
-	// Defaults to 1.
-	MaxConcurrentReconciles int
-
-	// ReconcilerSyncLoopPeriod is the amount of time the reconciler sync states loop
-	// wait between two reconciler sync.
-	// It is set to 15 sec by default.
-	// TODO(cph): maybe we can let it grows by multiple in the future
-	// and up to 5 minutes to reduce idle loop.
-	// e.g. 15s, 30s, 60s, 120s...
-	ReconcilerSyncLoopPeriod metav1.Duration
-
-	// Name of global default gang scheduler.
-	GangSchedulerName string
-
-	// The container builder image name, Kaniko image
-	ContainerImageBuilder string
-}1
-
 // JobController abstracts other operators to manage the lifecycle of Jobs.
 // User need to first implement the ControllerInterface(objectA) and then initialize a JobController(objectB) struct with objectA
 // as the parameter.
@@ -65,7 +42,7 @@ type JobControllerConfiguration struct {
 type JobController struct {
 	Controller apiv1.ControllerInterface
 
-	Config JobControllerConfiguration
+	Config options.JobControllerConfiguration
 
 	// Gang Scheduler is a abstract gang scheduling clientset.
 	GangScheduler gang_schedule.GangScheduler
@@ -110,7 +87,7 @@ type JobController struct {
 func NewJobController(
 	cli client.Client,
 	controllerImpl apiv1.ControllerInterface,
-	config JobControllerConfiguration,
+	config options.JobControllerConfiguration,
 	recorder record.EventRecorder,
 	metrics *metrics.JobMetrics,
 ) JobController {

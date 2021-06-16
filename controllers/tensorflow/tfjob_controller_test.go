@@ -8,6 +8,7 @@ import (
 	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers/model"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -67,7 +68,7 @@ func tearDown() {
 // NewReconciler returns a new reconcile.Reconciler
 func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 	recorder record.EventRecorder,
-	config job_controller.JobControllerConfiguration) *TFJobReconcilerTest {
+	config options.JobControllerConfiguration) *TFJobReconcilerTest {
 	r := &TFJobReconcilerTest{
 		TFJobReconciler{
 			Client: client,
@@ -106,7 +107,7 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 	// a job with 2 replicas
 	tfjob := createTFJob("job1", 2)
 	fakeClient := fake.NewFakeClientWithScheme(scheme, tfjob)
-	jobControllerConfig := job_controller.JobControllerConfiguration{}
+	jobControllerConfig := options.JobControllerConfiguration{}
 	eventBroadcaster := record.NewBroadcaster()
 	recorder := eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"})
 	tfJobReconciler := NewReconcilerTest(fakeClient, scheme, recorder, jobControllerConfig)
@@ -168,7 +169,7 @@ func TestJobCreateModel(t *testing.T) {
 		},
 	}
 	fakeClient := fake.NewFakeClientWithScheme(scheme, tfjob)
-	jobControllerConfig := job_controller.JobControllerConfiguration{}
+	jobControllerConfig := options.JobControllerConfiguration{}
 	eventBroadcaster := record.NewBroadcaster()
 	recorder := eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"})
 	tfJobReconciler := NewReconcilerTest(fakeClient, scheme, recorder, jobControllerConfig)

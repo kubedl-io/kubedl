@@ -60,7 +60,7 @@ const (
 var log = logf.Log.WithName("xdl-controller")
 
 // newReconciler returns a new reconcile.Reconciler
-func NewReconciler(mgr manager.Manager, config job_controller.JobControllerConfiguration) *XDLJobReconciler {
+func NewReconciler(mgr manager.Manager, config options.JobControllerConfiguration) *XDLJobReconciler {
 	r := &XDLJobReconciler{
 		Client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),

@@ -52,7 +52,7 @@ const (
 
 var log = logf.Log.WithName("pytorch-controller")
 
-func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfiguration) *PytorchJobReconciler {
+func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) *PytorchJobReconciler {
 	r := &PytorchJobReconciler{
 		Client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),
