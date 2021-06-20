@@ -37,6 +37,15 @@ const (
 	ReplicaTypeTensorBoard ReplicaType = "TensorBoard"
 )
 
+const (
+	// LabelInferenceName represents the inference service name.
+	LabelInferenceName = KubeDLPrefix + "/inference-name"
+	// LabelPredictorName represents the predictor name of served model.
+	LabelPredictorName = KubeDLPrefix + "/predictor-name"
+	// LabelModelVersion represents the model version value for inference role.
+	LabelModelVersion = KubeDLPrefix + "/model-version"
+)
+
 // NetworkMode defines network mode for intra job communicating.
 type NetworkMode string
 

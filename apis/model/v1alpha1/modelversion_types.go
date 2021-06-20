@@ -21,7 +21,10 @@ import (
 )
 
 const (
+	// KubeDLModelPath is the env key to indicate model path in container.
 	KubeDLModelPath = "KUBEDL_MODEL_PATH"
+	// DefaultModelInImagePath is the default model artifact path when build image.
+	DefaultModelInImagePath = "/model"
 )
 
 // ModelVersionSpec defines a particular version of the Model.

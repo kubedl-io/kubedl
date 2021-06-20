@@ -19,6 +19,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+	istio.io/api v0.0.0-20210420211535-1c598ea4139c
+	istio.io/client-go v1.9.4
+	istio.io/gogo-genproto v0.0.0-20210113155706-4daf5697332f // indirect
 	k8s.io/api v0.20.7
 	k8s.io/apiextensions-apiserver v0.20.2 // indirect
 	k8s.io/apimachinery v0.20.7
@@ -30,6 +33,7 @@ require (
 	k8s.io/kubernetes v1.20.7
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	sigs.k8s.io/controller-runtime v0.6.5
+	sigs.k8s.io/controller-tools v0.4.1 // indirect
 	sigs.k8s.io/scheduler-plugins v0.19.9
 )
 

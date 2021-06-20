@@ -14,14 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package serving
 
-import "k8s.io/apimachinery/pkg/runtime"
+import (
+	"fmt"
+	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
+)
 
-func SetDefaults_Model(in *Model) {
-
+func genPredictorName(inf *v1alpha1.Inference, predictor *v1alpha1.PredictorSpec) string {
+	return fmt.Sprintf("%s-%s-%s", inf.Name, predictor.Name, predictor.ModelVersion)
 }
 
-func addDefaultingFuncs(scheme *runtime.Scheme) error {
-	return RegisterDefaults(scheme)
+func svcHostForInference(inf *v1alpha1.Inference) string {
+	return fmt.Sprintf("%s.%s", inf.Name, inf.Namespace)
+}
+
+func svcHostForPredictor(inf *v1alpha1.Inference, predictor *v1alpha1.PredictorSpec) string {
+	return fmt.Sprintf("%s.%s.svc", genPredictorName(inf, predictor), inf.Namespace)
 }
