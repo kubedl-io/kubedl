@@ -22,7 +22,6 @@ import (
 
 	modelv1alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
-	"github.com/alibaba/kubedl/controllers/model/storage"
 	"github.com/alibaba/kubedl/controllers/serving/framework"
 
 	v1 "k8s.io/api/apps/v1"
@@ -54,8 +53,10 @@ func (ir *InferenceReconciler) createNewPredictorDeploy(inf *v1alpha1.Inference,
 
 	// Download model from already built image and delivery it to main serving containers
 	// via volumes.
-	storageProvider := storage.GetStorageProvider(modelVersion.Spec.Storage)
-	modelPath := storageProvider.GetModelPath(modelVersion.Spec.Storage)
+	modelPath := fmt.Sprintf("%s/%s", v1alpha1.DefaultModelMountPath, modelVersion.Name)
+	if predictor.ModelPath != nil && len(*predictor.ModelPath) > 0 {
+		modelPath = *predictor.ModelPath
+	}
 	loaderVolume := corev1.Volume{
 		Name:         "kubedl-model-loader",
 		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},

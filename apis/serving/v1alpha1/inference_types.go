@@ -60,6 +60,9 @@ type PredictorSpec struct {
 	// service deployed.
 	ModelVersion string `json:"modelVersion"`
 
+	// ModelPath is the loaded model filepath in container.
+	ModelPath *string `json:"modelPath"`
+
 	// Replicas specify the expected predictor replicas.
 	Replicas *int32 `json:"replicas,omitempty"`
 
