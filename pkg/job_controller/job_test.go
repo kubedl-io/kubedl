@@ -2,10 +2,12 @@ package job_controller
 
 import (
 	"context"
-	"github.com/alibaba/kubedl/pkg/metrics"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/metrics"
 
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -109,7 +111,7 @@ func TestDeletePodsAndServices(T *testing.T) {
 		mainJobController := NewJobController(
 			fakeClient,
 			&testJobController,
-			JobControllerConfiguration{},
+			options.JobControllerConfiguration{},
 			eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
 			&metrics.JobMetrics{},
 		)

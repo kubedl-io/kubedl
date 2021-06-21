@@ -18,13 +18,13 @@ package controllers
 
 import (
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers/tensorflow"
-	"github.com/alibaba/kubedl/pkg/job_controller"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 func init() {
-	SetupWithManagerMap[&training.TFJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+	SetupWithManagerMap[&training.TFJob{}] = func(mgr controllerruntime.Manager, config options.JobControllerConfiguration) error {
 		return tensorflow.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
 }

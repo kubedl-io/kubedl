@@ -51,7 +51,7 @@ const (
 	controllerName = "MarsController"
 )
 
-func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfiguration) *MarsJobReconciler {
+func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) *MarsJobReconciler {
 	r := &MarsJobReconciler{
 		Client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),

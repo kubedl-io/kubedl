@@ -16,8 +16,34 @@ limitations under the License.
 
 package options
 
-import "github.com/alibaba/kubedl/pkg/job_controller"
+import (
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 var (
-	CtrlConfig job_controller.JobControllerConfiguration
+	CtrlConfig JobControllerConfiguration
 )
+
+// JobControllerConfiguration contains configuration of operator.
+type JobControllerConfiguration struct {
+	// Enable gang scheduling by abstract GangScheduler.
+	EnableGangScheduling bool
+
+	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run.
+	// Defaults to 1.
+	MaxConcurrentReconciles int
+
+	// ReconcilerSyncLoopPeriod is the amount of time the reconciler sync states loop
+	// wait between two reconciler sync.
+	// It is set to 15 sec by default.
+	// TODO(cph): maybe we can let it grows by multiple in the future
+	// and up to 5 minutes to reduce idle loop.
+	// e.g. 15s, 30s, 60s, 120s...
+	ReconcilerSyncLoopPeriod v1.Duration
+
+	// Name of global default gang scheduler.
+	GangSchedulerName string
+
+	// The container builder image name, Kaniko image
+	ModelImageBuilder string
+}

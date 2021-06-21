@@ -154,7 +154,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 				IsInEtcd:     util.IntPtr(1),
 				Version:      "3",
 				GmtCreated:   testTime("2019-02-10T12:27:00Z"),
-				GmtFinished:  testTimePtr("2019-02-11T12:27:00Z"),
+				GmtJobFinished:  testTimePtr("2019-02-11T12:27:00Z"),
 				Resources:    `{"Worker":{"resources":{"requests":{"cpu":"2","memory":"2Gi"}},"replicas":1}}`,
 			},
 		}, {
@@ -206,7 +206,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 				IsInEtcd:    util.IntPtr(1),
 				Version:     "3",
 				GmtCreated:  testTime("2019-02-10T12:27:00Z"),
-				GmtFinished: testTimePtr("2019-02-11T12:27:00Z"),
+				GmtJobFinished: testTimePtr("2019-02-11T12:27:00Z"),
 				Resources:   `{"Master":{"resources":{"requests":{"cpu":"1","memory":"1Gi"}},"replicas":1}}`,
 			},
 		}, {
@@ -258,7 +258,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 				IsInEtcd:    util.IntPtr(1),
 				Version:     "3",
 				GmtCreated:  testTime("2019-02-10T12:27:00Z"),
-				GmtFinished: testTimePtr("2019-02-11T12:27:00Z"),
+				GmtJobFinished: testTimePtr("2019-02-11T12:27:00Z"),
 				Resources:   `{"Worker":{"resources":{"requests":{"cpu":"1","memory":"1Gi"}},"replicas":1}}`,
 			},
 		}, {
@@ -312,7 +312,7 @@ func TestConvertJobToDMOJob(t *testing.T) {
 				IsInEtcd:    util.IntPtr(1),
 				Version:     "3",
 				GmtCreated:  testTime("2019-02-10T12:27:00Z"),
-				GmtFinished: testTimePtr("2019-02-11T12:27:00Z"),
+				GmtJobFinished: testTimePtr("2019-02-11T12:27:00Z"),
 				Resources:   `{"Worker":{"resources":{"requests":{"cpu":"1","memory":"1Gi"}},"replicas":1}}`,
 			},
 		},

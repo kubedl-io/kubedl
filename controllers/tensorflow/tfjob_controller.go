@@ -59,7 +59,7 @@ const (
 var log = logf.Log.WithName("tf-controller")
 
 // NewReconciler returns a new reconcile.Reconciler
-func NewReconciler(mgr ctrl.Manager, config job_controller.JobControllerConfiguration) *TFJobReconciler {
+func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) *TFJobReconciler {
 	r := &TFJobReconciler{
 		Client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),

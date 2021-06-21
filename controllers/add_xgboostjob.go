@@ -17,14 +17,13 @@ package controllers
 
 import (
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
 	xgboostjob "github.com/alibaba/kubedl/controllers/xgboost"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 func init() {
-	SetupWithManagerMap[&v1alpha1.XGBoostJob{}] = func(mgr controllerruntime.Manager, config job_controller.JobControllerConfiguration) error {
+	SetupWithManagerMap[&v1alpha1.XGBoostJob{}] = func(mgr controllerruntime.Manager, config options.JobControllerConfiguration) error {
 		return xgboostjob.NewReconciler(mgr, config).SetupWithManager(mgr)
 	}
 }
