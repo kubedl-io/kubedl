@@ -5,6 +5,9 @@ go 1.15
 require (
 	github.com/aliyun/aliyun-log-go-sdk v0.1.6
 	github.com/frankban/quicktest v1.7.3 // indirect
+	github.com/gin-contrib/sessions v0.0.3
+	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
+	github.com/gin-gonic/gin v1.6.2
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.1-0.20210423233217-9f3e0b1ce51b // indirect
 	github.com/go-sql-driver/mysql v1.4.1
