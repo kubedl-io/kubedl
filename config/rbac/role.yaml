@@ -149,6 +149,26 @@ rules:
   - update
   - watch
 - apiGroups:
+  - serving.kubedl.io
+  resources:
+  - inferences
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - serving.kubedl.io
+  resources:
+  - inferences/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - training.kubedl.io
   resources:
   - elasticdljobs

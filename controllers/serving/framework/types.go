@@ -14,14 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package framework
 
-import "k8s.io/apimachinery/pkg/runtime"
+import (
+	modelv1alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
+	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
+	v1 "k8s.io/api/core/v1"
+)
 
-func SetDefaults_Model(in *Model) {
-
+// Setter is an interface definition to setup specification for predictor template.
+type Setter interface {
+	SetSpec(template *v1.PodTemplateSpec, modelVersion *modelv1alpha1.ModelVersion, modelPath string)
 }
 
-func addDefaultingFuncs(scheme *runtime.Scheme) error {
-	return RegisterDefaults(scheme)
-}
+var (
+	Setters = make(map[v1alpha1.FrameworkType]Setter)
+)
