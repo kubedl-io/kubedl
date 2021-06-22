@@ -11,7 +11,7 @@ on:
 env:
   # Common versions
   GO_VERSION: '1.15'
-  GOLANGCI_VERSION: 'v1.31'
+  GOLANGCI_VERSION: 'v1.39'
   DOCKER_BUILDX_VERSION: 'v0.4.2'
   KUSTOMIZE_VERSION: '3.9.2'
   KUBEDL_CI: 'true'
@@ -42,7 +42,8 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: ${{ env.GOLANGCI_VERSION }}
-          args: --skip-dirs=apis --disable-all  -E deadcode -E gofmt -E goimports -E golint -E ineffassign -E misspell -E vet --timeout=5m
+          # enable golint checks later.
+          args: #--skip-dirs=apis --disable-all  -E deadcode -E gofmt -E goimports -E golint -E ineffassign -E misspell -E vet --timeout=5m
 
   unit-tests:
     runs-on: ubuntu-18.04
