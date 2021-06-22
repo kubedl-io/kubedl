@@ -65,7 +65,7 @@ func (pc *XDLJobPersistController) Reconcile(req ctrl.Request) (ctrl.Result, err
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to fetch xdl job but it has been deleted.", "key", req.String())
-			if err = pc.handler.Delete(xdlJob.Namespace, xdlJob.Name, id); err != nil {
+			if err = pc.handler.Delete(xdlJob.Namespace, xdlJob.Name, xdlJob.Kind, id); err != nil {
 				return ctrl.Result{}, err
 			}
 			return ctrl.Result{}, nil

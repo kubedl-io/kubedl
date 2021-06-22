@@ -44,7 +44,7 @@ type ObjectStorageBackend interface {
 	StopPod(ns, name, podID string) error
 	// SaveJob append or update a job record to backend, region is optional.
 	SaveJob(job metav1.Object, kind string, specs map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus *apiv1.JobStatus, region string) error
-	// Get Job retrieve a job from backend, region is optional.
+	// GetJob retrieve a job from backend, region is optional.
 	GetJob(ns, name, jobID, kind, region string) (*dmo.Job, error)
 	// ListJobs lists those jobs who satisfied with query conditions.
 	ListJobs(query *Query) ([]*dmo.Job, error)

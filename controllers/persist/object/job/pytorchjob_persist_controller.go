@@ -65,7 +65,7 @@ func (pc *PytorchJobPersistController) Reconcile(req ctrl.Request) (ctrl.Result,
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to fetch pytorch job but it has been deleted.", "key", req.String())
-			if err = pc.handler.Delete(pytorchJob.Namespace, pytorchJob.Name, id); err != nil {
+			if err = pc.handler.Delete(pytorchJob.Namespace, pytorchJob.Name, pytorchJob.Kind, id); err != nil {
 				return ctrl.Result{}, err
 			}
 			return ctrl.Result{}, nil
