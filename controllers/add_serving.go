@@ -14,14 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package controllers
 
-import "k8s.io/apimachinery/pkg/runtime"
+import (
+	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/controllers/serving"
+	ctrl "sigs.k8s.io/controller-runtime"
+)
 
-func SetDefaults_Model(in *Model) {
-
-}
-
-func addDefaultingFuncs(scheme *runtime.Scheme) error {
-	return RegisterDefaults(scheme)
+func init() {
+	SetupWithManagerMap[&v1alpha1.Inference{}] = func(mgr ctrl.Manager, config options.JobControllerConfiguration) error {
+		return serving.NewInferenceReconciler(mgr, config).SetupWithManager(mgr)
+	}
 }

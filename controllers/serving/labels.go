@@ -14,14 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package serving
 
-import "k8s.io/apimachinery/pkg/runtime"
+import (
+	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+)
 
-func SetDefaults_Model(in *Model) {
-
-}
-
-func addDefaultingFuncs(scheme *runtime.Scheme) error {
-	return RegisterDefaults(scheme)
+func insertLabelsForPredictor(labels map[string]string, inf *v1alpha1.Inference, predictor *v1alpha1.PredictorSpec) map[string]string {
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	labels[v1.LabelInferenceName] = inf.Name
+	labels[v1.LabelPredictorName] = predictor.Name
+	labels[v1.LabelModelVersion] = predictor.ModelVersion
+	return labels
 }
