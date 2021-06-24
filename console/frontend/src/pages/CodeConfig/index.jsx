@@ -33,32 +33,7 @@ const CodeConfigCreate = ({ globalConfig }) => {
         setPvcs(pvcs.data);
         setPvcLoading(false);
     };
-    const promptAlert = (
-        <Alert
-            type="info"
-            showIcon
-            message={
-                <span>
-          若代码存储在OSS、NAS，则需要将该存储挂载到
-          <a
-              href="https://cs.console.aliyun.com/#/k8s/storage/pvc/list"
-              target="_blank"
-          >
-            ACK集群
-          </a>
-          中，详细见
-          <a
-              href="https://help.aliyun.com/document_detail/86545.html"
-              target="_blank"
-          >
-            指导文档；
-          </a>
-                   {/*运行代码时，需要按照存储目录寻找文件，如：python /workspace/${gitrepo}/example/helloworld.py*/}
-             {'运行代码时，需要按照存储目录寻找文件，如：python /workspace/${git repo}/example/helloworld.py'}
-        </span>
-            }
-        />
-    );
+    
     const codeAlert = (
         <Alert
             type="info"
@@ -84,7 +59,7 @@ const CodeConfigCreate = ({ globalConfig }) => {
         />
     );
     return (
-        <PageHeaderWrapper title={<></>}>
+        <div>
             <Form
                 form={form}
                 {...formItemLayout}
@@ -175,7 +150,6 @@ const CodeConfigCreate = ({ globalConfig }) => {
                                         label="本地存放目录"
                                     >
                                         <Input style={{marginBottom: '10px'}}/>
-                                        {promptAlert}
                                     </Form.Item>
                                 </Card>
                             </Col>
@@ -183,7 +157,7 @@ const CodeConfigCreate = ({ globalConfig }) => {
                     </React.Fragment>
                 )}
             </Form>
-        </PageHeaderWrapper>
+        </div>
     );
 };
 

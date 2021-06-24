@@ -77,26 +77,9 @@ const GitConfig = ({ globalConfig, currentUser }) => {
             }
         />
     );
-    const codeAlert = (
-        <Alert
-            type="info"
-            showIcon
-            message={
-                <span>
-                    {intl.formatMessage({id: 'dlc-dashboard-git-prompt-1'})}，
-                    <a href="https://cs.console.aliyun.com/#/k8s/storage/pvc/list" target="_blank">
-                        {intl.formatMessage({id: 'dlc-dashboard-guidance-document'})}
-                    </a>
-                    ，{intl.formatMessage({id: 'dlc-dashboard-public-key'})}&nbsp;
-                    <a href="https://help.aliyun.com/document_detail/86545.html" target="_blank">
-                        {intl.formatMessage({id: 'dlc-dashboard-download'})}
-                    </a>
-                </span>
-            }
-        />
-    );
+   
     return (
-        <PageHeaderWrapper title={<></>}>
+        <div>
             <Form
                 initialValues={formGitConfig}
                 form={form}
@@ -196,7 +179,7 @@ const GitConfig = ({ globalConfig, currentUser }) => {
                     </React.Fragment>
                 )}
             </Form>
-        </PageHeaderWrapper>
+        </div>
     );
 };
 

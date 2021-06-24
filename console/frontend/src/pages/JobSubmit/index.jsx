@@ -453,7 +453,7 @@ const JobSubmit = ({ globalConfig }) => {
       {i.split(/\/(.+)/)[1]}
       </Select.Option>;
   return (
-    <PageHeaderWrapper title={<></>}>
+    <div>
       <Form
         initialValues={formInitialTF}
         form={form}
@@ -907,7 +907,7 @@ const JobSubmit = ({ globalConfig }) => {
           </Button>
         </FooterToolbar>
       </Form>
-    </PageHeaderWrapper>
+    </div>
   );
 };
 

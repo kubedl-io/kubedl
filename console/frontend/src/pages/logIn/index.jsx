@@ -4,13 +4,18 @@ import { UserOutlined, KeyOutlined } from "@ant-design/icons";
 import styles from "./index.less";
 import 'antd/dist/antd.css';
 import { connect} from "umi";
-const Login =({dispatch})=> {
+import { times } from "lodash";
+const Login = props => {
+  const {dispatch} = props;
    const onFinish=({ username, password })=> {
        if (dispatch) {
          dispatch({
            type: "user/fetchLogin",
            payload: { username, password },
          });
+         setTimeout(function(){
+           props.history.push("/");
+         }, 1000);
        };
   }
     return (
@@ -27,7 +32,7 @@ const Login =({dispatch})=> {
                   rules={[
                     {
                       required: true,
-                      message: "Please input your username",
+                      message: "Please input your userid",
                     },
                   ]}
                 >

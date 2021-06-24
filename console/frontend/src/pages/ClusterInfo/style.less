@@ -25,24 +25,26 @@
   float: left;
 }
 .taskInfoTitle{
-  float: left;
+  display: inline-block;
+  vertical-align: middle;
   margin-left: 10px;
-  span{
-    color: rgba(0,0,0,.45);
-    font-size: 14px;
-    line-height: 22px;
-  }
-  div{
-    color: rgba(0,0,0,.85);
-    font-size: 24px;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    word-break: break-all;
-  }
 }
+.taskInfoMessage{
+  color: rgba(0,0,0,.45);
+  font-size: 14px;
+  line-height: 22px;
+}
+.taskInfoTotal{
+  color: rgba(0,0,0,.85);
+  font-size: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  margin-left: 10px;
+}
+
 .taskInfoAvatarDiv{
   float: left;
-  line-height: 50px;
 }
 .taskInfoAvatar{
   background-color: #1890ff;

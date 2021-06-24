@@ -30,13 +30,17 @@ const codeMessage = {
 const errorHandler = (error) => {
   const { response } = error;
   if (response && response.status) {
-    const errorText = codeMessage[response.status] || response.statusText;
-    const { status, url } = response;
-    notification.error({
-      message: `请求错误 ${status}: ${url}`,
-      description: errorText,
-    });
-
+    if (response.status === 403) {
+      history.push("/logIn")
+      return response
+    } else {
+      const errorText = codeMessage[response.status] || response.statusText;
+      const { status, url } = response;
+      notification.error({
+        message: `请求错误 ${status}: ${url}`,
+        description: errorText,
+      });
+    }
     return response || { data: { code: null, status: null } };
   }
   if (!response) {

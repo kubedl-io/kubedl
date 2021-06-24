@@ -11,7 +11,7 @@ export async function getFakeCaptcha(mobile) {
 }
 
 export async function queryLogin(params) {
-  return request('/api/v1/linuxLogin', {
+  return request('/api/v1/login/oauth2', {
     method: 'POST',
     data: params,
   });

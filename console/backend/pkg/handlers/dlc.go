@@ -3,15 +3,17 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"k8s.io/klog"
+
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
-
 	"github.com/alibaba/kubedl/console/backend/pkg/constants"
 	utils "github.com/alibaba/kubedl/pkg/storage/backends/client"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -36,14 +38,21 @@ type DLCCommonConfig struct {
 
 func (h *DLCHandler) GetDLCConfig() (*DLCCommonConfig, error) {
 	if constants.ConfigMapName == "" {
-		return nil, errors.New("empty common configmap name")
+		return nil, fmt.Errorf("empty common configmap name")
 	}
 
-	cm := v1.ConfigMap{}
-	if err := h.client.Get(context.Background(), types.NamespacedName{
-		Name:      constants.ConfigMapName,
+	cm := &v1.ConfigMap{}
+	err := h.client.Get(context.Background(), types.NamespacedName{
 		Namespace: constants.DLCSystemNamespace,
-	}, &cm); err != nil {
+		Name:      constants.ConfigMapName,
+	}, cm)
+	// Create initial ConfigMap if not exists
+	if errors.IsNotFound(err) {
+		cm, err = h.createDLCConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create common config, err: %v", err)
+		}
+	} else if err != nil {
 		return nil, fmt.Errorf("failed to get common config, err: %v", err)
 	}
 
@@ -54,6 +63,37 @@ func (h *DLCHandler) GetDLCConfig() (*DLCCommonConfig, error) {
 	}
 
 	return &dlcCommonCfg, nil
+}
+
+func (h *DLCHandler) createDLCConfig() (*v1.ConfigMap, error) {
+	commonConfig := DLCCommonConfig{
+		Namespace:   "kubedl",
+		TFCpuImages: []string{
+			"kubedl/tf-mnist-with-summaries:1.0",
+		},
+		PytorchGpuImages: []string{
+			"kubedl/pytorch-dist-example",
+		},
+	}
+	commonConfigBytes, err := json.Marshal(commonConfig)
+	if err != nil {
+		return nil, err
+	}
+	data := make(map[string]string)
+	data["commonConfig"] = string(commonConfigBytes)
+
+	initConfigMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: constants.DLCSystemNamespace,
+			Name:      DatasourceConfigMapName,
+		},
+		Data: data,
+	}
+	if err := h.client.Create(context.TODO(), initConfigMap); err != nil {
+		klog.Errorf("Failed to create ConfigMap, ns: %s, name: %s, err: %v", constants.DLCSystemNamespace, constants.ConfigMapName, err)
+		return nil, err
+	}
+	return initConfigMap, nil
 }
 
 func (h *DLCHandler) ListAvailableNamespaces() ([]string, error) {

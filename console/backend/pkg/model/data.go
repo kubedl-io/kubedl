@@ -27,10 +27,3 @@ type ClusterNodeInfo struct {
 type ClusterNodeInfoList struct {
 	Items []ClusterNodeInfo `json:"items,omitempty"`
 }
-
-type ArmsInfo struct {
-	ClusterId  string `json:"clusterId,omitempty"`
-	ArmsUrl    string `json:"armsUrl,omitempty"`
-	ArmsRegion string `json:"armsRegion,omitempty"`
-	UserId     string `json:"aid,omitempty"`
-}

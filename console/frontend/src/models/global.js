@@ -11,11 +11,7 @@ const GlobalModel = {
   effects: {
     *fetchConfig(_, { call, put }) {
       let response;
-      if (environment && environment !== "eflops") {
-        response = yield call(queryConfig);
-      } else {
-        response = yield { code: 200, data: "success" };
-      }
+      response = yield call(queryConfig);
       if (sessionStorage.getItem("namespace")) {
         response.data.namespace = sessionStorage.getItem("namespace");
       }

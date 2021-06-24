@@ -236,7 +236,7 @@ const DataSheetsList = () => {
     }
   }
   return (
-    <PageHeaderWrapper title={<></>}>
+    <div>
       <Card style={{ marginBottom: 12 }} title={
         <div>
           <div style={{paddingBottom:"8px", textAlign: "right",display: 'inline-block', marginRight: '20px'}}>
@@ -288,7 +288,7 @@ const DataSheetsList = () => {
           </TabPane>
         </Tabs>
       </Card>
-    </PageHeaderWrapper>
+    </div>
   );
 };
 

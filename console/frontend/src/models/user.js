@@ -35,6 +35,7 @@ const UserModel = {
           type: 'loginSuccess',
           payload: response || { data: { msg: null, success: null } },
         });
+        
       }
     },
     * fetchLoginOut(_, { call, put }) {

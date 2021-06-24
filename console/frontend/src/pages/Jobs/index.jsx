@@ -334,11 +334,9 @@ const TableList = ({ globalConfig }) => {
       valueType: "option",
       render: (_, record) => {
         let isDisabled;
-        if (users.accountId === users.loginId) {
+        if (users.loginId && users.loginId !== "") {
           isDisabled = true;
-        } else {
-          isDisabled = record.jobUserId && record.jobUserId === users.loginId;
-        }
+        } 
         let iconStyleMarginLeft = {
           marginLeft: "10px",
           color: isDisabled ? "#1890ff" : "",
@@ -434,7 +432,7 @@ const TableList = ({ globalConfig }) => {
     ];
   }
   return (
-    <PageHeaderWrapper title={<></>}>
+    <div>
       <ProTable
         loading={loading}
         dataSource={jobs}
@@ -460,7 +458,7 @@ const TableList = ({ globalConfig }) => {
           onCancel={() => onTBCancel()}
         />
       )}
-    </PageHeaderWrapper>
+    </div>
   );
 };
 

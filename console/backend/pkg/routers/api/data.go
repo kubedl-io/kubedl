@@ -26,7 +26,6 @@ func (dc *dataAPIsController) RegisterRoutes(routes *gin.RouterGroup) {
 	overview.GET("/total", dc.getClusterTotal)
 	overview.GET("/request/:podPhase", dc.getClusterRequest)
 	overview.GET("/nodeInfos", dc.getClusterNodeInfos)
-	overview.GET("/podRangeInfo", dc.getClusterPodRangeInfo)
 }
 
 func (dc *dataAPIsController) getClusterTotal(c *gin.Context) {
@@ -60,16 +59,3 @@ func (dc *dataAPIsController) getClusterNodeInfos(c *gin.Context) {
 	utils.Succeed(c, clusterNodeInfos)
 }
 
-func (dc *dataAPIsController) getClusterPodRangeInfo(c *gin.Context) {
-	query := c.Query("query")
-	start := c.Query("start")
-	end := c.Query("end")
-	step := c.Query("step")
-
-	clusterPodRangeInfo, err := dc.dataHandler.QueryRange(query, start, end, step)
-	if err != nil {
-		Error(c, fmt.Sprintf("failed to getClusterPodRangeInfo, err=%v", err))
-		return
-	}
-	utils.Succeed(c, clusterPodRangeInfo)
-}

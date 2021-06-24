@@ -364,13 +364,10 @@ const ClusterInfo = ({ globalConfig }) => {
         fetchStatistics(v.target.value);
     }
     return (
-        <PageHeaderWrapper title={<></>}>
+        <div>
             <Card style={{ marginBottom: 12 }} title={
                 <div>
                     ACK {intl.formatMessage({id: 'dlc-dashboard-cluster-overview'})}
-                    {environment && environment !=="eflops" &&
-                       <a style={{marginLeft: '15px'}} href={'https://cs.console.aliyun.com/index2#/k8s/cluster/'+ globalConfig.clusterId +'/v2/info/overview'} target="_blank">{intl.formatMessage({id: 'dlc-dashboard-cluster-details'})}</a>
-                    }
                     <Button type="primary" style={{float: 'right'}} onClick={fetchNodeInfos}>
                         {intl.formatMessage({id: 'dlc-dashboard-refresh'})}
                     </Button>
@@ -440,27 +437,28 @@ const ClusterInfo = ({ globalConfig }) => {
                 <Row gutter={[24, 24]}>
                     <Col span={environment && environment !=="eflops"? 12: 24}>
                         <Card title={
-                            <Radio.Group
-                                options={StatisticsOptions}
-                                onChange={dateStatisticalChange}
-                                value={dateStatistical}
-                                optionType="button"
-                                buttonStyle="solid"
-                            />
-                        }>
-                            <Row gutter={[24, 24]}>
-                                <Col span={14}>
+                            <div>
+                                <Radio.Group
+                                    options={StatisticsOptions}
+                                    onChange={dateStatisticalChange}
+                                    value={dateStatistical}
+                                    optionType="button"
+                                    buttonStyle="solid"
+                                    />
+                                <div style={{float:'right'}}>
                                     <div className={styles.taskInfoAvatarDiv}>
                                         <Avatar
                                             className={styles.taskInfoAvatar}
-                                            size="large"
+                                            size="small"
                                             icon={<ProfileOutlined />} />
                                     </div>
                                     <div className={styles.taskInfoTitle}>
-                                        <span>{intl.formatMessage({id: 'dlc-dashboard-job-total'})}</span>
-                                        <div>{taskTotal}</div>
+                                        <span className={styles.taskInfoMessage}>{intl.formatMessage({id: 'dlc-dashboard-job-total'})}</span>
+                                        <span className={styles.taskInfoTotal}>{taskTotal}</span>
                                     </div>
-                                </Col>
+                                </div>
+                            </div>
+                        }>
                                 {/*<Col span={9} offset={1}>*/}
                                 {/*    <div className={styles.taskInfoAvatarDiv} style={{marginLeft: '30px'}}>*/}
                                 {/*        <Avatar*/}
@@ -473,7 +471,6 @@ const ClusterInfo = ({ globalConfig }) => {
                                 {/*        <div>145</div>*/}
                                 {/*    </div>*/}
                                 {/*</Col>*/}
-                            </Row>
                             <ProTable
                                 loading={statisticsLoading}
                                 dataSource={statisticalInfos}
@@ -514,7 +511,7 @@ const ClusterInfo = ({ globalConfig }) => {
                     }
                 </Row>
             </Card>
-        </PageHeaderWrapper>
+        </div>
     );
 };
 

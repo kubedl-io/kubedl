@@ -8,6 +8,10 @@ export default {
       component: "../layouts/SecurityLayout",
       routes: [
         {
+          path: "/logIn",
+          component: "./logIn"
+        },
+        {
           path: "/",
           component: "../layouts/BasicLayout",
           authority: ["admin", "user"],

@@ -12,34 +12,33 @@ type JobResource struct {
 	TotalGPU    int64 `json:"totalGPU"`
 }
 
-// JobInfo job的基础模型
-// 一期简单定义- 平铺
+// JobInfo job meta info
 type JobInfo struct {
-	// 任务标识
+	// Id: unique id
 	Id string `json:"id"`
-	// 任务名称
+	// Name: job name
 	Name string `json:"name"`
-	// 任务类型
+	// JobType: type
 	JobType string `json:"jobType"`
-	// 是否启用了TensorBoard
+	// Enable Tensorboard or not
 	EnableTensorboard bool `json:"enableTensorboard"`
-	// 任务状态
+	// status of job
 	JobStatus v1.JobConditionType `json:"jobStatus"`
-	// 命名空间
+	// Namespace
 	Namespace string `json:"namespace"`
-	// 创建时间
+	//
 	CreateTime string `json:"createTime"`
-	// 结束时间
+	//
 	EndTime string `json:"endTime"`
-	// 执行时长
+	//
 	DurationTime string `json:"durationTime"`
-	// 部署域
+	//
 	DeployRegion string `json:"deployRegion"`
-	// 退出事件列表
+	//
 	ExitedEvents []string `json:"exitedEvents"`
-	// 任务规格列表
+	//
 	Specs []Spec `json:"specs"`
-	//任务规格类型状态统计
+	//
 	SpecsReplicaStatuses map[string]*SpecReplicaStatus `json:"specsReplicaStatuses"`
 
 	JobConfig   string `json:"jobConfig,omitempty"`
@@ -48,38 +47,37 @@ type JobInfo struct {
 	//JobResource JobResource `json:"jobResource,omitempty"`
 }
 
-// Spec 任务规格模型
+// Spec pods spec of job
 type Spec struct {
-	// 名称
 	Name  string `json:"name"`
 	PodId string `json:"podId"`
-	//任务类型
+	//
 	ReplicaType string `json:"replicaType"`
-	// 容器IP
+	//
 	ContainerIp string `json:"containerIp"`
-	// 容器ID
+	//
 	ContainerId string `json:"containerId"`
-	// 宿主机IP
+	//
 	HostIp string `json:"hostIp"`
-	// 状态
+	//
 	Status corev1.PodPhase `json:"jobStatus"`
-	// 创建时间
+	//
 	CreateTime string `json:"createTime"`
-	// 开始时间
+	//
 	StartTime string `json:"startTime"`
-	// 结束时间
+	//
 	EndTime string `json:"endTime"`
-	// 执行时长
+	//
 	DurationTime string `json:"durationTime"`
-	// 原因，目前只有失败情况下才有
+	// Reason of failed
 	Reason string `json:"reason,omitempty"`
-	// 描述，目前只有失败情况下才有
+	// Message of failed
 	Message string `json:"message,omitempty"`
-	// 原因+描述，目前只有失败情况下才有
+	// Reason + Message
 	Remark string `json:"remark,omitempty"`
 }
 
-// SpecReplicaStatus 规格状态
+// SpecReplicaStatus status of pods
 type SpecReplicaStatus struct {
 	// The number of actively running pods.
 	Active int32 `json:"active"`
@@ -102,10 +100,10 @@ type HistoryJobStatistic struct {
 	// or "Anonymous" if JobUserName and JobUserID are both empty.
 	UserName string `json:"userName"`
 
-	// Total job count submmitted by this user.
+	// Total job count submitted by this user.
 	JobCount int32 `json:"jobCount"`
 
-	// Job ratio submmited by this user.
+	// Job ratio submitted by this user.
 	JobRatio float64 `json:"jobRatio"`
 }
 

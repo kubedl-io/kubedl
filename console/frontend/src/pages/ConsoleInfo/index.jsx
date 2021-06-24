@@ -172,7 +172,7 @@ const ConsoleInfo = ({ globalConfig }) => {
         }
     ];
     return (
-        <PageHeaderWrapper title={<></>}>
+        <div>
             <Card style={{ marginBottom: 12 }} title={
                 <div>
                     ACK集群信息
@@ -216,7 +216,7 @@ const ConsoleInfo = ({ globalConfig }) => {
                     </div>
                 </div>
             </Card>
-        </PageHeaderWrapper>
+        </div>
     );
 };
 

@@ -191,7 +191,7 @@ const JobSubmitNew = ({ globalConfig }) => {
             data.metadata.annotations['kubedl.io/tensorboard-config'] = JSON.stringify(config)
         }
 
-        data.metadata.annotations['kubeflow.org/tenancy'] = JSON.stringify({
+        data.metadata.annotations['kubedl.io/tenancy'] = JSON.stringify({
             tenant: "",
             user: usersInfo.loginId ? usersInfo.loginId : '',
         });
@@ -452,7 +452,7 @@ const JobSubmitNew = ({ globalConfig }) => {
         form.setFieldsValue(currentFormInitial);
     }
     return (
-        <PageHeaderWrapper title={<></>}>
+        <div>
             <Form
                 initialValues={formInitialTF}
                 form={form}
@@ -768,7 +768,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                     </Button>
                 </FooterToolbar>
             </Form>
-        </PageHeaderWrapper>
+        </div>
     );
 };
 

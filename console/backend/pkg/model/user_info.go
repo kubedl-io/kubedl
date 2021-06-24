@@ -15,28 +15,21 @@ import (
 )
 
 type UserInfo struct {
-
-	// aliCloud main account id
-	Aid string `json:"aid"`
-	// aliCloud login account id
+	// Uid login account id
 	Uid string `json:"uid"`
-	// the name displayed by the logged-in user
-	Name string `json:"name"`
-	// aliCloud login account
+	// LoginName login account name
 	LoginName string `json:"login_name"`
-	// aliCloud ram  login account
-	Upn string `json:"upn"`
+
 }
 
 type UserInfoMap map[string]UserInfo
 
 const (
-	configMapName      = "user-info-config"
 	configMapKeyUsers  = "users"
 )
 
 func StoreUserInfoToConfigMap(userInfo UserInfo) error {
-	configMap, err := getOrCreateUserInfoConfigMap()
+	configMap, err := GetOrCreateUserInfoConfigMap()
 	if err != nil {
 		return err
 	}
@@ -56,7 +49,7 @@ func GetUserInfoFromConfigMap(userID string) (UserInfo, error) {
 		return UserInfo{}, fmt.Errorf("userID is empty")
 	}
 
-	configMap, err := getOrCreateUserInfoConfigMap()
+	configMap, err := GetOrCreateUserInfoConfigMap()
 	if err != nil {
 		return UserInfo{}, err
 	}
@@ -75,12 +68,12 @@ func GetUserInfoFromConfigMap(userID string) (UserInfo, error) {
 	return userInfo, nil
 }
 
-func getOrCreateUserInfoConfigMap() (*v1.ConfigMap, error) {
+func GetOrCreateUserInfoConfigMap() (*v1.ConfigMap, error) {
 	configMap := &v1.ConfigMap{}
 	err := clientmgr.GetCtrlClient().Get(context.TODO(),
 		apitypes.NamespacedName{
 			Namespace: constants.DLCSystemNamespace,
-			Name:      configMapName,
+			Name:      constants.ConfigMapName,
 		}, configMap)
 
 	// Create initial user info ConfigMap if not exists
@@ -88,7 +81,7 @@ func getOrCreateUserInfoConfigMap() (*v1.ConfigMap, error) {
 		initConfigMap := &v1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: constants.DLCSystemNamespace,
-				Name:      configMapName,
+				Name:      constants.ConfigMapName,
 			},
 			Data: map[string]string{
 				configMapKeyUsers: "{}",
@@ -97,7 +90,7 @@ func getOrCreateUserInfoConfigMap() (*v1.ConfigMap, error) {
 		clientmgr.GetCtrlClient().Create(context.TODO(), initConfigMap)
 		return initConfigMap, nil
 	} else if err != nil {
-		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.DLCSystemNamespace, configMapName, err)
+		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.DLCSystemNamespace, constants.ConfigMapName, err)
 		return configMap, err
 	}
 

@@ -200,10 +200,8 @@ class JobDetail extends Component {
 
     action = detail => {
         let isDisabled;
-        if (this.state.users.accountId === this.state.users.loginId) {
+        if (this.state.users.loginId && this.state.users.loginId !== "") {
             isDisabled = true;
-        }else {
-            isDisabled = record.jobUserId && record.jobUserId === this.state.users.loginId;
         }
         return (
             <Fragment>
@@ -313,7 +311,7 @@ class JobDetail extends Component {
                         {detail.durationTime}
                     </Descriptions.Item>
                 </Descriptions>
-              
+              {/*
                 <Descriptions bordered title={<FormattedMessage id="dlc-dashboard-job-config" />}>
                     <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-data-config" />}>
                          {jobConfig&&jobConfig.data_bindings? jobConfig.data_bindings.map((data,index)=>{
@@ -378,7 +376,7 @@ class JobDetail extends Component {
                         }
                     </Descriptions.Item>
                 </Descriptions>
-                
+                    */ }
             </div>
         );
         return (descriptions);

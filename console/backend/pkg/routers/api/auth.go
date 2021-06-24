@@ -1,8 +1,6 @@
 package api
 
 import (
-	"net/http"
-
 	"github.com/alibaba/kubedl/console/backend/pkg/auth"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 	"github.com/gin-contrib/sessions"
@@ -21,13 +19,14 @@ type authAPIsController struct {
 }
 
 func (ac *authAPIsController) RegisterRoutes(routes *gin.RouterGroup) {
-	routes.GET("/login/oauth2/:type", ac.login)
+	routes.GET("/login/oauth2", ac.login)
+	routes.POST("/login/oauth2", ac.login)
 	routes.GET("/current-user", ac.currentUser)
 	routes.GET("/logout", ac.logout)
 	routes.GET("/ingressAuth", ac.ingressAuth)
 }
 
-// login authorize and redirect to specify url, redirect to home page default
+// login authorize and redirect to home page
 func (ac *authAPIsController) login(c *gin.Context) {
 	err := ac.loginAuth.Login(c)
 	if err != nil {
@@ -39,9 +38,7 @@ func (ac *authAPIsController) login(c *gin.Context) {
 		}
 		return
 	}
-
-	redirectURL := c.DefaultQuery("redirect_uri", "http://" + c.Request.Host)
-	c.Redirect(http.StatusFound, redirectURL)
+	utils.Succeed(c, nil)
 }
 
 func (ac *authAPIsController) logout(c *gin.Context) {
@@ -56,9 +53,9 @@ func (ac *authAPIsController) logout(c *gin.Context) {
 func (ac *authAPIsController) currentUser(c *gin.Context) {
 	session := sessions.Default(c)
 	utils.Succeed(c, map[string]interface{}{
-		"accountId": session.Get(auth.SessionKeyAccountID),
+		//"accountId": session.Get(auth.SessionKeyAccountID),
 		"loginId":   session.Get(auth.SessionKeyLoginID),
-		"name":      session.Get(auth.SessionKeyName),
+		//"name":      session.Get(auth.SessionKeyName),
 		"loginName": session.Get(auth.SessionKeyLoginName),
 	})
 }

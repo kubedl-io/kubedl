@@ -2,6 +2,7 @@ package routers
 
 import (
 	"flag"
+	md "github.com/alibaba/kubedl/console/backend/pkg/middleware"
 	"github.com/alibaba/kubedl/console/backend/pkg/routers/api"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"github.com/alibaba/kubedl/console/backend/pkg/auth"
 	"github.com/alibaba/kubedl/console/backend/pkg/constants"
 	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
-	md "github.com/alibaba/kubedl/console/backend/pkg/middleware"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-contrib/static"
@@ -95,8 +95,6 @@ func InitRouter() *gin.Engine {
 
 //initControllersRoute registers customized controllers and adds routes
 func initControllersRoute(r *gin.Engine, baseGroup string) error {
-	router := r.Group(baseGroup)
-
 	//load check auth middleware
 	authHandler := auth.GetAuth()
 	r.Use(md.CheckAuthMiddleware(authHandler))
@@ -121,6 +119,7 @@ func initControllersRoute(r *gin.Engine, baseGroup string) error {
 		api.NewCodeSourceAPIsController(),
 	}
 	//register routes
+	router := r.Group(baseGroup)
 	for _, ctrl := range ctrls {
 		ctrl.RegisterRoutes(router)
 	}

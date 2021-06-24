@@ -2,11 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"github.com/alibaba/kubedl/console/backend/pkg/constants"
-	"io/ioutil"
-	"net/http"
 	"sort"
 
 	"github.com/alibaba/kubedl/pkg/util/resource_utils"
@@ -18,10 +13,7 @@ import (
 
 	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
-	prommodel "github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
-	apitypes "k8s.io/apimachinery/pkg/types"
 	resources "k8s.io/apiserver/pkg/quota/v1"
 	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -153,74 +145,6 @@ func (ov *DataHandler) GetClusterNodeInfos() (model.ClusterNodeInfoList, error) 
 	return model.ClusterNodeInfoList{Items: clusterNodeInfos}, nil
 }
 
-// QueryRange query data from prometheus(arms)
-// prometheus Range Vector Selectors https://prometheus.io/docs/prometheus/latest/querying/api/#range-queries
-func (ov *DataHandler) QueryRange(query, start, end, step string) (prommodel.Value, error) {
-	armsInfo, err := getArmsInfo()
-	if err != nil {
-		return nil, err
-	}
-	if armsInfo.UserId == "" || armsInfo.ArmsUrl == "" || armsInfo.ArmsRegion == "" || armsInfo.ClusterId == "" {
-		klog.Errorf("armsInfo property lack armsInfo:%v", armsInfo)
-		return nil, nil
-	}
-
-	reqUrl := armsInfo.ArmsUrl + "api/v1/arms/" + armsInfo.UserId + "/" + armsInfo.ClusterId + "/" + armsInfo.ArmsRegion + "/api/v1/query_range?query=" + query + "&start=" + start + "&end=" + end + "&step=" + step
-	klog.Infof("QueryRange url=%s", reqUrl)
-
-	resp, err := http.Get(reqUrl)
-	defer func() {
-		if resp != nil {
-			resp.Body.Close()
-		}
-	}()
-	if err != nil || resp.StatusCode != http.StatusOK {
-		klog.Errorf("QueryRange http err=%v,resp=%v,reqUrl=%s", err, resp, reqUrl)
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := getArmsValueFromResponse(body)
-	if err != nil {
-		return nil, err
-	}
-
-	return prommodel.Value(result), err
-}
-
-// get data from Arms http response
-func getArmsValueFromResponse(body []byte) (prommodel.Matrix, error) {
-	res := struct {
-		Status string          `json:"status"`
-		Data   json.RawMessage `json:"data,omitempty"`
-		Error  string          `json:"error,omitempty"`
-	}{}
-	err := json.Unmarshal(body, &res)
-	if err != nil {
-		return nil, err
-	}
-	if res.Status != "success" {
-		klog.Errorf("getArmsValueFromResponse err=%v", res.Error)
-		return nil, errors.New("arms query error")
-	}
-
-	v := struct {
-		Type   prommodel.ValueType `json:"resultType"`
-		Result prommodel.Matrix    `json:"result"`
-	}{}
-
-	err = json.Unmarshal(res.Data, &v)
-	if err != nil {
-		return nil, err
-	}
-
-	return v.Result, err
-}
-
 // sum podlist request
 func getPodRequest(podList *corev1.PodList, phase corev1.PodPhase) corev1.ResourceList {
 	totalRequest := corev1.ResourceList{}
@@ -248,34 +172,4 @@ func getGpu(resourceList corev1.ResourceList) *resource.Quantity {
 		return &val
 	}
 	return &resource.Quantity{Format: resource.DecimalSI}
-}
-
-// GetArmsInfo get arms config for query data
-func getArmsInfo() (model.ArmsInfo, error) {
-	// Get config map.
-	configMap := &v1.ConfigMap{}
-	var err = clientmgr.GetCtrlClient().Get(context.TODO(),
-		apitypes.NamespacedName{
-			Namespace: constants.DLCSystemNamespace,
-			Name:      constants.ConfigMapName,
-		}, configMap)
-	if err != nil {
-		klog.Errorf("oauth failed get oauth configMap, ns: %s, name: %s, err: %v", constants.DLCSystemNamespace, configMap, err)
-		return model.ArmsInfo{}, err
-	}
-	armsConfig := configMap.Data["armsConfig"]
-	oauthConfig := configMap.Data["oauthConfig"]
-	armsMap := map[string]string{}
-	err = json.Unmarshal([]byte(armsConfig), &armsMap)
-	if err != nil {
-		klog.Errorf("GetArmsInfo json Unmarshal err, armsConfig: %s, err: %v", armsConfig, err)
-		return model.ArmsInfo{}, err
-	}
-	oauthMap := map[string]string{}
-	err = json.Unmarshal([]byte(oauthConfig), &oauthMap)
-	if err != nil {
-		klog.Errorf("GetArmsInfo json Unmarshal err, oauthConfig: %s, err: %v", oauthConfig, err)
-		return model.ArmsInfo{}, err
-	}
-	return model.ArmsInfo{ClusterId: armsMap["clusterId"], ArmsUrl: armsMap["armsUrl"], ArmsRegion: armsMap["armsRegion"], UserId: oauthMap["aid"]}, nil
 }

@@ -24,7 +24,6 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
     const [form] = Form.useForm();
 
     useEffect(() => {
-        setAckLink('https://cs.console.aliyun.com/index2#/k8s/cluster/'+ globalConfig.clusterId +'/v2/storage/pvc/list?ns=' + globalConfig.namespace)
         fetchPVC();
     },[]);
 
@@ -49,31 +48,6 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
         setPvcLoading(false);
     };
 
-    const promptAlert = (
-        <Alert
-            type="info"
-            showIcon
-            message={
-                <span>
-          {intl.formatMessage({id: 'dlc-dashboard-prompt-1'})}
-          <a
-              href={ackLink}
-              target="_blank"
-          >
-            {intl.formatMessage({id: 'dlc-dashboard-ack-cluster'})}
-          </a>
-          {intl.formatMessage({id: 'dlc-dashboard-prompt-2'})}
-          <a
-              href="https://help.aliyun.com/document_detail/86545.html"
-              target="_blank"
-          >
-            {intl.formatMessage({id: 'dlc-dashboard-guidance-document'})}
-          </a>
-                    {intl.formatMessage({id: 'dlc-dashboard-prompt-3'})}
-        </span>
-            }
-        />
-    );
     const [isLoading, setIsLoading] = useState(false);
     const handleSubmit = (values) => {
         setIsLoading(true);
@@ -101,12 +75,11 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
 
     const onChangeNamespace = (v) => {
         setPvcs([]);
-        setAckLink('https://cs.console.aliyun.com/index2#/k8s/cluster/'+ globalConfig.clusterId +'/v2/storage/pvc/list?ns=' + v)
         fetchPVC();
     }
     
     return (
-        <PageHeaderWrapper title={<></>}>
+        <div>
             <Form
                 initialValues={formDataConfig}
                 form={form}
@@ -220,7 +193,6 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                                         <Col span={21}><Input/></Col>
                                     </Row>
                                 </Form.Item>
-                                {promptAlert}
                             </Form.Item>
                             <Form.Item wrapperCol={{span: 3, offset: 21}}>
                                 <Button type="primary" htmlType="submit" loading={isLoading}>{intl.formatMessage({id: 'dlc-dashboard-submit'})}</Button>
@@ -229,7 +201,7 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                     </Col>
                 </Row>
             </Form>
-        </PageHeaderWrapper>
+        </div>
     );
 };
 

@@ -57,9 +57,6 @@ func ConvertDMOJobToJobInfo(dmoJob *dmo.Job) JobInfo {
 
 	jobInfo.JobUserID = userInfo.Uid
 	jobInfo.JobUserName = userInfo.LoginName
-	if userInfo.Upn != "" {
-		jobInfo.JobUserName = userInfo.Upn
-	}
 
 	/*
 		jobResource, err := calculateJobResources(jobInfo.Resources)

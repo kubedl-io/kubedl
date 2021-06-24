@@ -1,19 +1,17 @@
 package utils
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
 func Redirect403(c *gin.Context) {
-	c.Redirect(http.StatusFound, "/403")
+	c.JSON(403, nil)
 }
 
 func Redirect404(c *gin.Context) {
-	c.Redirect(http.StatusFound, "/404")
+	c.JSON(404, nil)
 }
 
 func Redirect500(c *gin.Context) {
-	c.Redirect(http.StatusFound, "/500")
+	c.JSON(500, nil)
 }
