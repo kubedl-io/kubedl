@@ -6,11 +6,11 @@
 [![Build Status](https://travis-ci.com/alibaba/kubedl.svg?branch=master)](https://travis-ci.com/alibaba/kubedl)
 
 KubeDL enables deep learning workloads to run on Kubernetes more easily and efficiently. 
-<div align="center">
+<div align="left">
  <img src="https://v6d.io/_static/cncf-color.svg" width="400" title="">
 </div> <br/>
 
-KubeDL is a CNCF sandbox project.
+KubeDL is a [CNCF sandbox](https://www.cncf.io/sandbox-projects/) project.
 
 
 Its core functionalities include:
