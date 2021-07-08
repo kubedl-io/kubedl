@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - release-*
+  pull_request: {}
+  workflow_dispatch: {}
+
+env:
+  # Common versions
+  GO_VERSION: '1.15'
+  GOLANGCI_VERSION: 'v1.39'
+  DOCKER_BUILDX_VERSION: 'v0.4.2'
+  KUSTOMIZE_VERSION: '3.9.2'
+  KUBEDL_CI: 'true'
+
+jobs:
+
+  unit-tests:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Fetch History
+        run: git fetch --prune --unshallow
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: install Kubebuilder
+        uses: RyanSiu1995/kubebuilder-action@v1.2
+      - name: Cache Go Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
+      - name: Run Unit Tests
+        run: |
+          make generate
+          make -j2 test
+          git status
+      - name: Publish Unit Test Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          flags: unittests
+          file: cover.out
+      - name: Check diff
+        run: '[[ -z $(git status -s) ]] || (printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
+
+  # enable golint checks later.
+#  golangci-lint:
+#    runs-on: ubuntu-18.04
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#        with:
+#          submodules: true
+#      - name: Setup Go
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: ${{ env.GO_VERSION }}
+#      - name: Cache Go Dependencies
+#        uses: actions/cache@v2
+#        with:
+#          path: ~/go/pkg/mod
+#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+#          restore-keys: ${{ runner.os }}-go-
+#      - name: Code generate
+#        run: |
+#          make generate
+#      - name: Lint golang code
+#        uses: golangci/golangci-lint-action@v2
+#        with:
+#          version: ${{ env.GOLANGCI_VERSION }}
+#          args: --skip-dirs=apis --disable-all  -E deadcode -E gofmt -E goimports -E golint -E ineffassign -E misspell -E vet --timeout=5m
