@@ -1,9 +1,19 @@
 # KubeDL
 
+
+
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Build Status](https://travis-ci.com/alibaba/kubedl.svg?branch=master)](https://travis-ci.com/alibaba/kubedl)
 
-KubeDL enables deep learning workloads to run on Kubernetes more easily and efficiently. Its core functionalities include:
+KubeDL enables deep learning workloads to run on Kubernetes more easily and efficiently. 
+<div align="center">
+ <img src="https://v6d.io/_static/cncf-color.svg" width="400" title="">
+</div> <br/>
+
+KubeDL is a CNCF sandbox project.
+
+
+Its core functionalities include:
 
 - Automatically tunes the best container-level configurations before an ML model is deployed as inference services. - [Morphling Github](https://github.com/alibaba/morphling)
 - Model lineage and versioning to track the history of a model natively in CRD: when the model is trained using which data and which image, each version of the model, which version is running etc. 
@@ -16,3 +26,4 @@ Check the website: https://kubedl.io
 <div align="center">
  <img src="docs/img/kubedl.png" width="700" title="">
 </div> <br/>
+
