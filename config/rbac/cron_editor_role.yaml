@@ -1,0 +1,24 @@
+# permissions for end users to edit crons.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cron-editor-role
+rules:
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons/status
+  verbs:
+  - get

@@ -1,0 +1,20 @@
+# permissions for end users to view crons.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cron-viewer-role
+rules:
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons/status
+  verbs:
+  - get
