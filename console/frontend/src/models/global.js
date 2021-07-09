@@ -28,7 +28,7 @@ const GlobalModel = {
         Object.entries(response.data).forEach((item) => {
           namespaces.push({
             value: item[0],
-            label: `${item[0]}${item[1] ? "DLC" : ""}`,
+            label: `${item[0]}${item[1] ? "KubeDL" : ""}`,
           });
         });
       } else if (datatype === "[object Array]") {

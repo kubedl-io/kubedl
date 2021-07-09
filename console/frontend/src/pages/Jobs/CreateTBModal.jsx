@@ -109,7 +109,7 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
         }
       );
       message.success(
-        intl.formatMessage({ id: "dlc-dashboard-update-log-success" })
+        intl.formatMessage({ id: "kubedl-dashboard-update-log-success" })
       );
       fetchTensorboard();
       setIsEditing(false);
@@ -123,10 +123,10 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
           <Tooltip
             title={
               "Job " +
-              intl.formatMessage({ id: "dlc-dashboard-output-log-url" })
+              intl.formatMessage({ id: "kubedl-dashboard-output-log-url" })
             }
           >
-            {intl.formatMessage({ id: "dlc-dashboard-events-dir" })}{" "}
+            {intl.formatMessage({ id: "kubedl-dashboard-events-dir" })}{" "}
             <QuestionCircleTwoTone twoToneColor="#faad14" />
           </Tooltip>
         }
@@ -135,7 +135,7 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
           {
             required: true,
             message: intl.formatMessage({
-              id: "dlc-dashboard-events-dir-required",
+              id: "kubedl-dashboard-events-dir-required",
             }),
           },
         ]}
@@ -157,7 +157,7 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
         <div>
           <Descriptions size="small">
             <Descriptions.Item
-              label={intl.formatMessage({ id: "dlc-dashboard-domain-name" })}
+              label={intl.formatMessage({ id: "kubedl-dashboard-domain-name" })}
               span={3}
             >
               {tbStatus.ingresses ? (
@@ -165,20 +165,20 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
                   target="_blank"
                   href={`${window.location.protocol}//${tbStatus.ingresses[0].spec.rules[0].host}/${selectedJob.namespace}/${selectedJob.name}`}
                 >
-                  {intl.formatMessage({ id: "dlc-dashboard-open" })} Tensorboard
+                  {intl.formatMessage({ id: "kubedl-dashboard-open" })} Tensorboard
                 </a>
               ) : (
                 "-"
               )}
             </Descriptions.Item>
             <Descriptions.Item
-              label={intl.formatMessage({ id: "dlc-dashboard-status" })}
+              label={intl.formatMessage({ id: "kubedl-dashboard-status" })}
               span={3}
             >
               <PodStatus status={tbStatus.phase}></PodStatus>
             </Descriptions.Item>
             <Descriptions.Item
-              label={intl.formatMessage({ id: "dlc-dashboard-details" })}
+              label={intl.formatMessage({ id: "kubedl-dashboard-details" })}
               span={3}
             >
               {tbStatus.message || "-"}
@@ -187,7 +187,7 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
           <Divider />
           <Descriptions size="small">
             <Descriptions.Item
-              label={intl.formatMessage({ id: "dlc-dashboard-events-dir" })}
+              label={intl.formatMessage({ id: "kubedl-dashboard-events-dir" })}
               span={3}
             >
               {isEditing ? (
@@ -201,7 +201,7 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
                         {
                           required: true,
                           message: intl.formatMessage({
-                            id: "dlc-dashboard-events-dir-required",
+                            id: "kubedl-dashboard-events-dir-required",
                           }),
                         },
                       ]}
@@ -241,17 +241,17 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
       visible={true}
       title={`${
         isCreating
-          ? intl.formatMessage({ id: "dlc-dashboard-create" })
-          : intl.formatMessage({ id: "dlc-dashboard-view" })
+          ? intl.formatMessage({ id: "kubedl-dashboard-create" })
+          : intl.formatMessage({ id: "kubedl-dashboard-view" })
       } Tensorboard`}
       okText={
-        isCreating ? intl.formatMessage({ id: "dlc-dashboard-create" }) : null
+        isCreating ? intl.formatMessage({ id: "kubedl-dashboard-create" }) : null
       }
-      cancelText={intl.formatMessage({ id: "dlc-dashboard-cancel" })}
+      cancelText={intl.formatMessage({ id: "kubedl-dashboard-cancel" })}
       onCancel={onCancel}
       footer={[
         <Button key="back" onClick={onCancel}>
-          {intl.formatMessage({ id: "dlc-dashboard-close" })}
+          {intl.formatMessage({ id: "kubedl-dashboard-close" })}
         </Button>,
         isCreating && (
           <Button
@@ -264,7 +264,7 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
               });
             }}
           >
-            {intl.formatMessage({ id: "dlc-dashboard-create" })}
+            {intl.formatMessage({ id: "kubedl-dashboard-create" })}
           </Button>
         ),
       ]}

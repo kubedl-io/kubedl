@@ -1,4 +1,4 @@
-# DLC Dashboard
+# KubeDL Dashboard
 
 ## Environment Prepare
 

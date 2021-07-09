@@ -19,7 +19,7 @@ import { PageHeaderWrapper } from "@ant-design/pro-layout";
 import ProTable from "@ant-design/pro-table";
 import {getOverviewNodeInfos, getOverviewTotal, getOverviewRequestPodPhase, getTimeStatistics, getTopResourcesStatistics} from "@/pages/ClusterInfo/service";
 import styles from "./style.less";
-import { DlcIconFont } from "@/utils/iconfont";
+import { KubeDLIconFont } from "@/utils/iconfont";
 import moment from "moment";
 const ClusterInfo = ({ globalConfig }) => {
     const intl = useIntl();
@@ -49,19 +49,19 @@ const ClusterInfo = ({ globalConfig }) => {
     const StatisticsOptions = [
         {
             key: 'past7days',
-            label: () => intl.formatMessage({id: 'dlc-dashboard-past7days'})
+            label: () => intl.formatMessage({id: 'kubedl-dashboard-past7days'})
         },
         {
             key: 'past30days',
-            label: () => intl.formatMessage({id: 'dlc-dashboard-past30days'})
+            label: () => intl.formatMessage({id: 'kubedl-dashboard-past30days'})
         },
         {
             key: 'week',
-            label: () => intl.formatMessage({id: 'dlc-dashboard-week'})
+            label: () => intl.formatMessage({id: 'kubedl-dashboard-week'})
         },
         {
             key: 'month',
-            label: () => intl.formatMessage({id: 'dlc-dashboard-month'})
+            label: () => intl.formatMessage({id: 'kubedl-dashboard-month'})
         }
     ].map(name => {
         return{
@@ -185,7 +185,7 @@ const ClusterInfo = ({ globalConfig }) => {
     }
    
     let nodeNameAndNodeTypeAndGpuType =[{
-        title: intl.formatMessage({id: 'dlc-dashboard-node-name'}),
+        title: intl.formatMessage({id: 'kubedl-dashboard-node-name'}),
         dataIndex: "nodeName",
         render: (_, record) => {
             return (
@@ -197,16 +197,16 @@ const ClusterInfo = ({ globalConfig }) => {
             )
         }
     }];
-    if(environment && environment !=="eflops"){
+    if(environment){
         nodeNameAndNodeTypeAndGpuType =[
             ...nodeNameAndNodeTypeAndGpuType,
             {
-                title: intl.formatMessage({id: 'dlc-dashboard-node-type'}),
+                title: intl.formatMessage({id: 'kubedl-dashboard-node-type'}),
                 dataIndex: "instanceType",
                 key: "instanceType"
             },
             {
-                title: intl.formatMessage({id: 'dlc-dashboard-node-gpu-type'}),
+                title: intl.formatMessage({id: 'kubedl-dashboard-node-gpu-type'}),
                 dataIndex: "gpuType",
                 key: "gpuType"
             },
@@ -214,7 +214,7 @@ const ClusterInfo = ({ globalConfig }) => {
     }
     let nodeOtherInformation = [
         {
-            title: intl.formatMessage({id: 'dlc-dashboard-node-total-cpu'}),
+            title: intl.formatMessage({id: 'kubedl-dashboard-node-total-cpu'}),
             dataIndex: "nodeCpuResources",
             render: (_, record) => {
                 return (
@@ -228,7 +228,7 @@ const ClusterInfo = ({ globalConfig }) => {
             }
         },
         {
-            title: intl.formatMessage({id: 'dlc-dashboard-node-total-memory'}),
+            title: intl.formatMessage({id: 'kubedl-dashboard-node-total-memory'}),
             dataIndex: "nodeMemoryResources",
             render: (_, record) => {
                 return (
@@ -242,7 +242,7 @@ const ClusterInfo = ({ globalConfig }) => {
             }
         },
         {
-            title: intl.formatMessage({id: 'dlc-dashboard-node-total-gpu'}),
+            title: intl.formatMessage({id: 'kubedl-dashboard-node-total-gpu'}),
             dataIndex: "nodeGpuResources",
             render: (_, record) => {
                 return (
@@ -264,17 +264,17 @@ const ClusterInfo = ({ globalConfig }) => {
     ];
     const infoColumns = [
         {
-            title: intl.formatMessage({id: 'dlc-dashboard-user'}),
+            title: intl.formatMessage({id: 'kubedl-dashboard-user'}),
             dataIndex: "userName",
             key: "userName"
         },
         {
-            title: intl.formatMessage({id: 'dlc-dashboard-job-submission-number'}),
+            title: intl.formatMessage({id: 'kubedl-dashboard-job-submission-number'}),
             dataIndex: "jobCount",
             key: "jobCount"
         },
         {
-            title: intl.formatMessage({id: 'dlc-dashboard-ratio'}) + '(%)',
+            title: intl.formatMessage({id: 'kubedl-dashboard-ratio'}) + '(%)',
             dataIndex: "jobRatio",
             width: 180,
             render: (_, record) => {
@@ -297,12 +297,12 @@ const ClusterInfo = ({ globalConfig }) => {
     ];
     const topInfoColumns = [
         {
-            title: intl.formatMessage({id: 'dlc-dashboard-name'}),
+            title: intl.formatMessage({id: 'kubedl-dashboard-name'}),
             dataIndex: "name",
             key: "name"
         },
         {
-            title: 'GPU ' + intl.formatMessage({id: 'dlc-dashboard-ratio'}) + '(%)',
+            title: 'GPU ' + intl.formatMessage({id: 'kubedl-dashboard-ratio'}) + '(%)',
             dataIndex: "gpuAccounted",
             render: (_, record) => {
                 const computeGpu = record.jobResource && record.jobResource.totalGPU !== 0 ? (record.jobResource.totalGPU/overviewTotal.totalGPU)*100 : 0;
@@ -319,7 +319,7 @@ const ClusterInfo = ({ globalConfig }) => {
             }
         },
         {
-            title: 'CPU ' + intl.formatMessage({id: 'dlc-dashboard-ratio'}) + '(%)',
+            title: 'CPU ' + intl.formatMessage({id: 'kubedl-dashboard-ratio'}) + '(%)',
             dataIndex: "cpuAccounted",
             render: (_, record) => {
                 const computeCpu = record.jobResource && record.jobResource.totalCPU !== 0 ? (record.jobResource.totalCPU/overviewTotal.totalCPU)*100 : 0;
@@ -336,7 +336,7 @@ const ClusterInfo = ({ globalConfig }) => {
             }
         },
         {
-            title: intl.formatMessage({id: 'dlc-dashboard-memory-ratio'}) + '(%)',
+            title: intl.formatMessage({id: 'kubedl-dashboard-memory-ratio'}) + '(%)',
             dataIndex: "memoryAccounted",
             render: (_, record) => {
                 const computeMemory = record.jobResource && record.jobResource.totalMemory !== 0 ? (record.jobResource.totalMemory/overviewTotal.totalMemory)*100 : 0;
@@ -367,44 +367,44 @@ const ClusterInfo = ({ globalConfig }) => {
         <div>
             <Card style={{ marginBottom: 12 }} title={
                 <div>
-                    ACK {intl.formatMessage({id: 'dlc-dashboard-cluster-overview'})}
+                    ACK {intl.formatMessage({id: 'kubedl-dashboard-cluster-overview'})}
                     <Button type="primary" style={{float: 'right'}} onClick={fetchNodeInfos}>
-                        {intl.formatMessage({id: 'dlc-dashboard-refresh'})}
+                        {intl.formatMessage({id: 'kubedl-dashboard-refresh'})}
                     </Button>
                     {/*<Button type="primary" style={{float: 'right'}}>*/}
-                    {/*    {intl.formatMessage({id: 'dlc-dashboard-check-cluster'})}*/}
+                    {/*    {intl.formatMessage({id: 'kubedl-dashboard-check-cluster'})}*/}
                     {/*</Button>*/}
                 </div>
             }>
                 <div>
                     <div>
-                        <h4>{intl.formatMessage({id: 'dlc-dashboard-cluster-overview'})} ({intl.formatMessage({id: 'dlc-dashboard-free'})} / {intl.formatMessage({id: 'dlc-dashboard-total'})})：</h4>
+                        <h4>{intl.formatMessage({id: 'kubedl-dashboard-cluster-overview'})} ({intl.formatMessage({id: 'kubedl-dashboard-free'})} / {intl.formatMessage({id: 'kubedl-dashboard-total'})})：</h4>
                         <Row gutter={[24, 24]}>
                             <Col span={7}>
                                 <Avatar
                                     className={styles.ackInfoIcon}
                                     size="small"
-                                    icon={<DlcIconFont type="iconrenwuliebiao-copy"/>} />
-                                {intl.formatMessage({id: 'dlc-dashboard-cpu'})}：{Math.floor((overviewTotal?.totalCPU - overviewRequestPodPhase?.requestCPU)/1000)} / {Math.floor(overviewTotal?.totalCPU/1000)}
+                                    icon={<KubeDLIconFont type="iconrenwuliebiao-copy"/>} />
+                                {intl.formatMessage({id: 'kubedl-dashboard-cpu'})}：{Math.floor((overviewTotal?.totalCPU - overviewRequestPodPhase?.requestCPU)/1000)} / {Math.floor(overviewTotal?.totalCPU/1000)}
                             </Col>
                             <Col span={7} offset={1}>
                                 <Avatar
                                     className={styles.ackInfoIcon}
                                     size="small"
-                                    icon={<DlcIconFont type="iconmemory"/>} />
-                                {intl.formatMessage({id: 'dlc-dashboard-memory'})}：{Math.floor((overviewTotal?.totalMemory - overviewRequestPodPhase?.requestMemory)/(1024 * 1024 * 1024))} / {Math.floor(overviewTotal?.totalMemory/(1024 * 1024 * 1024))}
+                                    icon={<KubeDLIconFont type="iconmemory"/>} />
+                                {intl.formatMessage({id: 'kubedl-dashboard-memory'})}：{Math.floor((overviewTotal?.totalMemory - overviewRequestPodPhase?.requestMemory)/(1024 * 1024 * 1024))} / {Math.floor(overviewTotal?.totalMemory/(1024 * 1024 * 1024))}
                             </Col>
                             <Col span={7} offset={1}>
                                 <Avatar
                                     className={styles.ackInfoIcon}
                                     size="small"
-                                    icon={<DlcIconFont type="iconGPUyunfuwuqi"/>} />
-                                {intl.formatMessage({id: 'dlc-dashboard-gpu'})}：{Math.floor((overviewTotal?.totalGPU - overviewRequestPodPhase?.requestGPU)/1000)} / {Math.floor(overviewTotal?.totalGPU/1000)}
+                                    icon={<KubeDLIconFont type="iconGPUyunfuwuqi"/>} />
+                                {intl.formatMessage({id: 'kubedl-dashboard-gpu'})}：{Math.floor((overviewTotal?.totalGPU - overviewRequestPodPhase?.requestGPU)/1000)} / {Math.floor(overviewTotal?.totalGPU/1000)}
                             </Col>
                         </Row>
                     </div>
                     <div>
-                        <h4>{intl.formatMessage({id: 'dlc-dashboard-node-information'})}：</h4>
+                        <h4>{intl.formatMessage({id: 'kubedl-dashboard-node-information'})}：</h4>
                         <Row gutter={[24, 24]}>
                             <Col span={24}>
                                 <ProTable
@@ -425,17 +425,17 @@ const ClusterInfo = ({ globalConfig }) => {
             </Card>
           <Card title={
                 <div>
-                    {intl.formatMessage({id: 'dlc-dashboard-job-overview'})}
+                    {intl.formatMessage({id: 'kubedl-dashboard-job-overview'})}
                     {
-                        environment && environment !=="eflops"&&
+                        environment &&
                         <Button type="primary" style={{float: 'right'}} onClick={goJobCreate}>
-                           {intl.formatMessage({id: 'dlc-dashboard-submit-job'})}
+                           {intl.formatMessage({id: 'kubedl-dashboard-submit-job'})}
                        </Button>
                     }
                 </div>
             }>
                 <Row gutter={[24, 24]}>
-                    <Col span={environment && environment !=="eflops"? 12: 24}>
+                    <Col span={environment ? 12: 24}>
                         <Card title={
                             <div>
                                 <Radio.Group
@@ -453,7 +453,7 @@ const ClusterInfo = ({ globalConfig }) => {
                                             icon={<ProfileOutlined />} />
                                     </div>
                                     <div className={styles.taskInfoTitle}>
-                                        <span className={styles.taskInfoMessage}>{intl.formatMessage({id: 'dlc-dashboard-job-total'})}</span>
+                                        <span className={styles.taskInfoMessage}>{intl.formatMessage({id: 'kubedl-dashboard-job-total'})}</span>
                                         <span className={styles.taskInfoTotal}>{taskTotal}</span>
                                     </div>
                                 </div>
@@ -467,7 +467,7 @@ const ClusterInfo = ({ globalConfig }) => {
                                 {/*            icon={<FundTwoTone />} />*/}
                                 {/*    </div>*/}
                                 {/*    <div className={styles.taskInfoTitle}>*/}
-                                {/*        <span>{intl.formatMessage({id: 'dlc-dashboard-new-number'})}</span>*/}
+                                {/*        <span>{intl.formatMessage({id: 'kubedl-dashboard-new-number'})}</span>*/}
                                 {/*        <div>145</div>*/}
                                 {/*    </div>*/}
                                 {/*</Col>*/}
@@ -485,13 +485,13 @@ const ClusterInfo = ({ globalConfig }) => {
                         </Card>
                     </Col>
                     {
-                      environment && environment !=="eflops" &&
+                      environment &&
                     <Col span={12}>
                         <Card title={
                             <div>
-                                {intl.formatMessage({id: 'dlc-dashboard-running-jobs'})}
+                                {intl.formatMessage({id: 'kubedl-dashboard-running-jobs'})}
                                 <Button type="primary" style={{float: 'right'}} onClick={fetchTopResourcesStatistics}>
-                                    {intl.formatMessage({id: 'dlc-dashboard-refresh'})}
+                                    {intl.formatMessage({id: 'kubedl-dashboard-refresh'})}
                                 </Button>
                             </div>
                         }>

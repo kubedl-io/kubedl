@@ -62,7 +62,7 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
             local_path: defaultDataPath + values.local_path
         };
         newDatasource(addValues).then(res => {
-            message.success(intl.formatMessage({id: 'dlc-dashboard-add-success'}));
+            message.success(intl.formatMessage({id: 'kubedl-dashboard-add-success'}));
             setIsLoading(false);
             history.push({
                 pathname: `/datasheets`,
@@ -89,19 +89,19 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
             >
                 <Row gutter={[24, 24]}>
                     <Col span={18} offset={3}>
-                        <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'dlc-dashboard-new-data-config'})}>
+                        <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'kubedl-dashboard-new-data-config'})}>
                             <Form.Item
                                 name="name"
                                 required={true}
-                                label={intl.formatMessage({id: 'dlc-dashboard-name'})}
+                                label={intl.formatMessage({id: 'kubedl-dashboard-name'})}
                                 rules={[
                                     {
                                         required: true,
-                                        message: intl.formatMessage({id: 'dlc-dashboard-please-enter-name'}),
+                                        message: intl.formatMessage({id: 'kubedl-dashboard-please-enter-name'}),
                                     },
                                     {
                                         pattern: '^[0-9a-zA-Z-]{1,32}$',
-                                        message: intl.formatMessage({id: 'dlc-dashboard-name-rules'})
+                                        message: intl.formatMessage({id: 'kubedl-dashboard-name-rules'})
                                     }
                                 ]}
                             >
@@ -109,7 +109,7 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                             </Form.Item>
                             <Form.Item
                                 name="description"
-                                label={intl.formatMessage({id: 'dlc-dashboard-description'})}
+                                label={intl.formatMessage({id: 'kubedl-dashboard-description'})}
                             >
                                 <Input />
                             </Form.Item>
@@ -132,11 +132,11 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                             <Form.Item
                                 name="namespace"
                                 required={true}
-                                label={intl.formatMessage({id: 'dlc-dashboard-namespace'})}
+                                label={intl.formatMessage({id: 'kubedl-dashboard-namespace'})}
                                 rules={[
                                     {
                                         required: true,
-                                        message: intl.formatMessage({id: 'dlc-dashboard-please-enter-namespace'}),
+                                        message: intl.formatMessage({id: 'kubedl-dashboard-please-enter-namespace'}),
                                     }
                                 ]}
                             >
@@ -150,23 +150,23 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                             <Form.Item
                                 name="pvc_name"
                                 required={true}
-                                label={intl.formatMessage({id: 'dlc-dashboard-persistent-volume-claim'})}
+                                label={intl.formatMessage({id: 'kubedl-dashboard-persistent-volume-claim'})}
                                 rules={[
                                     {
                                         required: true,
-                                        message: intl.formatMessage({id: 'dlc-dashboard-please-enter-storage-volume'}),
+                                        message: intl.formatMessage({id: 'kubedl-dashboard-please-enter-storage-volume'}),
                                     }
                                 ]}>
                                 <Select
                                     placeholder=""
-                                    notFoundContent={<span>{intl.formatMessage({id: 'dlc-dashboard-no-pvc-prompt'})}</span>}
+                                    notFoundContent={<span>{intl.formatMessage({id: 'kubedl-dashboard-no-pvc-prompt'})}</span>}
                                     dropdownRender={menu => (
                                         <div>
                                             {menu}
                                             <Divider style={{ margin: "4px 0" }} />
                                             <div style={{ textAlign: "center" }}>
                                                 <a onClick={() => fetchPVC()}>
-                                                    <ReloadOutlined /> {intl.formatMessage({id: 'dlc-dashboard-reload'})}
+                                                    <ReloadOutlined /> {intl.formatMessage({id: 'kubedl-dashboard-reload'})}
                                                 </a>
                                             </div>
                                         </div>
@@ -179,7 +179,7 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                                     ))}
                                 </Select>
                             </Form.Item>
-                            <Form.Item label={intl.formatMessage({id: 'dlc-dashboard-local-paths'})}>
+                            <Form.Item label={intl.formatMessage({id: 'kubedl-dashboard-local-paths'})}>
                                 <Form.Item
                                     name="local_path"
                                     noStyle>
@@ -195,7 +195,7 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                                 </Form.Item>
                             </Form.Item>
                             <Form.Item wrapperCol={{span: 3, offset: 21}}>
-                                <Button type="primary" htmlType="submit" loading={isLoading}>{intl.formatMessage({id: 'dlc-dashboard-submit'})}</Button>
+                                <Button type="primary" htmlType="submit" loading={isLoading}>{intl.formatMessage({id: 'kubedl-dashboard-submit'})}</Button>
                             </Form.Item>
                         </Card>
                     </Col>

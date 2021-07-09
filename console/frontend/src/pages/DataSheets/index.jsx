@@ -71,23 +71,23 @@ const DataSheetsList = () => {
   };
   let columnsData = [
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-name'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-name'}),
       dataIndex: "name",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-pvc-name'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-pvc-name'}),
       dataIndex: "pvc_name",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-namespace'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-namespace'}),
       dataIndex: "namespace",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-local-paths'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-local-paths'}),
       dataIndex: "local_path",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-creator'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-creator'}),
       dataIndex: "user",
       render: (_, record) => {
        const user = record && record.username !== '' ? record.username : (record &&record.userid || "");
@@ -99,35 +99,35 @@ const DataSheetsList = () => {
       }
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-description'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-description'}),
       dataIndex: "description",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-creation-time'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-creation-time'}),
       dataIndex: "create_time",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-update-time'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-update-time'}),
       dataIndex: "update_time",
     }
   ];
-  if(environment&& environment ==="dlc"){
+  if(environment){
     columnsData =[
       ...columnsData,
       {
-        title: intl.formatMessage({id: 'dlc-dashboard-operation'}),
+        title: intl.formatMessage({id: 'kubedl-dashboard-operation'}),
         dataIndex: "option",
         valueType: "option",
         render: (_, record) => {
           let {name} = record || {};
           return (
             <>
-              <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-delete'})}>
+              <Tooltip title={intl.formatMessage({id: 'kubedl-dashboard-delete'})}>
                 <a onClick={
-                  () => onDelete({titleIntl:"dlc-dashboard-delete-data-configuration",
+                  () => onDelete({titleIntl:"kubedl-dashboard-delete-data-configuration",
                                   reqInterface:"deleteDataConfig",
                                   params:{name},
-                                  content:`${intl.formatMessage({id: 'dlc-dashboard-confirm-to-delete-data-configuration'})} ${name} ?`,
+                                  content:`${intl.formatMessage({id: 'kubedl-dashboard-confirm-to-delete-data-configuration'})} ${name} ?`,
                                 })
                 }>
                   <DeleteOutlined style={{color:"red"}}/>
@@ -141,23 +141,23 @@ const DataSheetsList = () => {
   };
   let columnsGit = [
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-name'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-name'}),
       dataIndex: "name",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-git-repository'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-git-repository'}),
       dataIndex: "code_path",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-default-branch'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-default-branch'}),
       dataIndex: "default_branch",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-local-paths'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-local-paths'}),
       dataIndex: "local_path",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-creator'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-creator'}),
       dataIndex: "user",
       render: (_, record) => {
         const user = record.username && record.username !== '' ? record.username : record.userid;
@@ -169,35 +169,35 @@ const DataSheetsList = () => {
       }
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-description'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-description'}),
       dataIndex: "description",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-creation-time'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-creation-time'}),
       dataIndex: "create_time",
     },
     {
-      title: intl.formatMessage({id: 'dlc-dashboard-update-time'}),
+      title: intl.formatMessage({id: 'kubedl-dashboard-update-time'}),
       dataIndex: "update_time",
     }
   ];
-  if(environment && environment ==="dlc"){
+  if(environment){
     columnsGit =[
       ...columnsGit,
       {
-        title: intl.formatMessage({id: 'dlc-dashboard-operation'}),
+        title: intl.formatMessage({id: 'kubedl-dashboard-operation'}),
         dataIndex: "option",
         valueType: "option",
         render: (_, record) => {
           let {name} = record;
           return (
             <>
-              <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-delete'})}>
+              <Tooltip title={intl.formatMessage({id: 'kubedl-dashboard-delete'})}>
                 <a onClick={
-                  () => onDelete({titleIntl:"dlc-dashboard-delete-code-configuration",
+                  () => onDelete({titleIntl:"kubedl-dashboard-delete-code-configuration",
                                   reqInterface:"deleteGitConfig",
                                   params:{name},
-                                  content:`${intl.formatMessage({id: 'dlc-dashboard-confirm-to-delete-code-configuration'})} ${name} ?`,
+                                  content:`${intl.formatMessage({id: 'kubedl-dashboard-confirm-to-delete-code-configuration'})} ${name} ?`,
                                 })
                 }>
                   <DeleteOutlined style={{color:"red"}}/>
@@ -241,12 +241,12 @@ const DataSheetsList = () => {
         <div>
           <div style={{paddingBottom:"8px", textAlign: "right",display: 'inline-block', marginRight: '20px'}}>
             <Button type="primary" onClick={onDataConfigCreate} style={{minWidth: '120px'}} size='small'>
-              {intl.formatMessage({id: 'dlc-dashboard-new-data-config'})}
+              {intl.formatMessage({id: 'kubedl-dashboard-new-data-config'})}
             </Button>
           </div>
           <div style={{paddingBottom:"8px", textAlign: "right",display: 'inline-block'}} >
             <Button type="primary" onClick={onCodeConfigCreate} style={{minWidth: '120px'}} size='small'>
-              {intl.formatMessage({id: 'dlc-dashboard-new-create-git-config'})}
+              {intl.formatMessage({id: 'kubedl-dashboard-new-create-git-config'})}
             </Button>
           </div>
         </div>
@@ -255,7 +255,7 @@ const DataSheetsList = () => {
           <TabPane tab={
             <span>
                 <CloudServerOutlined />
-                {intl.formatMessage({id: 'dlc-dashboard-data'})}
+                {intl.formatMessage({id: 'kubedl-dashboard-data'})}
               </span>
           } key="data">
             <ProTable
@@ -272,7 +272,7 @@ const DataSheetsList = () => {
           <TabPane tab={
             <span>
               <CodeOutlined />
-              {intl.formatMessage({id: 'dlc-dashboard-code'})}
+              {intl.formatMessage({id: 'kubedl-dashboard-code'})}
             </span>
           } key="code">
             <ProTable

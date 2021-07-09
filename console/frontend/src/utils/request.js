@@ -81,10 +81,6 @@ request.interceptors.response.use(async (response) => {
     return response;
   }
   const code = parseInt(data.code || -1, 10);
-  if (data.data && data.data.status == 401 && environment && environment === 'eflops') {
-    history.push('/login');
-    return response;
-  }
   if (code !== 200) {
     const codeMaps = {
       403: '无权限操作',

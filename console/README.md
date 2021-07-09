@@ -1,4 +1,4 @@
-# KubeDL-Pro Console
+# KubeDL Console
 
 ## Prerequisites
 
@@ -24,7 +24,28 @@ export KUBECONFIG={/path-to-kubeconfig-file}
 ```bash
 ./backend-server --config-name kubedl-config
 ```
-
+4. kubedl-config requires default namespace, images and authorize config. template below:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: kubedl-system
+  name: kubedl-config
+data:
+  commonConfig: '{
+	"namespace":"kubedl-system",
+	"TFCpuImages":"",
+	"TFGpuImages":"",
+	"PytouchGpuImages":""
+	}'
+  users: '{
+	"admin":{
+		"uid":"admin",
+		"login_name":"admin",
+		"password":"123456"
+	    }
+	}'
+```
 #### Run Console Frontend
 
 ```bash

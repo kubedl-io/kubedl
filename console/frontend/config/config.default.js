@@ -1,6 +1,6 @@
 export default {
   define: {
-    environment: "dlc"
+    environment: "kubedl"
   },
   routes: [
     {

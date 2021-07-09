@@ -112,7 +112,7 @@ func initControllersRoute(r *gin.Engine, baseGroup string) error {
 		api.NewJobAPIsController(jobHandler),
 		api.NewAuthAPIsController(authHandler),
 		api.NewLogsAPIsController(logHandler),
-		api.NewDLCAPIsController(),
+		api.NewKubeDLAPIsController(),
 		api.NewTensorBoardController(),
 		api.NewDataAPIsController(),
 		api.NewDataSourceAPIsController(),

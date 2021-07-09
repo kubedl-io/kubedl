@@ -53,7 +53,7 @@ const GitConfig = ({ globalConfig, currentUser }) => {
             local_path: defaultCodePath + values.local_path
         };
         newGitSource(addValues).then(res => {
-            message.success(intl.formatMessage({id: 'dlc-dashboard-add-success'}));
+            message.success(intl.formatMessage({id: 'kubedl-dashboard-add-success'}));
             setIsLoading(false);
             history.push({
                 pathname: `/datasheets`,
@@ -70,9 +70,9 @@ const GitConfig = ({ globalConfig, currentUser }) => {
             showIcon
             message={
                 <span>
-                    {intl.formatMessage({id: 'dlc-dashboard-code-synchronization'})}&nbsp;{form.getFieldValue('local_path') ? defaultCodePath + form.getFieldValue('local_path') : defaultCodePath}
+                    {intl.formatMessage({id: 'kubedl-dashboard-code-synchronization'})}&nbsp;{form.getFieldValue('local_path') ? defaultCodePath + form.getFieldValue('local_path') : defaultCodePath}
                     {handleGitUrl(form.getFieldValue('code_path')) !== '' && handleGitUrl(form.getFieldValue('code_path'))}
-                    &nbsp;{intl.formatMessage({id: 'dlc-dashboard-under-contents'})}
+                    &nbsp;{intl.formatMessage({id: 'kubedl-dashboard-under-contents'})}
                 </span>
             }
         />
@@ -90,26 +90,26 @@ const GitConfig = ({ globalConfig, currentUser }) => {
                     <React.Fragment>
                         <Row gutter={[24, 24]}>
                             <Col span={18} offset={3}>
-                               <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'dlc-dashboard-new-create-code-config'})}>
+                               <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'kubedl-dashboard-new-create-code-config'})}>
                                     <Form.Item
                                         required={true}
                                         name="name"
-                                        label={intl.formatMessage({id: 'dlc-dashboard-name'})}
+                                        label={intl.formatMessage({id: 'kubedl-dashboard-name'})}
                                         rules={[
                                             {
                                                 required: true,
-                                                message: intl.formatMessage({id: 'dlc-dashboard-please-enter-name'}),
+                                                message: intl.formatMessage({id: 'kubedl-dashboard-please-enter-name'}),
                                             },
                                             {
                                                 pattern: '^[0-9a-zA-Z-]{1,32}$',
-                                                message: intl.formatMessage({id: 'dlc-dashboard-name-rules'})
+                                                message: intl.formatMessage({id: 'kubedl-dashboard-name-rules'})
                                             }
                                         ]}>
                                         <Input />
                                     </Form.Item>
                                     <Form.Item
                                         name="description"
-                                        label={intl.formatMessage({id: 'dlc-dashboard-description'})}>
+                                        label={intl.formatMessage({id: 'kubedl-dashboard-description'})}>
                                         <Input />
                                     </Form.Item>
                                     {/*<Form.Item*/}
@@ -129,30 +129,30 @@ const GitConfig = ({ globalConfig, currentUser }) => {
                                     <Form.Item
                                         name="code_path"
                                         required={true}
-                                        label={intl.formatMessage({id: 'dlc-dashboard-git-repository'})}
+                                        label={intl.formatMessage({id: 'kubedl-dashboard-git-repository'})}
                                         rules={[
                                             {
                                                 required: true,
-                                                message: intl.formatMessage({id: 'dlc-dashboard-please-enter-git-path'}),
+                                                message: intl.formatMessage({id: 'kubedl-dashboard-please-enter-git-path'}),
                                             }
                                         ]}>
                                         <Input />
                                     </Form.Item>
-                                    <Form.Item label={intl.formatMessage({id: 'dlc-dashboard-default-branch'})} required={true}>
+                                    <Form.Item label={intl.formatMessage({id: 'kubedl-dashboard-default-branch'})} required={true}>
                                         <Form.Item
                                             name="default_branch"
                                             noStyle
                                             rules={[
                                                 {
                                                     required: true,
-                                                    message: intl.formatMessage({id: 'dlc-dashboard-please-enter-default-branch'}),
+                                                    message: intl.formatMessage({id: 'kubedl-dashboard-please-enter-default-branch'}),
                                                 }
                                             ]}>
                                             <Input style={{marginBottom: '10px'}}/>
                                         </Form.Item>
                                        {/*codeAlert*/}
                                     </Form.Item>
-                                    <Form.Item label={intl.formatMessage({id: 'dlc-dashboard-local-paths'})}>
+                                    <Form.Item label={intl.formatMessage({id: 'kubedl-dashboard-local-paths'})}>
                                         <Form.Item
                                             name="local_path"
                                             noStyle>
@@ -170,7 +170,7 @@ const GitConfig = ({ globalConfig, currentUser }) => {
                                     </Form.Item>
                                     <Form.Item wrapperCol={{span: 3, offset: 21}}>
                                         <Button type="primary" htmlType="submit" loading={isLoading}>
-                                             {intl.formatMessage({id: 'dlc-dashboard-submit'})}
+                                             {intl.formatMessage({id: 'kubedl-dashboard-submit'})}
                                         </Button>
                                     </Form.Item>
                                 </Card>

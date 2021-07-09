@@ -13,22 +13,22 @@ import { FormattedMessage,history, useIntl, formatMessage } from 'umi';
 import PodCharts from '@/pages/JobDetail/PodCharts';
 import {queryCurrentUser} from "@/services/global";
 const jobDeleteTitleFormatedText = formatMessage({
-    id: 'dlc-dashboard-delete-job'
+    id: 'kubedl-dashboard-delete-job'
 });
 const jobStopTitleFormatedText = formatMessage({
-    id: 'dlc-dashboard-stop-job'
+    id: 'kubedl-dashboard-stop-job'
 });
 const jobDeleteContentFormatedText = formatMessage({
-    id: 'dlc-dashboard-delete-job-confirm'
+    id: 'kubedl-dashboard-delete-job-confirm'
 });
 const jobStopContentFormatedText = formatMessage({
-    id: 'dlc-dashboard-stop-job-confirm'
+    id: 'kubedl-dashboard-stop-job-confirm'
 });
 const jobModelOkText = formatMessage({
-    id: 'dlc-dashboard-ok'
+    id: 'kubedl-dashboard-ok'
 });
 const jobModelCancelText = formatMessage({
-    id: 'dlc-dashboard-cancel'
+    id: 'kubedl-dashboard-cancel'
 });
 
 class JobDetail extends Component {
@@ -206,7 +206,7 @@ class JobDetail extends Component {
         return (
             <Fragment>
                 <Button type="primary" onClick={() => this.fetchJobCloneInfoSilently(detail)} disabled={!isDisabled} >
-                    {<FormattedMessage id="dlc-dashboard-clone" />}
+                    {<FormattedMessage id="kubedl-dashboard-clone" />}
                 </Button>
                 {/*{*/}
                 {/*   detail.jobStatus === 'Running' &&*/}
@@ -214,7 +214,7 @@ class JobDetail extends Component {
                 {/*         style={{background: isDisabled ? '#f2b924' : '', borderColor: isDisabled ? '#f2b924' : ''}}*/}
                 {/*          onClick={() => this.onJobStop(detail)}*/}
                 {/*           disabled={!isDisabled}>*/}
-                {/*       {<FormattedMessage id="dlc-dashboard-stop" />}*/}
+                {/*       {<FormattedMessage id="kubedl-dashboard-stop" />}*/}
                 {/*   </Button>*/}
                 {/*}*/}
                 <Button type="danger" onClick={() => this.onJobDelete(detail)} disabled={!isDisabled}>
@@ -300,20 +300,20 @@ class JobDetail extends Component {
             <div>
                 <Descriptions bordered className={styles.headerList} size="small">
                     <Descriptions.Item label="ID">{detail.id}</Descriptions.Item>
-                    <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-job-type" />} span={2}>
+                    <Descriptions.Item label={<FormattedMessage id="kubedl-dashboard-job-type" />} span={2}>
                         {detail.jobType}
                     </Descriptions.Item>
-                    <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-creation-time" />}>
+                    <Descriptions.Item label={<FormattedMessage id="kubedl-dashboard-creation-time" />}>
                         {detail.createTime}
                     </Descriptions.Item>
-                    <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-end-time" />}>{detail.endTime}</Descriptions.Item>
-                    <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-execution-time" />}>
+                    <Descriptions.Item label={<FormattedMessage id="kubedl-dashboard-end-time" />}>{detail.endTime}</Descriptions.Item>
+                    <Descriptions.Item label={<FormattedMessage id="kubedl-dashboard-execution-time" />}>
                         {detail.durationTime}
                     </Descriptions.Item>
                 </Descriptions>
               {/*
-                <Descriptions bordered title={<FormattedMessage id="dlc-dashboard-job-config" />}>
-                    <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-data-config" />}>
+                <Descriptions bordered title={<FormattedMessage id="kubedl-dashboard-job-config" />}>
+                    <Descriptions.Item label={<FormattedMessage id="kubedl-dashboard-data-config" />}>
                          {jobConfig&&jobConfig.data_bindings? jobConfig.data_bindings.map((data,index)=>{
                              let len = jobConfig.data_bindings.length;
                              let regExp = /^data-/g;
@@ -324,22 +324,22 @@ class JobDetail extends Component {
                             }):''
                         }
                     </Descriptions.Item>
-                  { environment && environment !=="eflops" && 
-                   <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-code-config" />} span={3}>
+                  { environment  &&
+                   <Descriptions.Item label={<FormattedMessage id="kubedl-dashboard-code-config" />} span={3}>
                         { jobConfig.code_bindings && jobConfig.code_bindings.aliasName ? <div>
                             <span className={styles.detailLink} onClick={this.goToDatasheets}>{jobConfig.code_bindings.aliasName.slice(5)}</span>
                             </div> :
                             <Row>
-                                <Col span={12}><FormattedMessage id="dlc-dashboard-repository-address" />：{jobConfig?.code_bindings?.source ?? ''}</Col>
-                                <Col span={12}><FormattedMessage id="dlc-dashboard-code-branch" />：{jobConfig?.code_bindings?.branch ?? ''}</Col>
+                                <Col span={12}><FormattedMessage id="kubedl-dashboard-repository-address" />：{jobConfig?.code_bindings?.source ?? ''}</Col>
+                                <Col span={12}><FormattedMessage id="kubedl-dashboard-code-branch" />：{jobConfig?.code_bindings?.branch ?? ''}</Col>
                             </Row>
                          }
                     </Descriptions.Item>
                    }
-                    <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-execute-command" />} span={3}>
+                    <Descriptions.Item label={<FormattedMessage id="kubedl-dashboard-execute-command" />} span={3}>
                         {jobConfig?.commands.toString()}
                     </Descriptions.Item>
-                    <Descriptions.Item label={<FormattedMessage id="dlc-dashboard-resource-info" />} span={3}>
+                    <Descriptions.Item label={<FormattedMessage id="kubedl-dashboard-resource-info" />} span={3}>
                         {
                             this.state.resourceConfigKey !== '' &&  <Card
                                 style={{ width: '100%'}}
@@ -406,7 +406,7 @@ class JobDetail extends Component {
             <PageHeaderWrapper
                 onBack={() => history.goBack()}
                 title={title}
-                extra={environment && environment !=="eflops" && this.action(detail)}
+                extra={environment && this.action(detail)}
                 className={styles.pageHeader}
                 content={ detail && this.description(detail)}
                 tabActiveKey={tabActiveKey}
@@ -414,11 +414,11 @@ class JobDetail extends Component {
                 tabList={[
                     {
                         key: "spec",
-                        tab: <FormattedMessage id="dlc-dashboard-instances" />
+                        tab: <FormattedMessage id="kubedl-dashboard-instances" />
                     },
                     {
                         key: "events",
-                        tab: <FormattedMessage id="dlc-dashboard-events" />
+                        tab: <FormattedMessage id="kubedl-dashboard-events" />
                     }
                 ]}
             >
@@ -435,7 +435,7 @@ class JobDetail extends Component {
                                 }}
                                 columns={[
                                     {
-                                        title: <FormattedMessage id="dlc-dashboard-type" />,
+                                        title: <FormattedMessage id="kubedl-dashboard-type" />,
                                         dataIndex: "replicaType",
                                         key: "replicaType"
                                     },
@@ -450,45 +450,45 @@ class JobDetail extends Component {
                                         key: "hostIp"
                                     },
                                     {
-                                        title: <FormattedMessage id="dlc-dashboard-name" />,
+                                        title: <FormattedMessage id="kubedl-dashboard-name" />,
                                         width: 128,
                                         dataIndex: "name",
                                         key: "name"
                                     },
                                     {
-                                        title: <FormattedMessage id="dlc-dashboard-status" />,
+                                        title: <FormattedMessage id="kubedl-dashboard-status" />,
                                         width: 128,
                                         dataIndex: "jobStatus",
                                         key: "jobStatus",
                                         render: (_, r) => <JobStatus status={r.jobStatus}/>
                                     },
                                     {
-                                        title: <FormattedMessage id="dlc-dashboard-creation-time" />,
+                                        title: <FormattedMessage id="kubedl-dashboard-creation-time" />,
                                         dataIndex: "createTime",
                                         key: "createTime"
                                     },
                                     {
-                                        title: <FormattedMessage id="dlc-dashboard-startup-time" />,
+                                        title: <FormattedMessage id="kubedl-dashboard-startup-time" />,
                                         dataIndex: "startTime",
                                         key: "startTime"
                                     },
                                     {
-                                        title: <FormattedMessage id="dlc-dashboard-end-time" />,
+                                        title: <FormattedMessage id="kubedl-dashboard-end-time" />,
                                         dataIndex: "endTime",
                                         key: "endTime"
                                     },
                                     {
-                                        title: <FormattedMessage id="dlc-dashboard-execution-time" />,
+                                        title: <FormattedMessage id="kubedl-dashboard-execution-time" />,
                                         dataIndex: "durationTime",
                                         key: "durationTime",
                                         render:(text)=> <Fragment>{ text && text.split(".")[0] }</Fragment>
                                     },
                                     {
-                                        title: <FormattedMessage id="dlc-dashboard-operation" />,
+                                        title: <FormattedMessage id="kubedl-dashboard-operation" />,
                                         dataIndex: "options",
                                         render: (_, r) => (
                                             <>
-                                                <a onClick={() => this.onLog(r)}><FormattedMessage id="dlc-dashboard-logs" /></a>
+                                                <a onClick={() => this.onLog(r)}><FormattedMessage id="kubedl-dashboard-logs" /></a>
                                             </>
                                         )
                                     }
@@ -500,7 +500,7 @@ class JobDetail extends Component {
                     {this.state.tabActiveKey === "events" && (
                         <Card loading={eventsLoading}>
                             {events.length === 0
-                            ? <Empty description={<FormattedMessage id="dlc-dashboard-no-events" />}/>
+                            ? <Empty description={<FormattedMessage id="kubedl-dashboard-no-events" />}/>
                             : <div style={{minHeight: 256}}>
                                 <LazyLog
                                 extraLines={1}

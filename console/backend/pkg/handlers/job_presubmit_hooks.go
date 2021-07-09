@@ -60,11 +60,11 @@ func tfJobPreSubmitTensorBoardDefaults(job runtime.Object) {
 		return
 	}
 	if tb.Image == nil {
-		dlcCfg, err := NewDLCHandler().GetDLCConfig()
+		kubedlCfg, err := NewKubeDLHandler().GetKubeDLConfig()
 		if err != nil {
 			return
 		}
-		if len(dlcCfg.TFCpuImages) == 0 {
+		if len(kubedlCfg.TFCpuImages) == 0 {
 			return
 		}
 		spec, ok := tfJob.Spec.TFReplicaSpecs[v1.TFReplicaTypeMaster]
@@ -82,11 +82,11 @@ func tfJobPreSubmitTensorBoardDefaults(job runtime.Object) {
 
 		image := getMainContainerImage(spec, v1.TFJobDefaultContainerName)
 		isTFV1Img := isTFV1(image)
-		tbImage := dlcCfg.TFCpuImages[0]
+		tbImage := kubedlCfg.TFCpuImages[0]
 		if len(image) > 0 {
-			for _, dlcImg := range dlcCfg.TFCpuImages {
-				if (isTFV1Img && isTFV1(dlcImg)) || (!isTFV1Img && !isTFV1(dlcImg)) {
-					tbImage = dlcImg
+			for _, kubedlImg := range kubedlCfg.TFCpuImages {
+				if (isTFV1Img && isTFV1(kubedlImg)) || (!isTFV1Img && !isTFV1(kubedlImg)) {
+					tbImage = kubedlImg
 					break
 				}
 			}

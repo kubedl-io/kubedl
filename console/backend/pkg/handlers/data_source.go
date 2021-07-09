@@ -164,7 +164,7 @@ func getOrCreateDataSourceConfigMap() (*v1.ConfigMap, error) {
 	configMap := &v1.ConfigMap{}
 	err := clientmgr.GetCtrlClient().Get(context.TODO(),
 		apitypes.NamespacedName{
-			Namespace: constants.DLCSystemNamespace,
+			Namespace: constants.KubeDLSystemNamespace,
 			Name:      DatasourceConfigMapName,
 		}, configMap)
 
@@ -172,7 +172,7 @@ func getOrCreateDataSourceConfigMap() (*v1.ConfigMap, error) {
 	if errors.IsNotFound(err) {
 		initConfigMap := &v1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: constants.DLCSystemNamespace,
+				Namespace: constants.KubeDLSystemNamespace,
 				Name:      DatasourceConfigMapName,
 			},
 			Data: map[string]string{
@@ -180,12 +180,12 @@ func getOrCreateDataSourceConfigMap() (*v1.ConfigMap, error) {
 			},
 		}
 		if err := clientmgr.GetCtrlClient().Create(context.TODO(), initConfigMap); err != nil {
-			klog.Errorf("Failed to create ConfigMap, ns: %s, name: %s, err: %v", constants.DLCSystemNamespace, DatasourceConfigMapName, err)
+			klog.Errorf("Failed to create ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, DatasourceConfigMapName, err)
 			return nil, err
 		}
 		return initConfigMap, nil
 	} else if err != nil {
-		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.DLCSystemNamespace, DatasourceConfigMapName, err)
+		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, DatasourceConfigMapName, err)
 		return configMap, err
 	}
 	return configMap, nil

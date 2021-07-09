@@ -18,33 +18,33 @@ var (
 	detectJobInNS bool
 )
 
-func NewDLCAPIsController() *DLCAPIsController {
-	return &DLCAPIsController{
-		handler: handlers.NewDLCHandler(),
+func NewKubeDLAPIsController() *KubeDLAPIsController {
+	return &KubeDLAPIsController{
+		handler: handlers.NewKubeDLHandler(),
 	}
 }
 
-func (dc *DLCAPIsController) RegisterRoutes(routes *gin.RouterGroup) {
-	dlcAPIs := routes.Group("/dlc")
-	dlcAPIs.GET("/common-config", dc.getCommonConfig)
-	dlcAPIs.GET("/namespaces", dc.getAvailableNamespaces)
+func (dc *KubeDLAPIsController) RegisterRoutes(routes *gin.RouterGroup) {
+	kubedlAPIs := routes.Group("/kubedl")
+	kubedlAPIs.GET("/common-config", dc.getCommonConfig)
+	kubedlAPIs.GET("/namespaces", dc.getAvailableNamespaces)
 }
 
-type DLCAPIsController struct {
-	handler *handlers.DLCHandler
+type KubeDLAPIsController struct {
+	handler *handlers.KubeDLHandler
 }
 
-func (dc *DLCAPIsController) getCommonConfig(c *gin.Context) {
-	dlcCfg, err := dc.handler.GetDLCConfig()
+func (dc *KubeDLAPIsController) getCommonConfig(c *gin.Context) {
+	kubedlCfg, err := dc.handler.GetKubeDLConfig()
 	if err != nil {
-		Error(c, fmt.Sprintf("failed to marshal dlc common config, err: %v", err))
+		Error(c, fmt.Sprintf("failed to marshal kubedl common config, err: %v", err))
 		return
 	}
 
-	utils.Succeed(c, dlcCfg)
+	utils.Succeed(c, kubedlCfg)
 }
 
-func (dc *DLCAPIsController) getAvailableNamespaces(c *gin.Context) {
+func (dc *KubeDLAPIsController) getAvailableNamespaces(c *gin.Context) {
 	avaliableNS, err := dc.handler.ListAvailableNamespaces()
 	if err != nil {
 		Error(c, fmt.Sprintf("failed to list avaliable namespaces, err: %v", err))

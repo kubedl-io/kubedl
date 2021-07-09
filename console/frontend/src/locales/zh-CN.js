@@ -1,4 +1,4 @@
-import component from './zh-CN/dlc';
+import component from './zh-CN/kubedl';
 import globalHeader from './zh-CN/globalHeader';
 import menu from './zh-CN/menu';
 import pwa from './zh-CN/pwa';

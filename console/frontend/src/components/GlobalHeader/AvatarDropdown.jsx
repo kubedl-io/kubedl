@@ -11,7 +11,7 @@ import HeaderDropdown from "../HeaderDropdown";
 import styles from "./index.less";
 
 const notLoggedIn = formatMessage({
-  id: 'dlc-dashboard-not-logged-in'
+  id: 'kubedl-dashboard-not-logged-in'
 });
 
 const AvatarDropdown = props => {

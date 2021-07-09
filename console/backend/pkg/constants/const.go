@@ -3,7 +3,7 @@ package constants
 import "flag"
 
 const (
-	DLCSystemNamespace = "kubedl-system"
+	KubeDLSystemNamespace = "kubedl-system"
 	ApiV1Routes = "/api/v1"
 )
 
@@ -12,5 +12,5 @@ var (
 )
 
 func init() {
-	flag.StringVar(&ConfigMapName, "config-name", "kubedl-config", "dlc common configmap name in kubedl-system namespace.")
+	flag.StringVar(&ConfigMapName, "config-name", "kubedl-config", "kubedl common configmap name in kubedl-system namespace.")
 }

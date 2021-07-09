@@ -36,10 +36,10 @@ var path = require("path");
 const JobSubmit = ({ globalConfig }) => {
   const intl = useIntl();
   const defaultWorkingDir = '/workspace';
-  let tfCPUImages = globalConfig["pai-tf-cpu-images"];
-  let tfGPUImages = globalConfig["pai-tf-gpu-images"];
+  let tfCPUImages = globalConfig["tf-cpu-images"];
+  let tfGPUImages = globalConfig["tf-gpu-images"];
   const tfJobImages = tfCPUImages.concat(tfGPUImages);
-  const pyTorchImages = globalConfig["pai-pytorch-gpu-images"];
+  const pyTorchImages = globalConfig["pytorch-gpu-images"];
 
   const namespace = globalConfig["namespace"];
   const [pvcs, setPvcs] = useState([]);
@@ -238,10 +238,8 @@ const JobSubmit = ({ globalConfig }) => {
           value: form.requirements.requirementsDir
         })
       }
-      // TODO(benjin.mbj) prepare_dlc_environement is only vaild
-      // in DLC standard docker images, we should delete this if
-      // DLC support user-defined docker images in the future.
-      replicaCommand = "prepare_dlc_environment && " + form.command
+
+      replicaCommand = "prepare_kubedl_environment && " + form.command
     }
 
     const replicaSpecs = (task,name)=>{
@@ -364,15 +362,15 @@ const JobSubmit = ({ globalConfig }) => {
 
   const pvcSelector = (
     <Select
-      placeholder={intl.formatMessage({id: 'dlc-dashboard-pvc-select-prompt'})}
-      notFoundContent={<span>{intl.formatMessage({id: 'dlc-dashboard-no-pvc-prompt'})}</span>}
+      placeholder={intl.formatMessage({id: 'kubedl-dashboard-pvc-select-prompt'})}
+      notFoundContent={<span>{intl.formatMessage({id: 'kubedl-dashboard-no-pvc-prompt'})}</span>}
       dropdownRender={menu => (
         <div>
           {menu}
           <Divider style={{ margin: "4px 0" }} />
           <div style={{ textAlign: "center" }}>
             <a onClick={() => fetchPVC()}>
-              <ReloadOutlined /> {intl.formatMessage({id: 'dlc-dashboard-reload'})}
+              <ReloadOutlined /> {intl.formatMessage({id: 'kubedl-dashboard-reload'})}
             </a>
           </div>
         </div>
@@ -420,7 +418,7 @@ const JobSubmit = ({ globalConfig }) => {
             }
         >
             <Button type="primary">
-              {intl.formatMessage({id: 'dlc-dashboard-add-task-type'})} <DownOutlined />
+              {intl.formatMessage({id: 'kubedl-dashboard-add-task-type'})} <DownOutlined />
             </Button>
         </Dropdown>
     );
@@ -430,19 +428,19 @@ const JobSubmit = ({ globalConfig }) => {
       showIcon
       message={
         <span>
-          {intl.formatMessage({id: 'dlc-dashboard-pvc-alert-info1'})} Kubernetes {intl.formatMessage({id: 'dlc-dashboard-create'})}
+          {intl.formatMessage({id: 'kubedl-dashboard-pvc-alert-info1'})} Kubernetes {intl.formatMessage({id: 'kubedl-dashboard-create'})}
           <a
             href="https://cs.console.aliyun.com/#/k8s/storage/pvc/list"
             target="_blank"
           >
-             &nbsp;{intl.formatMessage({id: 'dlc-dashboard-pvc-statement'})}&nbsp;
+             &nbsp;{intl.formatMessage({id: 'kubedl-dashboard-pvc-statement'})}&nbsp;
           </a>
-          {intl.formatMessage({id: 'dlc-dashboard-pvc-alert-info2'})}"{namespace}"，{intl.formatMessage({id: 'dlc-dashboard-please-refer'})}
+          {intl.formatMessage({id: 'kubedl-dashboard-pvc-alert-info2'})}"{namespace}"，{intl.formatMessage({id: 'kubedl-dashboard-please-refer'})}
           <a
             href="https://help.aliyun.com/document_detail/86545.html"
             target="_blank"
           >
-             &nbsp;{intl.formatMessage({id: 'dlc-dashboard-document-links'})}
+             &nbsp;{intl.formatMessage({id: 'kubedl-dashboard-document-links'})}
           </a>
         </span>
       }
@@ -463,10 +461,10 @@ const JobSubmit = ({ globalConfig }) => {
       >
         <Row gutter={[24, 24]}>
           <Col span={14}>
-            <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'dlc-dashboard-basic-info'})}>
+            <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'kubedl-dashboard-basic-info'})}>
               <Form.Item
                 name="kind"
-                label={intl.formatMessage({id: 'dlc-dashboard-job-type'})}
+                label={intl.formatMessage({id: 'kubedl-dashboard-job-type'})}
                 rules={[{ required: true }]}
               >
                 <Select style={{ width: 120 }} onChange={changeTaskType}>
@@ -476,23 +474,23 @@ const JobSubmit = ({ globalConfig }) => {
               </Form.Item>
               <Form.Item
                 name="name"
-                label={intl.formatMessage({id: 'dlc-dashboard-job-name'})}
+                label={intl.formatMessage({id: 'kubedl-dashboard-job-name'})}
                 rules={[
-                  { required: true, message: intl.formatMessage({id: 'dlc-dashboard-job-name-required'}) },
+                  { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-job-name-required'}) },
                   {
                     pattern: /^[a-z][-a-z0-9]{0,28}[a-z0-9]$/,
-                    message: intl.formatMessage({id: 'dlc-dashboard-job-name-required-rules'})
+                    message: intl.formatMessage({id: 'kubedl-dashboard-job-name-required-rules'})
                   }
                 ]}
               >
                 <Input />
               </Form.Item>
             </Card>
-            <Card title={intl.formatMessage({id: 'dlc-dashboard-job-overview'})}>
+            <Card title={intl.formatMessage({id: 'kubedl-dashboard-job-overview'})}>
               <Form.Item
                 label={(
-                  <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-code-mounts-dir'}) + ":" + defaultWorkingDir} >
-                    {intl.formatMessage({id: 'dlc-dashboard-code-config'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
+                  <Tooltip title={intl.formatMessage({id: 'kubedl-dashboard-code-mounts-dir'}) + ":" + defaultWorkingDir} >
+                    {intl.formatMessage({id: 'kubedl-dashboard-code-config'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
                   </Tooltip>
                 )}
                 shouldUpdate
@@ -506,34 +504,34 @@ const JobSubmit = ({ globalConfig }) => {
                     name={["source", "type"]}
                   >
                     <Radio.Group>
-                      <Radio value="git">{intl.formatMessage({id: 'dlc-dashboard-code-repository'})}</Radio>
-                      <Radio value="pvc">{intl.formatMessage({id: 'dlc-dashboard-cloud-storage-mount'})}</Radio>
+                      <Radio value="git">{intl.formatMessage({id: 'kubedl-dashboard-code-repository'})}</Radio>
+                      <Radio value="pvc">{intl.formatMessage({id: 'kubedl-dashboard-cloud-storage-mount'})}</Radio>
                     </Radio.Group>
                   </Form.Item>
                   {form.getFieldValue(["source", "type"]) === 'git' &&
                   <div>
                     <Form.Item
                       label={(
-                        <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-repository-address-prompt'})} >
-                          {intl.formatMessage({id: 'dlc-dashboard-repository-address'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
+                        <Tooltip title={intl.formatMessage({id: 'kubedl-dashboard-repository-address-prompt'})} >
+                          {intl.formatMessage({id: 'kubedl-dashboard-repository-address'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
                         </Tooltip>
                       )}
                       name={["source", "gitRepo"]}
                       rules={[
-                        { required: true, message: intl.formatMessage({id: 'dlc-dashboard-git-repository-address-required'})}
+                        { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-git-repository-address-required'})}
                       ]}
                       labelCol={{ span: getLocale() === 'zh-CN' ? 6 : 10 }}
                       wrapperCol={{ span: getLocale() === 'zh-CN' ? 18 : 14 }}
                     >
-                      <Input placeholder="https://github.com/pai-dlc/examples.git"/>
+                      <Input placeholder="https://github.com/kubedl"/>
                     </Form.Item>
                     <Form.Item
-                      label={intl.formatMessage({id: 'dlc-dashboard-code-branch'})}
+                      label={intl.formatMessage({id: 'kubedl-dashboard-code-branch'})}
                       name={["source", "gitBranch"]}
                       labelCol={{ span: 6 }}
                       wrapperCol={{ span: 18 }}
                     >
-                      <Input placeholder={intl.formatMessage({id: 'dlc-dashboard-code-branch-prompt'})}/>
+                      <Input placeholder={intl.formatMessage({id: 'kubedl-dashboard-code-branch-prompt'})}/>
                     </Form.Item>
                   </div>
                   }
@@ -542,7 +540,7 @@ const JobSubmit = ({ globalConfig }) => {
                     <Form.Item
                       name={["source", "pvc"]}
                       rules={[
-                        { required: true, message: intl.formatMessage({id: 'dlc-dashboard-git-repository-address-required'})}
+                        { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-git-repository-address-required'})}
                       ]}
                     >
                       {pvcSelector}
@@ -555,33 +553,13 @@ const JobSubmit = ({ globalConfig }) => {
               </Form.Item>
               <Form.Item
                 name="command"
-                label={intl.formatMessage({id: 'dlc-dashboard-execute-command'})}
-                rules={[{ required: true, message: intl.formatMessage({id: 'dlc-dashboard-execute-command-required'})}]}
+                label={intl.formatMessage({id: 'kubedl-dashboard-execute-command'})}
+                rules={[{ required: true, message: intl.formatMessage({id: 'kubedl-dashboard-execute-command-required'})}]}
               >
                 <Input.TextArea  placeholder={`python examples/main.py`}/>
               </Form.Item>
 
-              <Form.Item
-                shouldUpdate
-                noStyle
-              >
-              {() =>
-              (<Form.Item
-                label={(
-                  <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-topology-aware-scheduling-prompt'})} >
-                    {intl.formatMessage({id: 'dlc-dashboard-topology-aware-scheduling'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
-                  </Tooltip>
-                )}
-               >
-                  <Form.Item
-                    name={["topoawareschedule", "enabled"]}
-                    valuePropName="checked"
-                  >
-                    <Switch />
-                  </Form.Item>
-                </Form.Item>
-              )}
-              </Form.Item>
+
 
               <Form.Item
                 shouldUpdate
@@ -590,8 +568,8 @@ const JobSubmit = ({ globalConfig }) => {
               {() =>
               (<Form.Item
                 label={(
-                  <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-third-party-libraries-prompt'})} >
-                    {intl.formatMessage({id: 'dlc-dashboard-third-party-config'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
+                  <Tooltip title={intl.formatMessage({id: 'kubedl-dashboard-third-party-libraries-prompt'})} >
+                    {intl.formatMessage({id: 'kubedl-dashboard-third-party-config'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
                   </Tooltip>
                 )}
                >
@@ -605,21 +583,21 @@ const JobSubmit = ({ globalConfig }) => {
                   <React.Fragment>
                     <Form.Item
                       label={(
-                        <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-dir-prompt'})}>
-                          {intl.formatMessage({id: 'dlc-dashboard-dir'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
+                        <Tooltip title={intl.formatMessage({id: 'kubedl-dashboard-dir-prompt'})}>
+                          {intl.formatMessage({id: 'kubedl-dashboard-dir'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
                         </Tooltip>
                       )}
                       name={["requirements", "requirementsDir"]}
                       rules={[
                         {
                           pattern: /^\/\S+$/,
-                          message: intl.formatMessage({id: 'dlc-dashboard-dir-rules'})
+                          message: intl.formatMessage({id: 'kubedl-dashboard-dir-rules'})
                         }
                       ]}
                       labelCol={{ span: 6 }}
                       wrapperCol={{ span: 18 }}
                     >
-                      <Input placeholder={intl.formatMessage({id: 'dlc-dashboard-dir-placeholder'})}/>
+                      <Input placeholder={intl.formatMessage({id: 'kubedl-dashboard-dir-placeholder'})}/>
                     </Form.Item>
                   </React.Fragment>}
                 </Form.Item>
@@ -641,13 +619,13 @@ const JobSubmit = ({ globalConfig }) => {
                   <React.Fragment>
                     <Form.Item
                       label={(
-                        <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-events-dir-prompt'})} >
-                          {intl.formatMessage({id: 'dlc-dashboard-events-dir'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
+                        <Tooltip title={intl.formatMessage({id: 'kubedl-dashboard-events-dir-prompt'})} >
+                          {intl.formatMessage({id: 'kubedl-dashboard-events-dir'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
                         </Tooltip>
                       )}
                       name={["tensorboard", "logDir"]}
                       rules={[
-                        { required: true, message: intl.formatMessage({id: 'dlc-dashboard-events-dir-rules'})}
+                        { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-events-dir-rules'})}
                       ]}
                       labelCol={{ span: 6 }}
                       wrapperCol={{ span: 18 }}
@@ -681,9 +659,9 @@ const JobSubmit = ({ globalConfig }) => {
                       >
                         <Form.Item
                           name={[field.name, "replicas"]}
-                          label={intl.formatMessage({id: 'dlc-dashboard-instances-num'})}
+                          label={intl.formatMessage({id: 'kubedl-dashboard-instances-num'})}
                           fieldKey={[field.fieldKey, "replicas"]}
-                          rules={[{ required: true, message: intl.formatMessage({id: 'dlc-dashboard-instances-num-required'}) }]}
+                          rules={[{ required: true, message: intl.formatMessage({id: 'kubedl-dashboard-instances-num-required'}) }]}
                         >
                           <InputNumber
                             min={1}
@@ -697,7 +675,7 @@ const JobSubmit = ({ globalConfig }) => {
                         </Form.Item>
                         <Form.Item
                           name={[field.name, "image"]}
-                          label={intl.formatMessage({id: 'dlc-dashboard-image'})}
+                          label={intl.formatMessage({id: 'kubedl-dashboard-image'})}
                           fieldKey={[field.fieldKey, "image"]}
                           required={true}
                         >
@@ -709,7 +687,7 @@ const JobSubmit = ({ globalConfig }) => {
                         </Form.Item>
                         <Form.Item
                           name={[field.name, "resource", "cpu"]}
-                          label={intl.formatMessage({id: 'dlc-dashboard-cpu'})}
+                          label={intl.formatMessage({id: 'kubedl-dashboard-cpu'})}
                           fieldKey={[field.fieldKey, "resource", "cpu"]}
                         >
                           <InputNumber
@@ -722,7 +700,7 @@ const JobSubmit = ({ globalConfig }) => {
                         </Form.Item>
                         <Form.Item
                           name={[field.name, "resource", "memory"]}
-                          label={intl.formatMessage({id: 'dlc-dashboard-memory'})}
+                          label={intl.formatMessage({id: 'kubedl-dashboard-memory'})}
                           fieldKey={[field.fieldKey, "resource", "memory"]}
                         >
                           <Select>
@@ -739,7 +717,7 @@ const JobSubmit = ({ globalConfig }) => {
                         </Form.Item>
                         <Form.Item
                           name={[field.name, "resource", "gpu"]}
-                          label={intl.formatMessage({id: 'dlc-dashboard-gpu'})}
+                          label={intl.formatMessage({id: 'kubedl-dashboard-gpu'})}
                           fieldKey={[field.fieldKey, "resource", "gpu"]}
                           dependencies={["tasks"]}
                           shouldUpdate={true}
@@ -765,7 +743,7 @@ const JobSubmit = ({ globalConfig }) => {
             </Card>
           </Col>
           <Col span={10}>
-            <Card title={intl.formatMessage({id: 'dlc-dashboard-environment-variable'})} style={{ marginBottom: 12 }}>
+            <Card title={intl.formatMessage({id: 'kubedl-dashboard-environment-variable'})} style={{ marginBottom: 12 }}>
               <Form.List name="env">
                 {(fields, fieldOps) => (
                   <div>
@@ -778,14 +756,14 @@ const JobSubmit = ({ globalConfig }) => {
                           validateTrigger={["onChange", "onBlur"]}
                           style={{ display: "inline-block" }}
                           rules={[
-                            { required: true, message: intl.formatMessage({id: 'dlc-dashboard-environment-variable-required'}) },
+                            { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-environment-variable-required'}) },
                             {
                               pattern: /^[-._a-zA-Z][-._a-zA-Z0-9]*$/,
-                              message: intl.formatMessage({id: 'dlc-dashboard-environment-variable-rules'})
+                              message: intl.formatMessage({id: 'kubedl-dashboard-environment-variable-rules'})
                             }
                           ]}
                         >
-                          <Input placeholder={intl.formatMessage({id: 'dlc-dashboard-environment-variable-name'})} />
+                          <Input placeholder={intl.formatMessage({id: 'kubedl-dashboard-environment-variable-name'})} />
                         </Form.Item>
                         <Form.Item
                           {...inlineFormItemLayout}
@@ -794,10 +772,10 @@ const JobSubmit = ({ globalConfig }) => {
                           validateTrigger={["onChange", "onBlur"]}
                           style={{ display: "inline-block" }}
                           rules={[
-                            { required: true, message: intl.formatMessage({id: 'dlc-dashboard-environment-variable-value-required'}) }
+                            { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-environment-variable-value-required'}) }
                           ]}
                         >
-                          <Input placeholder={intl.formatMessage({id: 'dlc-dashboard-environment-variable-value'})} />
+                          <Input placeholder={intl.formatMessage({id: 'kubedl-dashboard-environment-variable-value'})} />
                         </Form.Item>
                         <MinusCircleOutlined
                           className="dynamic-delete-button"
@@ -821,7 +799,7 @@ const JobSubmit = ({ globalConfig }) => {
                         }}
                         style={{ width: "80%" }}
                       >
-                        <PlusOutlined /> {intl.formatMessage({id: 'dlc-dashboard-environment-variable-add'})}
+                        <PlusOutlined /> {intl.formatMessage({id: 'kubedl-dashboard-environment-variable-add'})}
                       </Button>
                     </Form.Item>
                   </div>
@@ -829,7 +807,7 @@ const JobSubmit = ({ globalConfig }) => {
               </Form.List>
             </Card>
 
-            <Card title={intl.formatMessage({id: 'dlc-dashboard-storage-config'})}>
+            <Card title={intl.formatMessage({id: 'kubedl-dashboard-storage-config'})}>
               <Form.List name="mount">
                 {(fields, fieldOps) => (
                   <div>
@@ -842,7 +820,7 @@ const JobSubmit = ({ globalConfig }) => {
                           validateTrigger={["onChange", "onBlur"]}
                           style={{ display: "inline-block", width: "45%" }}
                           rules={[
-                            { required: true, message: intl.formatMessage({id: 'dlc-dashboard-pvc-statement-required'}) },
+                            { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-pvc-statement-required'}) },
                           ]}
                         >
                           {pvcSelector}
@@ -854,20 +832,20 @@ const JobSubmit = ({ globalConfig }) => {
                           validateTrigger={["onChange", "onBlur"]}
                           style={{ display: "inline-block", width: "45%" }}
                           rules={[
-                            { required: true, message: intl.formatMessage({id: 'dlc-dashboard-mount-path-required'}) },
+                            { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-mount-path-required'}) },
                             {
                               pattern: /^\/\S+$/,
-                              message: intl.formatMessage({id: 'dlc-dashboard-mount-path-rules'})
+                              message: intl.formatMessage({id: 'kubedl-dashboard-mount-path-rules'})
                             },
                             { validator: async (rule, value) => {
                                 if (value === defaultWorkingDir || value === defaultWorkingDir + '/') {
-                                  throw new Error(intl.formatMessage({id: 'dlc-dashboard-mount-path-rules-error'}))
+                                  throw new Error(intl.formatMessage({id: 'kubedl-dashboard-mount-path-rules-error'}))
                                 }
                               }
                             }
                           ]}
                         >
-                          <Input placeholder={intl.formatMessage({id: 'dlc-dashboard-mount-path'})} />
+                          <Input placeholder={intl.formatMessage({id: 'kubedl-dashboard-mount-path'})} />
                         </Form.Item>
                         <MinusCircleOutlined
                           className="dynamic-delete-button"
@@ -891,7 +869,7 @@ const JobSubmit = ({ globalConfig }) => {
                         }}
                         style={{ width: "80%" }}
                       >
-                        <PlusOutlined /> {intl.formatMessage({id: 'dlc-dashboard-storage-config-add'})}
+                        <PlusOutlined /> {intl.formatMessage({id: 'kubedl-dashboard-storage-config-add'})}
                       </Button>
                     </Form.Item>
                     {pvcAlert}
@@ -903,7 +881,7 @@ const JobSubmit = ({ globalConfig }) => {
         </Row>
         <FooterToolbar>
           <Button type="primary" htmlType="submit">
-            {intl.formatMessage({id: 'dlc-dashboard-submit-job'})}
+            {intl.formatMessage({id: 'kubedl-dashboard-submit-job'})}
           </Button>
         </FooterToolbar>
       </Form>

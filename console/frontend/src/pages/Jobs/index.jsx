@@ -122,10 +122,10 @@ const TableList = ({ globalConfig }) => {
 
   const onJobDelete = (job) => {
     Modal.confirm({
-      title: intl.formatMessage({ id: "dlc-dashboard-delete-job" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-delete-job" }),
       icon: <ExclamationCircleOutlined />,
       content: `${intl.formatMessage({
-        id: "dlc-dashboard-delete-job-confirm",
+        id: "kubedl-dashboard-delete-job-confirm",
       })} ${job.name} ?`,
       onOk: () =>
         deleteJobs(
@@ -153,10 +153,10 @@ const TableList = ({ globalConfig }) => {
 
   const onJobStop = (job) => {
     Modal.confirm({
-      title: intl.formatMessage({ id: "dlc-dashboard-termination-job" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-termination-job" }),
       icon: <ExclamationCircleOutlined />,
       content: `${intl.formatMessage({
-        id: "dlc-dashboard-termination-job-confirm",
+        id: "kubedl-dashboard-termination-job-confirm",
       })} ${job.name} ?`,
       onOk: () => stopJobs(job.deployRegion, job.namespace, job.name),
       onCancel() {},
@@ -184,7 +184,7 @@ const TableList = ({ globalConfig }) => {
       window.open(`http://${host}/${job_namespace}/${job_name}`, "_blank");
     } else {
       message.warning(
-        "Tensorboard " + intl.formatMessage({ id: "dlc-dashboard-start-info" }),
+        "Tensorboard " + intl.formatMessage({ id: "kubedl-dashboard-start-info" }),
         3
       );
     }
@@ -202,9 +202,9 @@ const TableList = ({ globalConfig }) => {
       fetchJobs();
     }
   };
-  const Tip = ({ dlc, Click, disabled, IconComponent }) => {
+  const Tip = ({ kubedl, Click, disabled, IconComponent }) => {
     return (
-      <Tooltip title={intl.formatMessage({ id: dlc })}>
+      <Tooltip title={intl.formatMessage({ id: kubedl })}>
         <a onClick={() => Click()} disabled={disabled}>
           {IconComponent}
         </a>
@@ -233,7 +233,7 @@ const TableList = ({ globalConfig }) => {
   let columns = [
     {
       // title: 'Date Range',
-      title: intl.formatMessage({ id: "dlc-dashboard-time-interval" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-time-interval" }),
       dataIndex: "submitDateRange",
       valueType: "dateRange",
       initialValue: searchInitialParameters.submitDateRange,
@@ -241,12 +241,12 @@ const TableList = ({ globalConfig }) => {
     },
     {
       // title: 'Namespace',
-      title: intl.formatMessage({ id: "dlc-dashboard-namespace" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-namespace" }),
       dataIndex: "namespace",
       hideInSearch: true,
     },
     {
-      title: intl.formatMessage({ id: "dlc-dashboard-job-type" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-job-type" }),
       dataIndex: "jobType",
       valueEnum: {
         PyTorchJob: {
@@ -265,43 +265,43 @@ const TableList = ({ globalConfig }) => {
     },
     {
       // title: 'Status',
-      title: intl.formatMessage({ id: "dlc-dashboard-status" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-status" }),
       width: 128,
       dataIndex: "jobStatus",
       initialValue: searchInitialParameters.jobStatus,
       valueEnum: {
         All: {
-          text: intl.formatMessage({ id: "dlc-dashboard-all" }),
+          text: intl.formatMessage({ id: "kubedl-dashboard-all" }),
           // text: 'All',
           status: "Default",
         },
         Created: {
-          text: intl.formatMessage({ id: "dlc-dashboard-has-created" }),
+          text: intl.formatMessage({ id: "kubedl-dashboard-has-created" }),
           // text: 'Created',
           status: "Default",
         },
         Waiting: {
-          text: intl.formatMessage({ id: "dlc-dashboard-waiting-for" }),
+          text: intl.formatMessage({ id: "kubedl-dashboard-waiting-for" }),
           // text: 'Waiting',
           status: "Processing",
         },
         Running: {
-          text: intl.formatMessage({ id: "dlc-dashboard-executing" }),
+          text: intl.formatMessage({ id: "kubedl-dashboard-executing" }),
           // text: 'Running',
           status: "Processing",
         },
         Succeeded: {
-          text: intl.formatMessage({ id: "dlc-dashboard-execute-success" }),
+          text: intl.formatMessage({ id: "kubedl-dashboard-execute-success" }),
           // text: 'Succeeded',
           status: "Success",
         },
         Failed: {
-          text: intl.formatMessage({ id: "dlc-dashboard-execute-failure" }),
+          text: intl.formatMessage({ id: "kubedl-dashboard-execute-failure" }),
           // text: 'Failed',
           status: "Error",
         },
         Stopped: {
-          text: intl.formatMessage({ id: "dlc-dashboard-has-stopped" }),
+          text: intl.formatMessage({ id: "kubedl-dashboard-has-stopped" }),
           // text: 'Stopped',
           status: "Error",
         },
@@ -309,27 +309,27 @@ const TableList = ({ globalConfig }) => {
     },
     {
       // title: 'Create Time',
-      title: intl.formatMessage({ id: "dlc-dashboard-creation-time" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-creation-time" }),
       dataIndex: "createTime",
       //valueType: "date",
       hideInSearch: true,
     },
     {
       // title: 'End Time',
-      title: intl.formatMessage({ id: "dlc-dashboard-end-time" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-end-time" }),
       dataIndex: "endTime",
       //valueType: "date",
       hideInSearch: true,
     },
     {
       width: 142,
-      title: intl.formatMessage({ id: "dlc-dashboard-execution-time" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-execution-time" }),
       dataIndex: "durationTime",
       hideInSearch: true,
       render: (text) => <Fragment>{text && text.split(".")[0]}</Fragment>,
     },
     {
-      title: intl.formatMessage({ id: "dlc-dashboard-operation" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-operation" }),
       dataIndex: "option",
       valueType: "option",
       render: (_, record) => {
@@ -344,7 +344,7 @@ const TableList = ({ globalConfig }) => {
         return (
           <Fragment>
             <Tip
-              dlc={"dlc-dashboard-clone"}
+              kubedl={"kubedl-dashboard-clone"}
               Click={ClickClone.bind(this, record)}
               disabled={!isDisabled}
               IconComponent={
@@ -357,7 +357,7 @@ const TableList = ({ globalConfig }) => {
               }
             />
             <Tip
-              dlc={"dlc-dashboard-delete"}
+              kubedl={"kubedl-dashboard-delete"}
               Click={onJobDelete.bind(this, record)}
               disabled={!isDisabled}
               IconComponent={
@@ -366,12 +366,12 @@ const TableList = ({ globalConfig }) => {
                 />
               }
             />
-            {environment && environment !== "eflops" && (
+            {environment && (
               <>
                 {record.enableTensorboard === true ? (
                   <>
                     <Tip
-                      dlc={"dlc-dashboard-open"}
+                      kubedl={"kubedl-dashboard-open"}
                       Click={onTBCheckAndOpen.bind(this, record)}
                       disabled={!isDisabled}
                       IconComponent={
@@ -379,7 +379,7 @@ const TableList = ({ globalConfig }) => {
                       }
                     />
                     <Tip
-                      dlc={"dlc-dashboard-edit"}
+                      kubedl={"kubedl-dashboard-edit"}
                       Click={onTBOpen.bind(this, true, record)}
                       disabled={!isDisabled}
                       IconComponent={
@@ -389,7 +389,7 @@ const TableList = ({ globalConfig }) => {
                   </>
                 ) : record.enableTensorboard === false ? (
                   <Tip
-                    dlc={"dlc-dashboard-create"}
+                    kubedl={"kubedl-dashboard-create"}
                     Click={onTBOpen.bind(this, false, record)}
                     disabled={!isDisabled}
                     IconComponent={
@@ -408,7 +408,7 @@ const TableList = ({ globalConfig }) => {
   ];
   let nameAndUser = [
     {
-      title: intl.formatMessage({ id: "dlc-dashboard-name" }),
+      title: intl.formatMessage({ id: "kubedl-dashboard-name" }),
       dataIndex: "name",
       width: 196,
       render: (_, r) => {
@@ -416,11 +416,11 @@ const TableList = ({ globalConfig }) => {
       },
     },
   ];
-  if (environment && environment !== "eflops") {
+  if (environment) {
     nameAndUser = [
       ...nameAndUser,
       {
-        title: intl.formatMessage({ id: "dlc-dashboard-user" }),
+        title: intl.formatMessage({ id: "kubedl-dashboard-user" }),
         dataIndex: "jobUserName",
         hideInSearch: true,
         render: (_, r) => {
@@ -437,7 +437,7 @@ const TableList = ({ globalConfig }) => {
         loading={loading}
         dataSource={jobs}
         onSubmit={(params) => onSearchSubmit(params)}
-        headerTitle={intl.formatMessage({ id: "dlc-dashboard-job-list" })}
+        headerTitle={intl.formatMessage({ id: "kubedl-dashboard-job-list" })}
         actionRef={actionRef}
         formRef={formRef}
         rowKey="key"

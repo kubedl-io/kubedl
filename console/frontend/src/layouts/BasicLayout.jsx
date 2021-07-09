@@ -122,7 +122,7 @@ const BasicLayout = props => {
       logo={logo}
       breakpoint="xxl"
       formatMessage={formatMessage}
-      title={<div style={{position:"relative"}}>KubeDL <br/><span style={{position:"absolute",fontSize:"14px"}}>{config.dlcVersion}</span></div>} 
+      title={<div style={{position:"relative"}}>KubeDL <br/><span style={{position:"absolute",fontSize:"14px"}}>{config.kubedlVersion}</span></div>}
       menuHeaderRender={(logoDom, titleDom) => (
         <Link to="/">
           {logoDom}
@@ -141,13 +141,7 @@ const BasicLayout = props => {
 
         return <Link to={menuItemProps.path}>{defaultDom}</Link>;
       }}
-     // breadcrumbRender={(routers = []) => [
-     //  {
-     //     path: "/",
-     //     breadcrumbName: "PAI-DLC"
-     //   },
-     //   ...routers
-     // ]}
+
       itemRender={(route, params, routes, paths) => {
           return <Link to={route.path}>{route.breadcrumbName}</Link>;
       }}

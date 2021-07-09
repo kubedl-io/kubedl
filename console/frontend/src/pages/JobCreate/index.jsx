@@ -45,10 +45,10 @@ var path = require("path");
 const JobSubmitNew = ({ globalConfig }) => {
     const defaultWorkingDir = '/root/';
     const defaultRelativeCodePath = "code/";
-    let tfCPUImages = globalConfig["pai-tf-cpu-images"] || [];
-    let tfGPUImages = globalConfig["pai-tf-gpu-images"] || [];
+    let tfCPUImages = globalConfig["tf-cpu-images"] || [];
+    let tfGPUImages = globalConfig["tf-gpu-images"] || [];
     const tfJobImages = tfCPUImages.concat(tfGPUImages);
-    const pyTorchImages = globalConfig["pai-pytorch-gpu-images"] || [];
+    const pyTorchImages = globalConfig["pytorch-gpu-images"] || [];
     const intl = useIntl();
     const namespace = globalConfig["namespace"];
     const [submitLoading, setSubmitLoading] = useState(false);
@@ -228,7 +228,7 @@ const JobSubmitNew = ({ globalConfig }) => {
             })
         }
         if(!verifyNamespace.error && verifyNamespace.error !== undefined){
-            message.error(intl.formatMessage({id:"dlc-dashboard-multiple-data-sources-should-be-in-the-same-Namespace"}));
+            message.error(intl.formatMessage({id:"kubedl-dashboard-multiple-data-sources-should-be-in-the-same-Namespace"}));
             return;
         }
         // volumes 去重，避免 git 使用 pv 和挂载 pv 重复导致 pod 无法运行
@@ -261,7 +261,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                 name: "REQUIREMENTS_TEXT",
                 value: form.requirements.text.trim().replace(/[\n\r]/g,",")
             });
-            replicaCommand = "prepare_dlc_environment && " + form.command
+            replicaCommand = "prepare_kubedl_environment && " + form.command
         } else if (form.requirements?.enabled === 'catalog') {
             if (form.requirements.catalog !== "") {
                 requirementsDir = form.requirements.catalog
@@ -270,7 +270,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                 name: "REQUIREMENTS_DIR",
                 value: requirementsDir
             });
-            replicaCommand = "prepare_dlc_environment && " + form.command
+            replicaCommand = "prepare_kubedl_environment && " + form.command
         }
 
 
@@ -430,7 +430,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                 </Menu.Item>
              </Menu>}>
             <Button type="primary">
-                {intl.formatMessage({id: 'dlc-dashboard-add-task-type'})} <DownOutlined />
+                {intl.formatMessage({id: 'kubedl-dashboard-add-task-type'})} <DownOutlined />
             </Button>
         </Dropdown>
     );
@@ -442,7 +442,7 @@ const JobSubmitNew = ({ globalConfig }) => {
         <Alert type="info" showIcon
             message={
                 <span>
-                    {intl.formatMessage({id: 'dlc-dashboard-third-party-list-prompt'})}
+                    {intl.formatMessage({id: 'kubedl-dashboard-third-party-list-prompt'})}
         </span>}/>);
 
     const gitSourceChange = (v) => {
@@ -461,15 +461,15 @@ const JobSubmitNew = ({ globalConfig }) => {
                 labelAlign="left">
                 <Row gutter={[24, 24]}>
                     <Col span={13}>
-                        <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'dlc-dashboard-basic-info'})}>
+                        <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'kubedl-dashboard-basic-info'})}>
                             <Form.Item
                                 name="name"
-                                label={intl.formatMessage({id: 'dlc-dashboard-job-name'})}
+                                label={intl.formatMessage({id: 'kubedl-dashboard-job-name'})}
                                 rules={[
-                                    { required: true, message: intl.formatMessage({id: 'dlc-dashboard-job-name-required'})},
+                                    { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-job-name-required'})},
                                     {
                                         pattern: /^[a-z][-a-z0-9]{0,28}[a-z0-9]$/,
-                                        message: intl.formatMessage({id: 'dlc-dashboard-job-name-required-rules'})
+                                        message: intl.formatMessage({id: 'kubedl-dashboard-job-name-required-rules'})
                                     }
                                 ]}
                             >
@@ -477,12 +477,12 @@ const JobSubmitNew = ({ globalConfig }) => {
                             </Form.Item>
                             <ComForm.FormSel
                                 form ={form}
-                                {...{name:"kind", label:intl.formatMessage({id: 'dlc-dashboard-job-type'}), rules:[{ required: true }]}}
+                                {...{name:"kind", label:intl.formatMessage({id: 'kubedl-dashboard-job-type'}), rules:[{ required: true }]}}
                                 listOption={[
-                                              {label:`TF ${intl.formatMessage({id: 'dlc-dashboard-stand-alone'})}`, value:"TFJob"},
-                                              {label:`TF ${intl.formatMessage({id: 'dlc-dashboard-distributed'})}`, value:"TFJobDistributed"},
-                                              {label:`Pytorch ${intl.formatMessage({id: 'dlc-dashboard-stand-alone'})}`, value:"PyTorchJob"},
-                                              {label:`Pytorch ${intl.formatMessage({id: 'dlc-dashboard-distributed'})}`, value:"PyTorchJobDistributed"},
+                                              {label:`TF ${intl.formatMessage({id: 'kubedl-dashboard-stand-alone'})}`, value:"TFJob"},
+                                              {label:`TF ${intl.formatMessage({id: 'kubedl-dashboard-distributed'})}`, value:"TFJobDistributed"},
+                                              {label:`Pytorch ${intl.formatMessage({id: 'kubedl-dashboard-stand-alone'})}`, value:"PyTorchJob"},
+                                              {label:`Pytorch ${intl.formatMessage({id: 'kubedl-dashboard-distributed'})}`, value:"PyTorchJobDistributed"},
                                             ]}
                                onChange={changeTaskType}           
                             />
@@ -491,11 +491,11 @@ const JobSubmitNew = ({ globalConfig }) => {
                               fieldCode={"dataSource"}
                               fieldKey={"dataSource"}
                               options={dataSource}
-                              label={intl.formatMessage({id: 'dlc-dashboard-data-config'})}
+                              label={intl.formatMessage({id: 'kubedl-dashboard-data-config'})}
                               colStyle={{ labelCol:{ span: getLocale() === 'zh-CN' ? 4 : 8  }, 
                                           wrapperCol:{ span: getLocale() === 'zh-CN' ? 24 : 16  }
                                         }}
-                              messageLable={intl.formatMessage({id: 'dlc-dashboard-pvc-name'})}                     
+                              messageLable={intl.formatMessage({id: 'kubedl-dashboard-pvc-name'})}                     
                             />
                             <Form.Item
                                 shouldUpdate
@@ -504,7 +504,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                     <div>
                                         <div className={getLocale() === 'zh-CN' ? styles.gitSourceContainer : styles.gitSourceContainerEn}>
                                             <Form.Item
-                                                label= {intl.formatMessage({id: 'dlc-dashboard-code-config'})}
+                                                label= {intl.formatMessage({id: 'kubedl-dashboard-code-config'})}
                                                 name="codeSource"
                                             >
                                                 <Select
@@ -528,7 +528,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                     showIcon
                                                     message={
                                                         <span>
-                                                            {intl.formatMessage({id: 'dlc-dashboard-git-repository'})}
+                                                            {intl.formatMessage({id: 'kubedl-dashboard-git-repository'})}
                                                             {': '}
                                                             {
                                                                 codeSource.length > 0 &&
@@ -536,7 +536,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                                 codeSource.filter((v) => v.name === form.getFieldValue("codeSource"))[0]['code_path']
                                                             }
                                                             <br/>
-                                                            {intl.formatMessage({id: 'dlc-dashboard-code-local-directory'})}
+                                                            {intl.formatMessage({id: 'kubedl-dashboard-code-local-directory'})}
                                                             {': '}
                                                             {
                                                                 codeSource.length > 0 &&
@@ -552,7 +552,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                         {![null, "", undefined].includes(form.getFieldValue("codeSource")) &&
                                         <React.Fragment>
                                             <Form.Item
-                                                label={intl.formatMessage({id: 'dlc-dashboard-code-branch'})}
+                                                label={intl.formatMessage({id: 'kubedl-dashboard-code-branch'})}
                                                 name={"codeSourceBranch"}
                                                 labelCol={{ span: getLocale() === 'zh-CN' ? 3 : 4 , offset: getLocale() === 'zh-CN' ? 4 : 8 }}
                                                 wrapperCol={{ span: getLocale() === 'zh-CN' ? 17 : 12  }}
@@ -565,7 +565,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                             </Form.Item>
                             <Form.Item
                                 name="workingDir"
-                                label={intl.formatMessage({id: 'dlc-dashboard-working-dir'})}
+                                label={intl.formatMessage({id: 'kubedl-dashboard-working-dir'})}
                             >
                                 <Input
                                     placeholder={defaultWorkingDir}
@@ -574,38 +574,19 @@ const JobSubmitNew = ({ globalConfig }) => {
                             <Form.Item
                                 required={true}
                                 name="command"
-                                label={intl.formatMessage({id: 'dlc-dashboard-execute-command'})}>
+                                label={intl.formatMessage({id: 'kubedl-dashboard-execute-command'})}>
                                 <Input.TextArea  placeholder={''}/>
                             </Form.Item>
                             <Form.Item
-                                shouldUpdate
-                                noStyle>
-                            {() =>
-                            (<Form.Item
-                                label={(
-                                <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-topology-aware-scheduling-prompt'})} >
-                                    {intl.formatMessage({id: 'dlc-dashboard-topology-aware-scheduling'})} 
-                                    <QuestionCircleTwoTone twoToneColor="#faad14"/>
-                                </Tooltip>
-                                )}>
-                                <Form.Item
-                                    name={["topoawareschedule", "enabled"]}
-                                    valuePropName="checked">
-                                    <Switch/>
-                                </Form.Item>
-                            </Form.Item>
-                            )}
-                            </Form.Item>
-                            <Form.Item
-                                label={intl.formatMessage({id: 'dlc-dashboard-third-party-config'})}
+                                label={intl.formatMessage({id: 'kubedl-dashboard-third-party-config'})}
                                 shouldUpdate>
                                 {() => (
                                     <React.Fragment>
                                         <Form.Item
                                             name={["requirements", "enabled"]}>
                                             <Radio.Group>
-                                                <Radio value="textBox">{intl.formatMessage({id: 'dlc-dashboard-third-party-list'})}</Radio>
-                                                <Radio value="catalog">{intl.formatMessage({id: 'dlc-dashboard-third-party-directory'})}</Radio>
+                                                <Radio value="textBox">{intl.formatMessage({id: 'kubedl-dashboard-third-party-list'})}</Radio>
+                                                <Radio value="catalog">{intl.formatMessage({id: 'kubedl-dashboard-third-party-directory'})}</Radio>
                                             </Radio.Group>
                                         </Form.Item>
                                         {form.getFieldValue(["requirements", "enabled"]) === 'textBox' &&
@@ -644,13 +625,13 @@ const JobSubmitNew = ({ globalConfig }) => {
                                             <React.Fragment>
                                                 <Form.Item
                                                     label={(
-                                                        <Tooltip title={intl.formatMessage({id: 'dlc-dashboard-events-dir-prompt'})} >
-                                                            {intl.formatMessage({id: 'dlc-dashboard-events-dir'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
+                                                        <Tooltip title={intl.formatMessage({id: 'kubedl-dashboard-events-dir-prompt'})} >
+                                                            {intl.formatMessage({id: 'kubedl-dashboard-events-dir'})} <QuestionCircleTwoTone twoToneColor="#faad14" />
                                                         </Tooltip>
                                                     )}
                                                     name={["tensorboard", "logDir"]}
                                                     rules={[
-                                                        { required: true, message: intl.formatMessage({id: 'dlc-dashboard-events-dir-rules'})}
+                                                        { required: true, message: intl.formatMessage({id: 'kubedl-dashboard-events-dir-rules'})}
                                                     ]}
                                                     labelCol={{ span: 10 }}
                                                     wrapperCol={{ span: 18 }}
@@ -664,7 +645,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                         </Card>
                     </Col>
                     <Col span={11}>
-                        <Card title={intl.formatMessage({id: 'dlc-dashboard-resource-info'})} style={{ marginBottom: 12 }}>
+                        <Card title={intl.formatMessage({id: 'kubedl-dashboard-resource-info'})} style={{ marginBottom: 12 }}>
                             <Form.List name="tasks">
                                 {(fields, fieldOps) => (
                                     <Tabs
@@ -685,9 +666,9 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                     form.getFieldValue("tasks")[idx].role !== "Worker"}>
                                                 <Form.Item
                                                     name={[field.name, "replicas"]}
-                                                    label={intl.formatMessage({id: 'dlc-dashboard-instances-num'})}
+                                                    label={intl.formatMessage({id: 'kubedl-dashboard-instances-num'})}
                                                     fieldKey={[field.fieldKey, "replicas"]}
-                                                    rules={[{ required: true, message:intl.formatMessage({id: 'dlc-dashboard-instances-num-required'}) }]}>
+                                                    rules={[{ required: true, message:intl.formatMessage({id: 'kubedl-dashboard-instances-num-required'}) }]}>
                                                     <InputNumber
                                                         min={1}
                                                         step={1}
@@ -700,7 +681,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                 </Form.Item>
                                                 <Form.Item
                                                     name={[field.name, "image"]}
-                                                    label={intl.formatMessage({id: 'dlc-dashboard-image'})}
+                                                    label={intl.formatMessage({id: 'kubedl-dashboard-image'})}
                                                     fieldKey={[field.fieldKey, "image"]}
                                                     required={true}>
                                                     <Select>
@@ -711,7 +692,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                 </Form.Item>
                                                 <Form.Item
                                                     name={[field.name, "resource", "cpu"]}
-                                                    label={intl.formatMessage({id: 'dlc-dashboard-cpu'})}
+                                                    label={intl.formatMessage({id: 'kubedl-dashboard-cpu'})}
                                                     fieldKey={[field.fieldKey, "resource", "cpu"]}>
                                                     <InputNumber
                                                         min={1}
@@ -722,7 +703,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                 </Form.Item>
                                                 <Form.Item
                                                     name={[field.name, "resource", "memory"]}
-                                                    label={intl.formatMessage({id: 'dlc-dashboard-memory'})}
+                                                    label={intl.formatMessage({id: 'kubedl-dashboard-memory'})}
                                                     fieldKey={[field.fieldKey, "resource", "memory"]}>
                                                     <Select>
                                                         <Select.Option value={1}>1GB</Select.Option>
@@ -738,7 +719,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                 </Form.Item>
                                                 <Form.Item
                                                     name={[field.name, "resource", "gpu"]}
-                                                    label={intl.formatMessage({id: 'dlc-dashboard-gpu'})}
+                                                    label={intl.formatMessage({id: 'kubedl-dashboard-gpu'})}
                                                     fieldKey={[field.fieldKey, "resource", "gpu"]}
                                                     dependencies={["tasks"]}
                                                     shouldUpdate={true}>
@@ -756,15 +737,15 @@ const JobSubmitNew = ({ globalConfig }) => {
                                 )}
                             </Form.List>
                         </Card>
-                        <Card title={intl.formatMessage({id: 'dlc-dashboard-current-resources-details'})} style={{ marginBottom: 12 }}>
-                            {/*<h3>{intl.formatMessage({id: 'dlc-dashboard-resources-details'})}</h3>*/}
-                            <h3 style={{textAlign: 'center'}}>{intl.formatMessage({id: 'dlc-dashboard-coming-soon'})}</h3>
+                        <Card title={intl.formatMessage({id: 'kubedl-dashboard-current-resources-details'})} style={{ marginBottom: 12 }}>
+                            {/*<h3>{intl.formatMessage({id: 'kubedl-dashboard-resources-details'})}</h3>*/}
+                            <h3 style={{textAlign: 'center'}}>{intl.formatMessage({id: 'kubedl-dashboard-coming-soon'})}</h3>
                         </Card>
                     </Col>
                 </Row>
                  <FooterToolbar>
                     <Button type="primary" htmlType="submit">
-                        {intl.formatMessage({id: 'dlc-dashboard-submit-job'})}
+                        {intl.formatMessage({id: 'kubedl-dashboard-submit-job'})}
                     </Button>
                 </FooterToolbar>
             </Form>

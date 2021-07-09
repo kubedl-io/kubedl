@@ -73,7 +73,7 @@ export default function PodCharts(props) {
     }
     return (
         <div style={{width: '100%', background: 'white', margin: '10px 0', padding: '10px'}}>
-            <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'dlc-dashboard-resource-consumption'})}>
+            <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'kubedl-dashboard-resource-consumption'})}>
                 <Tabs shape="wrapped" onChange={tabOnChange} style={{ padding: "10px" }}>
                     {podTabs.map((tab) => (
                         <TabPane tab={tab.tab} key={tab.key}>
@@ -124,7 +124,7 @@ export default function PodCharts(props) {
                                         />
                                     </Chart> :
                                     <div className={styles.chartsNoData}>
-                                        {intl.formatMessage({id: 'dlc-dashboard-no-data'})}
+                                        {intl.formatMessage({id: 'kubedl-dashboard-no-data'})}
                                     </div>
                                 }
                             </Spin>

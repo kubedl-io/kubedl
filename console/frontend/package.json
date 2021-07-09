@@ -26,9 +26,7 @@
     "test:all": "node ./tests/run-tests.js",
     "test:component": "umi test ./src/components",
     "tsc": "tsc",
-    "ui": "umi ui",
-    "eflops": "cross-env  UMI_ENV=eflops  UMI_UI=none umi dev",
-    "eflops-build": "cross-env  UMI_ENV=eflops umi build"
+    "ui": "umi ui"
   },
   "lint-staged": {
     "**/*.less": "stylelint --syntax less",

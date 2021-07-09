@@ -9,32 +9,32 @@ const STATUS_MAP = {
       status: 'default',
     },
     'Created': {
-      text: <FormattedMessage id="dlc-dashboard-has-created" />,
+      text: <FormattedMessage id="kubedl-dashboard-has-created" />,
       // text: 'Created',
       status: 'default',
     },
     'Waiting': {
-      text: <FormattedMessage id="dlc-dashboard-waiting-for" />,
+      text: <FormattedMessage id="kubedl-dashboard-waiting-for" />,
       // text: 'Waiting',
       status: 'processing',
     },
     'Running': {
-      text: <FormattedMessage id="dlc-dashboard-executing" />,
+      text: <FormattedMessage id="kubedl-dashboard-executing" />,
       // text: 'Running',
       status: 'processing',
     },
     'Succeeded': {
-      text: <FormattedMessage id="dlc-dashboard-execute-success" />,
+      text: <FormattedMessage id="kubedl-dashboard-execute-success" />,
       // text: 'Succeeded',
       status: 'success',
     },
     'Failed': {
-      text: <FormattedMessage id="dlc-dashboard-execute-failure" />,
+      text: <FormattedMessage id="kubedl-dashboard-execute-failure" />,
       // text: 'Failed',
       status: 'error',
     },
     'Stopped': {
-      text: <FormattedMessage id="dlc-dashboard-has-stopped" />,
+      text: <FormattedMessage id="kubedl-dashboard-has-stopped" />,
       // text: 'Stopped',
       status: 'error',
     },
@@ -44,7 +44,7 @@ const JobStatus = props => {
     const { status } = props
 
     const s = STATUS_MAP[status] || {
-      text: <FormattedMessage id="dlc-dashboard-status-unknown" />,
+      text: <FormattedMessage id="kubedl-dashboard-status-unknown" />,
       // text: 'Stopped',
       status: 'default',
     }

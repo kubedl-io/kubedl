@@ -9,7 +9,7 @@ export const isGit = (info) => {
 export const getCommand = (info) => {
   const containersInfo = info?.kind === 'TFJob' ? Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec?.containers[0]
     : Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec?.containers[0];
-  const regExp = /^prepare_dlc_environment\s&&\s/g;
+  const regExp = /^prepare_kubedl_environment\s&&\s/g;
   const command = containersInfo?.command ?? [];
   const inputValue = command.reverse()[0];
   if (regExp.test(inputValue)) {
@@ -73,7 +73,7 @@ export const getEnv = (info) => {
   const envInfo = info?.kind === 'TFJob' ? Object.values(info?.spec?.tfReplicaSpecs)[0] : Object.values(info?.spec?.pytorchReplicaSpecs)[0];
   const envList = envInfo?.template?.spec?.containers?.[0]?.env ?? [];
   const newEnv = JSON.parse(JSON.stringify(envList) || '{}');
-  return newEnv.filter(e => e.name !== 'REQUIREMENTS_DIR' && e.name !== 'DLC_USER_TOKEN');
+  return newEnv.filter(e => e.name !== 'REQUIREMENTS_DIR');
 };
 
 export const getMount = (info) => {

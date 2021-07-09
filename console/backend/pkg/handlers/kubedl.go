@@ -19,36 +19,36 @@ import (
 )
 
 
-func NewDLCHandler() *DLCHandler {
-	return &DLCHandler{client: utils.GetCtrlClient()}
+func NewKubeDLHandler() *KubeDLHandler {
+	return &KubeDLHandler{client: utils.GetCtrlClient()}
 }
 
-type DLCHandler struct {
+type KubeDLHandler struct {
 	client client.Client
 }
 
-type DLCCommonConfig struct {
+type KubeDLCommonConfig struct {
 	Namespace        string   `json:"namespace"`
-	TFCpuImages      []string `json:"pai-tf-cpu-images"`
-	TFGpuImages      []string `json:"pai-tf-gpu-images"`
-	PytorchGpuImages []string `json:"pai-pytorch-gpu-images"`
+	TFCpuImages      []string `json:"tf-cpu-images"`
+	TFGpuImages      []string `json:"tf-gpu-images"`
+	PytorchGpuImages []string `json:"pytorch-gpu-images"`
 	ClusterID        string   `json:"clusterId,omitempty"`
-	DLCVersion       string   `json:"dlcVersion,omitempty"`
+	KubeDLVersion    string   `json:"kubedlVersion,omitempty"`
 }
 
-func (h *DLCHandler) GetDLCConfig() (*DLCCommonConfig, error) {
+func (h *KubeDLHandler) GetKubeDLConfig() (*KubeDLCommonConfig, error) {
 	if constants.ConfigMapName == "" {
 		return nil, fmt.Errorf("empty common configmap name")
 	}
 
 	cm := &v1.ConfigMap{}
 	err := h.client.Get(context.Background(), types.NamespacedName{
-		Namespace: constants.DLCSystemNamespace,
+		Namespace: constants.KubeDLSystemNamespace,
 		Name:      constants.ConfigMapName,
 	}, cm)
 	// Create initial ConfigMap if not exists
 	if errors.IsNotFound(err) {
-		cm, err = h.createDLCConfig()
+		cm, err = h.createKubeDLConfig()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create common config, err: %v", err)
 		}
@@ -57,16 +57,16 @@ func (h *DLCHandler) GetDLCConfig() (*DLCCommonConfig, error) {
 	}
 
 	commonCfg := cm.Data["commonConfig"]
-	dlcCommonCfg := DLCCommonConfig{}
-	if err := json.Unmarshal([]byte(commonCfg), &dlcCommonCfg); err != nil {
-		return nil, fmt.Errorf("failed to marshal dlc common config, err: %v", err)
+	kubeDLCommonCfg := KubeDLCommonConfig{}
+	if err := json.Unmarshal([]byte(commonCfg), &kubeDLCommonCfg); err != nil {
+		return nil, fmt.Errorf("failed to marshal kubedl common config, err: %v", err)
 	}
 
-	return &dlcCommonCfg, nil
+	return &kubeDLCommonCfg, nil
 }
 
-func (h *DLCHandler) createDLCConfig() (*v1.ConfigMap, error) {
-	commonConfig := DLCCommonConfig{
+func (h *KubeDLHandler) createKubeDLConfig() (*v1.ConfigMap, error) {
+	commonConfig := KubeDLCommonConfig{
 		Namespace:   "kubedl",
 		TFCpuImages: []string{
 			"kubedl/tf-mnist-with-summaries:1.0",
@@ -84,19 +84,19 @@ func (h *DLCHandler) createDLCConfig() (*v1.ConfigMap, error) {
 
 	initConfigMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: constants.DLCSystemNamespace,
+			Namespace: constants.KubeDLSystemNamespace,
 			Name:      DatasourceConfigMapName,
 		},
 		Data: data,
 	}
 	if err := h.client.Create(context.TODO(), initConfigMap); err != nil {
-		klog.Errorf("Failed to create ConfigMap, ns: %s, name: %s, err: %v", constants.DLCSystemNamespace, constants.ConfigMapName, err)
+		klog.Errorf("Failed to create ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.ConfigMapName, err)
 		return nil, err
 	}
 	return initConfigMap, nil
 }
 
-func (h *DLCHandler) ListAvailableNamespaces() ([]string, error) {
+func (h *KubeDLHandler) ListAvailableNamespaces() ([]string, error) {
 	namespaces := v1.NamespaceList{}
 	if err := h.client.List(context.Background(), &namespaces); err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (h *DLCHandler) ListAvailableNamespaces() ([]string, error) {
 	return available, nil
 }
 
-func (h *DLCHandler) DetectJobsInNS(ns, kind string) bool {
+func (h *KubeDLHandler) DetectJobsInNS(ns, kind string) bool {
 	var (
 		list     runtime.Object
 		detector func(object runtime.Object) bool

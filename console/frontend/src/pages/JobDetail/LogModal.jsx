@@ -97,13 +97,13 @@ class LogModal extends React.Component {
         visible
         footer={[
           <span>
-            <Checkbox checked={this.state.enableRefresh} onChange={(e) => this.enableRefresh(e.target.checked)}><FormattedMessage id="dlc-dashboard-auto-refresh" /></Checkbox>
+            <Checkbox checked={this.state.enableRefresh} onChange={(e) => this.enableRefresh(e.target.checked)}><FormattedMessage id="kubedl-dashboard-auto-refresh" /></Checkbox>
           </span>,
           <Button key="back" onClick={this.handleCancel}>
-            <FormattedMessage id="dlc-dashboard-close" />
+            <FormattedMessage id="kubedl-dashboard-close" />
           </Button>,
           <Button key="submit" type="primary" onClick={this.handleDownload}>
-            <FormattedMessage id="dlc-dashboard-download-logs" />
+            <FormattedMessage id="kubedl-dashboard-download-logs" />
           </Button>,
         ]}
         onCancel={this.handleCancel}
@@ -116,12 +116,12 @@ class LogModal extends React.Component {
           defaultActiveKey={this.state.currentKey}
           onChange={e => this.onTabChange(e)}
         >
-          <Tabs.TabPane tab={<FormattedMessage id="dlc-dashboard-user-logs" />} key="logs" />
-        <Tabs.TabPane tab={<FormattedMessage id="dlc-dashboard-system-logs" />} key="events" />
+          <Tabs.TabPane tab={<FormattedMessage id="kubedl-dashboard-user-logs" />} key="logs" />
+        <Tabs.TabPane tab={<FormattedMessage id="kubedl-dashboard-system-logs" />} key="events" />
         </Tabs>
         <Spin spinning={this.state.loading}>
           {this.state.logContent.length === 0 
-          ? <Empty description={<FormattedMessage id="dlc-dashboard-no-logs" />} />
+          ? <Empty description={<FormattedMessage id="kubedl-dashboard-no-logs" />} />
           : <div className={styles.logContainer} >
               <LazyLog
                 selectableLines={true}
@@ -139,7 +139,7 @@ class LogModal extends React.Component {
                 }}
               />
               <div class={styles.refresh}>
-                <Tooltip title={<FormattedMessage id="dlc-dashboard-refresh" />}>
+                <Tooltip title={<FormattedMessage id="kubedl-dashboard-refresh" />}>
                   <Button shape="circle" size="large" icon={<SyncOutlined />} onClick={() => this.loadLog()} />
                 </Tooltip>
               </div>

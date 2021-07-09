@@ -135,7 +135,7 @@ export const FromAddDropDown = ({
                               {alertMsg[`${field.key}_pvc_name`]}
                               <br />
                               {intl.formatMessage({
-                                id: "dlc-dashboard-data-local-directory",
+                                id: "kubedl-dashboard-data-local-directory",
                               })}{" "}
                               {alertMsg[alertMsg[field.key]]}
                             </span>

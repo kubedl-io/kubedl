@@ -164,7 +164,7 @@ func getOrCreateCodeSourceConfigMap() (*v1.ConfigMap, error) {
 	configMap := &v1.ConfigMap{}
 	err := clientmgr.GetCtrlClient().Get(context.TODO(),
 		apitypes.NamespacedName{
-			Namespace: constants.DLCSystemNamespace,
+			Namespace: constants.KubeDLSystemNamespace,
 			Name:      CodesourceConfigMapName,
 		}, configMap)
 
@@ -172,7 +172,7 @@ func getOrCreateCodeSourceConfigMap() (*v1.ConfigMap, error) {
 	if errors.IsNotFound(err) {
 		initConfigMap := &v1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: constants.DLCSystemNamespace,
+				Namespace: constants.KubeDLSystemNamespace,
 				Name:      CodesourceConfigMapName,
 			},
 			Data: map[string]string{
@@ -182,7 +182,7 @@ func getOrCreateCodeSourceConfigMap() (*v1.ConfigMap, error) {
 		clientmgr.GetCtrlClient().Create(context.TODO(), initConfigMap)
 		return initConfigMap, nil
 	} else if err != nil {
-		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.DLCSystemNamespace, CodesourceConfigMapName, err)
+		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, CodesourceConfigMapName, err)
 		return configMap, err
 	}
 
