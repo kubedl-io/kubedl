@@ -28,7 +28,7 @@ const DataSheetsList = () => {
     setLoading(true);
     let dataRequest = await service.getDatasources();
     const datasource = [];
-    if (dataRequest.data) {
+    if (dataRequest.code !== "300" && dataRequest.data) {
       for (const key in dataRequest.data) {
         datasource.push(dataRequest.data[key]);
       }
@@ -41,7 +41,7 @@ const DataSheetsList = () => {
     setLoading(true);
     let codeRequest = await service.getCodesources();
     const codesource = [];
-    if (codeRequest.data) {
+    if (codeRequest.code !== "300" && codeRequest.data) {
       for (const key in codeRequest.data) {
         codesource.push(codeRequest.data[key]);
       }
