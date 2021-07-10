@@ -63,8 +63,6 @@ func NewEventPersistController(mgr ctrl.Manager, eventStorage string, region str
 	}, nil
 }
 
-var _ reconcile.Reconciler = &EventPersistController{}
-
 type EventPersistController struct {
 	region       string
 	client       ctrlruntime.Client
