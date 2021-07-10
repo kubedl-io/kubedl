@@ -32,7 +32,6 @@ type KubeDLCommonConfig struct {
 	TFCpuImages      []string `json:"tf-cpu-images"`
 	TFGpuImages      []string `json:"tf-gpu-images"`
 	PytorchGpuImages []string `json:"pytorch-gpu-images"`
-	ClusterID        string   `json:"clusterId,omitempty"`
 	KubeDLVersion    string   `json:"kubedlVersion,omitempty"`
 }
 
@@ -85,7 +84,7 @@ func (h *KubeDLHandler) createKubeDLConfig() (*v1.ConfigMap, error) {
 	initConfigMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: constants.KubeDLSystemNamespace,
-			Name:      DatasourceConfigMapName,
+			Name:      constants.ConfigMapName,
 		},
 		Data: data,
 	}
