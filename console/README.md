@@ -14,38 +14,39 @@ go build -mod=mod -o backend-server github.com/alibaba/kubedl/console/backend/cm
 
 #### Run local Console Backend Server
 
-1. Prepare a `kubeconfig` file which defines k8s development environment.
-2. Set `KUBECONFIG` environment variable.
-```bash
-export KUBECONFIG={/path-to-kubeconfig-file} 
-```
-3. Run backend server with disabled authentication mode
+1. Create namespace `kubedl-system` in your k8s and make sure you have permission to create object.
+2. Prepare a ConfigMap as below. If not provide, kubedl will create default `kubedl-config` in namespace `kubedl-system`.
+    ```
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+        namespace: kubedl-system
+        name: kubedl-config
+    data:
+        commonConfig: '{
+            "namespace":"kubedl-system",
+            "TFCpuImages":"",
+            "TFGpuImages":"",
+            "PytouchGpuImages":""
+        }'
+        users: '{
+            "admin":{
+            "uid":"admin",
+            "login_name":"admin",
+            "password":"123456"
+            }
+        }'
+    ```
+    ConfigMap requires default namespace, images and dashboard login accounts.
 
-```bash
-./backend-server --config-name kubedl-config
-```
-4. kubedl-config requires default namespace, images and authorize config. template below:
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: kubedl-system
-  name: kubedl-config
-data:
-  commonConfig: '{
-	"namespace":"kubedl-system",
-	"TFCpuImages":"",
-	"TFGpuImages":"",
-	"PytouchGpuImages":""
-	}'
-  users: '{
-	"admin":{
-		"uid":"admin",
-		"login_name":"admin",
-		"password":"123456"
-	    }
-	}'
-```
+3. Run backend server with disabled authentication mode
+    ```bash
+    ./backend-server --config-name kubedl-config
+    ```
+    You can input some accounts into `users` in above ConfigMap, so that dashboard would check authorize when login.
+    ```bash
+    ./backend-server --auth-type=config
+    ```
 #### Run Console Frontend
 
 ```bash
@@ -53,14 +54,17 @@ cd console/frontend/
 ```
 
 1. Install dependencies (optional)
-```bash
-npm install
-```
+    ```bash
+    npm install
+    ```
 2. Run Console Frontend Dev Server
-```bash
-npm run start
-```
-
+    ```bash
+    npm run build
+    ```
+3. Move target dir to project dir.
+    ```bash
+    cp -r dist ../../
+    ```
 #### Optional: Start Console Frontend with Connection to other dev Backend-Server directly
 If you are not able to run local console backend server, or other dev console backend server is already present, you could make frontend dev server to proxy API requests to other dev backend server directly.
 
