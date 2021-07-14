@@ -26,7 +26,7 @@ func NewKubeDLAPIsController() *KubeDLAPIsController {
 
 func (dc *KubeDLAPIsController) RegisterRoutes(routes *gin.RouterGroup) {
 	kubedlAPIs := routes.Group("/kubedl")
-	kubedlAPIs.GET("/common-config", dc.getCommonConfig)
+	kubedlAPIs.GET("/images", dc.getImages)
 	kubedlAPIs.GET("/namespaces", dc.getAvailableNamespaces)
 }
 
@@ -34,14 +34,9 @@ type KubeDLAPIsController struct {
 	handler *handlers.KubeDLHandler
 }
 
-func (dc *KubeDLAPIsController) getCommonConfig(c *gin.Context) {
-	kubedlCfg, err := dc.handler.GetKubeDLConfig()
-	if err != nil {
-		Error(c, fmt.Sprintf("failed to marshal kubedl common config, err: %v", err))
-		return
-	}
-
-	utils.Succeed(c, kubedlCfg)
+func (dc *KubeDLAPIsController) getImages(c *gin.Context) {
+	imageConfig := dc.handler.GetImageConfig()
+	utils.Succeed(c, imageConfig)
 }
 
 func (dc *KubeDLAPIsController) getAvailableNamespaces(c *gin.Context) {

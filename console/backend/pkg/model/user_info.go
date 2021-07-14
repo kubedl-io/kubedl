@@ -28,22 +28,6 @@ const (
 	configMapKeyUsers  = "users"
 )
 
-func StoreUserInfoToConfigMap(userInfo UserInfo) error {
-	configMap, err := GetOrCreateUserInfoConfigMap()
-	if err != nil {
-		return err
-	}
-
-	userInfoMap, err := getUserInfoMap(configMap)
-	if err != nil {
-		return err
-	}
-
-	userInfoMap[userInfo.Uid] = userInfo
-
-	return updateUserInfoConfigMap(configMap, userInfoMap)
-}
-
 func GetUserInfoFromConfigMap(userID string) (UserInfo, error) {
 	if len(userID) == 0 {
 		return UserInfo{}, fmt.Errorf("userID is empty")
@@ -73,7 +57,7 @@ func GetOrCreateUserInfoConfigMap() (*v1.ConfigMap, error) {
 	err := clientmgr.GetCtrlClient().Get(context.TODO(),
 		apitypes.NamespacedName{
 			Namespace: constants.KubeDLSystemNamespace,
-			Name:      constants.ConfigMapName,
+			Name:      constants.AuthConfigMapName,
 		}, configMap)
 
 	// Create initial user info ConfigMap if not exists
@@ -81,16 +65,19 @@ func GetOrCreateUserInfoConfigMap() (*v1.ConfigMap, error) {
 		initConfigMap := &v1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: constants.KubeDLSystemNamespace,
-				Name:      constants.ConfigMapName,
+				Name:      constants.AuthConfigMapName,
 			},
 			Data: map[string]string{
 				configMapKeyUsers: "{}",
 			},
 		}
-		clientmgr.GetCtrlClient().Create(context.TODO(), initConfigMap)
+		err := clientmgr.GetCtrlClient().Create(context.TODO(), initConfigMap)
+		if err != nil {
+			return nil, err
+		}
 		return initConfigMap, nil
 	} else if err != nil {
-		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.ConfigMapName, err)
+		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.AuthConfigMapName, err)
 		return configMap, err
 	}
 

@@ -169,7 +169,7 @@ export default {
   'kubedl-dashboard-add-success': 'Successfully added',
   'kubedl-dashboard-week': 'This Week',
   'kubedl-dashboard-git-config': 'Git configuration',
-  'kubedl-dashboard-ack-cluster': 'ACK Cluster',
+  'kubedl-dashboard-cluster': 'Cluster',
   'kubedl-dashboard-month': 'This Month',
   'kubedl-dashboard-description': 'Description',
   'kubedl-dashboard-please-enter-local-path': 'Please enter a locally existing directory',

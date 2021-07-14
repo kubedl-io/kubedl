@@ -76,7 +76,7 @@ const BasicLayout = props => {
       setNamespaceValue(sessionStorage.getItem('namespace'));
     }else {
       if(config){
-        setNamespaceValue(config.namespace);
+        setNamespaceValue('default');
       }
     }
   }, [config]);
@@ -122,7 +122,7 @@ const BasicLayout = props => {
       logo={logo}
       breakpoint="xxl"
       formatMessage={formatMessage}
-      title={<div style={{position:"relative"}}>KubeDL <br/><span style={{position:"absolute",fontSize:"14px"}}>{config.kubedlVersion}</span></div>}
+      title={<div style={{position:"relative"}}>KubeDL <br/></div>}
       menuHeaderRender={(logoDom, titleDom) => (
         <Link to="/">
           {logoDom}

@@ -367,7 +367,7 @@ const ClusterInfo = ({ globalConfig }) => {
         <div>
             <Card style={{ marginBottom: 12 }} title={
                 <div>
-                    ACK {intl.formatMessage({id: 'kubedl-dashboard-cluster-overview'})}
+                    {intl.formatMessage({id: 'kubedl-dashboard-cluster-overview'})}
                     <Button type="primary" style={{float: 'right'}} onClick={fetchNodeInfos}>
                         {intl.formatMessage({id: 'kubedl-dashboard-refresh'})}
                     </Button>

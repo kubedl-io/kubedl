@@ -29,7 +29,7 @@ const CodeConfigCreate = ({ globalConfig }) => {
     };
     const fetchPVC = async () => {
         setPvcLoading(true);
-        const pvcs = await listPVC(globalConfig.namespace);
+        const pvcs = await listPVC('default');
         setPvcs(pvcs.data);
         setPvcLoading(false);
     };

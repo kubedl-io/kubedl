@@ -17,7 +17,7 @@ import {
     Input,
     InputNumber,
     Switch,
-    message
+    message, AutoComplete
 } from "antd";
 import React, { useState,  useEffect } from "react";
 import { connect } from "dva";
@@ -50,7 +50,7 @@ const JobSubmitNew = ({ globalConfig }) => {
     const tfJobImages = tfCPUImages.concat(tfGPUImages);
     const pyTorchImages = globalConfig["pytorch-gpu-images"] || [];
     const intl = useIntl();
-    const namespace = globalConfig["namespace"];
+    const namespace = "default";
     const [submitLoading, setSubmitLoading] = useState(false);
     const [activeTabKey, setActiveTabKey] = useState("Worker");
     const [dataSource, setDataSource] = useState([]);
@@ -175,7 +175,7 @@ const JobSubmitNew = ({ globalConfig }) => {
             kind: newFormKind,
             metadata: {
                 name: form.name,
-                namespace: globalConfig.namespace,
+                namespace: namespace,
                 annotations: {}
             },
             spec: {}
@@ -315,7 +315,7 @@ const JobSubmitNew = ({ globalConfig }) => {
             data.kind = 'TFJob';
         }
         if(newFormKind === 'PyTorchJob'){
-            if (form.topoawareschedule.enabled === true) {
+            if (form.topoawareschedule?.enabled === true) {
                 data.spec.gpuTopologyPolicy = {}
                 data.spec.gpuTopologyPolicy["isTopologyAware"] = true
             }
@@ -434,10 +434,11 @@ const JobSubmitNew = ({ globalConfig }) => {
             </Button>
         </Dropdown>
     );
-    const renderImages = i=>
-        <Select.Option title={i} value={i}>
-            {i.split(/\/(.+)/)[1]}
-        </Select.Option>;
+
+    const onSelect = (data) => {
+        console.log('onSelect', data);
+    };
+
     const textAlert = (
         <Alert type="info" showIcon
             message={
@@ -684,11 +685,10 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                     label={intl.formatMessage({id: 'kubedl-dashboard-image'})}
                                                     fieldKey={[field.fieldKey, "image"]}
                                                     required={true}>
-                                                    <Select>
                                                         {['TFJobDistributed', 'TFJob'].includes(form.getFieldValue('kind'))
-                                                            ? tfJobImages.map(i => renderImages(i))
-                                                            : pyTorchImages.map(i => renderImages(i))}
-                                                    </Select>
+                                                            ? <AutoComplete dataSource={tfJobImages}/>
+                                                            : <AutoComplete dataSource={pyTorchImages}/>
+                                                        }
                                                 </Form.Item>
                                                 <Form.Item
                                                     name={[field.name, "resource", "cpu"]}

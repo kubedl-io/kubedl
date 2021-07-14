@@ -139,7 +139,7 @@ export default {
   'kubedl-dashboard-prompt-2': '中，详细见',
   'kubedl-dashboard-prompt-3': '完成本次代码配置后，在代码中可直接按照配置的目录读取数据。',
   'kubedl-dashboard-guidance-document': '指导文档',
-  'kubedl-dashboard-ack-cluster': 'ACK集群',
+  'kubedl-dashboard-cluster': '集群',
   'kubedl-dashboard-please-enter-name': '请输入名称',
   'kubedl-dashboard-name-rules': "只能包含字母、数字和'-'，长度不大于32位",
   'kubedl-dashboard-description': '描述',

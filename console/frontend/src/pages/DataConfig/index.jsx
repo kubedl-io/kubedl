@@ -31,7 +31,7 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
         name: '',
         description: '',
         type: '',
-        namespace: globalConfig.namespace,
+        namespace: 'default',
         pvc_name: '',
         local_path: ''
     };
