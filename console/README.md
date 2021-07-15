@@ -9,7 +9,8 @@
 
 #### Build Console Backend Server
 ```bash
-go build -mod=mod -o backend-server github.com/alibaba/kubedl/console/backend/cmd/backend-server
+# kubedl/console/
+go build -mod=mod -o backend-server ./backend/cmd/backend-server/main.go
 ```
 
 #### Run local Console Backend Server
@@ -27,7 +28,7 @@ go build -mod=mod -o backend-server github.com/alibaba/kubedl/console/backend/cm
      kind: ConfigMap
      metadata:
          namespace: kubedl-system
-         name: kubedl-image-config
+         name: kubedl-option-config
      data:
          images: '{
              "tf-cpu-images":[
@@ -42,14 +43,16 @@ go build -mod=mod -o backend-server github.com/alibaba/kubedl/console/backend/cm
             ]
          }'
     ```
-2. authorize: You can input some accounts into `users` in ConfigMap below, so that dashboard would check `uid` and `password` when login.
+2. authorize: You can input some accounts into `users` in ConfigMap above, so that dashboard would check `uid` and `password` when login.
     ``` yaml
     apiVersion: v1
      kind: ConfigMap
      metadata:
          namespace: kubedl-system
-         name: kubedl-auth-config
+         name: kubedl-option-config
      data:
+        images: 
+               ...
         users: '{
             "admin":{
             "uid":"admin",
@@ -65,7 +68,7 @@ go build -mod=mod -o backend-server github.com/alibaba/kubedl/console/backend/cm
 #### Run Console Frontend
 
 ```bash
-cd console/frontend/
+cd frontend/
 ```
 
 1. Install dependencies (optional)
@@ -76,9 +79,13 @@ cd console/frontend/
     ```bash
     npm run build
     ```
-3. Move target dir to project dir.
+3. Move dist dir to `kubedl/console/`. Make sure that `dist` from frontend and `backend-server` from backend are in same path.
     ```bash
-    cp -r dist ../../
+    cp -r dist ../
+   
+   
+      |-- dist
+      |-- .backend-server
     ```
 #### Optional: Start Console Frontend with Connection to other dev Backend-Server directly
 If you are not able to run local console backend server, or other dev console backend server is already present, you could make frontend dev server to proxy API requests to other dev backend server directly.

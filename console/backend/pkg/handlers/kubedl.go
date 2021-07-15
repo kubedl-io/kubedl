@@ -31,7 +31,7 @@ func (h *KubeDLHandler) GetImageConfig() *ImageConfig {
 	cm := &v1.ConfigMap{}
 	err := h.client.Get(context.Background(), types.NamespacedName{
 		Namespace: constants.KubeDLSystemNamespace,
-		Name:      constants.ImageConfigMapName,
+		Name:      constants.ConfigMapName,
 	}, cm)
 	if err != nil {
 		glog.Infof("get image config error: %v", err)

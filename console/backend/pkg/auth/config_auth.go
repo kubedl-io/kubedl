@@ -6,11 +6,9 @@ import (
 	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang/glog"
 	"io/ioutil"
-	"k8s.io/klog"
 )
-
-const configMapKeyUsers = "users"
 
 type configAuth struct {}
 
@@ -28,34 +26,21 @@ func (auth *configAuth) Login(c *gin.Context) error {
 	c.Request.Body = ioutil.NopCloser(bytes.NewReader(buf[:n]))
 	data := buf[0:n]
 	if err := json.Unmarshal(data, &loginData);err != nil {
-		klog.Error("request form error")
+		glog.Errorf("request form error: %v", err)
 		return LoginInvalid
 	}
-	config, err := model.GetOrCreateUserInfoConfigMap()
+	userInfo, err := model.GetUserInfoFromConfigMap(loginData.Username)
 	if err != nil {
-		klog.Errorf("get user configMap error: %v", err)
-		return GetAuthError
+		glog.Errorf("Get user info error: %v", err)
+		return LoginInvalid
 	}
-	users, exists := config.Data[configMapKeyUsers]
-	if !exists || len(users) == 0 {
-		klog.Errorf("ConfigMap key `%s` not exists", configMapKeyUsers)
-		return GetAuthError
+	if userInfo.Password != loginData.Password {
+		return LoginInvalid
 	}
-	var userInfos map[string]map[string]string
-	if err := json.Unmarshal([]byte(users), &userInfos); err != nil {
-		return GetAuthError
-	}
-	if userInfo, exist := userInfos[loginData.Username]; exist {
-		if userInfo["password"] != loginData.Password {
-			return LoginInvalid
-		}
-		session := sessions.Default(c)
-		session.Set(SessionKeyLoginID, userInfo["uid"])
-		session.Set(SessionKeyLoginName, userInfo["login_name"])
-		return session.Save()
-
-	}
-	return LoginInvalid
+	session := sessions.Default(c)
+	session.Set(SessionKeyLoginID, userInfo.Uid)
+	session.Set(SessionKeyLoginName, userInfo.LoginName)
+	return session.Save()
 }
 
 func (auth *configAuth) Logout(c *gin.Context) error {
@@ -69,12 +54,12 @@ func (auth configAuth) Authorize(c *gin.Context) error {
 	session := sessions.Default(c)
 	v := session.Get(SessionKeyLoginID)
 	if v == nil {
-		klog.Warningf("authorize logout")
+		glog.Warningf("authorize logout")
 		return LoginInvalid
 	}
 	info, err := model.GetUserInfoFromConfigMap(v.(string))
 	if err != nil || session.Get(SessionKeyLoginName) != info.LoginName {
-		klog.Warningf("Authorize failed")
+		glog.Warningf("Authorize failed")
 		return LoginInvalid
 	}
 	return nil

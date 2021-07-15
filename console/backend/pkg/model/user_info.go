@@ -8,8 +8,6 @@ import (
 
 	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 )
@@ -19,7 +17,8 @@ type UserInfo struct {
 	Uid string `json:"uid"`
 	// LoginName login account name
 	LoginName string `json:"login_name"`
-
+	//
+	Password string `json:"password"`
 }
 
 type UserInfoMap map[string]UserInfo
@@ -33,7 +32,7 @@ func GetUserInfoFromConfigMap(userID string) (UserInfo, error) {
 		return UserInfo{}, fmt.Errorf("userID is empty")
 	}
 
-	configMap, err := GetOrCreateUserInfoConfigMap()
+	configMap, err := GetUserInfoConfigMap()
 	if err != nil {
 		return UserInfo{}, err
 	}
@@ -52,33 +51,17 @@ func GetUserInfoFromConfigMap(userID string) (UserInfo, error) {
 	return userInfo, nil
 }
 
-func GetOrCreateUserInfoConfigMap() (*v1.ConfigMap, error) {
+func GetUserInfoConfigMap() (*v1.ConfigMap, error) {
 	configMap := &v1.ConfigMap{}
 	err := clientmgr.GetCtrlClient().Get(context.TODO(),
 		apitypes.NamespacedName{
 			Namespace: constants.KubeDLSystemNamespace,
-			Name:      constants.AuthConfigMapName,
+			Name:      constants.ConfigMapName,
 		}, configMap)
 
-	// Create initial user info ConfigMap if not exists
-	if errors.IsNotFound(err) {
-		initConfigMap := &v1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: constants.KubeDLSystemNamespace,
-				Name:      constants.AuthConfigMapName,
-			},
-			Data: map[string]string{
-				configMapKeyUsers: "{}",
-			},
-		}
-		err := clientmgr.GetCtrlClient().Create(context.TODO(), initConfigMap)
-		if err != nil {
-			return nil, err
-		}
-		return initConfigMap, nil
-	} else if err != nil {
-		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.AuthConfigMapName, err)
-		return configMap, err
+	if err != nil {
+		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.ConfigMapName, err)
+		return nil, err
 	}
 
 	return configMap, nil
