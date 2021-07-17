@@ -15,10 +15,10 @@ func init() {
 
 type StorageProvider interface {
 	// CreatePersistentVolume creates the PV for the model
-	CreatePersistentVolume(model *modelv1alpha1.Storage, pvName string) *v1.PersistentVolume
+	CreatePersistentVolume(mv *modelv1alpha1.Storage, pvName string) *v1.PersistentVolume
 
-	// GetModelPath returns the model path
-	GetModelPath(model *modelv1alpha1.Storage) string
+	// Add the model volume and mountpath to the pod spec
+	AddModelVolumeToPodSpec(mv *modelv1alpha1.Storage, pod *v1.PodTemplateSpec)
 }
 
 func GetStorageProvider(storage *modelv1alpha1.Storage) StorageProvider {

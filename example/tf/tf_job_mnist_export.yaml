@@ -4,15 +4,6 @@ metadata:
   name: "distributed-bbb"
 spec:
   cleanPodPolicy: None
-  modelVersion:
-    modelName: mymodel
-    # The image repo to push the model
-    imageRepo: jianhe6/mymodel
-    storage:
-      localStorage:
-        # The host dir for THIS model, each model should have its own unique parent folder, in this case, 'mymodel'
-        path: /models/mymodel
-        nodeName: kind-control-plane
   tfReplicaSpecs:
     Worker:
       replicas: 3
@@ -22,9 +13,17 @@ spec:
           containers:
             - name: tensorflow
               image: kubedl/tf-mnist-estimator-api:v0.1
-              imagePullPolicy: Always
               command:
                 - "python"
                 - "/keras_model_to_estimator.py"
-                - "/tmp/tfkeras_example/" # checkpoint dir
+                - "/tmp/tfkeras_example/"        # checkpoint dir
                 - "/kubedl-model"                # export saved_model dir
+              imagePullPolicy: Always
+              volumeMounts:
+                - mountPath: "/kubedl-model"
+                  name: "model"
+          volumes:
+            - name: "model"
+              hostPath:
+                path: "/models/mymodel"
+                type: DirectoryOrCreate

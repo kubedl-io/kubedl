@@ -26,6 +26,6 @@ func (ir *InferenceReconciler) buildModelLoader(mv *v1alpha1.ModelVersion, share
 	c.Image = mv.Status.Image
 	c.VolumeMounts = append(c.VolumeMounts, v1.VolumeMount{Name: sharedVolumeName, MountPath: destModelPath})
 	// Model loader is an init container to copy model artifact from source path to destination.
-	c.Command = []string{"/bin/sh", "-c", "cp", v1alpha1.DefaultModelInImagePath, destModelPath}
+	c.Command = []string{"/bin/sh", "-c", "cp", v1alpha1.DefaultModelPathInImage, destModelPath}
 	return c, nil
 }
