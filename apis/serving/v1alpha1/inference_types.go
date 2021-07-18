@@ -22,6 +22,8 @@ import (
 )
 
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Namespaced
+// +kubebuilder:subresource:status
 
 // Inference is the Schema for the inference API.
 type Inference struct {
@@ -58,16 +60,16 @@ type PredictorSpec struct {
 	// ModelVersion specifies the name of target model-with-version to be loaded
 	// in serving service, ModelVersion object has to be created before serving
 	// service deployed.
-	ModelVersion string `json:"modelVersion"`
+	ModelVersion string `json:"modelVersion,omitempty"`
 
 	// ModelPath is the loaded model filepath in container.
-	ModelPath *string `json:"modelPath"`
+	ModelPath *string `json:"modelPath,omitempty"`
 
 	// Replicas specify the expected predictor replicas.
 	Replicas *int32 `json:"replicas,omitempty"`
 
-	// TrafficPercent defines the traffic split percentage.
-	TrafficPercent *int32 `json:"trafficPercent,omitempty"`
+	// TrafficWeight defines the traffic split weights across multiple predictors
+	TrafficWeight *int32 `json:"trafficWeight,omitempty"`
 
 	// Template describes a template of predictor pod with its properties.
 	Template corev1.PodTemplateSpec `json:"template"`

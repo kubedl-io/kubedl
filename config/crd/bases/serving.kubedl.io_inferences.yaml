@@ -2884,12 +2884,10 @@ spec:
                           - containers
                           type: object
                       type: object
-                    trafficPercent:
+                    trafficWeight:
                       format: int32
                       type: integer
                   required:
-                  - modelPath
-                  - modelVersion
                   - name
                   - template
                   type: object
@@ -2929,6 +2927,8 @@ spec:
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""

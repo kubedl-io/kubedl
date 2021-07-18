@@ -1,0 +1,35 @@
+apiVersion: serving.kubedl.io/v1alpha1
+kind: Inference
+metadata:
+  name: hello-inference
+spec:
+  framework: TFServing
+  predictors:
+    - name: model-predictor
+      #modelVersion: model
+      replicas: 2
+      batching:
+        batchSize: 32
+      template:
+        spec:
+          containers:
+            - name: tensorflow
+              args:
+                - --port=9000
+                - --rest_api_port=8500
+                - --model_name=mnist
+                - --model_base_path=/kubedl-model/
+              command:
+                - /usr/bin/tensorflow_model_server
+              image: tensorflow/serving:1.11.1
+              imagePullPolicy: IfNotPresent
+              ports:
+                - containerPort: 9000
+                - containerPort: 8500
+              resources:
+                limits:
+                  cpu: 2048m
+                  memory: 2Gi
+                requests:
+                  cpu: 1024m
+                  memory: 1Gi
