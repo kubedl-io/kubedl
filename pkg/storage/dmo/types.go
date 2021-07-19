@@ -103,8 +103,8 @@ type Job struct {
 	// Optional remark text reserved.
 	Remark *string `gorm:"type:text;column:remark" json:"remark,omitempty"`
 	// Timestamps of different job phases and status transitions.
-	GmtCreated  time.Time  `gorm:"type:datetime;column:gmt_created" json:"gmt_created"`
-	GmtModified time.Time  `gorm:"type:datetime;column:gmt_modified" json:"gmt_modified"`
+	GmtCreated      time.Time  `gorm:"type:datetime;column:gmt_created" json:"gmt_created"`
+	GmtModified     time.Time  `gorm:"type:datetime;column:gmt_modified" json:"gmt_modified"`
 	GmtJobSubmitted time.Time  `gorm:"type:datetime;column:gmt_job_submitted" json:"gmt_job_submitted"`
 	GmtJobStopped   *time.Time `gorm:"type:datetime;column:gmt_job_stopped" json:"gmt_job_stopped,omitempty"`
 	GmtJobRunning   *time.Time `gorm:"type:datetime;column:gmt_job_running" json:"gmt_job_running,omitempty"`

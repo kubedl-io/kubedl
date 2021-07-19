@@ -24,7 +24,7 @@ type UserInfo struct {
 type UserInfoMap map[string]UserInfo
 
 const (
-	configMapKeyUsers  = "users"
+	configMapKeyUsers = "users"
 )
 
 func GetUserInfoFromConfigMap(userID string) (UserInfo, error) {

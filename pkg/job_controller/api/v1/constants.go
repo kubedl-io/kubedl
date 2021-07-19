@@ -38,7 +38,7 @@ const (
 	// ReplicaTypeTensorBoard is the type for TensorBoard.
 	ReplicaTypeTensorBoard ReplicaType = "TensorBoard"
 	//ResourceNvidiaGPU is the key of gpu type in labels
-	ResourceNvidiaGPU      v1.ResourceName = "nvidia.com/gpu"
+	ResourceNvidiaGPU v1.ResourceName = "nvidia.com/gpu"
 )
 
 const (

@@ -12,4 +12,3 @@ const (
 	// JobStopping is a intermediate state before truly Stopped.
 	JobStopping apiv1.JobConditionType = "Stopping"
 )
-

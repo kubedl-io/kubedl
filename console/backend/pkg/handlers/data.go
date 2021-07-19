@@ -20,10 +20,10 @@ import (
 )
 
 const (
-	ResourceGPU        = "nvidia.com/gpu"
-	IndexNodeName      = "spec.nodeName"
-	IndexPhase         = "status.phase"
-	GPUType            = "aliyun.accelerator/nvidia_name"
+	ResourceGPU   = "nvidia.com/gpu"
+	IndexNodeName = "spec.nodeName"
+	IndexPhase    = "status.phase"
+	GPUType       = "aliyun.accelerator/nvidia_name"
 )
 
 func NewDataHandler() *DataHandler {

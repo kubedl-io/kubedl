@@ -13,7 +13,7 @@ type emptyAuth struct {
 
 func NewEmptyAuth() Auth {
 	return &emptyAuth{
-		defaultLoginID: "EmptyLoginID",
+		defaultLoginID:   "EmptyLoginID",
 		defaultLoginName: "Anonymous",
 	}
 }

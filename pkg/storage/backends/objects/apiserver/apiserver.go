@@ -153,7 +153,7 @@ func (a *apiServerBackend) GetJob(ns, name, jobID, kind, region string) (*dmo.Jo
 	}
 	metaObj, specs, jobStatus := getter(job)
 	/*
-	enableGPUTopo := runPolicy.GPUTopologyPolicy != nil && runPolicy.GPUTopologyPolicy.IsTopologyAware
+		enableGPUTopo := runPolicy.GPUTopologyPolicy != nil && runPolicy.GPUTopologyPolicy.IsTopologyAware
 	*/
 	dmoJob, err := converters.ConvertJobToDMOJob(metaObj, kind, specs, jobStatus, region)
 	if err != nil {
@@ -279,7 +279,7 @@ func (a *apiServerBackend) listJobsWithKind(kind string, nameLike, region string
 			continue
 		}
 		/*
-		enableGPUTopo := runPolicy.GPUTopologyPolicy != nil && runPolicy.GPUTopologyPolicy.IsTopologyAware
+			enableGPUTopo := runPolicy.GPUTopologyPolicy != nil && runPolicy.GPUTopologyPolicy.IsTopologyAware
 		*/
 		dmoJob, err := converters.ConvertJobToDMOJob(metaObj, kind, specs, jobStatus, region)
 		if err != nil {

@@ -10,14 +10,14 @@ import (
 	"io/ioutil"
 )
 
-type configAuth struct {}
+type configAuth struct{}
 
 func NewConfigAuth() Auth {
 	return &configAuth{}
 }
 
 func (auth *configAuth) Login(c *gin.Context) error {
-	var loginData struct{
+	var loginData struct {
 		Username string
 		Password string
 	}
@@ -25,7 +25,7 @@ func (auth *configAuth) Login(c *gin.Context) error {
 	n, _ := c.Request.Body.Read(buf)
 	c.Request.Body = ioutil.NopCloser(bytes.NewReader(buf[:n]))
 	data := buf[0:n]
-	if err := json.Unmarshal(data, &loginData);err != nil {
+	if err := json.Unmarshal(data, &loginData); err != nil {
 		glog.Errorf("request form error: %v", err)
 		return LoginInvalid
 	}
@@ -64,4 +64,3 @@ func (auth configAuth) Authorize(c *gin.Context) error {
 	}
 	return nil
 }
-

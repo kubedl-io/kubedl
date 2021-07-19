@@ -42,7 +42,7 @@ func CheckAuthMiddleware(loginAuth auth.Auth) gin.HandlerFunc {
 		err = loginAuth.Authorize(c)
 		if err == nil {
 			c.Next()
-		}else if err == auth.GetAuthError {
+		} else if err == auth.GetAuthError {
 			klog.Errorf("[check auth] getOauthInfo err, url: %s, err: %v", c.FullPath(), err)
 			utils.Redirect500(c)
 			c.Abort()

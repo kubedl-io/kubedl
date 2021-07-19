@@ -126,4 +126,3 @@ func GetTimeDiffer(startTime time.Time, endTime time.Time) (differ string) {
 	buffer.WriteString("s")
 	return buffer.String()
 }
-

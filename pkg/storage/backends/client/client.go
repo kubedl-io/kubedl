@@ -47,4 +47,3 @@ func IndexField(obj runtime.Object, field string, extractValue client.IndexerFun
 	}
 	return clientMgr.IndexField(obj, field, extractValue)
 }
-

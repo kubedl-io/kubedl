@@ -40,14 +40,14 @@ const (
 func ConvertJobToDMOJob(job metav1.Object, kind string, specs map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, region string) (*dmo.Job, error) {
 	klog.V(5).Infof("[ConvertJobToDMOJob] kind: %s, job: %s/%s", kind, job.GetNamespace(), job.GetName())
 	dmoJob := dmo.Job{
-		Name:       job.GetName(),
-		Namespace:  job.GetNamespace(),
-		JobID:      string(job.GetUID()),
-		Version:    job.GetResourceVersion(),
-		Kind:       kind,
-		Resources:  "",
+		Name:            job.GetName(),
+		Namespace:       job.GetNamespace(),
+		JobID:           string(job.GetUID()),
+		Version:         job.GetResourceVersion(),
+		Kind:            kind,
+		Resources:       "",
 		GmtJobSubmitted: job.GetCreationTimestamp().Time,
-		GmtCreated: job.GetCreationTimestamp().Time,
+		GmtCreated:      job.GetCreationTimestamp().Time,
 	}
 
 	if region != "" {

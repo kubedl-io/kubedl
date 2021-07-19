@@ -58,4 +58,3 @@ func (dc *dataAPIsController) getClusterNodeInfos(c *gin.Context) {
 	}
 	utils.Succeed(c, clusterNodeInfos)
 }
-

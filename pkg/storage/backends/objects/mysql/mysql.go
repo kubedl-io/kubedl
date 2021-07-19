@@ -229,13 +229,13 @@ func (b *mysqlBackend) StopJob(ns, name, jobID, kind, region string) error {
 	}
 
 	newJob := &dmo.Job{
-		JobID:        job.JobID,
-		Version:      job.Version,
-		Status:       job.Status,
-		DeployRegion: job.DeployRegion,
-		Deleted:      job.Deleted,
-		IsInEtcd:     util.IntPtr(0),
-		GmtJobFinished:  job.GmtJobFinished,
+		JobID:          job.JobID,
+		Version:        job.Version,
+		Status:         job.Status,
+		DeployRegion:   job.DeployRegion,
+		Deleted:        job.Deleted,
+		IsInEtcd:       util.IntPtr(0),
+		GmtJobFinished: job.GmtJobFinished,
 	}
 	if status := job.Status; status == apiv1.JobRunning || status == apiv1.JobCreated || status == apiv1.JobRestarting {
 		newJob.Status = utils.JobStopped
@@ -259,14 +259,14 @@ func (b *mysqlBackend) DeleteJob(ns, name, jobID, kind, region string) error {
 	}
 	Deleted := 1
 	newJob := &dmo.Job{
-		Namespace:    job.Namespace,
-		JobID:        job.JobID,
-		Version:      job.Version,
-		Status:       job.Status,
-		DeployRegion: job.DeployRegion,
-		Deleted:      &Deleted,
-		IsInEtcd:     job.IsInEtcd,
-		GmtJobFinished:  job.GmtJobFinished,
+		Namespace:      job.Namespace,
+		JobID:          job.JobID,
+		Version:        job.Version,
+		Status:         job.Status,
+		DeployRegion:   job.DeployRegion,
+		Deleted:        &Deleted,
+		IsInEtcd:       job.IsInEtcd,
+		GmtJobFinished: job.GmtJobFinished,
 	}
 	return b.updateJob(job, newJob)
 }
@@ -381,15 +381,15 @@ func (b *mysqlBackend) updateJob(oldJob, newJob *dmo.Job) error {
 		Version:      oldJob.Version,
 		DeployRegion: oldJob.DeployRegion,
 	}).Updates(&dmo.Job{
-		Status:       newJob.Status,
-		Namespace:    newJob.Namespace,
-		DeployRegion: newJob.DeployRegion,
-		Version:      newJob.Version,
-		Deleted:      newJob.Deleted,
-		IsInEtcd:     newJob.IsInEtcd,
-		GmtCreated:   newJob.GmtCreated,
+		Status:          newJob.Status,
+		Namespace:       newJob.Namespace,
+		DeployRegion:    newJob.DeployRegion,
+		Version:         newJob.Version,
+		Deleted:         newJob.Deleted,
+		IsInEtcd:        newJob.IsInEtcd,
+		GmtCreated:      newJob.GmtCreated,
 		GmtJobSubmitted: newJob.GmtJobSubmitted,
-		GmtJobStopped: newJob.GmtJobStopped,
+		GmtJobStopped:   newJob.GmtJobStopped,
 		GmtJobFinished:  newJob.GmtJobFinished,
 	})
 	if result.Error != nil {
