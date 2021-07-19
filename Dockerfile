@@ -15,15 +15,29 @@ COPY apis apis/
 COPY controllers/ controllers/
 COPY pkg/ pkg/
 COPY cmd/ cmd/
+COPY console/ console/
 
 # Build
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o manager main.go
+# Build dashboard
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o backend-server console/backend/cmd/backend-server/main.go
+
+FROM node as frontend
+WORKDIR /
+COPY console/frontend/ frontend/
+WORKDIR /frontend/
+RUN npm install
+RUN npm run build
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM gcr.io/distroless/static:nonroot 
 WORKDIR /
 COPY --from=builder /workspace/manager .
+COPY --from=builder /workspace/backend-server .
+COPY --from=frontend /frontend/dist .
+
 USER nonroot:nonroot
 
+CMD ["/backend-server"]
 ENTRYPOINT ["/manager"]
