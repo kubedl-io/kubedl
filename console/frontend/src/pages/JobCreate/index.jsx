@@ -22,7 +22,7 @@ import {
 import React, { useState,  useEffect } from "react";
 import { connect } from "dva";
 import { PageHeaderWrapper } from "@ant-design/pro-layout";
-import { getDatasources, submitJob, getCodeSource } from "./service";
+import {getDatasources, submitJob, getCodeSource, getNamespaces} from "./service";
 import Tooltip from "antd/es/tooltip";
 import FooterToolbar from "../JobSubmit/components/FooterToolbar";
 import { history, useIntl, getLocale } from 'umi';
@@ -50,9 +50,10 @@ const JobSubmitNew = ({ globalConfig }) => {
     const tfJobImages = tfCPUImages.concat(tfGPUImages);
     const pyTorchImages = globalConfig["pytorch-gpu-images"] || [];
     const intl = useIntl();
-    const namespace = "default";
+    const namespace = "";
     const [submitLoading, setSubmitLoading] = useState(false);
     const [activeTabKey, setActiveTabKey] = useState("Worker");
+    const [nameSpaces, setNameSpaces] = useState([]);
     const [dataSource, setDataSource] = useState([]);
     const [codeSource, setCodeSource] = useState([]);
     const region = location.hostname.split(".")[2] || "cn-hangzhou";
@@ -145,8 +146,10 @@ const JobSubmitNew = ({ globalConfig }) => {
     const fetchSource = async () => {
         const dataSource = await getDatasources();
         const gitSource = await getCodeSource();
+        const namespaces = await getNamespaces();
         const newDataSource = [];
         const newGitSource = [];
+        const newNameSpaces = [];
         if (dataSource && dataSource.data) {
             for (const key in dataSource.data) {
                 newDataSource.push(dataSource.data[key]);
@@ -157,9 +160,14 @@ const JobSubmitNew = ({ globalConfig }) => {
                 newGitSource.push(gitSource.data[key]);
             }
         }
+        if (namespaces && namespaces.data) {
+            for (const key in namespaces.data) {
+                newNameSpaces.push(namespaces.data[key]);
+            }
+        }
         setDataSource(newDataSource);
         setCodeSource(newGitSource);
-
+        setNameSpaces(newNameSpaces);
     };
 
     const fetchUser = async () => {
@@ -175,7 +183,7 @@ const JobSubmitNew = ({ globalConfig }) => {
             kind: newFormKind,
             metadata: {
                 name: form.name,
-                namespace: namespace,
+                namespace: form.nameSpace,
                 annotations: {}
             },
             spec: {}
@@ -487,6 +495,21 @@ const JobSubmitNew = ({ globalConfig }) => {
                                             ]}
                                onChange={changeTaskType}           
                             />
+                            <Form.Item
+                                name="nameSpace"
+                                required={true}
+                                label={intl.formatMessage({id: 'kubedl-dashboard-namespace'})}
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: intl.formatMessage({id: 'kubedl-dashboard-please-enter-namespace'}),
+                                    }
+                                ]}
+                            >
+                                <Select placeholder="" >
+                                    {nameSpaces.length > 0 && nameSpaces.map((item) => <Select.Option key={item} value={item}>{item}</Select.Option>)}
+                                </Select>
+                            </Form.Item>
                             <ComForm.FromAddDropDown
                               form={form}
                               fieldCode={"dataSource"}

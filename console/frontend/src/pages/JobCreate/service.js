@@ -27,3 +27,7 @@ export async function getDatasources() {
 export async function getCodeSource() {
   return request(`${APIV1Prefix}/codesource`);
 }
+
+export async function getNamespaces() {
+  return request(`${APIV1Prefix}/kubedl/namespaces`);
+}
