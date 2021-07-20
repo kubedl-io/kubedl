@@ -10,8 +10,24 @@ import (
 type LocalStorageProvider struct {
 }
 
-func (a *LocalStorageProvider) GetModelPath(model *modelv1alpha1.Storage) string {
-	return model.LocalStorage.Path
+// add the hostpath volume and mountPath in each container
+func (a *LocalStorageProvider) AddModelVolumeToPodSpec(mv *modelv1alpha1.Storage, pod *corev1.PodTemplateSpec) {
+
+	pod.Spec.Volumes = append(pod.Spec.Volumes,
+		corev1.Volume{
+			Name: "modelvolume",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: mv.LocalStorage.Path,
+				},
+			}})
+
+	for i, c := range pod.Spec.Containers {
+		pod.Spec.Containers[i].VolumeMounts = append(c.VolumeMounts,
+			corev1.VolumeMount{
+				Name: "modelvolume", MountPath: modelv1alpha1.DefaultModelPathInImage,
+			})
+	}
 }
 
 func (ls *LocalStorageProvider) CreatePersistentVolume(storage *modelv1alpha1.Storage, pvName string) *corev1.PersistentVolume {

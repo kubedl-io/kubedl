@@ -7,8 +7,7 @@ import (
 )
 
 const (
-	SessionKeyLoginID   = "loginId"
-	SessionKeyLoginName = "loginName"
+	SessionKeyLoginID = "loginId"
 )
 
 func init() {
@@ -18,9 +17,9 @@ func init() {
 	}
 
 	var authType string
-	flag.StringVar(&authType, "auth-type", "none",
-		"set authorize middleware name, --auth-type=none to disable authorize,"+
-			" --auth-type=config to authorize from configMap")
+	flag.StringVar(&authType, "authentication-mode", "none",
+		"set authentication mode. By default, no authentication . Use --authentication-mode=none to explicitly disable authentication,"+
+			" --authentication-mode=config to authenticate using configMap")
 	flag.Parse()
 	GetAuth = authTypes[authType]
 }
@@ -28,7 +27,7 @@ func init() {
 var (
 	GetAuth AuthRegister
 
-	LoginInvalid = errors.New("login id is inconsistent")
+	LoginInvalid = errors.New("login id is invalid")
 	GetAuthError = errors.New("get oauthInfo error")
 )
 

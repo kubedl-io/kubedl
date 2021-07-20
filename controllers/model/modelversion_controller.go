@@ -139,8 +139,8 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 			modelVersionStatus.Image = modelVersion.Spec.ImageRepo + ":v" + versionId
 			modelVersionStatus.ImageBuildPhase = modelv1alpha1.ImageBuilding
 			modelVersionStatus.Message = "Image building started."
-			imgBuildDockerfile := createImageBuildDockerfile(modelVersion.Namespace)
-			err = r.Create(context.Background(), imgBuildDockerfile)
+
+			err = r.createDockerfileIfNotExists(model, modelVersion)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
@@ -210,6 +210,22 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
+}
+
+// create the dockerfile to be used by kaniko
+func (r *ModelVersionReconciler) createDockerfileIfNotExists(model *modelv1alpha1.Model,
+	modelVersion *modelv1alpha1.ModelVersion) error {
+	dockerfile := &v1.ConfigMap{}
+	err := r.Get(context.Background(), types.NamespacedName{Namespace: model.Namespace, Name: "dockerfile"}, dockerfile)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			imgBuildDockerfile := createImageBuildDockerfile(modelVersion.Namespace)
+			err = r.Create(context.Background(), imgBuildDockerfile)
+		} else {
+			return err
+		}
+	}
+	return err
 }
 
 // createPVAndPVCForModelVersion creates pv and its pvc to be bound for specific model version.
@@ -439,7 +455,7 @@ func createImageBuildDockerfile(ns string) *v1.ConfigMap {
 		},
 		Data: map[string]string{
 			"dockerfile": fmt.Sprintf(`FROM busybox
-    COPY build/ %s`, modelv1alpha1.DefaultModelInImagePath),
+    COPY build/ %s`, modelv1alpha1.DefaultModelPathInImage),
 		},
 	}
 }

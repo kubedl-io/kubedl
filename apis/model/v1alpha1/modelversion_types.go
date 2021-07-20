@@ -23,8 +23,13 @@ import (
 const (
 	// KubeDLModelPath is the env key to indicate model path in container.
 	KubeDLModelPath = "KUBEDL_MODEL_PATH"
-	// DefaultModelInImagePath is the default model artifact path when build image.
-	DefaultModelInImagePath = "/model"
+
+	// DefaultModelPathInImage is the default dir inside the training container for storing the model artifacts.
+	// This is a mount path inside the container, mounted from an external storage such as local fs, nfs.
+	// The training code is expected to store the model under this directory, such as setting the model_export_path of 'tensorflow saved_model' to this value.
+	// The ModelVersion Controller will then create the image based on the corresponding external storage path defined in .ModelVersionSpec.Storage.
+	// TODO: support user-specified path in container.
+	DefaultModelPathInImage = "/kubedl-model"
 )
 
 // ModelVersionSpec defines a particular version of the Model.
@@ -76,13 +81,13 @@ type Storage struct {
 }
 
 // LocalStorage defines the local storage for storing the model version.
-// For a distributed training job, the nodeName will be the node where the chief/master worker run to output the model.
+// For a distributed training job, the nodeName will be the node where the chief/master worker run to export the model.
 type LocalStorage struct {
-	// The local path on the host
+	// The local host path to export the model.
 	// +required
 	Path string `json:"path,omitempty"`
 
-	// The name of the node for storing the model. This node will be where the chief worker run to output the model.
+	// The name of the node for storing the model. This node will be where the chief worker run to export the model.
 	// +required
 	NodeName string `json:"nodeName,omitempty"`
 }

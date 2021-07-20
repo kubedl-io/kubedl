@@ -11,8 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
 
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/model"
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
 	corev1 "k8s.io/api/core/v1"
 	resources "k8s.io/apiserver/pkg/quota/v1"
 	"k8s.io/klog"

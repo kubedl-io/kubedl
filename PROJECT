@@ -31,4 +31,7 @@ resources:
 - group: serving
   kind: Inference
   version: v1alpha1
+- group: apps
+  kind: Cron
+  version: v1alpha1
 version: "2"

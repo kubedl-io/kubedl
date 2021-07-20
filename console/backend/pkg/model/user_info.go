@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kubedl/console/backend/pkg/constants"
 
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	v1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
@@ -14,22 +14,17 @@ import (
 
 type UserInfo struct {
 	// Uid login account id
-	Uid string `json:"uid"`
-	// LoginName login account name
-	LoginName string `json:"login_name"`
-	//
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
-
-type UserInfoMap map[string]UserInfo
 
 const (
 	configMapKeyUsers = "users"
 )
 
-func GetUserInfoFromConfigMap(userID string) (UserInfo, error) {
-	if len(userID) == 0 {
-		return UserInfo{}, fmt.Errorf("userID is empty")
+func GetUserInfoFromConfigMap(username string) (UserInfo, error) {
+	if len(username) == 0 {
+		return UserInfo{}, fmt.Errorf("username is empty")
 	}
 
 	configMap, err := GetUserInfoConfigMap()
@@ -37,18 +32,17 @@ func GetUserInfoFromConfigMap(userID string) (UserInfo, error) {
 		return UserInfo{}, err
 	}
 
-	userInfoMap, err := getUserInfoMap(configMap)
+	userInfos, err := getUserInfos(configMap)
 	if err != nil {
 		return UserInfo{}, err
 	}
-
-	userInfo, exists := userInfoMap[userID]
-	if !exists {
-		klog.Errorf("UserInfo not exists, userID: %s", userID)
-		return UserInfo{}, fmt.Errorf("UserInfo not exists, userID: %s", userID)
+	for _, userInfo := range userInfos {
+		if userInfo.Username == username {
+			return userInfo, nil
+		}
 	}
-
-	return userInfo, nil
+	klog.Errorf("UserInfo not exists, username: %s", username)
+	return UserInfo{}, fmt.Errorf("UserInfo not exists, username: %s", username)
 }
 
 func GetUserInfoConfigMap() (*v1.ConfigMap, error) {
@@ -56,55 +50,35 @@ func GetUserInfoConfigMap() (*v1.ConfigMap, error) {
 	err := clientmgr.GetCtrlClient().Get(context.TODO(),
 		apitypes.NamespacedName{
 			Namespace: constants.KubeDLSystemNamespace,
-			Name:      constants.ConfigMapName,
+			Name:      constants.KubeDLConsoleConfig,
 		}, configMap)
 
 	if err != nil {
-		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.ConfigMapName, err)
+		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.KubeDLConsoleConfig, err)
 		return nil, err
 	}
 
 	return configMap, nil
 }
 
-func updateUserInfoConfigMap(configMap *v1.ConfigMap, userInfoMap UserInfoMap) error {
+func getUserInfos(configMap *v1.ConfigMap) ([]UserInfo, error) {
 	if configMap == nil {
 		klog.Errorf("ConfigMap is nil")
-		return fmt.Errorf("ConfigMap is nil")
-	}
-
-	userInfoMapBytes, err := json.Marshal(userInfoMap)
-	if err != nil {
-		klog.Errorf("UserInfoMap Marshal failed, err: %v", err)
-	}
-
-	configMap.Data[configMapKeyUsers] = string(userInfoMapBytes)
-
-	return clientmgr.GetCtrlClient().Update(context.TODO(), configMap)
-}
-
-func getUserInfoMap(configMap *v1.ConfigMap) (UserInfoMap, error) {
-	if configMap == nil {
-		klog.Errorf("ConfigMap is nil")
-		return UserInfoMap{}, fmt.Errorf("ConfigMap is nil")
+		return nil, fmt.Errorf("ConfigMap is nil")
 	}
 
 	users, exists := configMap.Data[configMapKeyUsers]
 	if !exists {
 		klog.Errorf("ConfigMap key `%s` not exists", configMapKeyUsers)
-		return UserInfoMap{}, fmt.Errorf("ConfigMap key `%s` not exists", configMapKeyUsers)
-	}
-	if len(users) == 0 {
-		klog.Warningf("UserInfoMap is empty")
-		return UserInfoMap{}, nil
+		return nil, fmt.Errorf("ConfigMap key `%s` not exists", configMapKeyUsers)
 	}
 
-	userInfoMap := UserInfoMap{}
-	err := json.Unmarshal([]byte(users), &userInfoMap)
+	var userInfos []UserInfo
+	err := json.Unmarshal([]byte(users), &userInfos)
 	if err != nil {
 		klog.Errorf("ConfigMap json Unmarshal error, content: %s, err: %v", users, err)
-		return userInfoMap, err
+		return nil, err
 	}
 
-	return userInfoMap, nil
+	return userInfos, nil
 }

@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/alibaba/kubedl/console/backend/pkg/storage/registry"
 	"sort"
 	"strconv"
 	"time"
 
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	consoleutils "github.com/alibaba/kubedl/console/backend/pkg/utils"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
-	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
 	"github.com/alibaba/kubedl/pkg/storage/backends/utils"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/types"
@@ -200,21 +200,15 @@ func (jh *JobHandler) GetJobStatisticsFromBackend(query *backends.Query) (model.
 	historyJobsMap := make(map[string]*model.HistoryJobStatistic)
 	totalJobCount := int32(0)
 	for _, jobInfo := range jobInfos {
-		userID := jobInfo.JobUserID
+		userID := jobInfo.JobUserName
 		if len(userID) == 0 {
 			userID = defaultUser
-		}
-
-		userName := jobInfo.JobUserName
-		if len(userName) == 0 {
-			userName = userID
 		}
 
 		if _, ok := historyJobsMap[userID]; !ok {
 			historyJobsMap[userID] = &model.HistoryJobStatistic{}
 		}
-		historyJobsMap[userID].UserName = userName
-		historyJobsMap[userID].UserID = userID
+		historyJobsMap[userID].UserName = userID
 		historyJobsMap[userID].JobCount++
 		totalJobCount++
 	}

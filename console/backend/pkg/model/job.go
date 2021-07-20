@@ -41,8 +41,8 @@ type JobInfo struct {
 	//
 	SpecsReplicaStatuses map[string]*SpecReplicaStatus `json:"specsReplicaStatuses"`
 
-	JobConfig   string `json:"jobConfig,omitempty"`
-	JobUserID   string `json:"jobUserId,omitempty"`
+	JobConfig string `json:"jobConfig,omitempty"`
+
 	JobUserName string `json:"jobUserName,omitempty"`
 	//JobResource JobResource `json:"jobResource,omitempty"`
 }
@@ -94,10 +94,8 @@ type SpecReplicaStatus struct {
 
 // HistoryJobStatistic used to record history job statistic.
 type HistoryJobStatistic struct {
-	UserID string `json:"userID"`
 	// UserName can be JobUserName in JobInfo
-	// or JobUserID iff JobUserName is empty in JobInfo
-	// or "Anonymous" if JobUserName and JobUserID are both empty.
+	// or "Anonymous" if JobUserName is empty.
 	UserName string `json:"userName"`
 
 	// Total job count submitted by this user.

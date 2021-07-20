@@ -1,44 +1,33 @@
-apiVersion: training.kubedl.io/v1alpha1
+apiVersion: "training.kubedl.io/v1alpha1"
 kind: "TFJob"
 metadata:
-  name: "mnist"
-  namespace: kubedl 
+  name: "tf-distributed"
 spec:
   cleanPodPolicy: None
+  # modelVersion defines the location where the model is stored.
   modelVersion:
-    modelName: tfjobmodel
-    imageRepo: jianhe6/kaniko
+    modelName: mymodel
+    # The dockerhub repo to push the generated image
+    imageRepo: jianhe6/mymodel
     storage:
+      # Use hostpath, NFS is also supported.
       localStorage:
-        path: /foo
+        # The host dir for THIS model version, each modelVersion should have its own unique parent folder, in this case, 'mymodelversion1'
+        path: /models/mymodelversion1
+        # The node for storing the model
         nodeName: kind-control-plane
   tfReplicaSpecs:
     Worker:
-      replicas: 1 
+      replicas: 3
       restartPolicy: Never
       template:
         spec:
           containers:
             - name: tensorflow
-              image: kubedl/tf-mnist-with-summaries:1.0
+              image: kubedl/tf-mnist-estimator-api:v0.1
+              imagePullPolicy: Always
               command:
                 - "python"
-                - "/var/tf_mnist/mnist_with_summaries.py"
-                - "--log_dir=/train/logs"
-                - "--learning_rate=0.01"
-                - "--batch_size=150"
-              volumeMounts:
-                - mountPath: "/train"
-                  name: "training"
-              resources:
-                limits:
-                  cpu: 2048m
-                  memory: 2Gi
-                requests:
-                  cpu: 1024m               
-                  memory: 1Gi
-          volumes:
-            - name: "training"
-              hostPath:
-                path: /tmp/data
-                type: DirectoryOrCreate
+                - "/keras_model_to_estimator.py"
+                - "/tmp/tfkeras_example/" # model checkpoint dir
+                - "/kubedl-model"         # export dir for the saved_model format

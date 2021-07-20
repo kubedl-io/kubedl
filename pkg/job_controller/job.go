@@ -3,10 +3,11 @@ package job_controller
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kubedl/pkg/features"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/alibaba/kubedl/pkg/features"
 
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/alibaba/kubedl/controllers/model/storage"
@@ -307,7 +308,6 @@ func addModelPathEnv(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, modelVer
 		return
 	}
 	provider := storage.GetStorageProvider(modelVersion.Storage)
-	modelPath := provider.GetModelPath(modelVersion.Storage)
 	for _, spec := range replicas {
 		containerList := spec.Template.Spec.Containers
 		for key, container := range containerList {
@@ -322,10 +322,13 @@ func addModelPathEnv(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, modelVer
 			if !exists {
 				containerList[key].Env = append(containerList[key].Env, v1.EnvVar{
 					Name:  v1alpha1.KubeDLModelPath,
-					Value: modelPath,
+					Value: v1alpha1.DefaultModelPathInImage, // The pre-defined dir inside the training container for storing the model
 				})
 			}
 		}
+
+		// add the model volume to pod spec
+		provider.AddModelVolumeToPodSpec(modelVersion.Storage, &spec.Template)
 	}
 }
 
@@ -340,6 +343,7 @@ func (jc *JobController) createModelVersion(job metav1.Object,
 	if err == nil {
 		// already exists, delete it
 		err = jc.Client.Delete(context.Background(), mv)
+		log.Infof("delete existing model version %s", mv.Name)
 		if err != nil {
 			log.Errorf("failed to delete model version %s", mv.Name)
 			return err
@@ -352,6 +356,7 @@ func (jc *JobController) createModelVersion(job metav1.Object,
 	}
 
 	// create the new model version
+	mv = &v1alpha1.ModelVersion{}
 	mv.Namespace = job.GetNamespace()
 	mv.Name = model.GetJobModelVersionName(job.GetName())
 	mv.Spec = *modelVersion
@@ -369,6 +374,7 @@ func (jc *JobController) createModelVersion(job metav1.Object,
 	}
 
 	jobStatus.ModelVersionName = mv.Name
+	log.Infof("created model version %s", mv.Name)
 	return nil
 }
 

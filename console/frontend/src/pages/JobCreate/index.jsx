@@ -55,6 +55,7 @@ const JobSubmitNew = ({ globalConfig }) => {
     const [activeTabKey, setActiveTabKey] = useState("Worker");
     const [nameSpaces, setNameSpaces] = useState([]);
     const [dataSource, setDataSource] = useState([]);
+    const [nsDataSource, setNsDataSource] = useState([]);
     const [codeSource, setCodeSource] = useState([]);
     const region = location.hostname.split(".")[2] || "cn-hangzhou";
     const [form] = Form.useForm();
@@ -166,6 +167,7 @@ const JobSubmitNew = ({ globalConfig }) => {
             }
         }
         setDataSource(newDataSource);
+        setNsDataSource(newDataSource)
         setCodeSource(newGitSource);
         setNameSpaces(newNameSpaces);
     };
@@ -454,6 +456,17 @@ const JobSubmitNew = ({ globalConfig }) => {
                     {intl.formatMessage({id: 'kubedl-dashboard-third-party-list-prompt'})}
         </span>}/>);
 
+    const nameSpaceChange = (v) => {
+        console.log(v)
+        var list = []
+        for(var i in dataSource) {
+            if(dataSource[i].namespace === v) {
+                list.push(dataSource[i])
+            }
+        }
+        setNsDataSource(list)
+    }
+
     const gitSourceChange = (v) => {
         const currentFormInitial = form.getFieldsValue() || {};
         const currentDefaultBranch = codeSource.filter((c) => c.name === v)[0] || {}; 
@@ -506,7 +519,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                     }
                                 ]}
                             >
-                                <Select placeholder="" >
+                                <Select placeholder="" onChange={nameSpaceChange}>
                                     {nameSpaces.length > 0 && nameSpaces.map((item) => <Select.Option key={item} value={item}>{item}</Select.Option>)}
                                 </Select>
                             </Form.Item>
@@ -514,7 +527,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                               form={form}
                               fieldCode={"dataSource"}
                               fieldKey={"dataSource"}
-                              options={dataSource}
+                              options={nsDataSource}
                               label={intl.formatMessage({id: 'kubedl-dashboard-data-config'})}
                               colStyle={{ labelCol:{ span: getLocale() === 'zh-CN' ? 4 : 8  }, 
                                           wrapperCol:{ span: getLocale() === 'zh-CN' ? 24 : 16  }

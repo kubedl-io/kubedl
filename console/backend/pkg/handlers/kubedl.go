@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
+	utils "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/constants"
-	utils "github.com/alibaba/kubedl/pkg/storage/backends/client"
 	"github.com/golang/glog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,7 +31,7 @@ func (h *KubeDLHandler) GetImageConfig() *ImageConfig {
 	cm := &v1.ConfigMap{}
 	err := h.client.Get(context.Background(), types.NamespacedName{
 		Namespace: constants.KubeDLSystemNamespace,
-		Name:      constants.ConfigMapName,
+		Name:      constants.KubeDLConsoleConfig,
 	}, cm)
 	if err != nil {
 		glog.Infof("get image config error: %v", err)

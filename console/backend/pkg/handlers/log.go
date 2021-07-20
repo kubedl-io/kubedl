@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/alibaba/kubedl/console/backend/pkg/model"
+	"github.com/alibaba/kubedl/console/backend/pkg/storage/registry"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
-	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
 )
 
 func NewLogHandler(eventStorage string) (*LogHandler, error) {

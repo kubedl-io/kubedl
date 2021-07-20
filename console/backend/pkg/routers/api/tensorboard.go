@@ -7,10 +7,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 
+	backendutils "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	backendutils "github.com/alibaba/kubedl/pkg/storage/backends/client"
 	tb "github.com/alibaba/kubedl/pkg/tensorboard"
 	"github.com/gin-gonic/gin"
 

@@ -21,6 +21,8 @@ import (
 
 	"github.com/alibaba/kubedl/pkg/features"
 
+	"github.com/spf13/pflag"
+
 	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers"
@@ -28,7 +30,6 @@ import (
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	backendregistry "github.com/alibaba/kubedl/pkg/storage/backends/registry"
-	"github.com/spf13/pflag"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"

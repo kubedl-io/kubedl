@@ -48,6 +48,8 @@ const (
 	LabelPredictorName = KubeDLPrefix + "/predictor-name"
 	// LabelModelVersion represents the model version value for inference role.
 	LabelModelVersion = KubeDLPrefix + "/model-version"
+	// LabelCronName indicates the name of cron who created this job.
+	LabelCronName = KubeDLPrefix + "/cron-name"
 )
 
 // NetworkMode defines network mode for intra job communicating.

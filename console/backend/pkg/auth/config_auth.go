@@ -17,10 +17,7 @@ func NewConfigAuth() Auth {
 }
 
 func (auth *configAuth) Login(c *gin.Context) error {
-	var loginData struct {
-		Username string
-		Password string
-	}
+	var loginData model.UserInfo
 	buf := make([]byte, 1024)
 	n, _ := c.Request.Body.Read(buf)
 	c.Request.Body = ioutil.NopCloser(bytes.NewReader(buf[:n]))
@@ -38,15 +35,13 @@ func (auth *configAuth) Login(c *gin.Context) error {
 		return LoginInvalid
 	}
 	session := sessions.Default(c)
-	session.Set(SessionKeyLoginID, userInfo.Uid)
-	session.Set(SessionKeyLoginName, userInfo.LoginName)
+	session.Set(SessionKeyLoginID, userInfo.Username)
 	return session.Save()
 }
 
 func (auth *configAuth) Logout(c *gin.Context) error {
 	session := sessions.Default(c)
 	session.Delete(SessionKeyLoginID)
-	session.Delete(SessionKeyLoginName)
 	return session.Save()
 }
 
@@ -57,8 +52,8 @@ func (auth configAuth) Authorize(c *gin.Context) error {
 		glog.Warningf("authorize logout")
 		return LoginInvalid
 	}
-	info, err := model.GetUserInfoFromConfigMap(v.(string))
-	if err != nil || session.Get(SessionKeyLoginName) != info.LoginName {
+	_, err := model.GetUserInfoFromConfigMap(v.(string))
+	if err != nil {
 		glog.Warningf("Authorize failed")
 		return LoginInvalid
 	}
