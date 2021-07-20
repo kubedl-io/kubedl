@@ -65,7 +65,7 @@ func (pc *TFJobPersistController) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to fetch tf job but it has been deleted.", "key", req.String())
-			if err = pc.handler.Delete(tfJob.Namespace, tfJob.Name, id); err != nil {
+			if err = pc.handler.Delete(tfJob.Namespace, tfJob.Name, tfJob.Kind, id); err != nil {
 				return ctrl.Result{}, err
 			}
 			return ctrl.Result{}, nil

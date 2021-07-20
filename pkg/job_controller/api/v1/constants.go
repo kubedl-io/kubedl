@@ -1,5 +1,7 @@
 package v1
 
+import v1 "k8s.io/api/core/v1"
+
 const (
 	// ReplicaIndexLabel represents the label key for the replica-index, e.g. the value is 0, 1, 2.. etc
 	ReplicaIndexLabel = "replica-index"
@@ -35,6 +37,8 @@ const (
 	AnnotationTensorBoardConfig = KubeDLPrefix + "/tensorboard-config"
 	// ReplicaTypeTensorBoard is the type for TensorBoard.
 	ReplicaTypeTensorBoard ReplicaType = "TensorBoard"
+	//ResourceNvidiaGPU is the key of gpu type in labels
+	ResourceNvidiaGPU v1.ResourceName = "nvidia.com/gpu"
 )
 
 const (

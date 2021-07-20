@@ -96,15 +96,15 @@ type jobPersistHandler struct {
 	jobBackend backends.ObjectStorageBackend
 }
 
-func (h *jobPersistHandler) Delete(ns, name, jobID string) error {
-	err := h.jobBackend.StopJob(ns, name, jobID, h.region)
+func (h *jobPersistHandler) Delete(ns, name, kind, jobID string) error {
+	err := h.jobBackend.StopJob(ns, name, jobID, kind, h.region)
 	if err != nil {
 		log.Error(err, "failed to stop job in object storage backend", "backend name",
 			h.jobBackend.Name(), "namespace", ns, "name", name, "job id", jobID)
 		return err
 	}
 
-	err = h.jobBackend.DeleteJob(ns, name, jobID, h.region)
+	err = h.jobBackend.DeleteJob(ns, name, jobID, kind, h.region)
 	if err != nil {
 		log.Error(err, "failed to delete job in object storage backend", "backend name",
 			h.jobBackend.Name(), "namespace", ns, "name", name, "job id", jobID)

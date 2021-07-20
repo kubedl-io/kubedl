@@ -10,22 +10,22 @@ import (
 
 // ControllerInterface defines the Interface to be implemented by custom operators. e.g. tf-operator needs to implement this interface
 type ControllerInterface interface {
-	// Returns the Controller name
+	//ControllerName Returns the Controller name
 	ControllerName() string
 
-	// Returns the GroupVersionKind of the API
+	// GetAPIGroupVersionKind Returns the GroupVersionKind of the API
 	GetAPIGroupVersionKind() schema.GroupVersionKind
 
-	// Returns the GroupVersion of the API
+	// GetAPIGroupVersion Returns the GroupVersion of the API
 	GetAPIGroupVersion() schema.GroupVersion
 
-	// Returns the Group Name(value) in the labels of the job
+	// GetGroupNameLabelValue Returns the Group Name(value) in the labels of the job
 	GetGroupNameLabelValue() string
 
-	// Returns the Job from Informer Cache
+	// GetJobFromInformerCache Returns the Job from Informer Cache
 	GetJobFromInformerCache(namespace, name string) (v1.Object, error)
 
-	// Returns the Job from API server
+	// GetJobFromAPIClient Returns the Job from API server
 	GetJobFromAPIClient(namespace, name string) (v1.Object, error)
 
 	// GetPodsForJob returns the pods managed by the job. This can be achieved by selecting pods using label key "job-name"
@@ -52,19 +52,19 @@ type ControllerInterface interface {
 	// SetClusterSpec sets the cluster spec for the pod
 	SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error
 
-	// Returns the default container name in pod
+	// GetDefaultContainerName Returns the default container name in pod
 	GetDefaultContainerName() string
 
-	// Get the default container port name
+	// GetDefaultContainerPortName Get the default container port name
 	GetDefaultContainerPortName() string
 
-	// Get the default container port number
+	// GetDefaultContainerPortNumber Get the default container port number
 	GetDefaultContainerPortNumber() int32
 
-	// Get replicas reconcile orders so that replica type with higher priority can be created earlier.
+	// GetReconcileOrders Get replicas reconcile orders so that replica type with higher priority can be created earlier.
 	GetReconcileOrders() []ReplicaType
 
-	// Returns if this replica type with index specified is a master role.
+	// IsMasterRole Returns if this replica type with index specified is a master role.
 	// MasterRole pod will have "job-role=master" set in its label
 	IsMasterRole(replicas map[ReplicaType]*ReplicaSpec, rtype ReplicaType, index int) bool
 }

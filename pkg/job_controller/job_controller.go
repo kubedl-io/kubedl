@@ -131,7 +131,7 @@ func (jc *JobController) GenLabels(jobName string) map[string]string {
 	}
 }
 
-// CrateGang create a new gang schedule process, ensure the relationship between job, managed objects and
+// CreateGang create a new gang schedule process, ensure the relationship between job, managed objects and
 // gang entity always maintained, so the consistency of gang scheduling never breaks.
 func (jc *JobController) CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) (runtime.Object, error) {
 	gangEntity, err := jc.GangScheduler.GetGang(types.NamespacedName{

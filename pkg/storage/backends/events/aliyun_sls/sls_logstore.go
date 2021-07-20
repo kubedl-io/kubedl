@@ -102,7 +102,7 @@ func (s *slsEventBackend) SaveEvent(event *corev1.Event, region string) error {
 	klog.Errorf("SLS PutLogs failed after retry 10 times, err: %v\n", err)
 	return err
 }
-func (s *slsEventBackend) ListEvent(jobNamespace, jobName string, from, to time.Time) ([]*dmo.Event, error) {
+func (s *slsEventBackend) ListEvent(jobNamespace, jobName, uid string, from, to time.Time) ([]*dmo.Event, error) {
 	query := fmt.Sprintf("%s AND %s", jobNamespace, jobName)
 	// Get histogram statistical information of logs satisfied with query.
 	hist, err := s.slsClient.GetHistograms(s.projectName, s.logStore, "", from.Unix(), to.Unix(), query)
@@ -139,6 +139,10 @@ func (s *slsEventBackend) ListEvent(jobNamespace, jobName string, from, to time.
 	}
 
 	return eventsBuffer, nil
+}
+
+func (s *slsEventBackend) ListLogs(namespace, name, uid string, maxLine int64, from, to time.Time) ([]string, error) {
+	return nil, nil
 }
 
 func (s *slsEventBackend) wrapSLSLog(event *corev1.Event, region string) *sls.LogGroup {

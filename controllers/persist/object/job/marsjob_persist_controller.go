@@ -64,7 +64,7 @@ func (pc *MarsJobPersistController) Reconcile(req ctrl.Request) (ctrl.Result, er
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to fetch mars job but it has been deleted.", "key", req.String())
-			if err = pc.handler.Delete(marsJob.Namespace, marsJob.Name, id); err != nil {
+			if err = pc.handler.Delete(marsJob.Namespace, marsJob.Name, marsJob.Kind, id); err != nil {
 				return ctrl.Result{}, err
 			}
 			return ctrl.Result{}, nil

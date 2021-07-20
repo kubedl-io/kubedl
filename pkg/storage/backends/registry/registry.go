@@ -30,13 +30,13 @@ var (
 )
 
 func RegisterStorageBackends() {
-	for idx := range NewObjectBackends {
-		b := NewObjectBackends[idx]()
+	for _, newBackend := range NewObjectBackends {
+		b := newBackend()
 		klog.Infof("register new object backend: %s", b.Name())
 		AddObjectBackend(b)
 	}
-	for idx := range NewEventBackends {
-		b := NewEventBackends[idx]()
+	for _, newBackend := range NewEventBackends {
+		b := newBackend()
 		klog.Infof("register new event backend: %s", b.Name())
 		AddEventBackend(b)
 	}
