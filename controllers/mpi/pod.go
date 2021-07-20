@@ -67,6 +67,24 @@ func (r *MPIJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error)
 			if err != nil {
 				return nil, err
 			}
+
+			// Get the launcher ServiceAccount for this MPIJob.
+			_, err = r.getOrCreateLauncherServiceAccount(mpiJob)
+			if err != nil {
+				return nil, err
+			}
+
+			// Get the launcher Role for this MPIJob.
+			_, err = r.getOrCreateLauncherRole(mpiJob, workerReplicas)
+			if err != nil {
+				return nil, err
+			}
+
+			// Get the launcher RoleBinding for this MPIJob.
+			_, err = r.getLauncherRoleBinding(mpiJob)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	// If any adoptions are attempted, we should first recheck for deletion
