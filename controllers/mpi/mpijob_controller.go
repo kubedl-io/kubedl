@@ -297,7 +297,10 @@ func (r *MPIJobReconciler) setupMPILauncher(mpiJob *training.MPIJob, podTemplate
 		r.recorder.Event(mpiJob, corev1.EventTypeWarning, "LauncherNotExist", msg)
 		return
 	}
-	// 1. append kubectl delivery init container to delivery kubectl binary file to
+
+	// 1. set pod ServiceAccount
+	podTemplateSpec.Spec.ServiceAccountName = mpiJob.Name + launcherSuffix
+	// 2. append kubectl delivery init container to delivery kubectl binary file to
 	// main containers by shared volume.
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, corev1.Container{
 		Name:  "kubectl-delivery",
@@ -330,11 +333,11 @@ func (r *MPIJobReconciler) setupMPILauncher(mpiJob *training.MPIJob, podTemplate
 		},
 		ImagePullPolicy: corev1.PullIfNotPresent,
 	})
-	// 2. inject mpi-environments and target delivery volume paths.
+	// 3. inject mpi-environments and target delivery volume paths.
 	for i := range podTemplateSpec.Spec.Containers {
 		setupLauncherMainContainers(mpiJob, &podTemplateSpec.Spec.Containers[i])
 	}
-	// 3. construct volumes shared across containers and its access mode.
+	// 4. construct volumes shared across containers and its access mode.
 	scriptsMode := int32(0555)
 	hostfileMode := int32(0444)
 	podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, corev1.Volume{
