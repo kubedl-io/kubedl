@@ -11,7 +11,6 @@ import (
 
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
 	"github.com/alibaba/kubedl/pkg/util"
-	"k8s.io/klog"
 )
 
 const (
@@ -47,16 +46,7 @@ func ConvertDMOJobToJobInfo(dmoJob *dmo.Job) JobInfo {
 			}
 		}
 	}
-
-	userID := *dmoJob.Owner
-	userInfo, err := GetUserInfoFromConfigMap(userID)
-	if err != nil {
-		klog.Errorf("Query UserInfo by userID failed, userID: %s, err: %v", userID, err)
-		userInfo.Uid = userID
-	}
-
-	jobInfo.JobUserID = userInfo.Uid
-	jobInfo.JobUserName = userInfo.LoginName
+	jobInfo.JobUserName = *dmoJob.Owner
 
 	/*
 		jobResource, err := calculateJobResources(jobInfo.Resources)

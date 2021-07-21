@@ -53,7 +53,7 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
         setIsLoading(true);
         const addValues = {
             userid: currentUser.loginId ?? '',
-            username: currentUser.loginName ?? '',
+            username: currentUser.loginId ?? '',
             name: values.name,
             type: '',
             description: values.description,

@@ -8,7 +8,6 @@ import (
 
 const (
 	SessionKeyLoginID   = "loginId"
-	SessionKeyLoginName = "loginName"
 )
 
 func init() {

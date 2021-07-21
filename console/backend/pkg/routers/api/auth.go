@@ -53,10 +53,7 @@ func (ac *authAPIsController) logout(c *gin.Context) {
 func (ac *authAPIsController) currentUser(c *gin.Context) {
 	session := sessions.Default(c)
 	utils.Succeed(c, map[string]interface{}{
-		//"accountId": session.Get(auth.SessionKeyAccountID),
 		"loginId": session.Get(auth.SessionKeyLoginID),
-		//"name":      session.Get(auth.SessionKeyName),
-		"loginName": session.Get(auth.SessionKeyLoginName),
 	})
 }
 
