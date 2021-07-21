@@ -26,5 +26,4 @@ WORKDIR /
 COPY --from=builder /workspace/manager .
 USER nonroot:nonroot
 
-CMD ["/backend-server"]
 ENTRYPOINT ["/manager"]
