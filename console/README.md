@@ -53,13 +53,12 @@ go build -mod=mod -o backend-server ./backend/cmd/backend-server/main.go
      data:
         images: 
                ...
-        users: '{
-            "admin":{
-            "uid":"admin",
-            "login_name":"admin",
+        users: '[
+            {
+            "username":"admin",
             "password":"123456"
             }
-        }'
+        ]'
     ```
    Start server in authorize mode.
     ```bash
