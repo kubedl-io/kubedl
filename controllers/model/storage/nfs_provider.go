@@ -10,8 +10,23 @@ import (
 type NFSProvider struct {
 }
 
-func (a *NFSProvider) GetModelPath(model *modelv1alpha1.Storage) string {
-	return model.NFS.Path
+func (a *NFSProvider) AddModelVolumeToPodSpec(mv *modelv1alpha1.Storage, pod *corev1.PodTemplateSpec) {
+	pod.Spec.Volumes = append(pod.Spec.Volumes,
+		corev1.Volume{
+			Name: "modelvolume",
+			VolumeSource: corev1.VolumeSource{
+				NFS: &corev1.NFSVolumeSource{
+					Path:   mv.NFS.Path,
+					Server: mv.NFS.Server,
+				},
+			}})
+
+	for _, c := range pod.Spec.Containers {
+		c.VolumeMounts = append(c.VolumeMounts,
+			corev1.VolumeMount{
+				Name: "modelvolume", MountPath: modelv1alpha1.DefaultModelPathInImage,
+			})
+	}
 }
 
 func (a *NFSProvider) CreatePersistentVolume(storage *modelv1alpha1.Storage, pvName string) *corev1.PersistentVolume {
