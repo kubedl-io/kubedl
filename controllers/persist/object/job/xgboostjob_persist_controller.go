@@ -65,7 +65,7 @@ func (pc *XGBoostJobPersistController) Reconcile(req ctrl.Request) (ctrl.Result,
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to fetch xgboost job but it has been deleted.", "key", req.String())
-			if err = pc.handler.Delete(xgboostJob.Namespace, xgboostJob.Name, id); err != nil {
+			if err = pc.handler.Delete(xgboostJob.Namespace, xgboostJob.Name, xgboostJob.Kind, id); err != nil {
 				log.Error(err, "failed to stop")
 				return ctrl.Result{Requeue: true}, err
 			}

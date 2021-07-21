@@ -18,6 +18,7 @@ package mysql
 
 import (
 	"errors"
+	"github.com/alibaba/kubedl/pkg/storage/backends/utils"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -37,10 +38,6 @@ import (
 const (
 	// initListSize defines the initial capacity when list objects from backend.
 	initListSize = 512
-
-	// Expanded object statuses only used in persistent layer.
-	PodStopped = "Stopped"
-	JobStopped = "Stopped"
 )
 
 func NewMysqlBackendService() backends.ObjectStorageBackend {
@@ -99,18 +96,16 @@ func (b *mysqlBackend) SavePod(pod *corev1.Pod, defaultContainerName, region str
 	return b.updatePod(&dmoPod, newPod)
 }
 
-func (b *mysqlBackend) ListPods(jobID, region string) ([]*dmo.Pod, error) {
+func (b *mysqlBackend) ListPods(ns, name, jobID string) ([]*dmo.Pod, error) {
 	klog.V(5).Infof("[mysql.ListPods] jobID: %s", jobID)
 
 	podList := make([]*dmo.Pod, 0, initListSize)
-	query := &dmo.Pod{JobID: jobID}
-	if region != "" {
-		query.DeployRegion = &region
-	}
+	query := &dmo.Pod{Namespace: ns, Name: name, JobID: jobID}
+
 	result := b.db.Where(query).
 		Order("replica_type").
 		Order("CAST(SUBSTRING_INDEX(name, '-', -1) AS SIGNED)").
-		Order("gmt_create DESC").
+		Order("gmt_created DESC").
 		Find(&podList)
 	if result.Error != nil {
 		return nil, result.Error
@@ -125,6 +120,9 @@ func (b *mysqlBackend) StopPod(ns, name, podID string) error {
 	if result := b.db.Where(&dmo.Pod{PodID: podID, Namespace: ns, Name: name}).First(&oldPod); result.Error != nil {
 		return result.Error
 	}
+	if oldPod.Status == utils.PodStopped || oldPod.Status == corev1.PodFailed || oldPod.Status == corev1.PodSucceeded {
+		return nil
+	}
 	newPod := &dmo.Pod{
 		Version:     oldPod.Version,
 		Status:      oldPod.Status,
@@ -137,7 +135,7 @@ func (b *mysqlBackend) StopPod(ns, name, podID string) error {
 		GmtFinished: oldPod.GmtFinished,
 	}
 	if status := oldPod.Status; status == corev1.PodPending || status == corev1.PodRunning || status == corev1.PodUnknown {
-		newPod.Status = PodStopped
+		newPod.Status = utils.PodStopped
 		newPod.GmtFinished = util.TimePtr(time.Now())
 		if newPod.GmtStarted == nil || newPod.GmtStarted.IsZero() {
 			newPod.GmtStarted = &oldPod.GmtCreated
@@ -169,11 +167,11 @@ func (b *mysqlBackend) SaveJob(job metav1.Object, kind string, specs map[apiv1.R
 	return b.updateJob(&dmoJob, newJob)
 }
 
-func (b *mysqlBackend) GetJob(ns, name, jobID, region string) (*dmo.Job, error) {
+func (b *mysqlBackend) GetJob(ns, name, jobID, kind, region string) (*dmo.Job, error) {
 	klog.V(5).Infof("[mysql.GetJob] jobID: %s", jobID)
 
 	job := dmo.Job{}
-	query := &dmo.Job{JobID: jobID, Namespace: ns, Name: name}
+	query := &dmo.Job{JobID: jobID, Namespace: ns, Name: name, Kind: kind}
 	if region != "" {
 		query.DeployRegion = &region
 	}
@@ -184,15 +182,15 @@ func (b *mysqlBackend) GetJob(ns, name, jobID, region string) (*dmo.Job, error) 
 	return &job, nil
 }
 
-func (b *mysqlBackend) ListJobs(query backends.Query) ([]*dmo.Job, error) {
+func (b *mysqlBackend) ListJobs(query *backends.Query) ([]*dmo.Job, error) {
 	klog.V(5).Infof("[mysql.ListJobs] query: %+v", query)
 
 	jobList := make([]*dmo.Job, 0, initListSize)
 	db := b.db.Model(&dmo.Job{})
-	db = db.Where("gmt_create < ?", query.EndTime).
-		Where("gmt_create > ?", query.StartTime)
+	db = db.Where("gmt_created < ?", query.EndTime).
+		Where("gmt_created > ?", query.StartTime)
 	if query.IsDel != nil {
-		db = db.Where("is_del = ?", *query.IsDel)
+		db = db.Where("deleted = ?", *query.IsDel)
 	}
 	if query.Status != "" {
 		db = db.Where("status = ?", query.Status)
@@ -209,7 +207,7 @@ func (b *mysqlBackend) ListJobs(query backends.Query) ([]*dmo.Job, error) {
 	if query.Region != "" {
 		db = db.Where("deploy_region = ?", query.Region)
 	}
-	db = db.Order("gmt_submit DESC")
+	db = db.Order("gmt_job_submitted DESC")
 	if query.Pagination != nil {
 		db = db.Count(&query.Pagination.Count).
 			Limit(query.Pagination.PageSize).
@@ -222,62 +220,55 @@ func (b *mysqlBackend) ListJobs(query backends.Query) ([]*dmo.Job, error) {
 	return jobList, nil
 }
 
-func (b *mysqlBackend) StopJob(ns, name, jobID, region string) error {
+func (b *mysqlBackend) StopJob(ns, name, jobID, kind, region string) error {
 	klog.V(5).Infof("[mysql.StopJob] jobID: %s, region: %s", jobID, region)
 
-	job := dmo.Job{}
-	query := &dmo.Job{JobID: jobID, Namespace: ns, Name: name}
-	if region != "" {
-		query.DeployRegion = &region
-	}
-	result := b.db.Where(query).First(&job)
-	if result.Error != nil {
-		return result.Error
+	job, err := b.GetJob(ns, name, jobID, kind, region)
+	if err != nil {
+		return err
 	}
 
 	newJob := &dmo.Job{
-		JobID:        job.JobID,
-		Version:      job.Version,
-		Status:       job.Status,
-		DeployRegion: job.DeployRegion,
-		Deleted:      job.Deleted,
-		IsInEtcd:     util.IntPtr(0),
-		GmtFinished:  job.GmtFinished,
+		JobID:          job.JobID,
+		Version:        job.Version,
+		Status:         job.Status,
+		DeployRegion:   job.DeployRegion,
+		Deleted:        job.Deleted,
+		IsInEtcd:       util.IntPtr(0),
+		GmtJobFinished: job.GmtJobFinished,
 	}
 	if status := job.Status; status == apiv1.JobRunning || status == apiv1.JobCreated || status == apiv1.JobRestarting {
-		newJob.Status = JobStopped
-		newJob.GmtFinished = util.TimePtr(time.Now())
+		newJob.Status = utils.JobStopped
+		now := time.Now()
+		newJob.GmtJobStopped = util.TimePtr(now)
+		newJob.GmtJobFinished = util.TimePtr(now)
 	}
-	return b.updateJob(&job, newJob)
+	return b.updateJob(job, newJob)
 }
 
-func (b *mysqlBackend) DeleteJob(ns, name, jobID, region string) error {
+func (b *mysqlBackend) DeleteJob(ns, name, jobID, kind, region string) error {
 	klog.V(5).Infof("[mysql.DeleteJob] jobID: %s, region: %s", jobID, region)
 
-	job := dmo.Job{}
-	query := &dmo.Job{JobID: jobID, Namespace: ns, Name: name}
-	if region != "" {
-		query.DeployRegion = &region
+	job, err := b.GetJob(ns, name, jobID, kind, region)
+	if err != nil {
+		return err
 	}
-	result := b.db.Where(query).First(&job)
-	if result.Error != nil {
-		return result.Error
-	}
+
 	if job.IsInEtcd != nil && *job.IsInEtcd == 1 {
 		return errors.New("job is still in etcd, must stop it first")
 	}
-	isDel := 1
+	Deleted := 1
 	newJob := &dmo.Job{
-		Namespace:    job.Namespace,
-		JobID:        job.JobID,
-		Version:      job.Version,
-		Status:       job.Status,
-		DeployRegion: job.DeployRegion,
-		Deleted:      &isDel,
-		IsInEtcd:     job.IsInEtcd,
-		GmtFinished:  job.GmtFinished,
+		Namespace:      job.Namespace,
+		JobID:          job.JobID,
+		Version:        job.Version,
+		Status:         job.Status,
+		DeployRegion:   job.DeployRegion,
+		Deleted:        &Deleted,
+		IsInEtcd:       job.IsInEtcd,
+		GmtJobFinished: job.GmtJobFinished,
 	}
-	return b.updateJob(&job, newJob)
+	return b.updateJob(job, newJob)
 }
 
 func (b *mysqlBackend) createNewPod(pod *corev1.Pod, defaultContainerName string, region string) error {
@@ -337,6 +328,7 @@ func (b *mysqlBackend) updatePod(oldPod, newPod *dmo.Pod) error {
 		Deleted:     newPod.Deleted,
 		IsInEtcd:    newPod.IsInEtcd,
 		Remark:      newPod.Remark,
+		GmtCreated:  newPod.GmtCreated,
 		GmtStarted:  newPod.GmtStarted,
 		GmtFinished: newPod.GmtFinished,
 	})
@@ -389,22 +381,25 @@ func (b *mysqlBackend) updateJob(oldJob, newJob *dmo.Job) error {
 		Version:      oldJob.Version,
 		DeployRegion: oldJob.DeployRegion,
 	}).Updates(&dmo.Job{
-		Status:       newJob.Status,
-		Namespace:    newJob.Namespace,
-		DeployRegion: newJob.DeployRegion,
-		Version:      newJob.Version,
-		Deleted:      newJob.Deleted,
-		IsInEtcd:     newJob.IsInEtcd,
-		GmtFinished:  newJob.GmtFinished,
+		Status:          newJob.Status,
+		Namespace:       newJob.Namespace,
+		DeployRegion:    newJob.DeployRegion,
+		Version:         newJob.Version,
+		Deleted:         newJob.Deleted,
+		IsInEtcd:        newJob.IsInEtcd,
+		GmtCreated:      newJob.GmtCreated,
+		GmtJobSubmitted: newJob.GmtJobSubmitted,
+		GmtJobStopped:   newJob.GmtJobStopped,
+		GmtJobFinished:  newJob.GmtJobFinished,
 	})
 	if result.Error != nil {
 		return result.Error
 	}
 
-	if oldJob.Status != apiv1.JobSucceeded && oldJob.Status != apiv1.JobFailed && oldJob.Status != JobStopped {
-		if newJob.GmtFinished != nil {
+	if oldJob.Status != apiv1.JobSucceeded && oldJob.Status != apiv1.JobFailed && oldJob.Status != utils.JobStopped {
+		if newJob.GmtJobFinished != nil {
 			klog.Infof("[updateJob digest] jobID: %s, duration: %dm, old status: %s, new status: %s",
-				newJob.JobID, newJob.GmtFinished.Sub(oldJob.GmtCreated)/time.Minute, oldJob.Status, newJob.Status)
+				newJob.JobID, newJob.GmtJobFinished.Sub(oldJob.GmtCreated)/time.Minute, oldJob.Status, newJob.Status)
 		} else {
 			klog.Infof("[updateJob digest] jobID: %s, old status: %s, new status: %s",
 				newJob.JobID, oldJob.Status, newJob.Status)

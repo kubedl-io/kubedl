@@ -21,11 +21,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func (ir *InferenceReconciler) buildModelLoader(mv *v1alpha1.ModelVersion, sharedVolumeName, destModelPath string) (c *v1.Container, err error) {
+func (ir *InferenceReconciler) buildModelLoaderInitContainer(mv *v1alpha1.ModelVersion, sharedVolumeName, destModelPath string) (c *v1.Container, err error) {
 	c = &v1.Container{Name: "kubedl-model-loader"}
 	c.Image = mv.Status.Image
 	c.VolumeMounts = append(c.VolumeMounts, v1.VolumeMount{Name: sharedVolumeName, MountPath: destModelPath})
-	// Model loader is an init container to copy model artifact from source path to destination.
-	c.Command = []string{"/bin/sh", "-c", "cp", v1alpha1.DefaultModelInImagePath, destModelPath}
+	// Model loader is an init container to move model artifacts from source path to destination.
+	c.Command = []string{"/bin/sh", "-c", "mv", v1alpha1.DefaultModelPathInImage + "/*", destModelPath}
 	return c, nil
 }

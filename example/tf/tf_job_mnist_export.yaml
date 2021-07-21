@@ -1,0 +1,29 @@
+apiVersion: "training.kubedl.io/v1alpha1"
+kind: "TFJob"
+metadata:
+  name: "distributed-bbb"
+spec:
+  cleanPodPolicy: None
+  tfReplicaSpecs:
+    Worker:
+      replicas: 3
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+            - name: tensorflow
+              image: kubedl/tf-mnist-estimator-api:v0.1
+              command:
+                - "python"
+                - "/keras_model_to_estimator.py"
+                - "/tmp/tfkeras_example/"        # checkpoint dir
+                - "/kubedl-model"                # export saved_model dir
+              imagePullPolicy: Always
+              volumeMounts:
+                - mountPath: "/kubedl-model"
+                  name: "model"
+          volumes:
+            - name: "model"
+              hostPath:
+                path: "/models/mymodel"
+                type: DirectoryOrCreate

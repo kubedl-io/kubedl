@@ -26,6 +26,7 @@ type Query struct {
 	JobID      string
 	Name       string
 	Namespace  string
+	Type       string
 	Region     string
 	Status     v1.JobConditionType
 	StartTime  time.Time
