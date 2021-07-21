@@ -4,6 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Build Status](https://travis-ci.com/alibaba/kubedl.svg?branch=master)](https://travis-ci.com/alibaba/kubedl)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl?ref=badge_shield)
 
 KubeDL enables deep learning workloads to run on Kubernetes more easily and efficiently. 
 <div align="left">
@@ -27,3 +28,7 @@ Check the website: https://kubedl.io
  <img src="docs/img/kubedl.png" width="700" title="">
 </div> <br/>
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl?ref=badge_large)
