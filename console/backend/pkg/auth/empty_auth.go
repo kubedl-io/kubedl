@@ -7,12 +7,12 @@ import (
 )
 
 type emptyAuth struct {
-	defaultLoginID   string
+	defaultLoginID string
 }
 
 func NewEmptyAuth() Auth {
 	return &emptyAuth{
-		defaultLoginID:   "Anonymous",
+		defaultLoginID: "Anonymous",
 	}
 }
 
