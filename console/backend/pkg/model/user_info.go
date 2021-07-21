@@ -56,11 +56,11 @@ func GetUserInfoConfigMap() (*v1.ConfigMap, error) {
 	err := clientmgr.GetCtrlClient().Get(context.TODO(),
 		apitypes.NamespacedName{
 			Namespace: constants.KubeDLSystemNamespace,
-			Name:      constants.ConfigMapName,
+			Name:      constants.KubeDLConsoleConfig,
 		}, configMap)
 
 	if err != nil {
-		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.ConfigMapName, err)
+		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, constants.KubeDLConsoleConfig, err)
 		return nil, err
 	}
 

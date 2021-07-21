@@ -1,5 +1,7 @@
 # KubeDL Console
 
+KubeDL console consists a frontend and a backend server.
+
 ## Prerequisites
 
 - NodeJS > 10
@@ -7,32 +9,34 @@
 
 ## Development
 
-#### Build Console Backend Server
+### Build Backend Server
 ```bash
 # kubedl/console/
-go build -mod=mod -o backend-server ./backend/cmd/backend-server/main.go
+go build -o backend-server ./backend/cmd/backend-server/main.go
 ```
 
-#### Run local Console Backend Server
+### Run Backend Server Locally
 
-1. Create namespace `kubedl-system` in your k8s and make sure you have permission to create object.
-2. Run backend server with disabled authentication mode
+1. Create `kubedl-system` namespace in your k8s if not existing, this is required to create system-level ConfigMaps.
+2. Make sure the backend-server uses a KUBECONFIG that has permission to create ConfigMap.
+2. Run backend server with no authentication (default mode) 
     ```bash
-    ./backend-server
+    export KUBECONFIG=<path/to/your/kubeconfig> && ./backend-server
     ```
-#### Optional
-1. base images: You Can input some image names as base images when creating a job.
-   Prepare the ConfigMap as below. These images will give you some choice when input job image.
+
+#### Optional Settings
+1. Default Training Container Images
+You can set the default container images for running the training jobs using ConfigMap as below: 
     ``` yaml
     apiVersion: v1
      kind: ConfigMap
      metadata:
          namespace: kubedl-system
-         name: kubedl-option-config
+         name: kubedl-console-config
      data:
          images: '{
              "tf-cpu-images":[
-               " here input your base image",
+               "here set your default container image",
                ...
              ],
             "tf-gpu-images":[
@@ -43,13 +47,19 @@ go build -mod=mod -o backend-server ./backend/cmd/backend-server/main.go
             ]
          }'
     ```
-2. authorize: You can input some accounts into `users` in ConfigMap above, so that dashboard would check `uid` and `password` when login.
+
+2. Authentication
+    By default, the backend-server has no authentication.
+    Optionally, you can set the default `username` and `password` in ConfigMap and use that to login.
+    The backend-server needs to start as `./backend-server --authentication-mode=config`. 
+    For example, create a ConfigMap like below:
+    
     ``` yaml
     apiVersion: v1
      kind: ConfigMap
      metadata:
          namespace: kubedl-system
-         name: kubedl-option-config
+         name: kubedl-console-config
      data:
         images: 
                ...
@@ -61,57 +71,49 @@ go build -mod=mod -o backend-server ./backend/cmd/backend-server/main.go
             }
         }'
     ```
-   Start server in authorize mode.
+    When login to the frontend, use `admin` for username and `123456` for password to login.
+
+### Run Frontend
+
+1. Go to the frontend root dir.
     ```bash
-    ./backend-server --auth-type=config
+    cd frontend/
     ```
-#### Run Console Frontend
-
-```bash
-cd frontend/
-```
-
-1. Install dependencies (optional)
+   
+2. Install dependencies
     ```bash
     npm install
     ```
-2. Run Console Frontend Dev Server
+3. Build Frontend Server
     ```bash
     npm run build
     ```
-3. Move dist dir to `kubedl/console/`. Make sure that `dist` from frontend and `backend-server` from backend are in same path.
+4. Run  Frontend Server
+
     ```bash
-    cp -r dist ../
-   
-   
-      |-- dist
-      |-- .backend-server
+    npm run start
     ```
-#### Optional: Start Console Frontend with Connection to other dev Backend-Server directly
-If you are not able to run local console backend server, or other dev console backend server is already present, you could make frontend dev server to proxy API requests to other dev backend server directly.
+   
+#### Optional: Set backend server address
 
-1. Change Proxy Backend
-Path: console/frontend/config/config.js
-```javascript
-  proxy: [
-    {
-      target: "http://localhost:9090",
-      ...
-    }
-  ]
+1. Use below config to set the backend-server address.
 
-```
-change the target to address <ip:port> of other present console backend server.
+    Path: console/frontend/config/config.js
+    ```javascript
+      proxy: [
+        {
+          target: "http://localhost:9090",
+          ...
+        }
+      ]
+    ```
+    
+Change the target to your own backend server address. By default, it is `localhost:9090`.
 
-
-2. Run Console Frontend Dev Server
-```bash
-npm run start
-```
 
 ## Tools
 
-#### Editor Recommandation
+### Editor Recommandation
 
 VSCode + ESlint(Plugin)
 
@@ -125,4 +127,22 @@ VSCode Configuration:
         "source.fixAll.eslint": true
     }
 }
+```
+
+### Check code style
+
+```bash
+npm run lint
+```
+
+You can also use script to auto fix some lint error:
+
+```bash
+npm run lint:fix
+```
+
+### Test code
+
+```bash
+npm test
 ```
