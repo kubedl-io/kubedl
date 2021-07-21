@@ -1,9 +1,8 @@
 # KubeDL
 
-
-
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
-[![Build Status](https://travis-ci.com/alibaba/kubedl.svg?branch=master)](https://travis-ci.com/alibaba/kubedl)
+[![KubeDL Action Status](https://github.com/kubedl-io/kubedl/workflows/CI/badge.svg)](https://github.com/kubedl-io}/kubedl}/actions)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5072/badge)](https://bestpractices.coreinfrastructure.org/projects/5072)
 
 KubeDL enables deep learning workloads to run on Kubernetes more easily and efficiently. 
 <div align="left">
