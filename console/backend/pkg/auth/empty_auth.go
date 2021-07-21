@@ -7,28 +7,24 @@ import (
 )
 
 type emptyAuth struct {
-	defaultLoginID   string
-	defaultLoginName string
+	defaultLoginID string
 }
 
 func NewEmptyAuth() Auth {
 	return &emptyAuth{
-		defaultLoginID:   "EmptyLoginID",
-		defaultLoginName: "Anonymous",
+		defaultLoginID: "Anonymous",
 	}
 }
 
 func (auth *emptyAuth) Login(c *gin.Context) error {
 	session := sessions.Default(c)
 	session.Set(SessionKeyLoginID, auth.defaultLoginID)
-	session.Set(SessionKeyLoginName, auth.defaultLoginName)
 	return session.Save()
 }
 
 func (auth *emptyAuth) Logout(c *gin.Context) error {
 	session := sessions.Default(c)
 	session.Delete(SessionKeyLoginID)
-	session.Delete(SessionKeyLoginName)
 	return session.Save()
 }
 

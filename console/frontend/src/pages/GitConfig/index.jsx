@@ -44,7 +44,7 @@ const GitConfig = ({ globalConfig, currentUser }) => {
         setIsLoading(true);
         const addValues = {
             userid: currentUser.loginId ?? '',
-            username: currentUser.loginName ?? '',
+            username: currentUser.loginId ?? '',
             name: values.name,
             type: 'git',
             description: values.description,

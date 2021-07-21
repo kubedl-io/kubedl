@@ -200,21 +200,15 @@ func (jh *JobHandler) GetJobStatisticsFromBackend(query *backends.Query) (model.
 	historyJobsMap := make(map[string]*model.HistoryJobStatistic)
 	totalJobCount := int32(0)
 	for _, jobInfo := range jobInfos {
-		userID := jobInfo.JobUserID
+		userID := jobInfo.JobUserName
 		if len(userID) == 0 {
 			userID = defaultUser
-		}
-
-		userName := jobInfo.JobUserName
-		if len(userName) == 0 {
-			userName = userID
 		}
 
 		if _, ok := historyJobsMap[userID]; !ok {
 			historyJobsMap[userID] = &model.HistoryJobStatistic{}
 		}
-		historyJobsMap[userID].UserName = userName
-		historyJobsMap[userID].UserID = userID
+		historyJobsMap[userID].UserName = userID
 		historyJobsMap[userID].JobCount++
 		totalJobCount++
 	}

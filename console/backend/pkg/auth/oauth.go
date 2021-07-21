@@ -7,8 +7,7 @@ import (
 )
 
 const (
-	SessionKeyLoginID   = "loginId"
-	SessionKeyLoginName = "loginName"
+	SessionKeyLoginID = "loginId"
 )
 
 func init() {
