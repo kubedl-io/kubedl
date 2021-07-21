@@ -41,7 +41,7 @@ type JobInfo struct {
 	//
 	SpecsReplicaStatuses map[string]*SpecReplicaStatus `json:"specsReplicaStatuses"`
 
-	JobConfig   string `json:"jobConfig,omitempty"`
+	JobConfig string `json:"jobConfig,omitempty"`
 
 	JobUserName string `json:"jobUserName,omitempty"`
 	//JobResource JobResource `json:"jobResource,omitempty"`
