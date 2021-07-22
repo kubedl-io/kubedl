@@ -7,10 +7,6 @@ import (
 	"k8s.io/kubernetes/pkg/features"
 )
 
-const (
-	ResourceNvidiaGPU = "nvidia.com/gpu"
-)
-
 // SumUpContainersResources sum up resources aggregated from containers list.
 func SumUpContainersResources(containers []v1.Container) v1.ResourceRequirements {
 	sum := v1.ResourceRequirements{
@@ -54,20 +50,4 @@ func GetPodResourceRequest(pod *v1.Pod) v1.ResourceList {
 		result = quota.Add(result, pod.Spec.Overhead)
 	}
 	return result
-}
-
-func PodRequestsForGPU(pod *v1.Pod) bool {
-	hasGPU := func(res v1.ResourceRequirements) bool {
-		_, ok1 := res.Requests[ResourceNvidiaGPU]
-		_, ok2 := res.Limits[ResourceNvidiaGPU]
-		return ok1 || ok2
-	}
-
-	for i := range pod.Spec.Containers {
-		c := &pod.Spec.Containers[i]
-		if hasGPU(c.Resources) {
-			return true
-		}
-	}
-	return false
 }

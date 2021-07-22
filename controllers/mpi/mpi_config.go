@@ -45,7 +45,7 @@ var (
 	workerSuffix   = "-" + strings.ToLower(string(training.MPIReplicaTypeWorker))
 )
 
-func (r *MPIJobReconciler) getOrCreateJobConfig(mpiJob *training.MPIJob, workerReplicas int32, isGPULauncher bool) (*corev1.ConfigMap, error) {
+func (r *MPIJobReconciler) getOrCreateJobConfig(mpiJob *training.MPIJob, workerReplicas int32, launcherRunsWorkload bool) (*corev1.ConfigMap, error) {
 	cm := corev1.ConfigMap{}
 	err := r.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: mpiJob.Namespace,
@@ -53,7 +53,7 @@ func (r *MPIJobReconciler) getOrCreateJobConfig(mpiJob *training.MPIJob, workerR
 	}, &cm)
 	if err != nil && errors.IsNotFound(err) {
 		// If the ConfigMap doesn't exist, we'll create it.
-		err = r.Client.Create(context.Background(), newJobConfigMap(mpiJob, workerReplicas, isGPULauncher))
+		err = r.Client.Create(context.Background(), newJobConfigMap(mpiJob, workerReplicas, launcherRunsWorkload))
 	}
 
 	if err != nil {
@@ -65,7 +65,7 @@ func (r *MPIJobReconciler) getOrCreateJobConfig(mpiJob *training.MPIJob, workerR
 // newConfigMap creates a new ConfigMap containing configurations for an MPIJob
 // resource. It also sets the appropriate OwnerReferences on the resource so
 // handleObject can discover the MPIJob resource that 'owns' it.
-func newJobConfigMap(mpiJob *training.MPIJob, workerReplicas int32, isGPULauncher bool) *corev1.ConfigMap {
+func newJobConfigMap(mpiJob *training.MPIJob, workerReplicas int32, launcherRunsWorkload bool) *corev1.ConfigMap {
 	kubexec := fmt.Sprintf(`#!/bin/sh
 set -x
 POD_NAME=$1
@@ -82,7 +82,7 @@ shift
 		slots = int(*mpiJob.Spec.SlotsPerWorker)
 	}
 	var buffer bytes.Buffer
-	if isGPULauncher {
+	if launcherRunsWorkload {
 		buffer.WriteString(fmt.Sprintf("%s%s slots=%d\n", mpiJob.Name, launcherSuffix, slots))
 	}
 	for i := 0; i < int(workerReplicas); i++ {

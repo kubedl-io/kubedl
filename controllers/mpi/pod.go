@@ -29,8 +29,6 @@ import (
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
-	"github.com/alibaba/kubedl/pkg/util/quota"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,10 +58,8 @@ func (r *MPIJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error)
 		// MPIJob ensures job-attached configuration is kept by ConfigMap when launcher
 		// neither succeed nor failed.
 		if pod.Labels[apiv1.ReplicaTypeLabel] == strings.ToLower(string(mpiv1.MPIReplicaTypeLauncher)) && k8sutil.IsPodActive(pod) {
-			isGPULauncher := quota.PodRequestsForGPU(pod) && launcherRunsWorkload
-
 			klog.Info("launcher of MPIJob: ", mpiJob.Namespace+"/"+mpiJob.Name, "generate job config.")
-			_, err := r.getOrCreateJobConfig(mpiJob, workerReplicas, isGPULauncher)
+			_, err := r.getOrCreateJobConfig(mpiJob, workerReplicas, launcherRunsWorkload)
 			if err != nil {
 				return nil, err
 			}
