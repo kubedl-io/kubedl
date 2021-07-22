@@ -1,0 +1,7 @@
+apiVersion: apps.kubedl.io/v1alpha1
+kind: Cron
+metadata:
+  name: cron-sample
+spec:
+  # Add fields here
+  foo: bar

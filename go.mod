@@ -18,9 +18,11 @@ require (
 	github.com/onsi/gomega v1.10.2
 	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
 	github.com/prometheus/client_golang v1.9.0
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
+	github.com/tidwall/gjson v1.8.0
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	gopkg.in/yaml.v2 v2.3.0
 	istio.io/api v0.0.0-20210420211535-1c598ea4139c

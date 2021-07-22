@@ -51,41 +51,46 @@ func (ir *InferenceReconciler) createNewPredictorDeploy(inf *v1alpha1.Inference,
 		return nil, err
 	}
 
-	// Download model from already built image and delivery it to main serving containers
-	// via volumes.
-	modelPath := fmt.Sprintf("%s/%s", v1alpha1.DefaultModelMountPath, modelVersion.Name)
-	if predictor.ModelPath != nil && len(*predictor.ModelPath) > 0 {
-		modelPath = *predictor.ModelPath
-	}
-	loaderVolume := corev1.Volume{
+	// 1. Init Container (that contains the model under /kubedl-model/) will be downloaded.
+	// 2. A shared EmptyDir volume is mounted in InitContainer at "/mnt/kubedl-model"
+	// 3. Move the models into shared volume: mv /kubedl-model/*  /mnt/kubedl-model
+	// 4. The main serving container mounts the shared volume at "predictor.ModelPath" if specified or "/kubedl-model/<modelVersion-name>" if not.
+	// 5. When serving, it loads the model from "predictor.ModelPath" if specified or "/kubedl-model/<modelVersion-name>" if not.
+
+	sharedVolume := corev1.Volume{
 		Name:         "kubedl-model-loader",
 		VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 	}
-	loader, err := ir.buildModelLoader(modelVersion, loaderVolume.Name, modelPath)
+	loader, err := ir.buildModelLoaderInitContainer(modelVersion, sharedVolume.Name, "/mnt/kubedl-model")
 	if err != nil {
 		return nil, err
 	}
-	predictor.Template.Spec.Volumes = append(predictor.Template.Spec.Volumes, loaderVolume)
+	predictor.Template.Spec.Volumes = append(predictor.Template.Spec.Volumes, sharedVolume)
 	predictor.Template.Spec.InitContainers = append(predictor.Template.Spec.InitContainers, *loader)
+
+	modelMntPath := fmt.Sprintf("%s/%s", modelv1alpha1.DefaultModelPathInImage, modelVersion.Name)
+	if predictor.ModelPath != nil && len(*predictor.ModelPath) > 0 {
+		modelMntPath = *predictor.ModelPath
+	}
 	for ci := range predictor.Template.Spec.Containers {
 		c := &predictor.Template.Spec.Containers[ci]
 		c.VolumeMounts = append(c.VolumeMounts, corev1.VolumeMount{
-			Name:      loaderVolume.Name,
-			MountPath: modelPath,
+			Name:      sharedVolume.Name,
+			MountPath: modelMntPath,
 		})
-		c.Env = append(c.Env, corev1.EnvVar{Name: modelv1alpha1.KubeDLModelPath, Value: modelPath})
+		c.Env = append(c.Env, corev1.EnvVar{Name: modelv1alpha1.KubeDLModelPath, Value: modelMntPath})
 	}
 
 	// Setup predictor template with specific framework requirements.
 	setter := framework.Setters[inf.Spec.Framework]
 	if setter != nil {
 		// Setup predictor template by its specific framework type.
-		setter.SetSpec(&predictor.Template, modelVersion, modelPath)
+		setter.SetSpec(&predictor.Template, modelVersion, modelMntPath)
 	}
 	for ci := range predictor.Template.Spec.Containers {
 		predictor.Template.Spec.Containers[ci].VolumeMounts = append(predictor.Template.Spec.Containers[ci].VolumeMounts, corev1.VolumeMount{
 			Name:      fmt.Sprintf("%s-volume-mounts", modelVersion.Name),
-			MountPath: modelPath,
+			MountPath: modelMntPath,
 		})
 	}
 
