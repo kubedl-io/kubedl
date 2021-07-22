@@ -1,6 +1,7 @@
 # KubeDL
 
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl?ref=badge_shield)
 [![KubeDL Action Status](https://github.com/kubedl-io/kubedl/workflows/CI/badge.svg)](https://github.com/kubedl-io}/kubedl}/actions)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5072/badge)](https://bestpractices.coreinfrastructure.org/projects/5072)
 
@@ -26,3 +27,7 @@ Check the website: https://kubedl.io
  <img src="docs/img/kubedl.png" width="700" title="">
 </div> <br/>
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl?ref=badge_large)
