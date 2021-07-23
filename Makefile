@@ -1,6 +1,7 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= kubedl/kubedl:v0.3.0
+VERSION ?= 0.3.0
+IMG ?= kubedl/kubedl:v$(VERSION)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,maxDescLen=0"
 
@@ -57,6 +58,19 @@ docker-build: test
 # Push the docker image
 docker-push:
 	docker push ${IMG}
+
+# Update helm charts
+# For example: export VERSION=0.5.0 && make helm-charts
+helm-chart:
+	cp config/crd/bases/* helm/kubedl/crds
+	# generate .kubedbackup file is for compatible between MAC OS and LINUX, since sed syntax is different
+	sed -i.kubedlbackup 's/tag:.*/tag: '"v$(VERSION)"'/g' helm/kubedl/values.yaml
+	sed -i.kubedlbackup 's/version:.*/version: '"$(VERSION)"'/g' helm/kubedl/Chart.yaml
+	sed -i.kubedlbackup 's/appVersion:.*/appVersion: '"$(VERSION)"'/g' helm/kubedl/Chart.yaml
+	cp config/rbac/role.yaml helm/kubedl/templates
+	sed -i.kubedlbackup 's/name:.*/name: {{ include "kubedl.fullname" . }}-role/g' helm/kubedl/templates/role.yaml
+	rm -f helm/kubedl/*.kubedlbackup
+	rm -f helm/kubedl/templates/*.kubedlbackup
 
 # find or download controller-gen
 # download controller-gen if necessary
