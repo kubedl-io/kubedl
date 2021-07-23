@@ -85,7 +85,10 @@ func (cc *CronController) SetupWithManager(mgr ctrl.Manager) error {
 	// Discover installed workload and watch for Cron controlled objects.
 	for _, workload := range workloads {
 		if _, enabled := workloadgate.IsWorkloadEnable(workload, cc.scheme); enabled {
-			if err = c.Watch(&source.Kind{Type: workload}, &handler.EnqueueRequestForOwner{}, predicate.Funcs{
+			if err = c.Watch(&source.Kind{Type: workload}, &handler.EnqueueRequestForOwner{
+				OwnerType:    &v1alpha1.Cron{},
+				IsController: true,
+			}, predicate.Funcs{
 				CreateFunc: onCronWorkloadCreate,
 				DeleteFunc: onCronWorkloadDelete,
 				UpdateFunc: onCronWorkloadUpdate,
