@@ -1,7 +1,7 @@
 
 # Image URL to use all building/pushing image targets
 VERSION ?= daily
-IMG ?= kubedl/kubedl:v$(VERSION)
+IMG ?= kubedl/kubedl:$(VERSION)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,maxDescLen=0"
 
