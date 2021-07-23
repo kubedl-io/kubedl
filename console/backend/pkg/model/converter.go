@@ -29,14 +29,14 @@ func ConvertDMOJobToJobInfo(dmoJob *dmo.Job) JobInfo {
 		jobInfo.DeployRegion = *dmoJob.DeployRegion
 	}
 
-	if !dmoJob.GmtJobSubmitted.IsZero() {
-		jobInfo.CreateTime = dmoJob.GmtJobSubmitted.Local().Format(JobInfoTimeFormat)
+	if !dmoJob.GmtCreated.IsZero() {
+		jobInfo.CreateTime = dmoJob.GmtCreated.Local().Format(JobInfoTimeFormat)
 	}
 	if !util.Time(dmoJob.GmtJobFinished).IsZero() {
 		jobInfo.EndTime = dmoJob.GmtJobFinished.Local().Format(JobInfoTimeFormat)
 	}
-	if !dmoJob.GmtJobSubmitted.IsZero() && !util.Time(dmoJob.GmtJobFinished).IsZero() {
-		jobInfo.DurationTime = GetTimeDiffer(dmoJob.GmtJobSubmitted, *dmoJob.GmtJobFinished)
+	if !dmoJob.GmtCreated.IsZero() && !util.Time(dmoJob.GmtJobFinished).IsZero() {
+		jobInfo.DurationTime = GetTimeDiffer(dmoJob.GmtCreated, *dmoJob.GmtJobFinished)
 	}
 	if dmoJob.Remark != nil {
 		for _, remark := range strings.Split(*dmoJob.Remark, ",") {

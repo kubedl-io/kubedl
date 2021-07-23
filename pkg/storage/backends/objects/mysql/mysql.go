@@ -207,7 +207,7 @@ func (b *mysqlBackend) ListJobs(query *backends.Query) ([]*dmo.Job, error) {
 	if query.Region != "" {
 		db = db.Where("deploy_region = ?", query.Region)
 	}
-	db = db.Order("gmt_job_submitted DESC")
+	db = db.Order("gmt_created DESC")
 	if query.Pagination != nil {
 		db = db.Count(&query.Pagination.Count).
 			Limit(query.Pagination.PageSize).
@@ -240,7 +240,6 @@ func (b *mysqlBackend) StopJob(ns, name, jobID, kind, region string) error {
 	if status := job.Status; status == apiv1.JobRunning || status == apiv1.JobCreated || status == apiv1.JobRestarting {
 		newJob.Status = utils.JobStopped
 		now := time.Now()
-		newJob.GmtJobStopped = util.TimePtr(now)
 		newJob.GmtJobFinished = util.TimePtr(now)
 	}
 	return b.updateJob(job, newJob)
@@ -375,22 +374,25 @@ func (b *mysqlBackend) updateJob(oldJob, newJob *dmo.Job) error {
 		return nil
 	}
 
+	if oldJob.GmtJobRunning != nil && !oldJob.GmtJobRunning.IsZero() && newJob.GmtJobRunning == nil {
+		newJob.GmtJobRunning = oldJob.GmtJobRunning
+	}
+
 	result := b.db.Model(&dmo.Job{}).Where(&dmo.Job{
 		Name:         oldJob.Name,
 		JobID:        oldJob.JobID,
 		Version:      oldJob.Version,
 		DeployRegion: oldJob.DeployRegion,
 	}).Updates(&dmo.Job{
-		Status:          newJob.Status,
-		Namespace:       newJob.Namespace,
-		DeployRegion:    newJob.DeployRegion,
-		Version:         newJob.Version,
-		Deleted:         newJob.Deleted,
-		IsInEtcd:        newJob.IsInEtcd,
-		GmtCreated:      newJob.GmtCreated,
-		GmtJobSubmitted: newJob.GmtJobSubmitted,
-		GmtJobStopped:   newJob.GmtJobStopped,
-		GmtJobFinished:  newJob.GmtJobFinished,
+		Status:         newJob.Status,
+		Namespace:      newJob.Namespace,
+		DeployRegion:   newJob.DeployRegion,
+		Version:        newJob.Version,
+		Deleted:        newJob.Deleted,
+		IsInEtcd:       newJob.IsInEtcd,
+		GmtCreated:     newJob.GmtCreated,
+		GmtJobRunning:  newJob.GmtJobRunning,
+		GmtJobFinished: newJob.GmtJobFinished,
 	})
 	if result.Error != nil {
 		return result.Error
