@@ -53,6 +53,9 @@ rules:
       - events
     verbs:
       - create
+      - patch
+      - get
+      - list
   - apiGroups:
       - ""
     resources:
