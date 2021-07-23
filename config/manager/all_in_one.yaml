@@ -412,7 +412,7 @@ spec:
         app: kubedl
     spec:
       containers:
-      - image: kubedl/kubedl:v0.3.0
+      - image: kubedl/kubedl:daily
         imagePullPolicy: IfNotPresent
         name: kubedl-manager
         ports:
