@@ -24,7 +24,7 @@ spec:
       name: Age
       type: date
     - jsonPath: .spec.ttlSecondsAfterFinished
-      name: Finished-TTL
+      name: TTL-AFTER-FINISHED
       type: integer
     - jsonPath: .spec.activeDeadlineSeconds
       name: Max-Lifetime
