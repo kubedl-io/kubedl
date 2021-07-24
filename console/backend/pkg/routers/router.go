@@ -29,7 +29,7 @@ var (
 	//eventStorage storage backend plugin name, persist events into backend
 	eventStorage string
 	//objectStorage storage backend plugin name, persist jobs and pods into backend
-	objectStorage = "default"
+	objectStorage = "proxy"
 )
 
 type APIController interface {

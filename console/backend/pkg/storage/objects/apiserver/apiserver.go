@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
 	"github.com/alibaba/kubedl/pkg/storage/dmo/converters"
 	"github.com/alibaba/kubedl/pkg/util/workloadgate"
@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewAPIServerBackendService() backends.ObjectStorageBackend {
+func NewAPIServerObjectBackend() backends.ObjectStorageBackend {
 	return &apiServerBackend{clientmgr.GetCtrlClient()}
 }
 

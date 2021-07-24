@@ -19,7 +19,7 @@ package apiserver
 import (
 	"bytes"
 	"context"
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"io"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sort"

@@ -2,16 +2,16 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/alibaba/kubedl/console/backend/pkg/storage"
 	"strings"
 	"time"
 
 	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
-	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
 )
 
 func NewLogHandler(eventStorage string) (*LogHandler, error) {
-	eventBackend := registry.GetEventBackend(eventStorage)
+	eventBackend := storage.GetEventBackend(eventStorage)
 	if eventBackend == nil {
 		return nil, fmt.Errorf("no event backend storage named: %s", eventStorage)
 	}

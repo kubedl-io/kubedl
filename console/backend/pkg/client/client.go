@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/alibaba/kubedl/apis"
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -51,7 +50,6 @@ func Init() {
 		StatusClient: c,
 	}
 
-	clientmgr.InstallClientManager(cmgr)
 }
 
 func Start() {
@@ -61,14 +59,14 @@ func Start() {
 	}()
 }
 
-func (c *clientManager) IndexField(obj runtime.Object, field string, extractValue client.IndexerFunc) error {
-	return c.ctrlCache.IndexField(context.Background(), obj, field, extractValue)
+func IndexField(obj runtime.Object, field string, extractValue client.IndexerFunc) error {
+	return cmgr.ctrlCache.IndexField(context.Background(), obj, field, extractValue)
 }
 
-func (c *clientManager) GetCtrlClient() client.Client {
-	return c.ctrlClient
+func GetCtrlClient() client.Client {
+	return cmgr.ctrlClient
 }
 
-func (c *clientManager) GetScheme() *runtime.Scheme {
-	return c.scheme
+func GetScheme() *runtime.Scheme {
+	return cmgr.scheme
 }

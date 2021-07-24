@@ -1,7 +1,7 @@
 package proxy
 
 import (
-	"github.com/alibaba/kubedl/console/backend/pkg/storage/apiserver"
+	"github.com/alibaba/kubedl/console/backend/pkg/storage/objects/apiserver"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
 	"github.com/alibaba/kubedl/pkg/storage/backends/objects/mysql"
@@ -10,9 +10,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func NewProxyBackendService() backends.ObjectStorageBackend {
+func NewProxyObjectBackend() backends.ObjectStorageBackend {
 	return proxyBackend{
-		apiServerBackend: apiserver.NewAPIServerBackendService(),
+		apiServerBackend: apiserver.NewAPIServerObjectBackend(),
 		mysqlBackend:     mysql.NewMysqlBackendService(),
 	}
 }
@@ -46,7 +46,7 @@ func (p proxyBackend) Close() error {
 }
 
 func (p proxyBackend) Name() string {
-	return "default"
+	return "proxy"
 }
 
 func (p proxyBackend) SavePod(pod *corev1.Pod, defaultContainerName, region string) error {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kubedl/console/backend/pkg/constants"
 
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	v1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
