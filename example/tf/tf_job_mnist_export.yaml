@@ -1,7 +1,8 @@
+# tf_job_mnist_model.yaml will be converted in KubeDL to add the volumes like below:
 apiVersion: "training.kubedl.io/v1alpha1"
 kind: "TFJob"
 metadata:
-  name: "distributed-bbb"
+  name: "tf-distributed"
 spec:
   cleanPodPolicy: None
   tfReplicaSpecs:
