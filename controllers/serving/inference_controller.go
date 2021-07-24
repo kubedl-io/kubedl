@@ -85,7 +85,7 @@ func (ir *InferenceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-// +kubebuilder:rbac:groups="",resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="apps",resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=serving.kubedl.io,resources=inferences,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=serving.kubedl.io,resources=inferences/status,verbs=get;update;patch
 

@@ -85,7 +85,10 @@ func (cc *CronController) SetupWithManager(mgr ctrl.Manager) error {
 	// Discover installed workload and watch for Cron controlled objects.
 	for _, workload := range workloads {
 		if _, enabled := workloadgate.IsWorkloadEnable(workload, cc.scheme); enabled {
-			if err = c.Watch(&source.Kind{Type: workload}, &handler.EnqueueRequestForOwner{}, predicate.Funcs{
+			if err = c.Watch(&source.Kind{Type: workload}, &handler.EnqueueRequestForOwner{
+				OwnerType:    &v1alpha1.Cron{},
+				IsController: true,
+			}, predicate.Funcs{
 				CreateFunc: onCronWorkloadCreate,
 				DeleteFunc: onCronWorkloadDelete,
 				UpdateFunc: onCronWorkloadUpdate,
@@ -100,6 +103,7 @@ func (cc *CronController) SetupWithManager(mgr ctrl.Manager) error {
 // Reconcile reconciles a cron object.
 // +kubebuilder:rbac:groups=apps.kubedl.io,resources=crons,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps.kubedl.io,resources=crons/status,verbs=get;update;patch
+
 func (cc *CronController) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	klog.V(3).Infof("start to reconcile cron: %v", req.String())
 

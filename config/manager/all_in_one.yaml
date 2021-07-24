@@ -38,21 +38,12 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - deployments
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
       - events
     verbs:
       - create
+      - get
+      - list
+      - patch
   - apiGroups:
       - ""
     resources:
@@ -113,6 +104,38 @@ rules:
       - ""
     resources:
       - services/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apps.kubedl.io
+    resources:
+      - crons
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apps.kubedl.io
+    resources:
+      - crons/status
     verbs:
       - get
       - patch
@@ -409,7 +432,7 @@ spec:
         app: kubedl
     spec:
       containers:
-      - image: kubedl/kubedl:v0.3.0
+      - image: kubedl/kubedl:daily
         imagePullPolicy: IfNotPresent
         name: kubedl-manager
         ports:

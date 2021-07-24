@@ -154,7 +154,7 @@ Check the mars job status:
 
 ```bash
 $ kubectl get marsjob
-NAME             STATE     AGE   FINISHED-TTL   MAX-LIFETIME
+NAME             STATE     AGE   TTL-AFTER-FINISHED   MAX-LIFETIME
 mars-test-demo   Running   40m
 $ kubectl get pods
 NAME                                            READY   STATUS             RESTARTS   AGE
