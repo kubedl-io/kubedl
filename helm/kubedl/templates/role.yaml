@@ -44,9 +44,10 @@ rules:
   - events
   verbs:
   - create
-  - patch
   - get
   - list
+  - patch
+  - update
 - apiGroups:
   - ""
   resources:
@@ -107,6 +108,26 @@ rules:
   - ""
   resources:
   - services/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons/status
   verbs:
   - get
   - patch

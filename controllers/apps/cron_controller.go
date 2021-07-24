@@ -103,6 +103,7 @@ func (cc *CronController) SetupWithManager(mgr ctrl.Manager) error {
 // Reconcile reconciles a cron object.
 // +kubebuilder:rbac:groups=apps.kubedl.io,resources=crons,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps.kubedl.io,resources=crons/status,verbs=get;update;patch
+
 func (cc *CronController) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	klog.V(3).Infof("start to reconcile cron: %v", req.String())
 
