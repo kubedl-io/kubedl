@@ -60,18 +60,18 @@ spec:
                       volumeHandle:
                         type: string
                     type: object
-                  nfs:
-                    properties:
-                      path:
-                        type: string
-                      server:
-                        type: string
-                    type: object
                   localStorage:
                     properties:
                       nodeName:
                         type: string
                       path:
+                        type: string
+                    type: object
+                  nfs:
+                    properties:
+                      path:
+                        type: string
+                      server:
                         type: string
                     type: object
                 type: object

@@ -6,4 +6,4 @@ metadata:
 data:
   dockerfile: |
     FROM busybox
-    COPY build/ /model
+    COPY build/ /kubedl-model

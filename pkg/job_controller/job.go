@@ -3,10 +3,11 @@ package job_controller
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kubedl/pkg/features"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/alibaba/kubedl/pkg/features"
 
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/alibaba/kubedl/controllers/model/storage"
@@ -373,6 +374,7 @@ func (jc *JobController) createModelVersion(job metav1.Object,
 	}
 
 	jobStatus.ModelVersionName = mv.Name
+	log.Infof("created model version %s", mv.Name)
 	return nil
 }
 

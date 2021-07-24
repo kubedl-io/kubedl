@@ -1,6 +1,9 @@
+
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  creationTimestamp: null
   name: {{ include "kubedl.fullname" . }}-role
 rules:
 - apiGroups:
@@ -29,6 +32,33 @@ rules:
   - events
   verbs:
   - create
+  - get
+  - list
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -70,6 +100,78 @@ rules:
   - patch
   - update
 - apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - models
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - models/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - modelversions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - modelversions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - networking.k8s.io
   resources:
   - ingresses
@@ -81,6 +183,26 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - serving.kubedl.io
+  resources:
+  - inferences
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - serving.kubedl.io
+  resources:
+  - inferences/status
+  verbs:
+  - get
+  - patch
+  - update
 - apiGroups:
   - training.kubedl.io
   resources:
@@ -221,16 +343,3 @@ rules:
   - get
   - patch
   - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: {{ include "kubedl.fullname" . }}-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ include "kubedl.fullname" . }}-role
-subjects:
-  - kind: ServiceAccount
-    name: {{ include "kubedl.serviceAccountName" . }}
-    namespace: {{ .Release.Namespace }}

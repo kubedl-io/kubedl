@@ -37,7 +37,7 @@ Check the XDLJob is started, and all pods are Running.
 ```bash
 kubectl get xdljob
 
-NAME                STATE     AGE   FINISHED-TTL   MAX-LIFETIME
+NAME                STATE     AGE   TTL-AFTER-FINISHED   MAX-LIFETIME
 xdl-mnist-example   Running   70s   3600
 
 kubectl get po

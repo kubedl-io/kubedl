@@ -6,30 +6,17 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: marsjobs.training.kubedl.io
+  name: inferences.serving.kubedl.io
 spec:
-  group: training.kubedl.io
+  group: serving.kubedl.io
   names:
-    kind: MarsJob
-    listKind: MarsJobList
-    plural: marsjobs
-    singular: marsjob
+    kind: Inference
+    listKind: InferenceList
+    plural: inferences
+    singular: inference
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .status.conditions[-1:].type
-      name: State
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    - jsonPath: .spec.ttlSecondsAfterFinished
-      name: TTL-AFTER-FINISHED
-      type: integer
-    - jsonPath: .spec.activeDeadlineSeconds
-      name: Max-Lifetime
-      type: integer
-    name: v1alpha1
+  - name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
@@ -41,22 +28,59 @@ spec:
             type: object
           spec:
             properties:
-              activeDeadlineSeconds:
-                format: int64
-                type: integer
-              backoffLimit:
-                format: int32
-                type: integer
-              cleanPodPolicy:
+              framework:
                 type: string
-              marsReplicaSpecs:
-                additionalProperties:
+              predictors:
+                items:
                   properties:
+                    autoScale:
+                      properties:
+                        autoScaler:
+                          properties:
+                            apiVersion:
+                              type: string
+                            fieldPath:
+                              type: string
+                            kind:
+                              type: string
+                            name:
+                              type: string
+                            namespace:
+                              type: string
+                            resourceVersion:
+                              type: string
+                            uid:
+                              type: string
+                          type: object
+                        maxReplicas:
+                          format: int32
+                          type: integer
+                        minReplicas:
+                          format: int32
+                          type: integer
+                      required:
+                      - autoScaler
+                      type: object
+                    batching:
+                      properties:
+                        batchSize:
+                          format: int32
+                          type: integer
+                        timeoutSeconds:
+                          format: int32
+                          type: integer
+                      required:
+                      - batchSize
+                      type: object
+                    modelPath:
+                      type: string
+                    modelVersion:
+                      type: string
+                    name:
+                      type: string
                     replicas:
                       format: int32
                       type: integer
-                    restartPolicy:
-                      type: string
                     template:
                       properties:
                         metadata:
@@ -2860,107 +2884,51 @@ spec:
                           - containers
                           type: object
                       type: object
+                    trafficPercent:
+                      format: int32
+                      type: integer
+                  required:
+                  - modelPath
+                  - modelVersion
+                  - name
+                  - template
                   type: object
-                type: object
-              schedulingPolicy:
-                properties:
-                  minAvailable:
-                    format: int32
-                    type: integer
-                type: object
-              ttlSecondsAfterFinished:
-                format: int32
-                type: integer
-              webHost:
-                type: string
-              workerMemoryTuningPolicy:
-                properties:
-                  lockFreeFileIO:
-                    type: boolean
-                  plasmaStore:
-                    type: string
-                  spillDirs:
-                    items:
-                      type: string
-                    type: array
-                  workerCachePercentage:
-                    format: int32
-                    type: integer
-                  workerCacheSize:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                type: object
+                type: array
             required:
-            - marsReplicaSpecs
+            - framework
+            - predictors
             type: object
           status:
             properties:
-              completionTime:
-                format: date-time
+              inferenceEndpoint:
                 type: string
-              conditions:
+              predictorStatuses:
                 items:
                   properties:
-                    lastTransitionTime:
-                      format: date-time
+                    endpoint:
                       type: string
-                    lastUpdateTime:
-                      format: date-time
+                    name:
                       type: string
-                    message:
-                      type: string
-                    reason:
-                      type: string
-                    status:
-                      type: string
-                    type:
-                      type: string
+                    readyReplicas:
+                      format: int32
+                      type: integer
+                    replicas:
+                      format: int32
+                      type: integer
+                    trafficPercent:
+                      format: int32
+                      type: integer
                   required:
-                  - status
-                  - type
+                  - endpoint
+                  - name
+                  - readyReplicas
+                  - replicas
                   type: object
                 type: array
-              lastReconcileTime:
-                format: date-time
-                type: string
-              modelVersionName:
-                type: string
-              replicaStatuses:
-                additionalProperties:
-                  properties:
-                    active:
-                      format: int32
-                      type: integer
-                    evicted:
-                      format: int32
-                      type: integer
-                    failed:
-                      format: int32
-                      type: integer
-                    succeeded:
-                      format: int32
-                      type: integer
-                  type: object
-                type: object
-              startTime:
-                format: date-time
-                type: string
-              webServiceAddresses:
-                items:
-                  type: string
-                type: array
-            required:
-            - conditions
-            - replicaStatuses
             type: object
         type: object
     served: true
     storage: true
-    subresources:
-      status: {}
 status:
   acceptedNames:
     kind: ""
