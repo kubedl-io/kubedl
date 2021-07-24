@@ -38,25 +38,12 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - deployments
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
       - events
     verbs:
       - create
       - get
       - list
       - patch
-      - update
   - apiGroups:
       - ""
     resources:
@@ -121,6 +108,18 @@ rules:
       - get
       - patch
       - update
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
   - apiGroups:
       - apps.kubedl.io
     resources:
