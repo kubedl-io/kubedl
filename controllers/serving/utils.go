@@ -18,10 +18,14 @@ package serving
 
 import (
 	"fmt"
+
 	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
 )
 
 func genPredictorName(inf *v1alpha1.Inference, predictor *v1alpha1.PredictorSpec) string {
+	if predictor.ModelVersion == "" {
+		return fmt.Sprintf("%s-%s", inf.Name, predictor.Name)
+	}
 	return fmt.Sprintf("%s-%s-%s", inf.Name, predictor.Name, predictor.ModelVersion)
 }
 

@@ -145,15 +145,21 @@ func (ir *InferenceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 func (ir *InferenceReconciler) syncPredictor(inf *servingv1alpha1.Inference, index int, predictor *servingv1alpha1.PredictorSpec) (ctrl.Result, error) {
 	klog.Infof("start to sync [%d] predictor, name: %s, model version: %s", index, predictor.Name, predictor.ModelVersion)
 
-	modelVersion := v1alpha1.ModelVersion{}
-	err := ir.client.Get(context.Background(), types.NamespacedName{Namespace: inf.Namespace, Name: predictor.ModelVersion}, &modelVersion)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	var (
+		modelVersion = v1alpha1.ModelVersion{}
+		err          error
+	)
 
-	if modelVersion.Status.ImageBuildPhase != v1alpha1.ImageBuildSucceeded {
-		klog.Infof("predictor model version has not been successfully built yet, current build phase %s", modelVersion.Status.ImageBuildPhase)
-		return ctrl.Result{Requeue: true}, nil
+	if predictor.ModelVersion != "" {
+		err := ir.client.Get(context.Background(), types.NamespacedName{Namespace: inf.Namespace, Name: predictor.ModelVersion}, &modelVersion)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		if modelVersion.Status.ImageBuildPhase != v1alpha1.ImageBuildSucceeded {
+			klog.Infof("predictor model version has not been successfully built yet, current build phase %s", modelVersion.Status.ImageBuildPhase)
+			return ctrl.Result{Requeue: true}, nil
+		}
 	}
 
 	deploy := &v1.Deployment{}
@@ -171,7 +177,7 @@ func (ir *InferenceReconciler) syncPredictor(inf *servingv1alpha1.Inference, ind
 	}
 
 	endpoint := svcHostForPredictor(inf, predictor)
-	if len(inf.Status.PredictorStatuses) < index {
+	if psLen := len(inf.Status.PredictorStatuses); psLen == 0 || psLen < index {
 		inf.Status.PredictorStatuses = append(inf.Status.PredictorStatuses, servingv1alpha1.PredictorStatus{
 			Name:          predictor.Name,
 			Replicas:      deploy.Status.Replicas,
@@ -184,6 +190,11 @@ func (ir *InferenceReconciler) syncPredictor(inf *servingv1alpha1.Inference, ind
 		ps.Replicas = deploy.Status.Replicas
 		ps.ReadyReplicas = deploy.Status.ReadyReplicas
 		ps.Endpoint = endpoint
+	}
+
+	// Trim extra predictors status who have been removed from spec.
+	if len(inf.Status.PredictorStatuses) > index+1 {
+		inf.Status.PredictorStatuses = inf.Status.PredictorStatuses[:index+1]
 	}
 	return ctrl.Result{}, nil
 }
@@ -305,8 +316,14 @@ func (ir *InferenceReconciler) syncServiceForInference(inf *servingv1alpha1.Infe
 		return ir.client.Create(context.Background(), &svc)
 	}
 
-	if !reflect.DeepEqual(svc.Spec, svcInCluster.Spec) {
-		svcInCluster.Spec = *svc.Spec.DeepCopy()
+	if !reflect.DeepEqual(svc.Spec, corev1.ServiceSpec{
+		Selector: svcInCluster.Spec.Selector,
+		Type:     svcInCluster.Spec.Type,
+		Ports:    svcInCluster.Spec.Ports,
+	}) {
+		svcInCluster.Spec.Selector = svc.Spec.Selector
+		svcInCluster.Spec.Type = svc.Spec.Type
+		svcInCluster.Spec.Ports = svc.Spec.Ports
 		return ir.client.Update(context.Background(), &svcInCluster)
 	}
 
@@ -321,8 +338,8 @@ func computePredictorTrafficRatios(inf *servingv1alpha1.Inference) map[string]in
 	for pi := range inf.Spec.Predictors {
 		predictor := &inf.Spec.Predictors[pi]
 		percentage := defaultTrafficPercentage
-		if inf.Spec.Predictors[pi].TrafficPercent != nil {
-			percentage = *predictor.TrafficPercent
+		if inf.Spec.Predictors[pi].TrafficWeight != nil {
+			percentage = *predictor.TrafficWeight
 		}
 		total += percentage
 		ratios[predictor.Name] = percentage

@@ -17,8 +17,9 @@ limitations under the License.
 package framework
 
 import (
-	alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
+	modelv1alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -37,13 +38,15 @@ var _ Setter = &tfServingSetter{}
 
 type tfServingSetter struct{}
 
-func (t *tfServingSetter) SetSpec(template *corev1.PodTemplateSpec, modelVersion *alpha1.ModelVersion, modelPath string) {
+func (t *tfServingSetter) SetSpec(template *corev1.PodTemplateSpec, modelVersion *modelv1alpha1.ModelVersion, modelPath string) {
 	for ci := range template.Spec.Containers {
 		c := &template.Spec.Containers[ci]
 		c.Env = append(c.Env,
-			corev1.EnvVar{Name: EnvTensorflowServingModelName, Value: modelVersion.Spec.ModelName},
 			corev1.EnvVar{Name: EnvTensorflowServingModelBasePath, Value: v1alpha1.DefaultModelMountPath},
-			corev1.EnvVar{Name: alpha1.KubeDLModelPath, Value: modelPath},
+			corev1.EnvVar{Name: modelv1alpha1.KubeDLModelPath, Value: modelPath},
 		)
+		if modelVersion != nil && modelVersion.Name != "" {
+			c.Env = append(c.Env, corev1.EnvVar{Name: EnvTensorflowServingModelName, Value: modelVersion.Spec.ModelName})
+		}
 	}
 }

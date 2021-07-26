@@ -186,8 +186,8 @@ func (in *PredictorSpec) DeepCopyInto(out *PredictorSpec) {
 		*out = new(int32)
 		**out = **in
 	}
-	if in.TrafficPercent != nil {
-		in, out := &in.TrafficPercent, &out.TrafficPercent
+	if in.TrafficWeight != nil {
+		in, out := &in.TrafficWeight, &out.TrafficWeight
 		*out = new(int32)
 		**out = **in
 	}
