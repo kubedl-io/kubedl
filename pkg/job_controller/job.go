@@ -296,6 +296,12 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 
 	// No need to update the job status if the status hasn't changed since last time.
 	if !reflect.DeepEqual(*oldStatus, jobStatus) {
+		err = jc.Controller.UpdateJobStatusInApiServer(job, &jobStatus)
+		if errors.IsConflict(err) {
+			// retry later when update operation violates with etcd concurrency control.
+			result.Requeue = true
+			return result, nil
+		}
 		return result, jc.Controller.UpdateJobStatusInApiServer(job, &jobStatus)
 	}
 	return result, nil

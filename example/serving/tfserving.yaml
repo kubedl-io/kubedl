@@ -6,7 +6,7 @@ spec:
   framework: TFServing
   predictors:
     - name: model-predictor
-      #modelVersion: model
+      modelVersion: mymodel
       replicas: 2
       batching:
         batchSize: 32

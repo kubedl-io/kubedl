@@ -132,6 +132,10 @@ func (ir *InferenceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// 4) Compare status before-and-after reconciling and update changes to cluster.
 	if !reflect.DeepEqual(oldStatus, &inference.Status) {
 		if err = ir.client.Status().Update(context.Background(), &inference); err != nil {
+			if errors.IsConflict(err) {
+				// retry later when update operation violates with etcd concurrency control.
+				return ctrl.Result{Requeue: true}, nil
+			}
 			return ctrl.Result{}, err
 		}
 	}
