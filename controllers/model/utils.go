@@ -16,24 +16,27 @@ limitations under the License.
 
 package controllers
 
-func GetJobModelVersionName(postfix string) string {
-	return "model-version-" + postfix
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+// take the preceding 5 chars for versionId
+func GetJobModelVersionName(job metav1.Object) string {
+	return "mv-" + job.GetName() + "-" + string(job.GetUID())[:5]
 }
 
 func GetModelVersionPVName(modelName string) string {
-	return "model-version-pv-" + modelName
+	return "mv-pv-" + modelName
 }
 
 func GetModelVersionPVClaimName(modelName string) string {
-	return "model-version-pvc-" + modelName
+	return "mv-pvc-" + modelName
 }
 
 func GetModelVersionPVNameByNode(modelName string, nodeName string) string {
-	return "model-version-pv-" + modelName + "-" + nodeName
+	return "mv-pv-" + modelName + "-" + nodeName
 }
 
 func GetModelVersionPVClaimNameByNode(modelName string, nodeName string) string {
-	return "model-version-pvc-" + modelName + "-" + nodeName
+	return "mv-pvc-" + modelName + "-" + nodeName
 }
 
 func GetBuildImagePodName(modelName string, versionId string) string {
