@@ -49,27 +49,26 @@ jobs:
           flags: unittests
           file: cover.out
       - name: Check diff
-        run: '[[ -z $(git status -s) ]] || (git status -s; printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
+        run: '[[ -z $(git status -s) ]] || (git diff; printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
 
-  # enable golint checks later.
-#  golangci-lint:
-#    runs-on: ubuntu-18.04
-#    steps:
-#        uses: actions/checkout@v2
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: ${{ env.GO_VERSION }}
-#      - name: Cache Go Dependencies
-#        uses: actions/cache@v2
-#        with:
-#          path: ~/go/pkg/mod
-#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-#          restore-keys: ${{ runner.os }}-go-
-#      - name: Code generate
-#        run: |
-#          make generate
-#      - name: Lint golang code
-#        uses: golangci/golangci-lint-action@v2
-#        with:
-#          version: ${{ env.GOLANGCI_VERSION }}
-#          args: --skip-dirs=apis --disable-all  -E deadcode -E gofmt -E goimports -E golint -E ineffassign -E misspell -E vet --timeout=5m
+  golangci-lint:
+    runs-on: ubuntu-18.04
+    steps:
+        uses: actions/checkout@v2
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Cache Go Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
+      - name: Code generate
+        run: |
+          make generate
+      - name: Lint golang code
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: ${{ env.GOLANGCI_VERSION }}
+          args: --skip-dirs=apis --disable-all  -E deadcode -E gofmt -E goimports -E golint -E ineffassign -E misspell -E vet --timeout=5m
