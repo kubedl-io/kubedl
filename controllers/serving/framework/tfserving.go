@@ -17,6 +17,8 @@ limitations under the License.
 package framework
 
 import (
+	"path/filepath"
+
 	modelv1alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
 
@@ -42,7 +44,7 @@ func (t *tfServingSetter) SetSpec(template *corev1.PodTemplateSpec, modelVersion
 	for ci := range template.Spec.Containers {
 		c := &template.Spec.Containers[ci]
 		c.Env = append(c.Env,
-			corev1.EnvVar{Name: EnvTensorflowServingModelBasePath, Value: v1alpha1.DefaultModelMountPath},
+			corev1.EnvVar{Name: EnvTensorflowServingModelBasePath, Value: filepath.Dir(modelPath) /* parent dir as base path */},
 			corev1.EnvVar{Name: modelv1alpha1.KubeDLModelPath, Value: modelPath},
 		)
 		if modelVersion != nil && modelVersion.Name != "" {
