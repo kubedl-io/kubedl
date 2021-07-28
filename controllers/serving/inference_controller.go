@@ -147,7 +147,7 @@ func (ir *InferenceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 // with canary policy.
 // TODO: support autoscaling and batching for inference backends.
 func (ir *InferenceReconciler) syncPredictor(inf *servingv1alpha1.Inference, index int, predictor *servingv1alpha1.PredictorSpec) (ctrl.Result, error) {
-	klog.Infof("start to sync [%d] predictor, name: %s, model version: %s", index, predictor.Name, predictor.ModelVersion)
+	klog.Infof("start to sync predictor-[%d], name: %s, model version: %s", index, predictor.Name, predictor.ModelVersion)
 
 	var (
 		modelVersion = v1alpha1.ModelVersion{}
