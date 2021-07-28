@@ -367,10 +367,8 @@ const ClusterInfo = ({ globalConfig }) => {
         <div>
             <Card style={{ marginBottom: 12 }} title={
                 <div>
-                    {intl.formatMessage({id: 'kubedl-dashboard-cluster-overview'})}
-                    <Button type="primary" style={{float: 'right'}} onClick={fetchNodeInfos}>
-                        {intl.formatMessage({id: 'kubedl-dashboard-refresh'})}
-                    </Button>
+                    <h4>{intl.formatMessage({id: 'kubedl-dashboard-cluster-overview'})} ({intl.formatMessage({id: 'kubedl-dashboard-free'})} / {intl.formatMessage({id: 'kubedl-dashboard-total'})})</h4>
+
                     {/*<Button type="primary" style={{float: 'right'}}>*/}
                     {/*    {intl.formatMessage({id: 'kubedl-dashboard-check-cluster'})}*/}
                     {/*</Button>*/}
@@ -378,7 +376,6 @@ const ClusterInfo = ({ globalConfig }) => {
             }>
                 <div>
                     <div>
-                        <h4>{intl.formatMessage({id: 'kubedl-dashboard-cluster-overview'})} ({intl.formatMessage({id: 'kubedl-dashboard-free'})} / {intl.formatMessage({id: 'kubedl-dashboard-total'})})：</h4>
                         <Row gutter={[24, 24]}>
                             <Col span={7}>
                                 <Avatar
@@ -403,8 +400,108 @@ const ClusterInfo = ({ globalConfig }) => {
                             </Col>
                         </Row>
                     </div>
+                </div>
+            </Card>
+
+            <Card style={{ marginBottom: 12 }} title={
+                <div>
+                    {intl.formatMessage({id: 'kubedl-dashboard-job-overview'})}
+                    {
+                        environment &&
+                        <Button type="primary" style={{float: 'right'}} onClick={goJobCreate}>
+                            {intl.formatMessage({id: 'kubedl-dashboard-submit-job'})}
+                        </Button>
+                    }
+                </div>
+            }>
+                <Row gutter={[24, 24]}>
+                    <Col span={environment ? 12: 24}>
+                        <Card title={
+                            <div>
+                                <Radio.Group
+                                    options={StatisticsOptions}
+                                    onChange={dateStatisticalChange}
+                                    value={dateStatistical}
+                                    optionType="button"
+                                    buttonStyle="solid"
+                                />
+                                <div style={{float:'right'}}>
+                                    <div className={styles.taskInfoAvatarDiv}>
+                                        <Avatar
+                                            className={styles.taskInfoAvatar}
+                                            size="small"
+                                            icon={<ProfileOutlined />} />
+                                    </div>
+                                    <div className={styles.taskInfoTitle}>
+                                        <span className={styles.taskInfoMessage}>{intl.formatMessage({id: 'kubedl-dashboard-job-total'})}</span>
+                                        <span className={styles.taskInfoTotal}>{taskTotal}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }>
+                            {/*<Col span={9} offset={1}>*/}
+                            {/*    <div className={styles.taskInfoAvatarDiv} style={{marginLeft: '30px'}}>*/}
+                            {/*        <Avatar*/}
+                            {/*            className={styles.taskInfoAvatar}*/}
+                            {/*            size="large"*/}
+                            {/*            icon={<FundTwoTone />} />*/}
+                            {/*    </div>*/}
+                            {/*    <div className={styles.taskInfoTitle}>*/}
+                            {/*        <span>{intl.formatMessage({id: 'kubedl-dashboard-new-number'})}</span>*/}
+                            {/*        <div>145</div>*/}
+                            {/*    </div>*/}
+                            {/*</Col>*/}
+                            <ProTable
+                                loading={statisticsLoading}
+                                dataSource={statisticalInfos}
+                                headerTitle=""
+                                rowKey="task"
+                                columns={infoColumns}
+                                onChange={onStatisticsTableChange}
+                                pagination={{total: total}}
+                                toolBarRender={false}
+                                search={false}
+                            />
+                        </Card>
+                    </Col>
+                    {
+                        environment &&
+                        <Col span={12}>
+                            <Card title={
+                                <div>
+                                    {intl.formatMessage({id: 'kubedl-dashboard-running-jobs'})}
+                                    <Button type="primary" style={{float: 'right'}} onClick={fetchTopResourcesStatistics}>
+                                        {intl.formatMessage({id: 'kubedl-dashboard-refresh'})}
+                                    </Button>
+                                </div>
+                            }>
+                                <ProTable
+                                    loading={topResourcesLoading}
+                                    dataSource={topResourcesInfos}
+                                    headerTitle=""
+                                    rowKey="resources"
+                                    columns={topInfoColumns}
+                                    onChange={onResourcesTableChange}
+                                    pagination={{total: total}}
+                                    toolBarRender={false}
+                                    search={false}
+                                />
+                            </Card>
+                        </Col>
+                    }
+                </Row>
+            </Card>
+
+            <Card style={{ marginBottom: 12 }} title={
+                <div>
+                    {intl.formatMessage({id: 'kubedl-dashboard-node-information'})}
+                    <Button type="primary" style={{float: 'right'}} onClick={fetchNodeInfos}>
+                        {intl.formatMessage({id: 'kubedl-dashboard-refresh'})}
+                    </Button>
+                </div>
+            }>
+                <div>
                     <div>
-                        <h4>{intl.formatMessage({id: 'kubedl-dashboard-node-information'})}：</h4>
                         <Row gutter={[24, 24]}>
                             <Col span={24}>
                                 <ProTable
@@ -423,94 +520,7 @@ const ClusterInfo = ({ globalConfig }) => {
                     </div>
                 </div>
             </Card>
-          <Card title={
-                <div>
-                    {intl.formatMessage({id: 'kubedl-dashboard-job-overview'})}
-                    {
-                        environment &&
-                        <Button type="primary" style={{float: 'right'}} onClick={goJobCreate}>
-                           {intl.formatMessage({id: 'kubedl-dashboard-submit-job'})}
-                       </Button>
-                    }
-                </div>
-            }>
-                <Row gutter={[24, 24]}>
-                    <Col span={environment ? 12: 24}>
-                        <Card title={
-                            <div>
-                                <Radio.Group
-                                    options={StatisticsOptions}
-                                    onChange={dateStatisticalChange}
-                                    value={dateStatistical}
-                                    optionType="button"
-                                    buttonStyle="solid"
-                                    />
-                                <div style={{float:'right'}}>
-                                    <div className={styles.taskInfoAvatarDiv}>
-                                        <Avatar
-                                            className={styles.taskInfoAvatar}
-                                            size="small"
-                                            icon={<ProfileOutlined />} />
-                                    </div>
-                                    <div className={styles.taskInfoTitle}>
-                                        <span className={styles.taskInfoMessage}>{intl.formatMessage({id: 'kubedl-dashboard-job-total'})}</span>
-                                        <span className={styles.taskInfoTotal}>{taskTotal}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        }>
-                                {/*<Col span={9} offset={1}>*/}
-                                {/*    <div className={styles.taskInfoAvatarDiv} style={{marginLeft: '30px'}}>*/}
-                                {/*        <Avatar*/}
-                                {/*            className={styles.taskInfoAvatar}*/}
-                                {/*            size="large"*/}
-                                {/*            icon={<FundTwoTone />} />*/}
-                                {/*    </div>*/}
-                                {/*    <div className={styles.taskInfoTitle}>*/}
-                                {/*        <span>{intl.formatMessage({id: 'kubedl-dashboard-new-number'})}</span>*/}
-                                {/*        <div>145</div>*/}
-                                {/*    </div>*/}
-                                {/*</Col>*/}
-                            <ProTable
-                                loading={statisticsLoading}
-                                dataSource={statisticalInfos}
-                                headerTitle=""
-                                rowKey="task"
-                                columns={infoColumns}
-                                onChange={onStatisticsTableChange}
-                                pagination={{total: total}}
-                                toolBarRender={false}
-                                search={false}
-                            />
-                        </Card>
-                    </Col>
-                    {
-                      environment &&
-                    <Col span={12}>
-                        <Card title={
-                            <div>
-                                {intl.formatMessage({id: 'kubedl-dashboard-running-jobs'})}
-                                <Button type="primary" style={{float: 'right'}} onClick={fetchTopResourcesStatistics}>
-                                    {intl.formatMessage({id: 'kubedl-dashboard-refresh'})}
-                                </Button>
-                            </div>
-                        }>
-                            <ProTable
-                                loading={topResourcesLoading}
-                                dataSource={topResourcesInfos}
-                                headerTitle=""
-                                rowKey="resources"
-                                columns={topInfoColumns}
-                                onChange={onResourcesTableChange}
-                                pagination={{total: total}}
-                                toolBarRender={false}
-                                search={false}
-                            />
-                        </Card>
-                    </Col>
-                    }
-                </Row>
-            </Card>
+
         </div>
     );
 };

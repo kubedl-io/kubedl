@@ -1,6 +1,6 @@
 export default {
   'menu.jobs': 'Job List',
-  'menu.datasheets': 'Data Config',
+  'menu.datasheets': 'Data Source',
   'menu.cluster': 'Overview',
   'menu.job-submit': 'Submit Job',
   'menu.welcome': 'Welcome',

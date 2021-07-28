@@ -11,22 +11,23 @@ KubeDL console consists a frontend and a backend server.
 
 ### Build Backend Server
 ```bash
-# kubedl/console/
-go build -o backend-server ./backend/cmd/backend-server/main.go
+$ cd console/
+$ go build -o backend-server ./backend/cmd/backend-server/main.go
 ```
 
 ### Run Backend Server Locally
 
 1. Create `kubedl-system` namespace in your k8s if not existing, this is required to create system-level ConfigMaps.
 2. Make sure the backend-server uses a KUBECONFIG that has permission to create ConfigMap.
-2. Run backend server with no authentication (default mode) 
+2. Run backend server with no authentication (default mode).
     ```bash
     export KUBECONFIG=<path/to/your/kubeconfig> && ./backend-server
     ```
 
 #### Optional Settings
 1. Default Training Container Images
-You can set the default container images for running the training jobs using ConfigMap as below: 
+
+    You can set the default container images for running the training jobs using ConfigMap as below: 
     ``` yaml
     apiVersion: v1
      kind: ConfigMap
@@ -49,8 +50,10 @@ You can set the default container images for running the training jobs using Con
     ```
 
 2. Authentication
+
     By default, the backend-server has no authentication.
-    Optionally, you can set the default `username` and `password` in ConfigMap and use that to login.
+    Optionally, you can enable authentication using ConfigMap. That is, use `username` and `password` defined in ConfigMap and to login.
+    
     The backend-server needs to start as `./backend-server --authentication-mode=config`. 
     For example, create a ConfigMap like below:
     
