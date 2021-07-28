@@ -49,7 +49,7 @@ jobs:
           flags: unittests
           file: cover.out
       - name: Check diff
-        run: '[[ -z $(git status -s) ]] || (printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
+        run: '[[ -z $(git status -s) ]] || (git status -s; printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
 
   # enable golint checks later.
 #  golangci-lint:
