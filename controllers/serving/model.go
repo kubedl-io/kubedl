@@ -17,6 +17,8 @@ limitations under the License.
 package serving
 
 import (
+	"fmt"
+
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
@@ -26,6 +28,6 @@ func (ir *InferenceReconciler) buildModelLoaderInitContainer(mv *v1alpha1.ModelV
 	c.Image = mv.Status.Image
 	c.VolumeMounts = append(c.VolumeMounts, v1.VolumeMount{Name: sharedVolumeName, MountPath: destModelPath})
 	// Model loader is an init container to move model artifacts from source path to destination.
-	c.Command = []string{"/bin/sh", "-c", "mv", v1alpha1.DefaultModelPathInImage + "/*", destModelPath}
+	c.Command = []string{"/bin/sh", "-c", fmt.Sprintf("cp -r %s %s", v1alpha1.DefaultModelPathInImage+"/*", destModelPath)}
 	return c, nil
 }

@@ -195,10 +195,10 @@ func TestJobCreateModel(t *testing.T) {
 	modelVersion := &v1alpha1.ModelVersion{}
 	_ = tfJobReconciler.Get(context.TODO(), types.NamespacedName{
 		Namespace: "default",
-		Name:      controllers.GetJobModelVersionName(tfjob.GetName()),
+		Name:      controllers.GetJobModelVersionName(tfjob),
 	}, modelVersion)
 	// the modelVersion is created
-	assert.Equal(t, controllers.GetJobModelVersionName(tfjob.GetName()), modelVersion.Name)
+	assert.Equal(t, controllers.GetJobModelVersionName(tfjob), modelVersion.Name)
 }
 
 func markPodStatus(podName string, status corev1.PodPhase, tfJobReconciler *TFJobReconcilerTest) {

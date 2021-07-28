@@ -335,19 +335,16 @@ func addModelPathEnv(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, modelVer
 func (jc *JobController) createModelVersion(job metav1.Object,
 	modelVersion *v1alpha1.ModelVersionSpec, pods []*v1.Pod, jobStatus *apiv1.JobStatus) error {
 	mv := &v1alpha1.ModelVersion{}
+	// model version name, take the preceding 5 chars for versionId
+	mvName := model.GetJobModelVersionName(job)
 	err := jc.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: job.GetNamespace(),
-		Name:      model.GetJobModelVersionName(job.GetName()),
+		Name:      mvName,
 	}, mv)
 
 	if err == nil {
-		// already exists, delete it
-		err = jc.Client.Delete(context.Background(), mv)
-		log.Infof("delete existing model version %s", mv.Name)
-		if err != nil {
-			log.Errorf("failed to delete model version %s", mv.Name)
-			return err
-		}
+		// already exists
+		return nil
 	} else {
 		if !errors.IsNotFound(err) {
 			log.Errorf("failed to get model version %s", mv.Name)
@@ -358,7 +355,7 @@ func (jc *JobController) createModelVersion(job metav1.Object,
 	// create the new model version
 	mv = &v1alpha1.ModelVersion{}
 	mv.Namespace = job.GetNamespace()
-	mv.Name = model.GetJobModelVersionName(job.GetName())
+	mv.Name = mvName
 	mv.Spec = *modelVersion
 	mv.Spec.CreatedBy = job.GetName()
 

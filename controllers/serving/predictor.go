@@ -62,7 +62,7 @@ func (ir *InferenceReconciler) createNewPredictorDeploy(inf *v1alpha1.Inference,
 			Name:         "kubedl-model-loader",
 			VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 		}
-		loader, err := ir.buildModelLoaderInitContainer(modelVersion, sharedVolume.Name, "/mnt/kubedl-model")
+		loader, err := ir.buildModelLoaderInitContainer(modelVersion, sharedVolume.Name, "/mnt/kubedl-model/")
 		if err != nil {
 			return nil, err
 		}
@@ -80,13 +80,6 @@ func (ir *InferenceReconciler) createNewPredictorDeploy(inf *v1alpha1.Inference,
 				MountPath: modelMntPath,
 			})
 			c.Env = append(c.Env, corev1.EnvVar{Name: modelv1alpha1.KubeDLModelPath, Value: modelMntPath})
-		}
-
-		for ci := range predictor.Template.Spec.Containers {
-			predictor.Template.Spec.Containers[ci].VolumeMounts = append(predictor.Template.Spec.Containers[ci].VolumeMounts, corev1.VolumeMount{
-				Name:      fmt.Sprintf("%s-volume-mounts", modelVersion.Name),
-				MountPath: modelMntPath,
-			})
 		}
 	}
 
@@ -117,7 +110,7 @@ func (ir *InferenceReconciler) createNewPredictorDeploy(inf *v1alpha1.Inference,
 		return nil, err
 	}
 	ir.recorder.Eventf(inf, corev1.EventTypeNormal, "PredictorDeploymentCreated",
-		"Deployment %s for predictor successfully created, replicas: %s", deploy.Name, *deploy.Spec.Replicas)
+		"Deployment %s for predictor successfully created, replicas: %d", deploy.Name, *deploy.Spec.Replicas)
 	return &deploy, nil
 }
 
