@@ -1,0 +1,22 @@
+# A simple distributed tf with 3 replicas
+apiVersion: "training.kubedl.io/v1alpha1"
+kind: "TFJob"
+metadata:
+  name: "tf-distributed-simple"
+spec:
+  cleanPodPolicy: None
+  tfReplicaSpecs:
+    Worker:
+      replicas: 3
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+            - name: tensorflow
+              image: kubedl/tf-mnist-estimator-api:v0.1
+              command:
+                - "python"
+                - "/keras_model_to_estimator.py"
+                - "/tmp/tfkeras_example/"        # checkpoint dir
+                - "/kubedl-model"                # export saved_model dir
+              imagePullPolicy: Always
