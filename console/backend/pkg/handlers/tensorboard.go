@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	backendutils "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	backendutils "github.com/alibaba/kubedl/pkg/storage/backends/client"
 	"github.com/alibaba/kubedl/pkg/tensorboard"
 
 	v1 "k8s.io/api/core/v1"

@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
 	"github.com/alibaba/kubedl/pkg/storage/dmo/converters"
 	"github.com/alibaba/kubedl/pkg/util/workloadgate"
@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewAPIServerBackendService() backends.ObjectStorageBackend {
+func NewAPIServerObjectBackend() backends.ObjectStorageBackend {
 	return &apiServerBackend{clientmgr.GetCtrlClient()}
 }
 
@@ -178,7 +178,7 @@ func (a *apiServerBackend) ListJobs(query *backends.Query) ([]*dmo.Job, error) {
 		return nil, fmt.Errorf("StartTime EndTime should not be empty")
 	}
 	filters = append(filters, func(job *dmo.Job) bool {
-		if job.GmtJobSubmitted.Before(query.StartTime) {
+		if job.GmtCreated.Before(query.StartTime) {
 			if job.GmtJobFinished == nil || job.GmtJobFinished.IsZero() {
 				return true
 			}
@@ -187,7 +187,7 @@ func (a *apiServerBackend) ListJobs(query *backends.Query) ([]*dmo.Job, error) {
 			}
 			return false
 		}
-		if job.GmtJobSubmitted.Before(query.EndTime) {
+		if job.GmtCreated.Before(query.EndTime) {
 			return true
 		}
 		return false
@@ -217,10 +217,10 @@ func (a *apiServerBackend) ListJobs(query *backends.Query) ([]*dmo.Job, error) {
 	if len(dmoJobs) > 1 {
 		// Order by create timestamp.
 		sort.SliceStable(dmoJobs, func(i, j int) bool {
-			if dmoJobs[i].GmtJobSubmitted.Equal(dmoJobs[j].GmtJobSubmitted) {
+			if dmoJobs[i].GmtCreated.Equal(dmoJobs[j].GmtCreated) {
 				return dmoJobs[i].Name < dmoJobs[j].Name
 			}
-			return dmoJobs[i].GmtJobSubmitted.After(dmoJobs[j].GmtJobSubmitted)
+			return dmoJobs[i].GmtCreated.After(dmoJobs[j].GmtCreated)
 		})
 	}
 

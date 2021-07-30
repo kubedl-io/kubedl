@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/alibaba/kubedl/console/backend/pkg/storage"
 	"sort"
 	"strconv"
 	"time"
 
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	consoleutils "github.com/alibaba/kubedl/console/backend/pkg/utils"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
-	clientmgr "github.com/alibaba/kubedl/pkg/storage/backends/client"
-	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
 	"github.com/alibaba/kubedl/pkg/storage/backends/utils"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/types"
@@ -28,7 +28,7 @@ const (
 )
 
 func NewJobHandler(objStorage string, logHandler *LogHandler) (*JobHandler, error) {
-	objBackend := registry.GetObjectBackend(objStorage)
+	objBackend := storage.GetObjectBackend(objStorage)
 	if objBackend == nil {
 		return nil, fmt.Errorf("no object backend storage named: %s", objStorage)
 	}

@@ -2,16 +2,15 @@ package main
 
 import (
 	"flag"
-
 	"github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/routers"
-	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
+	"github.com/alibaba/kubedl/console/backend/pkg/storage"
 )
 
 func main() {
 	flag.Parse()
 	client.Init()
-	registry.RegisterStorageBackends()
+	storage.RegisterStorageBackends()
 	r := routers.InitRouter()
 
 	client.Start()
