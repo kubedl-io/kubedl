@@ -62,9 +62,9 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Setup Kind Cluster
-          uses: engineerd/setup-kind@v0.5.0
-          with:
-            version: ${{ env.KIND_VERSION }}
+        uses: engineerd/setup-kind@v0.5.0
+        with:
+          version: ${{ env.KIND_VERSION }}
 #      - name: Create k8s Kind Cluster
 #        uses: helm/kind-action@v1.2.0
 #        with:
