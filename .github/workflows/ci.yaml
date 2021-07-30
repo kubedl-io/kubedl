@@ -15,7 +15,7 @@ env:
   DOCKER_BUILDX_VERSION: 'v0.4.2'
   KUSTOMIZE_VERSION: '3.9.2'
   KUBEDL_CI: 'true'
-  KIND_VERSION: 'v0.10.0'
+  KIND_VERSION: 'v0.11.1'
 
 jobs:
 
