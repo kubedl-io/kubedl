@@ -49,17 +49,13 @@ jobs:
           flags: unittests
           file: cover.out
       - name: Check diff
-        run: '[[ -z $(git status -s) ]] || (git diff; printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
+        run: '[[ -z $(git status -s) ]] || (printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
 
+  # enable golint checks later.
 #  golangci-lint:
 #    runs-on: ubuntu-18.04
 #    steps:
-#      - uses: actions/checkout@v2
-#        with:
-#          submodules: true
-#      - name: Fetch History
-#        run: git fetch --prune --unshallow
-#      - name: Setup Go
+#        uses: actions/checkout@v2
 #        uses: actions/setup-go@v2
 #        with:
 #          go-version: ${{ env.GO_VERSION }}

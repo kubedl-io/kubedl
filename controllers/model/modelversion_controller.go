@@ -40,14 +40,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func NewModelVersionController(mgr ctrl.Manager, _ options.JobControllerConfiguration) *ModelVersionReconciler {
-	return &ModelVersionReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ModelVersion"),
-		Scheme: mgr.GetScheme(),
-	}
-}
-
 // ModelVersionReconciler reconciles a ModelVersion object
 type ModelVersionReconciler struct {
 	client.Client
