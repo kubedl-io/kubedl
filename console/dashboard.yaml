@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubedl-dashboard
+  namespace: kubedl-system
+  labels:
+    control-plane: kubedl-dashboard
+spec:
+  selector:
+    matchLabels:
+      control-plane: kubedl-dashboard
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        control-plane: kubedl-dashboard
+    spec:
+      containers:
+        - image: kubedl/dashboard:0.1.0
+          name: kubedl-dashboard
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 500Mi
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kubedl-system
+  name: kubedl-dashboard-service
+spec:
+  selector:
+    control-plane: kubedl-dashboard
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: kubedl-system
+  name: kubedl-dashboard-config
+#data:
+##  images: '{
+##    "tf-cpu-images":[
+##    "here set your default container image",
+##    ...
+##    ],
+##    "tf-gpu-images":[
+##    ...
+##    ],
+##    "pytorch-gpu-images":[
+##    ...
+##    ]'
+##  users: '[
+##          {
+##          "username":"admin",
+##          "password":"123456"
+##          }
+##      ]'
