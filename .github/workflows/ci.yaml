@@ -15,6 +15,7 @@ env:
   DOCKER_BUILDX_VERSION: 'v0.4.2'
   KUSTOMIZE_VERSION: '3.9.2'
   KUBEDL_CI: 'true'
+  KIND_VERSION: 'v0.11.1'
 
 jobs:
 
@@ -50,7 +51,62 @@ jobs:
           file: cover.out
       - name: Check diff
         run: '[[ -z $(git status -s) ]] || (git diff; printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
-
+  e2e-tests:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Setup Kind Cluster
+        uses: engineerd/setup-kind@v0.5.0
+        with:
+          version: ${{ env.KIND_VERSION }}
+      - name: Build image
+        run: |
+          export IMAGE="kubedl/kubedl:e2e-${GITHUB_RUN_ID}"
+          docker build --pull --no-cache . -t $IMAGE
+          kind load docker-image $IMAGE || { echo >&2 "kind not installed or error loading image: $IMAGE"; exit 1; }
+      - name: Install KubeDL
+        run: |
+          set -ex
+          kubectl cluster-info
+          kubectl describe node
+          IMG=kubedl/kubedl:e2e-${GITHUB_RUN_ID} ./scripts/deploy_kubedl.sh
+          for ((i=1;i<10;i++));
+          do
+            set +e
+            PODS=$(kubectl get pod -n kubedl-system | grep 'Running' | wc -l)
+            set -e
+            if [ "$PODS" -eq 1 ]; then
+              break
+            fi
+            sleep 3
+          done
+          set +e
+          PODS=$(kubectl get pod -n kubedl-system | grep 'Running' | wc -l)
+          kubectl get all -n kubedl-system -o yaml
+          set -e
+          if [ "$PODS" -eq 1 ]; then
+            echo "kubedl-controller pod is running now"
+          else
+            echo "kubedl-controller pod is not at running state "
+            exit 1
+          fi
+      - name: Run TF simple distributed test job
+        run: |
+          set -ex
+          ./scripts/run_tf_test_job.sh
+          if [ $? -eq 0 ]; then
+            echo "Succeed: ./scripts/run_tf_test_job.sh"
+          else
+            echo "Failed: ./scripts/run_tf_test_job.sh"
+            exit 1
+          fi
+# enable golint checks later.
 #  golangci-lint:
 #    runs-on: ubuntu-18.04
 #    steps:
