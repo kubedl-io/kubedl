@@ -131,6 +131,9 @@ func (r *TFJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) string {
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=tfjobs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 
+// Note, this is added for kubedl-dashboard to list nodes, not for kubedl-controller
+// +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
+
 func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Fetch the TFJob tfJob
 	sharedTfJob := &training.TFJob{}
