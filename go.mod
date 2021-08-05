@@ -41,6 +41,7 @@ require (
 	sigs.k8s.io/controller-runtime v0.6.5
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/scheduler-plugins v0.19.9
+	volcano.sh/apis v1.3.0-k8s1.18.3-alpha.3
 )
 
 replace (
