@@ -75,6 +75,9 @@ func (kbs *kubeCoscheduler) BindPodToGang(obj metav1.Object, entity runtime.Obje
 	if podSpec.Spec.SchedulerName == "" || podSpec.Spec.SchedulerName != kbs.Name() {
 		podSpec.Spec.SchedulerName = kbs.Name()
 	}
+	if podSpec.Labels == nil {
+		podSpec.Labels = map[string]string{}
+	}
 	// Coscheduling based on PodGroup CRD
 	podSpec.Labels["pod-group.scheduling.sigs.k8s.io"] = podGroup.Name
 	// Lightweight coscheduling based on back-to-back queue sorting

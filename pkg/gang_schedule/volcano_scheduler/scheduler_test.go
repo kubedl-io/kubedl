@@ -1,4 +1,4 @@
-package coscheduler
+package volcano_scheduler
 
 import (
 	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
@@ -7,14 +7,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/scheduler-plugins/pkg/apis/scheduling/v1alpha1"
 	"testing"
+	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	testjobv1 "github.com/alibaba/kubedl/pkg/test_job/v1"
-)
-
-var (
-	controllerKind = testjobv1.SchemeGroupVersionKind
 )
 
 func TestCreateGang(t *testing.T) {
@@ -28,10 +24,10 @@ func TestCreateGang(t *testing.T) {
 		_ = testjobv1.AddToScheme(scheme)
 		testJob := testutilv1.NewTestJob(workerNumber)
 		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
-		testScheduler := &kubeCoscheduler{client: fakeClient}
+		testScheduler := &volcanoScheduler{client: fakeClient}
 
 		testObject, _ := testScheduler.CreateGang(testJob, testJob.Spec.TestReplicaSpecs)
-		testPodGroup := testObject.(*v1alpha1.PodGroup)
+		testPodGroup := testObject.(*v1beta1.PodGroup)
 		assert.Equal(t, testPodGroup.Name, testutilv1.TestJobName)
 		assert.Equal(t, testPodGroup.Namespace, metav1.NamespaceDefault)
 		assert.Equal(t, testPodGroup.Spec.MinMember, int32(workerNumber))
@@ -49,14 +45,12 @@ func TestBindPodToGang(t *testing.T) {
 		_ = testjobv1.AddToScheme(scheme)
 		testJob := testutilv1.NewTestJob(workerNumber)
 		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
-		testScheduler := &kubeCoscheduler{client: fakeClient}
+		testScheduler := &volcanoScheduler{client: fakeClient}
 
 		testObject, _ := testScheduler.CreateGang(testJob, testJob.Spec.TestReplicaSpecs)
-		testPodGroup := testObject.(*v1alpha1.PodGroup)
+		testPodGroup := testObject.(*v1beta1.PodGroup)
 		testPodSpec := testutilv1.NewTestReplicaSpecTemplate()
 		testScheduler.BindPodToGang(&testPodSpec, testPodGroup)
-		assert.Equal(t, testPodSpec.Labels["pod-group.scheduling.sigs.k8s.io"], testPodGroup.Name)
-		assert.Equal(t, testPodSpec.Labels["pod-group.scheduling.sigs.k8s.io/name"], testPodGroup.Name)
-		assert.Equal(t, testPodSpec.Labels["pod-group.scheduling.sigs.k8s.io/min-available"], string(testPodGroup.Spec.MinMember))
+		assert.Equal(t, testPodSpec.Annotations[v1beta1.KubeGroupNameAnnotationKey], testPodGroup.Name)
 	}
 }
