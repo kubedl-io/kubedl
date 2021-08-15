@@ -75,7 +75,7 @@ func setDefaultMPIDAGConditions(job *MPIJob) {
 	if job.Spec.MPIReplicaSpecs[MPIReplicaTypeWorker] != nil &&
 		job.Spec.MPIReplicaSpecs[MPIReplicaTypeLauncher] != nil {
 		job.Spec.MPIReplicaSpecs[MPIReplicaTypeLauncher].DependOn = []v1.DAGCondition{
-			{Upstream: MPIReplicaTypeLauncher, OnPhase: corev1.PodRunning},
+			{Upstream: MPIReplicaTypeWorker, OnPhase: corev1.PodRunning},
 		}
 	}
 }
