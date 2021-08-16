@@ -216,6 +216,19 @@ func (r *MPIJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, 
 	if !ok {
 		return fmt.Errorf("%+v is not a type of MPIJob", job)
 	}
+	workerReplicas := int32(0)
+	if workerSpec := mpiJob.Spec.MPIReplicaSpecs[training.MPIReplicaTypeWorker]; workerSpec != nil && workerSpec.Replicas != nil {
+		workerReplicas = *workerSpec.Replicas
+	}
+	if launcherSpec, ok := mpiJob.Spec.MPIReplicaSpecs[training.MPIReplicaTypeLauncher]; ok && launcherSpec != nil {
+		// MPIJob ensures job-attached configuration is kept by ConfigMap when launcher
+		// neither succeed nor failed.
+		log.Info("launcher of MPIJob: ", mpiJob.Namespace+"/"+mpiJob.Name, " generate job config.")
+		_, err := r.getOrCreateJobConfig(mpiJob, workerReplicas, launcherRunsWorkload)
+		if err != nil {
+			return err
+		}
+	}
 
 	switch rt {
 	case strings.ToLower(string(training.MPIReplicaTypeWorker)):
