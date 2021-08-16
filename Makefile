@@ -60,7 +60,7 @@ docker-push:
 	docker push ${IMG}
 
 # Update helm charts
-# For example: export VERSION=0.5.0 && make helm-charts
+# For example: export VERSION=0.5.0 && make helm-chart
 helm-chart:
 	cp config/crd/bases/* helm/kubedl/crds
 	# generate .kubedbackup file is for compatible between MAC OS and LINUX, since sed syntax is different
@@ -71,6 +71,16 @@ helm-chart:
 	sed -i.kubedlbackup 's/name:.*/name: {{ include "kubedl.fullname" . }}-role/g' helm/kubedl/templates/role.yaml
 	rm -f helm/kubedl/*.kubedlbackup
 	rm -f helm/kubedl/templates/*.kubedlbackup
+
+# Set the VERSION across YAML files
+# When making a release, e.g. 0.4.0, run this command
+# 1. create a branch: release-0.4.0
+# 2. export VERSION=0.4.0 && make release
+# 2. push the release-0.4.0 branch
+release: helm-chart
+	sed -i.kubedlbackup 's/daily/'"$(VERSION)"'/g' config/manager/all_in_one.yaml
+	sed -i.kubedlbackup 's/daily/'"$(VERSION)"'/g' config/manager/kustomization.yaml
+	rm -f config/manager/*.kubedlbackup
 
 # find or download controller-gen
 # download controller-gen if necessary
