@@ -1,10 +1,10 @@
 # Implementation design for data cache
 
-- [Motivations](#Motivations)
-- [Use Case](#Use Case)
-- [Proposal](#Proposal)
-- [Implementation](#Implementation)
-- [Alternatives Considered](#Alternatives Considered)
+- [Motivations](#motivations)
+- [Use Case](#use-case)
+- [Proposal](#proposal)
+- [Implementation](#implementation)
+- [Alternatives Considered](#alternatives-considered)
 
 ## Motivations
 
@@ -91,16 +91,16 @@ A partial list of supported options, full list TBD
 
 ```yaml
 # Required parameters for dataset
-mountPoint: "https://mirrors.bit.edu.cn/apache/spark/",  # Directory of the dataset to be mounted(required)
-mountPath: "/path/in/container"													 # Path to mount into container(required)
+mountPoint: "https://mirrors.bit.edu.cn/apache/spark/"   # Directory of the dataset to be mounted(required)
+mountPath: "/path/in/container"				 # Path to mount into container(required)
 
 # Required parameters for Runtime
-quota: "4Gi",                                            # Maximum cache capacity allowed for this level of storage(required)
-mediumtype: "MEM",                                       # The default is MEM, and SSD and HDD are optional(optional)
-cachePath: "/dev/shm",                                   # The data is cached at the node where the alluxio worker is located(optional)
+quota: "4Gi"                                             # Maximum cache capacity allowed for this level of storage(required)
+mediumtype: "MEM"                                        # The default is MEM, and SSD and HDD are optional(optional)
+cachePath: "/dev/shm"                                    # The data is cached at the node where the alluxio worker is located(optional)
 
 # Specify the required cache engine
-runtimeType: "AlluxioRuntime",                           # Cache engine used by fluid cache(optional)
+runtimeType: "AlluxioRuntime"                            # Cache engine used by fluid cache(optional)
 
 ParametersToBeAdd...
 ```
