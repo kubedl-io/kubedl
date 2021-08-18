@@ -64,23 +64,23 @@ With the above process, the dataset in the specified file system can be cached, 
 Reference to the configuration of `modelVersion` in `example/tf/tf_job_mnist_modelversion.yaml`
 
 ```yaml
-    apiVersion: "training.kubedl.io/v1alpha1"
-    kind: "TFJob"
-    metadata:
-      name: "mnist"
-      namespace: kubedl
-    spec:
-      cleanPodPolicy: None
-+     fluidConfig:
-+ 			runtimeType: "AlluxioRuntime"
-+     	levels:
-+     		- mountPoint: "/file/system/dataset/path"
-+     			mountPath: "/path/in/container"
-+     			quota: "4Gi"
-      tfReplicaSpecs:
-        ...
-        No additional volumes need to be configured. 
-        The cache handler will automatically inject the pvc created by fluid into the container
+apiVersion: "training.kubedl.io/v1alpha1"
+kind: "TFJob"
+metadata:
+  name: "mnist"
+  namespace: kubedl
+spec:
+  cleanPodPolicy: None
+  fluidConfig:
+    runtimeType: "AlluxioRuntime"
+    tierdStorage:
+      - dataSource: "/file/system/dataset/path"
+        mountPath: "/path/in/container"
+        quota: "4Gi"
+  tfReplicaSpecs:
+    ...
+    No additional volumes need to be configured. 
+    The cache handler will automatically inject the pvc created by fluid into the container
 ```
 
 Compared with the first configuration method mentioned in **Alternatives Considered**, the advantage of this configuration data cache is that:
@@ -91,7 +91,7 @@ A partial list of supported options, full list TBD
 
 ```yaml
 # Required parameters for dataset
-mountPoint: "https://mirrors.bit.edu.cn/apache/spark/"   # Directory of the dataset to be mounted(required)
+dataSource: "https://mirrors.bit.edu.cn/apache/spark/"   # Directory of the dataset to be mounted(required)
 mountPath: "/path/in/container"				 # Path to mount into container(required)
 
 # Required parameters for Runtime
@@ -118,7 +118,7 @@ ParametersToBeAdd...
         name: "mnist"
         namespace: kubedl
         annotations:
-   +      kubedl.io/fluid-config: '{"mountPoint":"/file/system/dataset/path","mountPath":/path/in/containe","quota":"4Gi"}'
+   +      kubedl.io/fluid-config: '{"dataSource":"/file/system/dataset/path","mountPath":/path/in/containe","quota":"4Gi"}'
       spec:
         cleanPodPolicy: None
         tfReplicaSpecs:
@@ -140,10 +140,10 @@ ParametersToBeAdd...
           tfReplicaSpecs:
             ...
             volumes:
-               - name: "XXX"
-                 hostPath:
-                   path: "/file/system/dataset/path"
-                   type: DirectoryOrCreate
+              - name: "XXX"
+                hostPath:
+                  path: "/file/system/dataset/path"
+                  type: DirectoryOrCreate
    ```
 
 - How to handle the Fluid generated dataset and Runtime after the job is completed?
