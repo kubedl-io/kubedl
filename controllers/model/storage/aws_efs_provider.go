@@ -10,6 +10,10 @@ import (
 type AWSEfsProvider struct {
 }
 
+func (a *AWSEfsProvider) GetModelMountPath(mv *modelv1alpha1.Storage) string {
+	panic("implement me")
+}
+
 func (a *AWSEfsProvider) AddModelVolumeToPodSpec(mv *modelv1alpha1.Storage, pod *corev1.PodTemplateSpec) {
 	panic("implement me")
 }

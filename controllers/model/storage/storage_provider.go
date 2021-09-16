@@ -19,6 +19,9 @@ type StorageProvider interface {
 
 	// Add the model volume and mountpath to the pod spec
 	AddModelVolumeToPodSpec(mv *modelv1alpha1.Storage, pod *v1.PodTemplateSpec)
+
+	// Get the model mount path inside the container
+	GetModelMountPath(mv *modelv1alpha1.Storage) string
 }
 
 func GetStorageProvider(storage *modelv1alpha1.Storage) StorageProvider {
