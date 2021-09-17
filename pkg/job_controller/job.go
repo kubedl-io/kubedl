@@ -328,7 +328,7 @@ func addModelPathEnv(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, modelVer
 			if !exists {
 				containerList[key].Env = append(containerList[key].Env, v1.EnvVar{
 					Name:  v1alpha1.KubeDLModelPath,
-					Value: v1alpha1.DefaultModelPathInImage, // The pre-defined dir inside the training container for storing the model
+					Value: provider.GetModelMountPath(modelVersion.Storage),
 				})
 			}
 		}

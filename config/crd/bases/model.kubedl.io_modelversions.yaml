@@ -62,6 +62,8 @@ spec:
                     type: object
                   localStorage:
                     properties:
+                      mountPath:
+                        type: string
                       nodeName:
                         type: string
                       path:
@@ -69,6 +71,8 @@ spec:
                     type: object
                   nfs:
                     properties:
+                      mountPath:
+                        type: string
                       path:
                         type: string
                       server:

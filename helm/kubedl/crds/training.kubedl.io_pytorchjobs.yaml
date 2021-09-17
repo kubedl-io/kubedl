@@ -23,15 +23,15 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
-    - jsonPath: .spec.ttlSecondsAfterFinished
-      name: TTL-AFTER-FINISHED
-      type: integer
-    - jsonPath: .spec.activeDeadlineSeconds
-      name: Max-Lifetime
-      type: integer
     - jsonPath: .status.modelVersionName
       name: Model-Version
       type: string
+    - jsonPath: .spec.activeDeadlineSeconds
+      name: Max-Lifetime
+      type: integer
+    - jsonPath: .spec.ttlSecondsAfterFinished
+      name: TTL-AFTER-FINISHED
+      type: integer
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -73,6 +73,8 @@ spec:
                         type: object
                       localStorage:
                         properties:
+                          mountPath:
+                            type: string
                           nodeName:
                             type: string
                           path:
@@ -80,6 +82,8 @@ spec:
                         type: object
                       nfs:
                         properties:
+                          mountPath:
+                            type: string
                           path:
                             type: string
                           server:

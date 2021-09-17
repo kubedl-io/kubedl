@@ -14,6 +14,8 @@ spec:
       localStorage:
         # The host dir for THIS model version, each modelVersion should have its own unique parent folder, in this case, 'mymodelversion1'
         path: /models/mymodelversion1
+        # The mount path inside the training container.
+        mountPath: /kubedl-model
         # The node for storing the model
         nodeName: kind-control-plane
   tfReplicaSpecs:

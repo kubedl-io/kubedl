@@ -72,12 +72,12 @@ helm-chart:
 	rm -f helm/kubedl/*.kubedlbackup
 	rm -f helm/kubedl/templates/*.kubedlbackup
 
-# Set the VERSION across YAML files
-# When making a release, e.g. 0.4.0, run this command
-# 1. create a branch: release-0.4.0
+# When making a release, e.g. 0.4.0, run below commands:
+# 1. create a new git branch: release-0.4.0
 # 2. export VERSION=0.4.0 && make release
 # 2. push the release-0.4.0 branch
 release: helm-chart
+	# Set the VERSION across YAML files
 	sed -i.kubedlbackup 's/daily/'"$(VERSION)"'/g' config/manager/all_in_one.yaml
 	sed -i.kubedlbackup 's/daily/'"$(VERSION)"'/g' config/manager/kustomization.yaml
 	rm -f config/manager/*.kubedlbackup

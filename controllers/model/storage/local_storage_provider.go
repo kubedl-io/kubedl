@@ -25,7 +25,7 @@ func (a *LocalStorageProvider) AddModelVolumeToPodSpec(mv *modelv1alpha1.Storage
 	for i, c := range pod.Spec.Containers {
 		pod.Spec.Containers[i].VolumeMounts = append(c.VolumeMounts,
 			corev1.VolumeMount{
-				Name: "modelvolume", MountPath: modelv1alpha1.DefaultModelPathInImage,
+				Name: "modelvolume", MountPath: mv.LocalStorage.MountPath,
 			})
 	}
 }
@@ -68,6 +68,10 @@ func (ls *LocalStorageProvider) CreatePersistentVolume(storage *modelv1alpha1.St
 		},
 	}
 	return pv
+}
+
+func (a *LocalStorageProvider) GetModelMountPath(mv *modelv1alpha1.Storage) string {
+	return mv.LocalStorage.MountPath
 }
 
 func NewLocalStorageProvider() StorageProvider {
