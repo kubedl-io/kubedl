@@ -83,7 +83,7 @@ shift
 	}
 	var buffer bytes.Buffer
 	if launcherRunsWorkload {
-		buffer.WriteString(fmt.Sprintf("%s%s slots=%d\n", mpiJob.Name, launcherSuffix, slots))
+		buffer.WriteString(fmt.Sprintf("%s%s-0 slots=%d\n", mpiJob.Name, launcherSuffix, slots))
 	}
 	for i := 0; i < int(workerReplicas); i++ {
 		// If MPIDistributionType specified, the format of the hostfile file is inconsistent as
