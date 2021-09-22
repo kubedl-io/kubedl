@@ -302,7 +302,6 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			result.Requeue = true
 			return result, nil
 		}
-		return result, jc.Controller.UpdateJobStatusInApiServer(job, &jobStatus)
 	}
 	return result, nil
 }
