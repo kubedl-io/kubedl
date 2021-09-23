@@ -4,18 +4,19 @@
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5072/badge)](https://bestpractices.coreinfrastructure.org/projects/5072)
 
 
-<h1 align="center">
-    <img src="./docs/img/kubedllogo.png" alt="logo" width="300">
-</h1>
-
-
-<div align="center">
-    <img src="https://v6d.io/_static/cncf-color.svg" width="400" title="">
+<div align="left">
+ <img src="https://user-images.githubusercontent.com/3662775/134578512-a9f29d92-b2e2-4fc4-b7b5-333926c738ab.png" width="400" title="">
 </div> <br/>
 
 KubeDL enables deep learning workloads to run on Kubernetes more easily and efficiently. 
 
-KubeDL is a [CNCF sandbox](https://www.cncf.io/sandbox-projects/) project. Its core functionalities include:
+KubeDL is a [CNCF sandbox](https://www.cncf.io/sandbox-projects/) project. 
+
+<div align="left">
+    <img src="https://v6d.io/_static/cncf-color.svg" width="400" title="">
+</div> <br/>
+
+Its core functionalities include:
 
 - Automatically tunes the best container-level configurations before an ML model is deployed as inference services. - [Morphling Github](https://github.com/alibaba/morphling)
 - Model lineage and versioning to track the history of a model natively in CRD: when the model is trained using which data and which image, each version of the model, which version is running etc. 
