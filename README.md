@@ -5,6 +5,11 @@
 [![KubeDL Action Status](https://github.com/kubedl-io/kubedl/workflows/CI/badge.svg)](https://github.com/kubedl-io}/kubedl}/actions)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5072/badge)](https://bestpractices.coreinfrastructure.org/projects/5072)
 
+
+<h1 align="center">
+    <img src="./docs/img/kubedllogo.png" alt="logo" width="400">
+</h1>
+
 KubeDL enables deep learning workloads to run on Kubernetes more easily and efficiently. 
 <div align="left">
  <img src="https://v6d.io/_static/cncf-color.svg" width="400" title="">
