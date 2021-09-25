@@ -18,7 +18,7 @@ package v1alpha1
 
 import "k8s.io/apimachinery/pkg/runtime"
 
-func SetDefaults_Model(in *Model) {
+func SetDefaults_CacheBackend(cacheBackend *CacheBackend) {
 
 }
 

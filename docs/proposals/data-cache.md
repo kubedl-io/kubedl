@@ -71,12 +71,16 @@ metadata:
   namespace: kubedl
 spec:
   cleanPodPolicy: None
-  fluidConfig:
-    runtimeType: "AlluxioRuntime"
-    tierdStorage:
-      - dataSource: "/file/system/dataset/path"
-        mountPath: "/path/in/container"
-        quota: "4Gi"
+  cacheBackend:
+    fluid:
+      dataset:
+        mounts:
+          - dataSource: "/file/system/dataset/path"
+            mountPath: "/path/in/container"
+      alluxioRuntime:
+        tierdStorage:
+          - cachePath: "/dev/shm"
+            quota: "4Gi"
   tfReplicaSpecs:
     ...
     No additional volumes need to be configured. 

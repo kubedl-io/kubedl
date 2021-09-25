@@ -16,7 +16,7 @@ limitations under the License.
 
 package apis
 
-import "github.com/alibaba/kubedl/apis/model/v1alpha1"
+import "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 
 func init() {
 	AddToSchemes = append(AddToSchemes, v1alpha1.AddToScheme)
