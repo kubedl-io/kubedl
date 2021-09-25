@@ -4,12 +4,15 @@ import (
 	"context"
 	"strings"
 
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
+	cachectrl "github.com/alibaba/kubedl/controllers/cache"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	log "github.com/sirupsen/logrus"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -186,4 +189,35 @@ func (jc *JobController) resolveControllerRef(namespace string, controllerRef *m
 		return nil
 	}
 	return job
+}
+
+func (jc *JobController) createCache(object metav1.Object, backend *cachev1alpha1.CacheBackendSpec) error {
+	cacheBackend := &cachev1alpha1.CacheBackend{}
+	cacheBackendName := cachectrl.GetCacheBackendName(object)
+	err := jc.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: object.GetNamespace(),
+		Name:      cacheBackendName,
+	}, cacheBackend)
+
+	if err == nil {
+		// already exists
+		return nil
+	} else {
+		if !errors.IsNotFound(err) {
+			log.Errorf("failed to get cache backend %s", cacheBackend.Name)
+			return err
+		}
+	}
+
+	cacheBackend = &cachev1alpha1.CacheBackend{}
+	cacheBackend.Namespace = object.GetNamespace()
+	cacheBackend.Name = cacheBackendName
+	cacheBackend.Spec = *backend
+
+	err = jc.Client.Create(context.Background(), cacheBackend)
+	if err != nil {
+		log.Errorf("failed to create cache backend %s", cacheBackend.Name)
+		return err
+	}
+	return nil
 }

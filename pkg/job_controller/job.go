@@ -113,6 +113,14 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	}
 	// TODO(SimonCqk): update job conditions failed ?
 
+	if cacheBackend != nil {
+		err = jc.createCache(metaObject, cacheBackend)
+		if err != nil {
+			log.Error(err, "failed to enable cache")
+			return reconcile.Result{Requeue: true}, err
+		}
+	}
+
 	pods, err := jc.Controller.GetPodsForJob(job)
 	if err != nil {
 		log.Warnf("GetPodsForJob error %v", err)
