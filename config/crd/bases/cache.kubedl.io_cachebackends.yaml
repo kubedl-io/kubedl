@@ -1,0 +1,81 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: cachebackends.cache.kubedl.io
+spec:
+  group: cache.kubedl.io
+  names:
+    kind: CacheBackend
+    listKind: CacheBackendList
+    plural: cachebackends
+    singular: cachebackend
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              fluid:
+                properties:
+                  alluxioRuntime:
+                    properties:
+                      tierdStorage:
+                        items:
+                          properties:
+                            cachePath:
+                              type: string
+                            mediumType:
+                              type: string
+                            quota:
+                              type: string
+                          type: object
+                        type: array
+                    type: object
+                  dataset:
+                    properties:
+                      mounts:
+                        items:
+                          properties:
+                            dataSource:
+                              type: string
+                            mountPath:
+                              type: string
+                          type: object
+                        type: array
+                    type: object
+                type: object
+            type: object
+          status:
+            properties:
+              cacheStatus:
+                type: string
+              finishTime:
+                format: date-time
+                type: string
+              message:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

@@ -1,0 +1,24 @@
+# permissions for end users to edit cachebackends.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cachebackend-editor-role
+rules:
+- apiGroups:
+  - cache.kubedl.io
+  resources:
+  - cachebackends
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cache.kubedl.io
+  resources:
+  - cachebackends/status
+  verbs:
+  - get
