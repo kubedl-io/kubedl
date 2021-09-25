@@ -122,7 +122,7 @@ func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 	// Set default properties for xdl job.
 	r.scheme.Default(xdlJob)
 
-	result, err := r.ctrl.ReconcileJobs(xdlJob, xdlJob.Spec.XDLReplicaSpecs, xdlJob.Status, &xdlJob.Spec.RunPolicy, nil)
+	result, err := r.ctrl.ReconcileJobs(xdlJob, xdlJob.Spec.XDLReplicaSpecs, xdlJob.Status, &xdlJob.Spec.RunPolicy, nil, nil)
 	if err != nil {
 		log.Error(err, "xdl job reconcile failed.")
 		return result, err

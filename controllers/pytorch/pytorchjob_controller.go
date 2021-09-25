@@ -127,7 +127,7 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// Set default properties for pytorch job.
 	r.scheme.Default(pytorchJob)
 
-	result, err := r.ctrl.ReconcileJobs(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs, pytorchJob.Status, &pytorchJob.Spec.RunPolicy, pytorchJob.Spec.ModelVersion)
+	result, err := r.ctrl.ReconcileJobs(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs, pytorchJob.Status, &pytorchJob.Spec.RunPolicy, pytorchJob.Spec.ModelVersion, pytorchJob.Spec.CacheBackend)
 	if err != nil {
 		log.Error(err, "pytorch job reconcile failed")
 		return result, err

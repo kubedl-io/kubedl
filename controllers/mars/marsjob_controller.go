@@ -109,7 +109,7 @@ func (r *MarsJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	r.scheme.Default(marsJob)
 
-	result, err := r.ctrl.ReconcileJobs(marsJob, marsJob.Spec.MarsReplicaSpecs, marsJob.Status.JobStatus, &marsJob.Spec.RunPolicy, nil)
+	result, err := r.ctrl.ReconcileJobs(marsJob, marsJob.Spec.MarsReplicaSpecs, marsJob.Status.JobStatus, &marsJob.Spec.RunPolicy, nil, nil)
 	if err != nil {
 		log.Error(err, "mars job reconcile failed")
 		return result, err

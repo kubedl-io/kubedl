@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	commonv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +52,10 @@ type TFJobSpec struct {
 	// ModelVersion represents the model output by this job run.
 	// +optional
 	ModelVersion *v1alpha1.ModelVersionSpec `json:"modelVersion"`
+
+	// CacheBackend is used to configure the cache engine for job
+	// +optional
+	CacheBackend *cachev1alpha1.CacheBackendSpec `json:"cache_backend"`
 }
 
 // +genclient

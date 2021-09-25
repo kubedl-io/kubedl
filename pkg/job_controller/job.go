@@ -19,6 +19,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	model "github.com/alibaba/kubedl/controllers/model"
 	"github.com/alibaba/kubedl/pkg/code_sync"
@@ -66,7 +67,7 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 // ReconcileJobs checks and updates replicas for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods/services.
 func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus apiv1.JobStatus,
-	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec) (result reconcile.Result, err error) {
+	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackend *cachev1alpha1.CacheBackendSpec) (result reconcile.Result, err error) {
 
 	metaObject, ok := job.(metav1.Object)
 	jobName := metaObject.GetName()
