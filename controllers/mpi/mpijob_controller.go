@@ -98,6 +98,7 @@ type MPIJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create
+// +kubebuilder:rbac:groups=scheduling.incubator.k8s.io;scheduling.sigs.dev;scheduling.volcano.sh,resources=podgroups;queues,verbs=*
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=mpijobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=mpijobs/status,verbs=get;update;patch
 
