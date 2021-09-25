@@ -8,7 +8,6 @@ kind: Namespace
 metadata:
   name: kubedl-system
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -200,6 +199,15 @@ rules:
       - update
       - watch
   - apiGroups:
+      - scheduling.incubator.k8s.io
+      - scheduling.sigs.dev
+      - scheduling.volcano.sh
+    resources:
+      - podgroups
+      - queues
+    verbs:
+      - '*'
+  - apiGroups:
       - serving.kubedl.io
     resources:
       - inferences
@@ -359,7 +367,6 @@ rules:
       - get
       - patch
       - update
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
