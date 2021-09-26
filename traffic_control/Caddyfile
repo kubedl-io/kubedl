@@ -1,0 +1,9 @@
+{
+    auto_https off
+    order traffic_control before respond
+}
+
+:2088 {
+    traffic_control
+    encode gzip
+}
