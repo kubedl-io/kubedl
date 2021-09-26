@@ -28,14 +28,18 @@ type CacheBackendSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Fluid may be the only caching engine for the time being
-	Fluid *Fluid `json:"fluid,omitempty"`
+	// CacheEngine is different kinds of cache engine
+	CacheEngine *CacheEngine `json:"cacheEngine,omitempty"`
 }
 
 // CacheBackendStatus defines the observed state of CacheBackend
 type CacheBackendStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// JobName is the job name which create cache
+	// the string will be associated with the PVC being created
+	JobName string `json:"jobName,omitempty"`
 
 	// CacheStatus displays the status of the entire caching process
 	CacheStatus CacheStatus `json:"cacheStatus,omitempty"`
@@ -45,6 +49,11 @@ type CacheBackendStatus struct {
 
 	// Message is some information in the cache process, such as whether the PVC was created or not
 	Message string `json:"message,omitempty"`
+}
+
+type CacheEngine struct {
+	// Fluid may be the only caching engine for the time being
+	Fluid *Fluid `json:"fluid,omitempty"`
 }
 
 type Fluid struct {

@@ -213,6 +213,7 @@ func (jc *JobController) createCache(object metav1.Object, backend *cachev1alpha
 	cacheBackend.Namespace = object.GetNamespace()
 	cacheBackend.Name = cacheBackendName
 	cacheBackend.Spec = *backend
+	cacheBackend.Status.JobName = object.GetName()
 
 	err = jc.Client.Create(context.Background(), cacheBackend)
 	if err != nil {
