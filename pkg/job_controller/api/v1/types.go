@@ -25,7 +25,7 @@ import (
 // +k8s:deepcopy-gen=true
 type JobStatus struct {
 	// Conditions is an array of current observed job conditions.
-	Conditions []JobCondition `json:"conditions"`
+	Conditions []JobCondition `json:"conditions,omitempty"`
 
 	// ReplicaStatuses is map of ReplicaType and ReplicaStatus,
 	// specifies the status of each replica.

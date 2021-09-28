@@ -2953,7 +2953,6 @@ spec:
                   type: string
                 type: array
             required:
-            - conditions
             - replicaStatuses
             type: object
         type: object
