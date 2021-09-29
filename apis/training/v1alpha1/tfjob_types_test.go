@@ -42,7 +42,6 @@ func TestStorageTFJob(t *testing.T) {
 		},
 		Status: v1.JobStatus{
 			ReplicaStatuses: map[v1.ReplicaType]*v1.ReplicaStatus{},
-			Conditions:      []v1.JobCondition{},
 		},
 	}
 	g := gomega.NewGomegaWithT(t)
@@ -62,7 +61,6 @@ func TestStorageTFJob(t *testing.T) {
 		},
 		Status: v1.JobStatus{
 			ReplicaStatuses: map[v1.ReplicaType]*v1.ReplicaStatus{},
-			Conditions:      []v1.JobCondition{},
 		},
 	}
 	scheme.Scheme.Default(expected)
