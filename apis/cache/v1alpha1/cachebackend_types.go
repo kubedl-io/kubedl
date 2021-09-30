@@ -20,6 +20,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	MountCachePVC = "MountCachePVC"
+)
+
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
@@ -27,6 +31,12 @@ import (
 type CacheBackendSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// The location in the container where the dataset should be mounted
+	MountPath string `json:"mountPath,omitempty"`
+
+	// Provide multiple Caching mode to user
+	CacheMode *CacheMode `json:"cacheMode,omitempty"`
 
 	// CacheEngine is different kinds of cache engine
 	CacheEngine *CacheEngine `json:"cacheEngine,omitempty"`
@@ -37,12 +47,14 @@ type CacheBackendStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// JobName is the job name which create cache
-	// the string will be associated with the PVC being created
-	JobName string `json:"jobName,omitempty"`
+	// PVCName is the PVC being created name
+	// the string will be associated with the job which create cache
+	PVCName string `json:"pvcName,omitempty"`
 
 	// CacheStatus displays the status of the entire caching process
 	CacheStatus CacheStatus `json:"cacheStatus,omitempty"`
+
+	MountStatus MountStatus `json:"mountStatus,omitempty"`
 
 	// FinishTime is the time when data cache is finished.
 	FinishTime *metav1.Time `json:"finishTime,omitempty"`
@@ -50,6 +62,12 @@ type CacheBackendStatus struct {
 	// Message is some information in the cache process, such as whether the PVC was created or not
 	Message string `json:"message,omitempty"`
 }
+
+type CacheMode string
+
+const (
+	BestEffort CacheMode = "BestEffort"
+)
 
 type CacheEngine struct {
 	// Fluid may be the only caching engine for the time being
@@ -77,9 +95,6 @@ type Dataset struct {
 type MountPoint struct {
 	// The dataset path in variety file system
 	DataSource string `json:"dataSource,omitempty"`
-
-	// The location in the container where the dataset should be mounted
-	MountPath string `json:"mountPath,omitempty"`
 }
 
 type AlluxioRuntime struct {
@@ -101,15 +116,25 @@ type Level struct {
 type CacheStatus string
 
 const (
+	CacheCreated   CacheStatus = "CacheStatus"
 	Caching        CacheStatus = "Caching"
 	CacheFailed    CacheStatus = "CacheFailed"
 	CacheSucceeded CacheStatus = "CacheSucceeded"
 )
 
-//+k8s:defaulter-gen=TypeMeta
+type MountStatus string
 
+const (
+	WaitPVCCreated MountStatus = "WaitPVCCreated"
+	Mounting       MountStatus = "Mounting"
+	MountFailed    MountStatus = "MountFailed"
+	MountSucceeded MountStatus = "MountSucceeded"
+)
+
+//+k8s:defaulter-gen=TypeMeta
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // CacheBackend is the Schema for the cachebackends API
 type CacheBackend struct {

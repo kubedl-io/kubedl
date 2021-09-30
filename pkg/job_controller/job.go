@@ -21,6 +21,7 @@ import (
 
 	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	cachectrl "github.com/alibaba/kubedl/controllers/cache"
 	model "github.com/alibaba/kubedl/controllers/model"
 	"github.com/alibaba/kubedl/pkg/code_sync"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -117,8 +118,20 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 		err = jc.createCache(metaObject, cacheBackend)
 		if err != nil {
 			log.Error(err, "failed to enable cache")
-			return reconcile.Result{Requeue: true}, err
+			// TODO(zjchenn): when cache mode is best effort
+			return reconcile.Result{}, err
 		}
+	}
+
+	pvc := &v1.PersistentVolumeClaim{}
+	pvcName := cachectrl.GetPVCName(metaObject)
+	err = jc.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: metaObject.GetNamespace(),
+		Name:      pvcName,
+	}, pvc)
+
+	if err != nil {
+		jc.addCachePathToContainer(pvcName, cacheBackend, replicas)
 	}
 
 	pods, err := jc.Controller.GetPodsForJob(job)

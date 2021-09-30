@@ -72,15 +72,16 @@ metadata:
 spec:
   cleanPodPolicy: None
   cacheBackend:
-    fluid:
-      dataset:
-        mounts:
-          - dataSource: "/file/system/dataset/path"
-            mountPath: "/path/in/container"
-      alluxioRuntime:
-        tierdStorage:
-          - cachePath: "/dev/shm"
-            quota: "4Gi"
+    cacheEngine:
+      fluid:
+        dataset:
+          mounts:
+            - dataSource: "/file/system/dataset/path"
+              mountPath: "/path/in/container"
+        alluxioRuntime:
+          tierdStorage:
+            - cachePath: "/dev/shm"
+              quota: "4Gi"
   tfReplicaSpecs:
     ...
     No additional volumes need to be configured. 

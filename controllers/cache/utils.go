@@ -18,6 +18,6 @@ package controllers
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-func GetCacheBackendName(job metav1.Object) string {
-	return "cache-" + job.GetName() + "-" + string(job.GetUID())[:5]
+func GetPVCName(job metav1.Object) string {
+	return "cache-pvc-" + job.GetName() + "-" + string(job.GetUID())[:5]
 }

@@ -55,7 +55,7 @@ type TFJobSpec struct {
 
 	// CacheBackend is used to configure the cache engine for job
 	// +optional
-	CacheBackend *cachev1alpha1.CacheBackendSpec `json:"cache_backend"`
+	CacheBackend *cachev1alpha1.CacheBackendSpec `json:"cacheBackend"`
 }
 
 // +genclient

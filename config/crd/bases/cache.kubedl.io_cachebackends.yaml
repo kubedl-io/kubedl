@@ -28,33 +28,36 @@ spec:
             type: object
           spec:
             properties:
-              fluid:
+              cacheEngine:
                 properties:
-                  alluxioRuntime:
+                  fluid:
                     properties:
-                      tierdStorage:
-                        items:
-                          properties:
-                            cachePath:
-                              type: string
-                            mediumType:
-                              type: string
-                            quota:
-                              type: string
-                          type: object
-                        type: array
-                    type: object
-                  dataset:
-                    properties:
-                      mounts:
-                        items:
-                          properties:
-                            dataSource:
-                              type: string
-                            mountPath:
-                              type: string
-                          type: object
-                        type: array
+                      alluxioRuntime:
+                        properties:
+                          tierdStorage:
+                            items:
+                              properties:
+                                cachePath:
+                                  type: string
+                                mediumType:
+                                  type: string
+                                quota:
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                      dataset:
+                        properties:
+                          mounts:
+                            items:
+                              properties:
+                                dataSource:
+                                  type: string
+                                mountPath:
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
                     type: object
                 type: object
             type: object
@@ -64,6 +67,8 @@ spec:
                 type: string
               finishTime:
                 format: date-time
+                type: string
+              jobName:
                 type: string
               message:
                 type: string

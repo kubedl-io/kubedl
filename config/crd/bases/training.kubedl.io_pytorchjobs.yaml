@@ -50,6 +50,41 @@ spec:
               backoffLimit:
                 format: int32
                 type: integer
+              cache_backend:
+                properties:
+                  cacheEngine:
+                    properties:
+                      fluid:
+                        properties:
+                          alluxioRuntime:
+                            properties:
+                              tierdStorage:
+                                items:
+                                  properties:
+                                    cachePath:
+                                      type: string
+                                    mediumType:
+                                      type: string
+                                    quota:
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          dataset:
+                            properties:
+                              mounts:
+                                items:
+                                  properties:
+                                    dataSource:
+                                      type: string
+                                    mountPath:
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                        type: object
+                    type: object
+                type: object
               cleanPodPolicy:
                 type: string
               modelVersion:

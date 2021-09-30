@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/alibaba/kubedl/cmd/options"
 	v1 "k8s.io/api/core/v1"
@@ -90,25 +91,47 @@ func (r *CacheBackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		r.Log.Error(err, "cacheEngine is undefined", "cache backend", cacheBackend.Name)
 		return reconcile.Result{}, nil
 	} else {
-		err = r.submitCacheJobAndGetPVC(cacheBackend, pvc)
+		err = r.submitCacheJobAndCreatePVC(cacheBackend, pvc)
 		if err != nil {
 			r.Log.Error(err, "failed to create pvc for cacheBackend", "cacheBackend", cacheBackend.Name)
 			return reconcile.Result{Requeue: true}, err
 		}
 	}
 
+	// wait for pvc to be created, that is, the cache job to complete
+	err = r.Get(context.Background(), types.NamespacedName{Namespace: cacheBackend.Namespace, Name: cacheBackend.Status.PVCName}, pvc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			cacheBackend.Status.CacheStatus = cachev1alpha1.Caching
+			r.Log.Info("waiting for pvc to be created", "cacheBackend", cacheBackend.Name, "pvc", pvc.Name)
+			return ctrl.Result{Requeue: true, RequeueAfter: 1 * time.Second}, nil
+		} else {
+			r.Log.Error(err, "fail to get pvc")
+			return reconcile.Result{}, err
+		}
+	}
+
+	cacheBackend.Status.CacheStatus = cachev1alpha1.CacheSucceeded
+
 	return ctrl.Result{}, nil
 }
 
-func (r *CacheBackendReconciler) submitCacheJobAndGetPVC(cacheBackend *cachev1alpha1.CacheBackend,
+func (r *CacheBackendReconciler) submitCacheJobAndCreatePVC(cacheBackend *cachev1alpha1.CacheBackend,
 	pvc *v1.PersistentVolumeClaim) (error error) {
-	pvcName := cacheBackend.Name
+	pvcName := cacheBackend.Status.PVCName
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: cacheBackend.Namespace, Name: pvcName}, pvc)
 	if err != nil {
+		// if pvc has not created
 		if errors.IsNotFound(err) {
 			cacheProvider := cachefactory.GetCacheProvider(cacheBackend.Spec.CacheEngine)
-			pvc = cacheProvider.CreateCacheJob(cacheBackend, pvcName)
+			err = cacheProvider.CreateCacheJob(cacheBackend, pvcName)
+			if err != nil {
+				cacheBackend.Status.CacheStatus = cachev1alpha1.CacheFailed
+				r.Log.Error(err, "fail to create cache job")
+				return err
+			}
 		} else {
+			r.Log.Error(err, "cannot get pvc")
 			return err
 		}
 	}
