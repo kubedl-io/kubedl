@@ -72,12 +72,13 @@ metadata:
 spec:
   cleanPodPolicy: None
   cacheBackend:
+    mountPath: "/path/in/container"
+    cacheMode: "BestEffort"
     cacheEngine:
       fluid:
         dataset:
           mounts:
             - dataSource: "/file/system/dataset/path"
-              mountPath: "/path/in/container"
         alluxioRuntime:
           tierdStorage:
             - cachePath: "/dev/shm"
