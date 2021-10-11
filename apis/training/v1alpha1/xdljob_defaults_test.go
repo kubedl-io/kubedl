@@ -74,9 +74,10 @@ func expectedXDLJob(
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:  XDLJobDefaultContainerName,
-									Image: testXDLImage,
-									Ports: ports,
+									Name:                     XDLJobDefaultContainerName,
+									Image:                    testXDLImage,
+									Ports:                    ports,
+									TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
 						},

@@ -23,9 +23,6 @@ import (
 
 // XDLJobSpec defines the desired state of XDLJob
 type XDLJobSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// RunPolicy encapsulates various runtime policies of the distributed training
 	// job, for example how to clean up resources and how long the job can stay
 	// active.

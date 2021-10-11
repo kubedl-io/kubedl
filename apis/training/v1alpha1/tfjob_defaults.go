@@ -128,6 +128,7 @@ func SetDefaults_TFJob(tfjob *TFJob) {
 	}
 
 	for _, spec := range tfjob.Spec.TFReplicaSpecs {
+		enableFallbackToLogsOnErrorTerminationMessagePolicy(&spec.Template.Spec)
 		// Set default replicas to 1.
 		setDefaults_TFJobReplicas(spec)
 		// Set default port to tensorFlow container.

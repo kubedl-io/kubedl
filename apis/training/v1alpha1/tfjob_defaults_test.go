@@ -66,9 +66,10 @@ func expectedTFJob(cleanPodPolicy common.CleanPodPolicy, restartPolicy common.Re
 						Spec: v1.PodSpec{
 							Containers: []v1.Container{
 								{
-									Name:  TFJobDefaultContainerName,
-									Image: testTFJobImage,
-									Ports: ports,
+									Name:                     TFJobDefaultContainerName,
+									Image:                    testTFJobImage,
+									Ports:                    ports,
+									TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 								},
 							},
 						},

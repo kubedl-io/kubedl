@@ -101,6 +101,7 @@ func SetDefaults_XDLJob(xdlJob *XDLJob) {
 	setTypeNames_XDLJob(xdlJob)
 
 	for _, spec := range xdlJob.Spec.XDLReplicaSpecs {
+		enableFallbackToLogsOnErrorTerminationMessagePolicy(&spec.Template.Spec)
 		// Set default replica and restart policy.
 		setDefaults_XDLJobReplicas(spec)
 		// Set default container port for xdl containers
