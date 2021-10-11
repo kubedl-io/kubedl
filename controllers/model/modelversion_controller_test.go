@@ -81,7 +81,7 @@ func TestCreateModelVersionWithLocalStorage(t *testing.T) {
 	_, _ = versionReconciler.Reconcile(versionRequest)
 
 	// check the img build pod exists
-	imgBuildPodName := GetBuildImagePodName(version.Spec.ModelName, string(version.UID[:5]))
+	imgBuildPodName := GetBuildImagePodName(version.Spec.ModelName, "v"+string(version.UID[:5]))
 	imgBuildPod := &corev1.Pod{}
 	_ = versionReconciler.Get(context.TODO(), types.NamespacedName{
 		Namespace: versionRequest.Namespace,

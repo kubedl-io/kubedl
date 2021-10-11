@@ -40,5 +40,5 @@ func GetModelVersionPVClaimNameByNode(modelName string, nodeName string) string 
 }
 
 func GetBuildImagePodName(modelName string, versionId string) string {
-	return "image-build-" + modelName + "-v" + versionId
+	return "image-build-" + modelName + "-" + versionId
 }

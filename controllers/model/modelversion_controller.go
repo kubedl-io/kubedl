@@ -136,15 +136,17 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 
 	modelVersionStatus := modelVersion.Status.DeepCopy()
 
-	// create kaniko pod to build container image\
-	// take the preceding 5 chars for image versionId
-	versionId := string(modelVersion.UID[:5])
+	// create kaniko pod to build container image, take the preceding 5 chars for image versionId
+	versionId := "v" + string(modelVersion.UID[:5])
+	if modelVersion.Spec.ImageTag != nil && len(*modelVersion.Spec.ImageTag) > 0 {
+		versionId = *modelVersion.Spec.ImageTag
+	}
 	imgBuildPodName := GetBuildImagePodName(model.Name, versionId)
 	imgBuildPod := &v1.Pod{}
 	err = r.Get(context.Background(), types.NamespacedName{Namespace: model.Namespace, Name: imgBuildPodName}, imgBuildPod)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			modelVersionStatus.Image = modelVersion.Spec.ImageRepo + ":v" + versionId
+			modelVersionStatus.Image = modelVersion.Spec.ImageRepo + ":" + versionId
 			modelVersionStatus.ImageBuildPhase = modelv1alpha1.ImageBuilding
 			modelVersionStatus.Message = "Image building started."
 
