@@ -107,4 +107,12 @@ func SetDefaults_XDLJob(xdlJob *XDLJob) {
 		// Set default container port for xdl containers
 		setDefaults_XDLJobPort(&spec.Template.Spec)
 	}
+
+	if xdlJob.Kind == "" {
+		xdlJob.Kind = XDLJobKind
+	}
+
+	if xdlJob.APIVersion == "" {
+		xdlJob.APIVersion = GroupVersion.String()
+	}
 }

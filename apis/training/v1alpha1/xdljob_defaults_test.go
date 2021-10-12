@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 
@@ -61,6 +62,10 @@ func expectedXDLJob(
 	}
 
 	return &XDLJob{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       XDLJobKind,
+			APIVersion: GroupVersion.String(),
+		},
 		Spec: XDLJobSpec{
 			RunPolicy: v1.RunPolicy{
 				CleanPodPolicy: &cleanPodPolicy,

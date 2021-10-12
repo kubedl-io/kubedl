@@ -105,4 +105,12 @@ func SetDefaults_MPIJob(mpiJob *MPIJob) {
 	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
 		setDefaultMPIDAGConditions(mpiJob)
 	}
+
+	if mpiJob.Kind == "" {
+		mpiJob.Kind = MPIJobKind
+	}
+
+	if mpiJob.APIVersion == "" {
+		mpiJob.APIVersion = GroupVersion.String()
+	}
 }
