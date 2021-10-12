@@ -59,6 +59,12 @@ docker-build: test
 docker-push:
 	docker push ${IMG}
 
+dashboard-image-build:
+	docker build . -f Dockerfile.dashboard -t kubedl/dashboard:daily
+
+dashboard-image-build:
+	docker push kubedl/dashboard:daily
+
 # Update helm charts
 # For example: export VERSION=0.5.0 && make helm-chart
 helm-chart:
