@@ -137,7 +137,7 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	modelVersionStatus := modelVersion.Status.DeepCopy()
 
 	// create kaniko pod to build container image, take the preceding 5 chars for image versionId
-	versionId := "v" + string(modelVersion.UID[:5])
+	versionId := string(modelVersion.UID[:5])
 	if modelVersion.Spec.ImageTag != nil && len(*modelVersion.Spec.ImageTag) > 0 {
 		versionId = *modelVersion.Spec.ImageTag
 	}
