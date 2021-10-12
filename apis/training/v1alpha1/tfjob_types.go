@@ -47,7 +47,7 @@ type TFJobSpec struct {
 
 	// ModelVersion represents the model output by this job run.
 	// +optional
-	ModelVersion *v1alpha1.ModelVersionSpec `json:"modelVersion"`
+	ModelVersion *v1alpha1.ModelVersionSpec `json:"modelVersion,omitempty"`
 }
 
 // +genclient
