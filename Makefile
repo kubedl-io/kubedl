@@ -62,7 +62,7 @@ docker-push:
 dashboard-image-build:
 	docker build . -f Dockerfile.dashboard -t kubedl/dashboard:daily
 
-dashboard-image-build:
+dashboard-image-push:
 	docker push kubedl/dashboard:daily
 
 # Update helm charts
