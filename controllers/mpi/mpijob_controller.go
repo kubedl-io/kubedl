@@ -123,6 +123,12 @@ func (r *MPIJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// the gvk of job from util.GetObjectByPassCache is empty, so SetGVK to job
+	if err = util.SetGVK(sharedMPIJob, r.scheme); err != nil {
+		log.Error(err, "set gvk to job(%s) failed", sharedMPIJob.GetName())
+		return reconcile.Result{}, err
+	}
+
 	mpiJob := sharedMPIJob.DeepCopy()
 	// Check reconcile is required.
 	needSync := r.ctrl.SatisfyExpectations(mpiJob, mpiJob.Spec.MPIReplicaSpecs)

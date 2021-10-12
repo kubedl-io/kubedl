@@ -18,6 +18,8 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"math/rand"
 	"strings"
 	"time"
@@ -88,4 +90,28 @@ func MergeMap(a, b map[string]string) map[string]string {
 		a[key] = value
 	}
 	return a
+}
+
+// SetGVK set the GroupVersionKind to obj if it is empty
+func SetGVK(obj runtime.Object, scheme *runtime.Scheme) error {
+	if !obj.GetObjectKind().GroupVersionKind().Empty() {
+		return nil
+	}
+	gvks, _, err := scheme.ObjectKinds(obj)
+	if err != nil {
+		return err
+	}
+	var jobGVK schema.GroupVersionKind
+	for _, gvk := range gvks {
+		if gvk.Group == "training.kubedl.io" {
+			jobGVK = gvk
+			break
+		}
+	}
+	objKind, ok := obj.(schema.ObjectKind)
+	if !ok {
+		return fmt.Errorf("the input obj of SetGVK is not the schema.ObjectKind")
+	}
+	objKind.SetGroupVersionKind(jobGVK)
+	return nil
 }

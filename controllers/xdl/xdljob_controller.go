@@ -111,6 +111,12 @@ func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
+	// the gvk of job from util.GetObjectByPassCache is empty, so SetGVK to job
+	if err = util.SetGVK(sharedXdlJob, r.scheme); err != nil {
+		log.Error(err, "set gvk to job(%s) failed", sharedXdlJob.GetName())
+		return reconcile.Result{}, err
+	}
+
 	xdlJob := sharedXdlJob.DeepCopy()
 	// Check reconcile is required.
 	needSync := r.ctrl.SatisfyExpectations(xdlJob, xdlJob.Spec.XDLReplicaSpecs)

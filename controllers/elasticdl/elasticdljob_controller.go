@@ -93,6 +93,12 @@ func (r *ElasticDLJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		return reconcile.Result{}, err
 	}
 
+	// the gvk of job from util.GetObjectByPassCache is empty, so SetGVK to job
+	if err = util.SetGVK(sharedElasticDLJob, r.scheme); err != nil {
+		log.Error(err, "set gvk to job(%s) failed", sharedElasticDLJob.GetName())
+		return reconcile.Result{}, err
+	}
+
 	elasticdlJob := sharedElasticDLJob.DeepCopy()
 	// Check reconcile is required.
 	needSync := r.ctrl.SatisfyExpectations(elasticdlJob, elasticdlJob.Spec.ElasticDLReplicaSpecs)

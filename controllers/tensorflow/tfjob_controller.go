@@ -151,6 +151,12 @@ func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return reconcile.Result{}, err
 	}
 
+	// the gvk of job from util.GetObjectByPassCache is empty, so SetGVK to job
+	if err = util.SetGVK(sharedTfJob, r.scheme); err != nil {
+		log.Error(err, "set gvk to job(%s) failed", sharedTfJob.GetName())
+		return reconcile.Result{}, err
+	}
+
 	tfJob := sharedTfJob.DeepCopy()
 	// Check reconcile is required.
 	needSync := r.ctrl.SatisfyExpectations(tfJob, tfJob.Spec.TFReplicaSpecs)

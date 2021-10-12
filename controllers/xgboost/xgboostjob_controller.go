@@ -99,6 +99,12 @@ func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
+	// the gvk of job from util.GetObjectByPassCache is empty, so SetGVK to job
+	if err = util.SetGVK(xgboostjob, r.scheme); err != nil {
+		log.Error(err, "set gvk to job(%s) failed", xgboostjob.GetName())
+		return reconcile.Result{}, err
+	}
+
 	// Check reconcile is required.
 	needSync := r.ctrl.SatisfyExpectations(xgboostjob, xgboostjob.Spec.XGBReplicaSpecs)
 

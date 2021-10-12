@@ -116,6 +116,12 @@ func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return reconcile.Result{}, err
 	}
 
+	// the gvk of job from commonutil.GetObjectByPassCache is empty, so SetGVK to job
+	if err = commonutil.SetGVK(sharedPytorchJob, r.scheme); err != nil {
+		log.Error(err, "set gvk to job(%s) failed", sharedPytorchJob.GetName())
+		return reconcile.Result{}, err
+	}
+
 	pytorchJob := sharedPytorchJob.DeepCopy()
 	// Check reconcile is required.
 	needSync := r.ctrl.SatisfyExpectations(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs)
