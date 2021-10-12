@@ -54,6 +54,7 @@ func setDefaults_MPIJobLauncherReplica(spec *v1.ReplicaSpec) {
 			spec.RestartPolicy = MPIJobDefaultRestartPolicy
 		}
 		setDefaults_MPIJobPort(&spec.Template.Spec)
+		enableFallbackToLogsOnErrorTerminationMessagePolicy(&spec.Template.Spec)
 	}
 }
 
@@ -64,6 +65,7 @@ func setDefaults_MPIJobWorkerReplica(spec *v1.ReplicaSpec) {
 			spec.RestartPolicy = MPIJobDefaultRestartPolicy
 		}
 		setDefaults_MPIJobPort(&spec.Template.Spec)
+		enableFallbackToLogsOnErrorTerminationMessagePolicy(&spec.Template.Spec)
 	}
 }
 

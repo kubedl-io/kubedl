@@ -121,5 +121,6 @@ func SetDefaults_PyTorchJob(job *PyTorchJob) {
 			// Set default port to pytorch container of Master.
 			setDefaults_PyTorchJobPort(&spec.Template.Spec)
 		}
+		enableFallbackToLogsOnErrorTerminationMessagePolicy(&spec.Template.Spec)
 	}
 }

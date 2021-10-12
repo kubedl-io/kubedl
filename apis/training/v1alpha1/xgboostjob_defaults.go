@@ -106,6 +106,7 @@ func SetDefaults_XGBoostJob(xgbJob *XGBoostJob) {
 	setTypeNames_XGBoostJob(xgbJob)
 
 	for _, spec := range xgbJob.Spec.XGBReplicaSpecs {
+		enableFallbackToLogsOnErrorTerminationMessagePolicy(&spec.Template.Spec)
 		// Set default replica and restart policy.
 		setDefaults_XGBoostJobReplicas(spec)
 		// Set default container port for xgboost containers

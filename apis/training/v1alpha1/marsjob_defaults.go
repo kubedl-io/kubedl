@@ -145,6 +145,7 @@ func SetDefaults_MarsJob(job *MarsJob) {
 
 	for rType, spec := range job.Spec.MarsReplicaSpecs {
 		setDefaults_MarsJobPort(&spec.Template.Spec)
+		enableFallbackToLogsOnErrorTerminationMessagePolicy(&spec.Template.Spec)
 		switch rType {
 		case MarsReplicaTypeWebService:
 			setDefaults_MarsJobWebServiceReplicas(spec)

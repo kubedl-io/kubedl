@@ -25,9 +25,6 @@ import (
 
 // MPIJobSpec defines the desired state of MPIJob
 type MPIJobSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Specifies the number of slots per worker used in hostfile.
 	// Defaults to 1.
 	// +optional

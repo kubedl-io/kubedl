@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -27,4 +28,13 @@ func addDefaultingFuncs(scheme *runtime.Scheme) error {
 func cleanPodPolicyPointer(cleanPodPolicy v1.CleanPodPolicy) *v1.CleanPodPolicy {
 	c := cleanPodPolicy
 	return &c
+}
+
+func enableFallbackToLogsOnErrorTerminationMessagePolicy(podSpec *corev1.PodSpec) {
+	for ci := range podSpec.Containers {
+		c := &podSpec.Containers[ci]
+		if c.TerminationMessagePolicy == "" {
+			c.TerminationMessagePolicy = corev1.TerminationMessageFallbackToLogsOnError
+		}
+	}
 }
