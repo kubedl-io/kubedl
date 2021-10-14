@@ -138,8 +138,8 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 
 	// create kaniko pod to build container image, take the preceding 5 chars for image versionId
 	versionId := string(modelVersion.UID[:5])
-	if modelVersion.Spec.ImageTag != nil && len(*modelVersion.Spec.ImageTag) > 0 {
-		versionId = *modelVersion.Spec.ImageTag
+	if len(modelVersion.Spec.ImageTag) > 0 {
+		versionId = modelVersion.Spec.ImageTag
 	}
 	imgBuildPodName := GetBuildImagePodName(model.Name, versionId)
 	imgBuildPod := &v1.Pod{}

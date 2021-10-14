@@ -53,7 +53,7 @@ type ModelVersionSpec struct {
 	// ImageTag is the image tag suffixed with image repo, which indicates a specific image version/variant.
 	// If empty, the first 5 digits of this ModelVersion object UID will be used as image tag.
 	// +optional
-	ImageTag *string `json:"imageTag,omitempty"`
+	ImageTag string `json:"imageTag,omitempty"`
 }
 
 // ModelVersionStatus defines the observed state of ModelVersion
