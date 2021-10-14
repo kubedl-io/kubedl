@@ -21,6 +21,8 @@ import (
 )
 
 type ModelSpec struct {
+	// Description is an arbitrary string that describes what this model for.
+	Description *string `json:"description,omitempty"`
 }
 
 // ModelStatus defines the observed state of Model

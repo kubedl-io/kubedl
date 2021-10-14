@@ -58,6 +58,8 @@ spec:
                     type: string
                   imageRepo:
                     type: string
+                  imageTag:
+                    type: string
                   modelName:
                     type: string
                   storage:
