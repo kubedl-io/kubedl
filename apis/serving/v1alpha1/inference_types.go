@@ -24,6 +24,7 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Namespaced
 // +kubebuilder:subresource:status
+// +k8s:defaulter-gen=true
 
 // Inference is the Schema for the inference API.
 type Inference struct {
