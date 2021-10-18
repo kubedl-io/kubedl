@@ -18,10 +18,11 @@ package cron
 
 import (
 	"fmt"
+	"time"
+
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
-	"time"
 
 	"github.com/alibaba/kubedl/apis/apps/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/util"
@@ -101,21 +102,22 @@ func getMostRecentScheduleTime(earliestTime time.Time, now time.Time, schedule c
 		return &t1, 1, nil
 	}
 
+	// It is possible for cron.ParseStandard("59 23 31 2 *") to return an invalid schedule
+	// seconds - 59, minute - 23, hour - 31 (?!)  dom - 2, and dow is optional, clearly 31 is invalid
+	// In this case the scheduleDelta will be 0, and we error out the invalid schedule.
+	scheduleDelta := int64(t2.Sub(t1).Round(time.Second).Seconds())
+	if scheduleDelta < 1 {
+		return nil, 0, fmt.Errorf("time difference between two schedules less than 1 second")
+	}
+
 	// At this point, now > t2 > t1, which means cron has missed more than one time.
 	for !t2.After(now) {
 		t2 = schedule.Next(t2)
 	}
 
-	// It is possible for cron.ParseStandard("59 23 31 2 *") to return an invalid schedule
-	// seconds - 59, minute - 23, hour - 31 (?!)  dom - 2, and dow is optional, clearly 31 is invalid
-	// In this case the timeBetweenTwoSchedules will be 0, and we error out the invalid schedule.
-	timeBetweenTwoSchedules := int64(t2.Sub(t1).Round(time.Second).Seconds())
-	if timeBetweenTwoSchedules < 1 {
-		return nil, 0, fmt.Errorf("time difference between two schedules less than 1 second")
-	}
 	timeElapsed := int64(now.Sub(t1).Seconds())
-	numberOfMissedSchedules := (timeElapsed / timeBetweenTwoSchedules) + 1
-	t := time.Unix(t1.Unix()+((numberOfMissedSchedules-1)*timeBetweenTwoSchedules), 0).UTC()
+	numberOfMissedSchedules := (timeElapsed / scheduleDelta) + 1
+	t := time.Unix(t1.Unix()+((numberOfMissedSchedules-1)*scheduleDelta), 0).UTC()
 	return &t, numberOfMissedSchedules, nil
 }
 
