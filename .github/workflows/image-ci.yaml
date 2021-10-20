@@ -43,4 +43,4 @@ jobs:
         run: |
           export IMAGE="kubedl/dashboard:daily"
           make dashboard-image-build
-          make dashboard-iamge-push
+          make dashboard-image-push
