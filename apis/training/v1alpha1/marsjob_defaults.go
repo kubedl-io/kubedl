@@ -156,4 +156,12 @@ func SetDefaults_MarsJob(job *MarsJob) {
 			setDefaults_MarsJobSchedulerReplicas(spec)
 		}
 	}
+
+	if job.Kind == "" {
+		job.Kind = MarsJobKind
+	}
+
+	if job.APIVersion == "" {
+		job.APIVersion = GroupVersion.String()
+	}
 }

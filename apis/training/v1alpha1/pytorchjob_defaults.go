@@ -123,4 +123,12 @@ func SetDefaults_PyTorchJob(job *PyTorchJob) {
 		}
 		enableFallbackToLogsOnErrorTerminationMessagePolicy(&spec.Template.Spec)
 	}
+
+	if job.Kind == "" {
+		job.Kind = PyTorchJobKind
+	}
+
+	if job.APIVersion == "" {
+		job.APIVersion = GroupVersion.String()
+	}
 }

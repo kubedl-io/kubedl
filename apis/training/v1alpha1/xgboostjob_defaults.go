@@ -116,4 +116,12 @@ func SetDefaults_XGBoostJob(xgbJob *XGBoostJob) {
 	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
 		setDefaultXGBoostDAGConditions(xgbJob)
 	}
+
+	if xgbJob.Kind == "" {
+		xgbJob.Kind = XGBoostJobKind
+	}
+
+	if xgbJob.APIVersion == "" {
+		xgbJob.APIVersion = GroupVersion.String()
+	}
 }

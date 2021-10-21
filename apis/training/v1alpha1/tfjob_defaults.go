@@ -134,4 +134,12 @@ func SetDefaults_TFJob(tfjob *TFJob) {
 		// Set default port to tensorFlow container.
 		setDefaults_TFJobPort(&spec.Template.Spec)
 	}
+
+	if tfjob.Kind == "" {
+		tfjob.Kind = TFJobKind
+	}
+
+	if tfjob.APIVersion == "" {
+		tfjob.APIVersion = GroupVersion.String()
+	}
 }
