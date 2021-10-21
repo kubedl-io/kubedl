@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/alibaba/kubedl/pkg/job_controller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -141,6 +142,17 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 			return false
 		}
 		reconciler.ctrl.Metrics.CreatedInc()
+		return true
+	}
+}
+
+func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
+	return func(e event.DeleteEvent) bool {
+		pytorchJob, ok := e.Meta.(*training.PyTorchJob)
+		if !ok {
+			return false
+		}
+		jc.DeleteExpectations(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs)
 		return true
 	}
 }

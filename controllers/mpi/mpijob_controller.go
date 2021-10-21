@@ -166,6 +166,7 @@ func (r *MPIJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Watch owner resource with create event filter.
 	if err = c.Watch(&source.Kind{Type: &training.MPIJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
+		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
 	}); err != nil {
 		return err
 	}

@@ -222,3 +222,14 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 		return true
 	}
 }
+
+func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
+	return func(e event.DeleteEvent) bool {
+		xgboostJob, ok := e.Meta.(*v1alpha1.XGBoostJob)
+		if !ok {
+			return false
+		}
+		jc.DeleteExpectations(xgboostJob, xgboostJob.Spec.XGBReplicaSpecs)
+		return true
+	}
+}

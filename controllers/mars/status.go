@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 
@@ -145,6 +146,17 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 			return false
 		}
 		reconciler.ctrl.Metrics.CreatedInc()
+		return true
+	}
+}
+
+func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
+	return func(e event.DeleteEvent) bool {
+		marsJob, ok := e.Meta.(*v1alpha1.MarsJob)
+		if !ok {
+			return false
+		}
+		jc.DeleteExpectations(marsJob, marsJob.Spec.MarsReplicaSpecs)
 		return true
 	}
 }

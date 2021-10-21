@@ -208,3 +208,14 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 		return true
 	}
 }
+
+func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
+	return func(e event.DeleteEvent) bool {
+		mpiJob, ok := e.Meta.(*training.MPIJob)
+		if !ok {
+			return false
+		}
+		jc.DeleteExpectations(mpiJob, mpiJob.Spec.MPIReplicaSpecs)
+		return true
+	}
+}

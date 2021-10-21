@@ -17,7 +17,10 @@ limitations under the License.
 package job_controller
 
 import (
+	"fmt"
+
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,6 +31,7 @@ func (jc *JobController) SatisfyExpectations(job metav1.Object, specs map[apiv1.
 	satisfied := true
 	key, err := KeyFunc(job)
 	if err != nil {
+		log.Error(err, fmt.Sprintf("failed to get the key of job(%s/%s)", job.GetNamespace(), job.GetName()))
 		return false
 	}
 
@@ -44,4 +48,20 @@ func (jc *JobController) SatisfyExpectations(job metav1.Object, specs map[apiv1.
 		satisfied = satisfied || jc.Expectations.SatisfiedExpectations(expectationServicesKey)
 	}
 	return satisfied
+}
+
+func (jc *JobController) DeleteExpectations(job metav1.Object, specs map[apiv1.ReplicaType]*apiv1.ReplicaSpec) {
+	key, err := KeyFunc(job)
+	if err != nil {
+		log.Error(err, fmt.Sprintf("failed to get the key of job(%s/%s)", job.GetNamespace(), job.GetName()))
+		return
+	}
+
+	for rtype := range specs {
+		expectationPodsKey := GenExpectationPodsKey(key, string(rtype))
+		expectationServicesKey := GenExpectationServicesKey(key, string(rtype))
+		jc.Expectations.DeleteExpectations(expectationPodsKey)
+		jc.Expectations.DeleteExpectations(expectationServicesKey)
+	}
+	return
 }

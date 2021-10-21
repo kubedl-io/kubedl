@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/alibaba/kubedl/pkg/job_controller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -53,6 +54,17 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			return false
 		}
 		reconciler.ctrl.Metrics.CreatedInc()
+		return true
+	}
+}
+
+func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
+	return func(e event.DeleteEvent) bool {
+		xdlJob, ok := e.Meta.(*xdlv1alpha1.XDLJob)
+		if !ok {
+			return false
+		}
+		jc.DeleteExpectations(xdlJob, xdlJob.Spec.XDLReplicaSpecs)
 		return true
 	}
 }
