@@ -46,8 +46,11 @@ type JobStatus struct {
 	// It is represented in RFC3339 form and is in UTC.
 	LastReconcileTime *metav1.Time `json:"lastReconcileTime,omitempty"`
 
-	// ModelVersionName reprensents the model version name output by this job run.
+	// ModelVersionName represents the model version name output by this job run.
 	ModelVersionName string `json:"modelVersionName,omitempty"`
+
+	// EnableCache is the cache status of the job
+	CacheBackendName string `json:"cacheBackendName,omitempty"`
 }
 
 // ReplicaType represents the type of the replica. Each operator needs to define its

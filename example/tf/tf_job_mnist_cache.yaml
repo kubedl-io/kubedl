@@ -1,0 +1,43 @@
+apiVersion: "training.kubedl.io/v1alpha1"
+kind: "TFJob"
+metadata:
+  name: "tf-cache"
+spec:
+  cleanPodPolicy: None  
+  cacheBackend:
+    mountPath: "/data"   # mountPath is the path to which cached files are mounted to the container
+    cacheEngine:
+      fluid:
+        dataset:
+          dataSources:
+            - path: local:///dataset/mnist  # path property can be any legal UFS path acknowledged by Alluxio
+              subdirName: mnist   # dataset needs to specify the name of the file directory in the mount path
+        alluxioRuntime:
+          replicas: 1
+          tieredStorage:
+            - cachePath: /dev/shm
+              quota: "1Gi"
+              mediumType: MEM
+  tfReplicaSpecs:
+    Worker:
+      replicas: 1 
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+            - name: tensorflow
+              image: kubedl/tf-mnist-with-summaries:1.0
+              command:
+                - "python"
+                - "/var/tf_mnist/mnist_with_summaries.py"
+                - "--log_dir=/train/logs"
+                - "--data_dir=/data/mnist"  # dataset directory, equivalent to "mountPath + subdirName"
+                - "--learning_rate=0.01"
+                - "--batch_size=150"
+              resources:
+                limits:
+                  cpu: 2048m
+                  memory: 2Gi
+                requests:
+                  cpu: 1024m               
+                  memory: 1Gi

@@ -7,10 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alibaba/kubedl/pkg/features"
-
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	model "github.com/alibaba/kubedl/controllers/model"
 	"github.com/alibaba/kubedl/controllers/model/storage"
+	"github.com/alibaba/kubedl/pkg/code_sync"
+	"github.com/alibaba/kubedl/pkg/features"
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	commonutil "github.com/alibaba/kubedl/pkg/util"
+	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,14 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
-	model "github.com/alibaba/kubedl/controllers/model"
-	"github.com/alibaba/kubedl/pkg/code_sync"
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	commonutil "github.com/alibaba/kubedl/pkg/util"
-	"github.com/alibaba/kubedl/pkg/util/k8sutil"
-	log "github.com/sirupsen/logrus"
 )
 
 // Reasons for job events.
@@ -66,7 +66,7 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 // ReconcileJobs checks and updates replicas for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods/services.
 func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus apiv1.JobStatus,
-	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec) (result reconcile.Result, err error) {
+	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackend *cachev1alpha1.CacheBackendSpec) (result reconcile.Result, err error) {
 
 	metaObject, ok := job.(metav1.Object)
 	jobName := metaObject.GetName()
@@ -111,6 +111,23 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 		return reconcile.Result{}, err
 	}
 	// TODO(SimonCqk): update job conditions failed ?
+
+	if cacheBackend != nil {
+		// Create cache backend
+		// if cache backend has been created, the func also returns nil
+		err = jc.createCache(metaObject, cacheBackend)
+		if err != nil {
+			log.Error(err, " failed to create cacheBackend")
+			return reconcile.Result{Requeue: true}, err
+		}
+
+		// Next step is to get pvc and inject it to containers
+		err = jc.addCachePathToContainer(metaObject, cacheBackend, replicas)
+		if err != nil {
+			log.Error(err, " failed to inject pvc to containers")
+			return reconcile.Result{Requeue: true}, err
+		}
+	}
 
 	pods, err := jc.Controller.GetPodsForJob(job)
 	if err != nil {

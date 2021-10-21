@@ -1,0 +1,20 @@
+# permissions for end users to view cachebackends.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cachebackend-viewer-role
+rules:
+- apiGroups:
+  - cache.kubedl.io
+  resources:
+  - cachebackends
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cache.kubedl.io
+  resources:
+  - cachebackends/status
+  verbs:
+  - get

@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/aliyun/aliyun-log-go-sdk v0.1.6
+	github.com/fluid-cloudnative/fluid v0.6.0
 	github.com/frankban/quicktest v1.7.3 // indirect
 	github.com/gin-contrib/sessions v0.0.3
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
