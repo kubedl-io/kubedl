@@ -135,36 +135,9 @@ func (r *NotebookReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	// check pod status and update notebook status
-	if pod.Status.Phase == corev1.PodPending {
-		if notebook.Status.Condition == "" {
-			notebook.Status.Condition = notebookv1alpha1.NotebookCreated
-			notebook.Status.Message = "created notebook pod " + pod.Name
-			notebook.Status.LastTransitionTime = metav1.Now()
-			err = r.Status().Update(context.Background(), notebook)
-			if err != nil {
-				r.Log.Error(err, "failed to update notebook status", "notebook", notebook.Name)
-				return ctrl.Result{}, err
-			}
-		}
-	} else if pod.Status.Phase == corev1.PodRunning {
-		if notebook.Status.Condition != notebookv1alpha1.NotebookRunning {
-			notebook.Status.Condition = notebookv1alpha1.NotebookRunning
-			notebook.Status.LastTransitionTime = metav1.Now()
-			notebook.Status.Message = "notebook pod " + pod.Name + " is running"
-			err = r.Status().Update(context.Background(), notebook)
-		}
-	} else if pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodSucceeded {
-		if notebook.Status.Condition != notebookv1alpha1.NotebookTerminated {
-			notebook.Status.Condition = notebookv1alpha1.NotebookTerminated
-			notebook.Status.LastTransitionTime = metav1.Now()
-			notebook.Status.Message = "notebook pod " + pod.Name + " terminated: " + string(pod.Status.Phase)
-			err = r.Status().Update(context.Background(), notebook)
-			if err != nil {
-				r.Log.Error(err, "failed to update notebook status", "notebook", notebook.Name)
-				return ctrl.Result{}, err
-			}
-		}
-		return reconcile.Result{}, nil
+	err = r.updateNotebookCondition(pod, notebook)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	// 2. create the notebook service if not existing
@@ -213,6 +186,37 @@ func (r *NotebookReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *NotebookReconciler) updateNotebookCondition(pod *corev1.Pod, notebook *notebookv1alpha1.Notebook) error {
+	var err error
+	if pod.Status.Phase == corev1.PodPending {
+		if notebook.Status.Condition == "" {
+			notebook.Status.Condition = notebookv1alpha1.NotebookCreated
+			notebook.Status.Message = "created notebook pod " + pod.Name
+			notebook.Status.LastTransitionTime = metav1.Now()
+			err = r.Status().Update(context.Background(), notebook)
+		}
+	} else if pod.Status.Phase == corev1.PodRunning {
+		if notebook.Status.Condition != notebookv1alpha1.NotebookRunning {
+			notebook.Status.Condition = notebookv1alpha1.NotebookRunning
+			notebook.Status.LastTransitionTime = metav1.Now()
+			notebook.Status.Message = "notebook pod " + pod.Name + " is running"
+			err = r.Status().Update(context.Background(), notebook)
+		}
+	} else if pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodSucceeded {
+		if notebook.Status.Condition != notebookv1alpha1.NotebookTerminated {
+			notebook.Status.Condition = notebookv1alpha1.NotebookTerminated
+			notebook.Status.LastTransitionTime = metav1.Now()
+			notebook.Status.Message = "notebook pod " + pod.Name + " terminated: " + string(pod.Status.Phase)
+			err = r.Status().Update(context.Background(), notebook)
+		}
+	}
+	if err != nil {
+		r.Log.Error(err, "failed to update notebook status", "notebook", notebook.Name)
+		return err
+	}
+	return err
 }
 
 func generateIngress(svc *corev1.Service, nb *notebookv1alpha1.Notebook, pod *corev1.Pod) *v1.Ingress {

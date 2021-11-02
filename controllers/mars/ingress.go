@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"path"
 	"strings"
 
@@ -103,7 +102,6 @@ func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host 
 			Labels:    labels,
 			Annotations: map[string]string{
 				"nginx.ingress.kubernetes.io/rewrite-target": "/$1",
-				"nginx.org/websocket-services":               fmt.Sprintf(`"%s"`, svc.Name),
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{

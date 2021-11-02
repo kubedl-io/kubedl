@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Alibaba Authors.
+Copyright 2021 The KubeDL Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -41,6 +41,9 @@ func init() {
 	_ = pflag.Set("v", "10")
 }
 
+// 1. First reconcile: a notebook crd, check that notebook pod is created and its status as CREATED
+// 2. Second reconcile: mark notebook pod is running and check notebook status as running
+// 3. Third reconcile: mark notebook pod is finished and check notebook status as terminated
 func TestNotebookController(t *testing.T) {
 	scheme := runtime.NewScheme()
 	// required to register all used api schemes
@@ -111,7 +114,7 @@ func TestNotebookController(t *testing.T) {
 	_ = notebookReconciler.Status().Update(context.TODO(), notebookPod)
 	// 3rd reconcile
 	_, _ = notebookReconciler.Reconcile(request)
-	// notebook is running
+	// notebook is termniated
 	notebook = getNotebook(notebookReconciler, notebookName)
 	assert.Equal(t, notebookv1alpha1.NotebookTerminated, notebook.Status.Condition)
 }
