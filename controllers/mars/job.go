@@ -37,7 +37,7 @@ func (r *MarsJobReconciler) GetJobFromInformerCache(namespace, name string) (met
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "mars job not found", "namespace", namespace, "name", name)
+			log.Info("mars job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}
@@ -56,7 +56,7 @@ func (r *MarsJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.
 	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "mars job not found", "namespace", namespace, "name", name)
+			log.Info("mars job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}

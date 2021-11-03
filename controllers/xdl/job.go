@@ -20,14 +20,15 @@ import (
 	"context"
 	"fmt"
 
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	commonutil "github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/job_controller"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
 
 // GetJobFromInformerCache returns the Job from Informer Cache
@@ -37,7 +38,7 @@ func (r *XDLJobReconciler) GetJobFromInformerCache(namespace, name string) (meta
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "xdl job not found", "namespace", namespace, "name", name)
+			log.Info("xdl job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}
@@ -57,7 +58,7 @@ func (r *XDLJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.O
 	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "xdl job not found", "namespace", namespace, "name", name)
+			log.Info("xdl job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}

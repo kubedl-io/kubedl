@@ -20,14 +20,15 @@ import (
 	"context"
 	"fmt"
 
-	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/job_controller"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/util"
 )
 
 // GetJobFromInformerCache returns the Job from Informer Cache
@@ -37,7 +38,7 @@ func (r *ElasticDLJobReconciler) GetJobFromInformerCache(namespace, name string)
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "elasticdl job not found", "namespace", namespace, "name", name)
+			log.Info("elasticdl job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}
@@ -57,7 +58,7 @@ func (r *ElasticDLJobReconciler) GetJobFromAPIClient(namespace, name string) (me
 	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "elasticdl job not found", "namespace", namespace, "name", name)
+			log.Info("elasticdl job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}
