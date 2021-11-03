@@ -35,11 +35,11 @@ import (
 
 func (r *MPIJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
 	job := &training.MPIJob{}
-	// Default reader for PytorchJob is cache reader.
+	// Default reader for MPIJob is cache reader.
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "mpi job not found", "namespace", namespace, "name", name)
+			log.Info("mpi job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}
@@ -58,7 +58,7 @@ func (r *MPIJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.O
 	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "mpi job not found", "namespace", namespace, "name", name)
+			log.Info("mpi job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}

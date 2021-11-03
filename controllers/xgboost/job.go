@@ -19,10 +19,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	k8sv1 "k8s.io/api/core/v1"
@@ -31,6 +27,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/job_controller"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
 
 // DeleteJob deletes the job
@@ -56,7 +57,7 @@ func (r *XgboostJobReconciler) GetJobFromInformerCache(namespace, name string) (
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "xgboost job not found", "namespace", namespace, "name", name)
+			log.Info("xgboost job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}
@@ -76,7 +77,7 @@ func (r *XgboostJobReconciler) GetJobFromAPIClient(namespace, name string) (meta
 	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			log.Error(err, "xgboost job not found", "namespace", namespace, "name", name)
+			log.Info("xgboost job not found", "namespace", namespace, "name", name)
 		} else {
 			log.Error(err, "failed to get job from api-server", "namespace", namespace, "name", name)
 		}
