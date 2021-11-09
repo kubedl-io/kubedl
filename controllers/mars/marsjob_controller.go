@@ -135,6 +135,7 @@ func (r *MarsJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Watch owner resources with create event filter.
 	if err = c.Watch(&source.Kind{Type: &kubedliov1beta1.MarsJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
+		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
 	}); err != nil {
 		return err
 	}

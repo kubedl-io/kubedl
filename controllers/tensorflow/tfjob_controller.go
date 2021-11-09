@@ -193,6 +193,7 @@ func (r *TFJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Watch owner resource with create event filter.
 	if err = c.Watch(&source.Kind{Type: &training.TFJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
+		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
 	}); err != nil {
 		return err
 	}

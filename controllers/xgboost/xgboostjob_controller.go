@@ -132,6 +132,7 @@ func (r *XgboostJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Watch owner resource with create event filter.
 	if err = c.Watch(&source.Kind{Type: &v1alpha1.XGBoostJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
+		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
 	}); err != nil {
 		return err
 	}

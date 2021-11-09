@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -48,6 +49,17 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 		}
 		log.Info(msg)
 		reconciler.ctrl.Metrics.CreatedInc()
+		return true
+	}
+}
+
+func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
+	return func(e event.DeleteEvent) bool {
+		tfJob, ok := e.Meta.(*training.TFJob)
+		if !ok {
+			return false
+		}
+		jc.DeleteExpectations(tfJob, tfJob.Spec.TFReplicaSpecs)
 		return true
 	}
 }
