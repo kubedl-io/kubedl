@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	KubeDLCacheEnabled = "KubeDLCacheEnabled"
+	KUBEDL_CACHE_NAME = "KUBEDL_CACHE_NAME"
 )
 
 // CacheBackendSpec defines the desired state of CacheBackend
@@ -29,33 +29,20 @@ type CacheBackendSpec struct {
 	// The location in the container where the dataset should be mounted
 	MountPath string `json:"mountPath,omitempty"`
 
+	// Dataset describes the parameters related to the dataset file
+	Dataset *Dataset `json:"dataset,omitempty"`
+
 	// CacheEngine is different kinds of cache engine
 	CacheEngine *CacheEngine `json:"cacheEngine,omitempty"`
 }
 
 // CacheBackendStatus defines the observed state of CacheBackend
 type CacheBackendStatus struct {
-	// JobName indicates the job name of the cacheBackend binding
+	// JobName indicates the name of the job that consumes the cache
 	JobName string `json:"jobName,omitempty"`
 
 	// CacheStatus is used to help understand the status of a caching process
 	CacheStatus CacheStatus `json:"cacheStatus,omitempty"`
-}
-
-type CacheEngine struct {
-	// Fluid may be the only caching engine for the time being
-	Fluid *Fluid `json:"fluid,omitempty"`
-}
-
-type Fluid struct {
-	// Dataset describes the parameters related to the dataset file
-	// +required
-	Dataset *Dataset `json:"dataset,omitempty"`
-
-	// AlluxioRuntime is used to configure the cache runtime
-	// If this parameter is not specified, the cache will not take effect and the data set will be directly mounted
-	// +optional
-	AlluxioRuntime *AlluxioRuntime `json:"alluxioRuntime,omitempty"`
 }
 
 // Dataset is used to define where specific data sources are stored and mounted
@@ -66,16 +53,27 @@ type Dataset struct {
 }
 
 type DataSource struct {
-	// The dataset path in variety file system
-	Path string `json:"path,omitempty"`
+	// Location is the dataset path in variety file system
+	Location string `json:"location,omitempty"`
 
 	// SubdirectoryName is used as the file name of the data source in mountPath.
 	// The directory structure in container is as follows:
 	// - MountPath
-	// 	 - SubdirectoryName1
-	//   - SubdirectoryName2
+	//   - SubDirName1
+	//   - SubDirName2
 	//   - ...
-	SubdirectoryName string `json:"subdirName,omitempty"`
+	SubDirName string `json:"subDirName,omitempty"`
+}
+
+type CacheEngine struct {
+	// Fluid may be the only caching engine for the time being
+	Fluid *Fluid `json:"fluid,omitempty"`
+}
+
+type Fluid struct {
+	// AlluxioRuntime is used to configure the cache runtime
+	// If this parameter is not specified, the cache will not take effect and the data set will be directly mounted
+	AlluxioRuntime *AlluxioRuntime `json:"alluxioRuntime,omitempty"`
 }
 
 type AlluxioRuntime struct {
@@ -101,7 +99,7 @@ type CacheStatus string
 
 // The four CacheStatus vary as follows:
 // CacheCreating -> PVCCreating ( CacheSucceed ) -> PVCCreated
-// 			  or -> CacheFailed
+//            or -> CacheFailed
 const (
 	PVCCreated    CacheStatus = "PVCCreated"
 	PVCCreating   CacheStatus = "PVCCreating"

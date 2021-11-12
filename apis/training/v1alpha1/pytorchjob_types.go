@@ -17,10 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	common "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 

@@ -96,7 +96,7 @@ func main() {
 	registry.RegisterGangSchedulers(mgr)
 
 	setupLog.Info("setting up cache backends")
-	cacheregistry.RegisterCacheBackends(mgr)
+	cacheregistry.RegisterCacheBackends(mgr.GetClient())
 
 	// Setup all controllers with provided manager.
 	if err = controllers.SetupWithManager(mgr, options.CtrlConfig); err != nil {

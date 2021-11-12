@@ -20,10 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
-	"github.com/alibaba/kubedl/cmd/options"
-	"github.com/alibaba/kubedl/pkg/cache_backend/registry"
-
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,6 +28,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/cache_backend/registry"
 )
 
 func NewCacheBackendController(mgr ctrl.Manager, _ options.JobControllerConfiguration) *CacheBackendReconciler {

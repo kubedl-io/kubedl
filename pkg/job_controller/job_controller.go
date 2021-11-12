@@ -4,13 +4,6 @@ import (
 	"context"
 	"strings"
 
-	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
-	"github.com/alibaba/kubedl/cmd/options"
-	cachectrl "github.com/alibaba/kubedl/controllers/cache"
-	"github.com/alibaba/kubedl/pkg/gang_schedule"
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/metrics"
-
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -22,6 +15,13 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
+	cachectrl "github.com/alibaba/kubedl/controllers/cache"
+	"github.com/alibaba/kubedl/pkg/gang_schedule"
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/metrics"
 )
 
 var (
@@ -191,7 +191,8 @@ func (jc *JobController) resolveControllerRef(namespace string, controllerRef *m
 	return job
 }
 
-func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) error {
+func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec *cachev1alpha1.CacheBackendSpec,
+	jobStatus *apiv1.JobStatus) error {
 	cacheBackend := &cachev1alpha1.CacheBackend{}
 	cacheBackendName := cachectrl.GetCacheName(metaObject)
 	cacheBackendNameSpace := metaObject.GetNamespace()
@@ -221,7 +222,10 @@ func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec 
 				return err
 			}
 
-			// Update status
+			// Update job status
+			jobStatus.CacheBackendName = cacheBackendName
+
+			// Update cache backend status
 			cacheCopy := cacheBackend.DeepCopy()
 			cacheCopy.Status.JobName = metaObject.GetName()
 			cacheCopy.Status.CacheStatus = cachev1alpha1.CacheCreating
@@ -258,7 +262,7 @@ func (jc JobController) addCachePathToContainer(metaObject metav1.Object, cacheB
 			for key, container := range containerList {
 				exists := false
 				for _, env := range container.Env {
-					if env.Name == cachev1alpha1.KubeDLCacheEnabled {
+					if env.Name == cachev1alpha1.KUBEDL_CACHE_NAME {
 						exists = true
 						break
 					}
@@ -266,7 +270,7 @@ func (jc JobController) addCachePathToContainer(metaObject metav1.Object, cacheB
 				// append if not exists
 				if !exists {
 					containerList[key].Env = append(containerList[key].Env, v1.EnvVar{
-						Name:  cachev1alpha1.KubeDLCacheEnabled,
+						Name:  cachev1alpha1.KUBEDL_CACHE_NAME,
 						Value: pvcName,
 					})
 				}

@@ -49,7 +49,7 @@ type JobStatus struct {
 	// ModelVersionName represents the model version name output by this job run.
 	ModelVersionName string `json:"modelVersionName,omitempty"`
 
-	// EnableCache is the cache status of the job
+	// CacheBackendName is the name for the backend cache
 	CacheBackendName string `json:"cacheBackendName,omitempty"`
 }
 

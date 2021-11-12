@@ -35,7 +35,7 @@ User submit deep learning jobs in a Kubernetes cluster with Fluid and KubeDL dep
 
 Add a new feature, data cache, which will:
 1. Add an data cache field to the job manifest of KubeDL, which will be provided to the user to specify the parameters for the data cache that they will use to flexibly configure how their data will be cached. The parameters will be discussed below.
-2. Add a handler which primary purpose is to parse parameters about the data cache in user-submitted jobs and provide default values for some optional fields.
+2. Add a Controller which primary purpose is to parse parameters about the data cache in user-submitted jobs and provide default values for some optional fields.
 3. Add a checker that checks to see if available fluids are deployed within the cluster and, if not, prompts the user that data cache is not available.
 4. Add a client that interacts with the api server. After the parameters related to the data cache are resolved, the parameters are submitted to the fluid in the cluster through the api server and the dataset and create the dataset and cache runtime (usually alluxio runtime), which are apis provided by the fluid.
 5. Add a watch feature that will use client to monitor if a new pv&pvc pair are created in the cluster (if dataset and runtime are successfully created, fluid will bind them and create a pair of pv and pvc).
@@ -51,11 +51,11 @@ FYR. The final implementation may be slightly different from this diagram.
 The general process is as follows:
 
 1. The user submits a yaml file describing the job whose field contains the parameters of the data cache, which means that the job will use the feature of the data cache.
-2. KubeDL's Job Controller detects that a job with data cache parameters has been created, and it passes the parameters to the handler responsible for enable data cache.
-3. After verifying that the parameters are correct, the cache handler adds defaults to the missing parameters and creates a client. The client checks to see if Fluid has been deployed in the Kubernetes cluster, and if so, it will create the dataset and cache runtime by the api server.
+2. KubeDL's Job Controller detects that a job with data cache parameters has been created, and it passes the parameters to the controller responsible for enable data cache.
+3. After verifying that the parameters are correct, the cache controller adds defaults to the missing parameters and creates a client. The client checks to see if Fluid has been deployed in the Kubernetes cluster, and if so, it will create the dataset and cache runtime by the api server.
 4. The volume controller from Fluid detects that there is a pair of dataset and runtime in the cluster that can be bound, and it will automatically create pv and assign pvc to it. Users can enjoy data cache by mounting this pvc.
-5. When the listener in KubeDL detects that pvc is created, it will notify the cache handler and pass relevant information about pvc to the handler.
-6. Handler receives the parameters of the pvc and injects the pvc into the container of the KubeDL job.
+5. When the listener in KubeDL detects that pvc is created, it will notify the cache controller and pass relevant information about pvc to the controller.
+6. Controller receives the parameters of the pvc and injects the pvc into the container of the KubeDL job.
 
 With the above process, the dataset in the specified file system can be cached, which means that the time for the KubeDL job to access the dataset will be greatly reduced.
 
@@ -73,20 +73,22 @@ spec:
   cleanPodPolicy: None
   cacheBackend:
     mountPath: "/path/in/container"
-    cacheMode: "BestEffort"
     cacheEngine:
       fluid:
         dataset:
           dataSources:
             - path: "/file/system/dataset/path"
+              subdirName: mnist
         alluxioRuntime:
+          replicas: 1
           tieredStorage:
             - cachePath: "/dev/shm"
               quota: "4Gi"
+              mediumtype: "MEM"
   tfReplicaSpecs:
     ...
     No additional volumes need to be configured. 
-    The cache handler will automatically inject the pvc created by fluid into the container
+    The cache controller will automatically inject the pvc created by fluid into the container
 ```
 
 Compared with the first configuration method mentioned in **Alternatives Considered**, the advantage of this configuration data cache is that:
@@ -96,18 +98,16 @@ Compared with the first configuration method mentioned in **Alternatives Conside
 A partial list of supported options, full list TBD
 
 ```yaml
-# Required parameters for dataset
-dataSource: "https://mirrors.bit.edu.cn/apache/spark/"   # Directory of the dataset to be mounted(required)
 mountPath: "/path/in/container"				 # Path to mount into container(required)
+
+# Required parameters for dataset
+path: "/file/system/dataset/path"   # Directory of the dataset to be mounted(required)
+subdirName: "mnist"
 
 # Required parameters for Runtime
 quota: "4Gi"                                             # Maximum cache capacity allowed for this level of storage(required)
 mediumtype: "MEM"                                        # The default is MEM, and SSD and HDD are optional(optional)
 cachePath: "/dev/shm"                                    # The data is cached at the node where the alluxio worker is located(optional)
-
-# Specify the required cache engine
-runtimeType: "AlluxioRuntime"                            # Cache engine used by fluid cache(optional)
-
 ParametersToBeAdd...
 ```
 

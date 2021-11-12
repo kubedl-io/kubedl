@@ -76,19 +76,19 @@ spec:
                                   type: object
                                 type: array
                             type: object
-                          dataset:
-                            properties:
-                              dataSources:
-                                items:
-                                  properties:
-                                    path:
-                                      type: string
-                                    subdirName:
-                                      type: string
-                                  type: object
-                                type: array
-                            type: object
                         type: object
+                    type: object
+                  dataset:
+                    properties:
+                      dataSources:
+                        items:
+                          properties:
+                            location:
+                              type: string
+                            subDirName:
+                              type: string
+                          type: object
+                        type: array
                     type: object
                   mountPath:
                     type: string

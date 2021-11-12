@@ -1,9 +1,9 @@
 package cache_backend
 
 import (
-	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	controllerruntime "sigs.k8s.io/controller-runtime"
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 )
 
 type CacheEngine interface {
@@ -12,4 +12,4 @@ type CacheEngine interface {
 	Name() string
 }
 
-type NewCacheEngine func(mgr controllerruntime.Manager) CacheEngine
+type NewCacheEngine func(client client.Client) CacheEngine

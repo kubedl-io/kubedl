@@ -7,6 +7,15 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
 	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -17,15 +26,6 @@ import (
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
-
-	log "github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // Reasons for job events.
@@ -115,7 +115,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	if cacheBackend != nil {
 		// Create cache backend
 		// if cache backend has been created, the func also returns nil
-		err = jc.createCache(metaObject, cacheBackend)
+		err = jc.createCache(metaObject, cacheBackend, &jobStatus)
 		if err != nil {
 			log.Error(err, " failed to create cacheBackend")
 			return reconcile.Result{Requeue: true}, err

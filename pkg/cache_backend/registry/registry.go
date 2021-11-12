@@ -4,12 +4,12 @@ import (
 	"errors"
 	"sync"
 
+	"k8s.io/klog"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/cache_backend"
 	"github.com/alibaba/kubedl/pkg/cache_backend/fluid"
-
-	"k8s.io/klog"
-	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 var (
@@ -17,9 +17,9 @@ var (
 	defaultRegistry = Registry{registry: make(map[string]cache_backend.CacheEngine)}
 )
 
-func RegisterCacheBackends(mgr controllerruntime.Manager) {
+func RegisterCacheBackends(client client.Client) {
 	for _, newer := range NewCacheEngines {
-		cacheEngine := newer(mgr)
+		cacheEngine := newer(client)
 		klog.Infof("register cache backend %s", cacheEngine.Name())
 		defaultRegistry.Add(cacheEngine)
 	}
