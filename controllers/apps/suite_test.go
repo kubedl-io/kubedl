@@ -17,18 +17,18 @@ limitations under the License.
 package cron
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	appsv1alpha1 "github.com/alibaba/kubedl/apis/apps/v1alpha1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -46,13 +46,12 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+	defer func() { close(done) }()
 
+	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 	By("bootstrapping test environment")
 
-	var err error
-
-	err = appsv1alpha1.AddToScheme(scheme.Scheme)
+	err := appsv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
@@ -60,8 +59,6 @@ var _ = BeforeSuite(func(done Done) {
 	k8sClient = fake.NewFakeClientWithScheme(scheme.Scheme)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
-
-	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {

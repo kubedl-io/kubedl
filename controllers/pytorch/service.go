@@ -36,9 +36,14 @@ func (r *PytorchJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Ser
 	if err != nil {
 		return nil, err
 	}
+
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: r.ctrl.GenLabels(job.GetName()),
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	// List all pods to include those that don't match the selector anymore
 	// but have a ControllerRef pointing to this controller.
 	serviceList := &corev1.ServiceList{}
@@ -46,6 +51,7 @@ func (r *PytorchJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Ser
 	if err != nil {
 		return nil, err
 	}
+
 	services := util.ToServicePointerList(serviceList.Items)
 	// If any adoptions are attempted, we should first recheck for deletion
 	// with an uncached quorum read sometime after listing services (see #42639).
