@@ -110,7 +110,7 @@ func (r *XgboostJobReconciler) Reconcile(req reconcile.Request) (reconcile.Resul
 	// Set default properties for xgboost job
 	r.scheme.Default(xgboostjob)
 
-	result, err := r.ctrl.ReconcileJobs(xgboostjob, xgboostjob.Spec.XGBReplicaSpecs, xgboostjob.Status.JobStatus, &xgboostjob.Spec.RunPolicy, nil)
+	result, err := r.ctrl.ReconcileJobs(xgboostjob, xgboostjob.Spec.XGBReplicaSpecs, xgboostjob.Status.JobStatus, &xgboostjob.Spec.RunPolicy, nil, nil)
 	if err != nil {
 		log.Error(err, "xgboost job reconcile failed")
 		return result, err

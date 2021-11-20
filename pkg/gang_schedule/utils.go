@@ -21,14 +21,14 @@ import (
 )
 
 func AppendOwnerReference(obj metav1.Object, newReference metav1.OwnerReference) {
-	owenerReferences := obj.GetOwnerReferences()
-	for _, reference := range owenerReferences {
+	ownerReferences := obj.GetOwnerReferences()
+	for _, reference := range ownerReferences {
 		if ownerReferenceEquals(reference, newReference) {
 			return
 		}
 	}
-	owenerReferences = append(owenerReferences, newReference)
-	obj.SetOwnerReferences(owenerReferences)
+	ownerReferences = append(ownerReferences, newReference)
+	obj.SetOwnerReferences(ownerReferences)
 }
 
 func ownerReferenceEquals(ref1, ref2 metav1.OwnerReference) bool {

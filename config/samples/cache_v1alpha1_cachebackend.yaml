@@ -1,0 +1,7 @@
+apiVersion: cache.kubedl.io/v1alpha1
+kind: CacheBackend
+metadata:
+  name: cachebackend-sample
+spec:
+  # Add fields here
+  foo: bar

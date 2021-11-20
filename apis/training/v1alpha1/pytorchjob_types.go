@@ -17,9 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	common "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
@@ -41,6 +42,10 @@ type PyTorchJobSpec struct {
 	// ModelVersion represents the model output by this job run.
 	// +optional
 	ModelVersion *v1alpha1.ModelVersionSpec `json:"modelVersion,omitempty"`
+
+	// CacheBackend is used to configure the cache engine for job
+	// +optional
+	CacheBackend *cachev1alpha1.CacheBackendSpec `json:"cacheBackend"`
 }
 
 // PyTorchJobStatus defines the observed state of PyTorchJob
@@ -56,6 +61,7 @@ type PyTorchJobStatus struct {
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.conditions[-1:].type`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 // +kubebuilder:printcolumn:name="Model-Version",type=string,JSONPath=`.status.modelVersionName`
+// +kubebuilder:printcolumn:name="Cache-Backend",type=string,JSONPath=`.status.cacheBackendName`
 // +kubebuilder:printcolumn:name="Max-Lifetime",type=integer,JSONPath=`.spec.activeDeadlineSeconds`
 // +kubebuilder:printcolumn:name="TTL-AFTER-FINISHED",type=integer,JSONPath=`.spec.ttlSecondsAfterFinished`
 

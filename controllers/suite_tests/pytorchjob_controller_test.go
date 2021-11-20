@@ -41,14 +41,14 @@ var _ = Describe("PytorchJob Controller", func() {
 			Expect(err).Should(Succeed())
 
 			// Get
-			By("Expecting created tf job")
+			By("Expecting created pytorch job")
 			Eventually(func() error {
 				job := &training.PyTorchJob{}
 				return k8sClient.Get(context.Background(), key, job)
 			}, timeout).Should(BeNil())
 
 			// Delete
-			By("Deleting tf job")
+			By("Deleting pytorch job")
 			Eventually(func() error {
 				job := &training.PyTorchJob{}
 				err := k8sClient.Get(context.Background(), key, job)

@@ -2898,6 +2898,8 @@ spec:
             type: object
           status:
             properties:
+              cacheBackendName:
+                type: string
               completionTime:
                 format: date-time
                 type: string

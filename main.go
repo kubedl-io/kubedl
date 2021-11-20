@@ -27,6 +27,7 @@ import (
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers"
 	"github.com/alibaba/kubedl/controllers/persist"
+	cacheregistry "github.com/alibaba/kubedl/pkg/cache_backend/registry"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	backendregistry "github.com/alibaba/kubedl/pkg/storage/backends/registry"
@@ -93,6 +94,9 @@ func main() {
 
 	setupLog.Info("setting up gang schedulers")
 	registry.RegisterGangSchedulers(mgr)
+
+	setupLog.Info("setting up cache backends")
+	cacheregistry.RegisterCacheBackends(mgr.GetClient())
 
 	// Setup all controllers with provided manager.
 	if err = controllers.SetupWithManager(mgr, options.CtrlConfig); err != nil {

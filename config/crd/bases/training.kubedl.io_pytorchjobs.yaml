@@ -26,6 +26,9 @@ spec:
     - jsonPath: .status.modelVersionName
       name: Model-Version
       type: string
+    - jsonPath: .status.cacheBackendName
+      name: Cache-Backend
+      type: string
     - jsonPath: .spec.activeDeadlineSeconds
       name: Max-Lifetime
       type: integer
@@ -50,6 +53,46 @@ spec:
               backoffLimit:
                 format: int32
                 type: integer
+              cacheBackend:
+                properties:
+                  cacheEngine:
+                    properties:
+                      fluid:
+                        properties:
+                          alluxioRuntime:
+                            properties:
+                              replicas:
+                                format: int32
+                                type: integer
+                              tieredStorage:
+                                items:
+                                  properties:
+                                    cachePath:
+                                      type: string
+                                    mediumType:
+                                      type: string
+                                    quota:
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                        type: object
+                    type: object
+                  dataset:
+                    properties:
+                      dataSources:
+                        items:
+                          properties:
+                            location:
+                              type: string
+                            subDirName:
+                              type: string
+                          type: object
+                        type: array
+                    type: object
+                  mountPath:
+                    type: string
+                type: object
               cleanPodPolicy:
                 type: string
               modelVersion:
@@ -2920,6 +2963,8 @@ spec:
             type: object
           status:
             properties:
+              cacheBackendName:
+                type: string
               completionTime:
                 format: date-time
                 type: string
