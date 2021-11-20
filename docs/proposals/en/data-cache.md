@@ -72,19 +72,19 @@ metadata:
 spec:
   cleanPodPolicy: None
   cacheBackend:
-    mountPath: "/path/in/container"
+    mountPath: "/data"   
+    dataset:
+      dataSources:
+        - location: local:///dataset/mnist
+          subDirName: mnist
     cacheEngine:
       fluid:
-        dataset:
-          dataSources:
-            - path: "/file/system/dataset/path"
-              subdirName: mnist
         alluxioRuntime:
           replicas: 1
           tieredStorage:
-            - cachePath: "/dev/shm"
-              quota: "4Gi"
-              mediumtype: "MEM"
+            - cachePath: /dev/shm
+              quota: "1Gi"
+              mediumType: MEM
   tfReplicaSpecs:
     ...
     No additional volumes need to be configured. 
