@@ -36,6 +36,9 @@ spec:
           metadata:
             type: object
           spec:
+            properties:
+              description:
+                type: string
             type: object
           status:
             properties:

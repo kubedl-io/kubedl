@@ -2876,6 +2876,8 @@ spec:
             type: object
           status:
             properties:
+              cacheBackendName:
+                type: string
               completionTime:
                 format: date-time
                 type: string
@@ -2927,7 +2929,6 @@ spec:
                 format: date-time
                 type: string
             required:
-            - conditions
             - replicaStatuses
             type: object
         type: object

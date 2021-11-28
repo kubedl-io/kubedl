@@ -1,6 +1,7 @@
 
 # Image URL to use all building/pushing image targets
 VERSION ?= daily
+HELM_CHART_VERSION ?= 0.1.0
 IMG ?= kubedl/kubedl:$(VERSION)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,maxDescLen=0"
@@ -71,7 +72,7 @@ helm-chart:
 	cp config/crd/bases/* helm/kubedl/crds
 	# generate .kubedbackup file is for compatible between MAC OS and LINUX, since sed syntax is different
 	sed -i.kubedlbackup 's/tag:.*/tag: '"$(VERSION)"'/g' helm/kubedl/values.yaml
-	sed -i.kubedlbackup 's/version:.*/version: '"$(VERSION)"'/g' helm/kubedl/Chart.yaml
+	sed -i.kubedlbackup 's/version:.*/version: '"$(HELM_CHART_VERSION)"'/g' helm/kubedl/Chart.yaml
 	sed -i.kubedlbackup 's/appVersion:.*/appVersion: '"$(VERSION)"'/g' helm/kubedl/Chart.yaml
 	cp config/rbac/role.yaml helm/kubedl/templates
 	sed -i.kubedlbackup 's/name:.*/name: {{ include "kubedl.fullname" . }}-role/g' helm/kubedl/templates/role.yaml
