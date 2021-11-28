@@ -139,6 +139,26 @@ rules:
   - patch
   - update
 - apiGroups:
+  - cache.kubedl.io
+  resources:
+  - cachebackends
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cache.kubedl.io
+  resources:
+  - cachebackends/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - model.kubedl.io
   resources:
   - models
@@ -190,6 +210,15 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - scheduling.incubator.k8s.io
+  - scheduling.sigs.dev
+  - scheduling.volcano.sh
+  resources:
+  - podgroups
+  - queues
+  verbs:
+  - '*'
 - apiGroups:
   - serving.kubedl.io
   resources:
