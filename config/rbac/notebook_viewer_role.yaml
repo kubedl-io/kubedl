@@ -1,0 +1,20 @@
+# permissions for end users to view notebooks.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: notebook-viewer-role
+rules:
+- apiGroups:
+  - notebook.kubedl.io
+  resources:
+  - notebooks
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - notebook.kubedl.io
+  resources:
+  - notebooks/status
+  verbs:
+  - get

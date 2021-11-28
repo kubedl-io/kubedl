@@ -199,6 +199,26 @@ rules:
       - update
       - watch
   - apiGroups:
+      - notebook.kubedl.io
+    resources:
+      - notebooks
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - notebook.kubedl.io
+    resources:
+      - notebooks/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
       - scheduling.incubator.k8s.io
       - scheduling.sigs.dev
       - scheduling.volcano.sh
@@ -446,7 +466,7 @@ spec:
         app: kubedl
     spec:
       containers:
-      - image: kubedl/kubedl:daily
+      - image: jianhe6/kubedl:0.1
         imagePullPolicy: IfNotPresent
         name: kubedl-manager
         ports:

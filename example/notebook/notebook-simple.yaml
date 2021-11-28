@@ -1,0 +1,23 @@
+apiVersion: notebook.kubedl.io/v1alpha1
+kind: Notebook
+metadata:
+  name: notebook-sample
+spec:
+  # Add fields here
+  template:
+    spec:
+      containers:
+        - name: notebook
+          image: jupyter/tensorflow-notebook:latest
+          volumeMounts:
+            - mountPath: "/workspace"
+              name: "workspace"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+      volumes:
+        - name: "workspace"
+          hostPath:
+            path: /tmp/data
+            type: DirectoryOrCreate
