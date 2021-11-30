@@ -222,7 +222,9 @@ func getNotebookServiceName(notebook *notebookv1alpha1.Notebook) types.Namespace
 func (r *NotebookReconciler) updateNotebookCondition(pod *corev1.Pod, notebook *notebookv1alpha1.Notebook) (bool, error) {
 	var err error
 	var shouldReconcile bool
-	if pod.Status.Phase == corev1.PodPending {
+
+	switch pod.Status.Phase {
+	case corev1.PodPending:
 		if notebook.Status.Condition == "" {
 			notebook.Status.Condition = notebookv1alpha1.NotebookCreated
 			notebook.Status.Message = "created notebook pod " + pod.Name
@@ -230,14 +232,14 @@ func (r *NotebookReconciler) updateNotebookCondition(pod *corev1.Pod, notebook *
 			err = r.Status().Update(context.Background(), notebook)
 		}
 		shouldReconcile = true
-	} else if pod.Status.Phase == corev1.PodRunning {
+	case corev1.PodRunning:
 		if notebook.Status.Condition != notebookv1alpha1.NotebookRunning {
 			notebook.Status.Condition = notebookv1alpha1.NotebookRunning
 			notebook.Status.LastTransitionTime = metav1.Now()
 			notebook.Status.Message = "notebook pod " + pod.Name + " is running"
 			err = r.Status().Update(context.Background(), notebook)
 		}
-	} else if pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodSucceeded {
+	case corev1.PodFailed, corev1.PodSucceeded:
 		if notebook.Status.Condition != notebookv1alpha1.NotebookTerminated {
 			notebook.Status.Condition = notebookv1alpha1.NotebookTerminated
 			notebook.Status.LastTransitionTime = metav1.Now()
@@ -332,7 +334,7 @@ func addNotebookDefaultPort(spec *corev1.PodSpec) {
 	}
 }
 
-// set JUPYTER_ENABLE_LAB=yes in notebook container's env
+// set necessary ENVs in notebook container's env
 func setJuypterLabEnv(pod *corev1.Pod, notebook *notebookv1alpha1.Notebook) error {
 	if len(pod.Spec.Containers) == 0 {
 		err := fmt.Errorf("pod %s container list is zero", pod.Name)
@@ -342,12 +344,26 @@ func setJuypterLabEnv(pod *corev1.Pod, notebook *notebookv1alpha1.Notebook) erro
 	nbContainerExists := false
 	for i, container := range containers {
 		if container.Name == notebookv1alpha1.NotebookContainerName {
-			// add JUPYTER_ENABLE_LAB if not present
+
 			juypterLabEnvExists := false
+			notebookArgsExists := false
+			grantSudoExists := false
+			juypterAllowInsecureWritesExists := false
+
 			for _, env := range container.Env {
 				if env.Name == "JUPYTER_ENABLE_LAB" {
 					juypterLabEnvExists = true
-					break
+				}
+				if env.Name == "NOTEBOOK_ARGS" {
+					notebookArgsExists = true
+					nbEnv := generateNotebookArgsEnv(notebook)
+					container.Env[i].Value = nbEnv + " " + container.Env[i].Value
+				}
+				if env.Name == "GRANT_SUDO" {
+					grantSudoExists = true
+				}
+				if env.Name == "JUPYTER_ALLOW_INSECURE_WRITES" {
+					juypterAllowInsecureWritesExists = true
 				}
 			}
 			if !juypterLabEnvExists {
@@ -357,31 +373,11 @@ func setJuypterLabEnv(pod *corev1.Pod, notebook *notebookv1alpha1.Notebook) erro
 				})
 			}
 
-			// add baseUrl and noToken in NOTEBOOK_ARGS
-			notebookArgsExists := false
-			for i, env := range container.Env {
-				if env.Name == "NOTEBOOK_ARGS" {
-					notebookArgsExists = true
-					nbEnv := generateNotebookArgsEnv(notebook)
-					container.Env[i].Value = nbEnv + " " + container.Env[i].Value
-					break
-				}
-			}
-
 			if !notebookArgsExists {
 				containers[i].Env = append(containers[i].Env, corev1.EnvVar{
 					Name:  "NOTEBOOK_ARGS",
 					Value: generateNotebookArgsEnv(notebook),
 				})
-			}
-
-			// add GRANT_SUDO
-			grantSudoExists := false
-			for _, env := range container.Env {
-				if env.Name == "GRANT_SUDO" {
-					grantSudoExists = true
-					break
-				}
 			}
 
 			if !grantSudoExists {
@@ -391,21 +387,13 @@ func setJuypterLabEnv(pod *corev1.Pod, notebook *notebookv1alpha1.Notebook) erro
 				})
 			}
 
-			// add JUPYTER_ALLOW_INSECURE_WRITES
-			JUPYTER_ALLOW_INSECURE_WRITES_EXISTS := false
-			for _, env := range container.Env {
-				if env.Name == "JUPYTER_ALLOW_INSECURE_WRITES" {
-					JUPYTER_ALLOW_INSECURE_WRITES_EXISTS = true
-					break
-				}
-			}
-
-			if !JUPYTER_ALLOW_INSECURE_WRITES_EXISTS {
+			if !juypterAllowInsecureWritesExists {
 				containers[i].Env = append(containers[i].Env, corev1.EnvVar{
 					Name:  "JUPYTER_ALLOW_INSECURE_WRITES",
 					Value: "true",
 				})
 			}
+
 			nbContainerExists = true
 			break
 		}
