@@ -78,6 +78,7 @@ rules:
       - ""
     resources:
       - pods
+      - pods/log
     verbs:
       - create
       - delete
