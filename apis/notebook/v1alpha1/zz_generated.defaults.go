@@ -20,6 +20,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -44,5 +45,29 @@ func SetObjectDefaults_NotebookList(in *NotebookList) {
 }
 
 func SetDefaults_Notebook(in *Notebook) {
+	addNotebookDefaultPort(&in.Spec.Template.Spec)
+}
 
+func addNotebookDefaultPort(spec *corev1.PodSpec) {
+	index := 0
+	for i, container := range spec.Containers {
+		if container.Name == NotebookContainerName {
+			index = i
+			break
+		}
+	}
+
+	hasNotebookPort := false
+	for _, port := range spec.Containers[index].Ports {
+		if port.Name == NotebookPortName {
+			hasNotebookPort = true
+			break
+		}
+	}
+	if !hasNotebookPort {
+		spec.Containers[index].Ports = append(spec.Containers[index].Ports, corev1.ContainerPort{
+			Name:          NotebookPortName,
+			ContainerPort: NotebookDefaultPort,
+		})
+	}
 }

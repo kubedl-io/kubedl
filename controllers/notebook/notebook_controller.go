@@ -102,8 +102,6 @@ func (r *NotebookReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			pod.Labels[notebookv1alpha1.NotebookNameLabel] = notebook.Name
 			pod.Spec = notebook.Spec.Template.Spec
 
-			addNotebookDefaultPort(&pod.Spec)
-
 			log.Infof("pod spec: %v", pod.Spec.Containers[0])
 			err := setJuypterLabEnv(pod, notebook)
 			if err != nil {
