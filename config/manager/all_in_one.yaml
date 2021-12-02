@@ -388,6 +388,24 @@ rules:
       - get
       - patch
       - update
+  - apiGroups:
+      - notebook.kubedl.io
+    resources:
+      - notebooks
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - notebook.kubedl.io
+    resources:
+      - notebooks/status
+    verbs:
+      - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

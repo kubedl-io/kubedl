@@ -5,6 +5,9 @@ console/frontend/package-lock.json
 **/.umi/**
 **/dist/**
 
+# manager binary
+manager
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

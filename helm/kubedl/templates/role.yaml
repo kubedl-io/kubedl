@@ -70,6 +70,7 @@ rules:
   - ""
   resources:
   - pods
+  - pods/log
   verbs:
   - create
   - delete
@@ -210,6 +211,26 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - notebook.kubedl.io
+  resources:
+  - notebooks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - notebook.kubedl.io
+  resources:
+  - notebooks/status
+  verbs:
+  - get
+  - patch
+  - update
 - apiGroups:
   - scheduling.incubator.k8s.io
   - scheduling.sigs.dev
