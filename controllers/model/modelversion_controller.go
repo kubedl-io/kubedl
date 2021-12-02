@@ -73,7 +73,7 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 			r.Log.Info("modelVersion doesn't exist", "name", req.String())
 			return reconcile.Result{}, nil
 		}
-		r.Log.Error(err, "fail to get model version")
+		r.Log.Error(err, "fail to get model version "+req.String())
 		return reconcile.Result{}, err
 	}
 
@@ -89,7 +89,7 @@ func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	err = r.Get(context.Background(), types.NamespacedName{Namespace: modelVersion.Namespace, Name: modelVersion.Spec.ModelName}, model)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			r.Log.Info("model doesn't exist, create it.", "model", modelVersion.Spec.ModelName)
+			r.Log.Info("create model " + modelVersion.Spec.ModelName)
 			model := &modelv1alpha1.Model{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: modelVersion.Namespace,

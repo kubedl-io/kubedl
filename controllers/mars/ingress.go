@@ -18,17 +18,16 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"path"
 	"strings"
 
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 
 	v1 "k8s.io/api/core/v1"
 	networkingv1beta "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -92,18 +91,18 @@ func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host 
 	port := r.findDefaultPort(svc)
 	regexAPIPath := path.Join("/", "mars", svc.Namespace, svc.Name+"/(.*)")
 	indexPath := path.Join("/", "mars", svc.Namespace, svc.Name)
+	prefixPathType := networkingv1.PathTypePrefix
 
 	// Generate ingress instance by given service template, every ingress exposes a URL formatted as:
 	// http://{host}/mars/{namespace}/{svc.Name}/
 	// all traffic requests for this url will be forwarded to the backend service and its endpoint.
-	ingress := networkingv1beta.Ingress{
+	ingress := networkingv1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      svc.Name,
 			Namespace: svc.Namespace,
 			Labels:    labels,
 			Annotations: map[string]string{
 				"nginx.ingress.kubernetes.io/rewrite-target": "/$1",
-				"nginx.org/websocket-services":               fmt.Sprintf(`"%s"`, svc.Name),
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -116,25 +115,34 @@ func (r *MarsJobReconciler) createNewIngressForWebservice(svc *v1.Service, host 
 				},
 			},
 		},
-		Spec: networkingv1beta.IngressSpec{
-			Rules: []networkingv1beta.IngressRule{
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{
 				{
 					Host: host,
-					IngressRuleValue: networkingv1beta.IngressRuleValue{
-						HTTP: &networkingv1beta.HTTPIngressRuleValue{
-							Paths: []networkingv1beta.HTTPIngressPath{
+					IngressRuleValue: networkingv1.IngressRuleValue{
+						HTTP: &networkingv1.HTTPIngressRuleValue{
+							Paths: []networkingv1.HTTPIngressPath{
 								{
-									Path: regexAPIPath,
-									Backend: networkingv1beta.IngressBackend{
-										ServiceName: svc.Name,
-										ServicePort: intstr.IntOrString{IntVal: port},
+									Path:     regexAPIPath,
+									PathType: &prefixPathType,
+									Backend: networkingv1.IngressBackend{
+										Service: &networkingv1.IngressServiceBackend{
+											Name: svc.Name,
+											Port: networkingv1.ServiceBackendPort{
+												Number: port,
+											},
+										},
 									},
 								},
 								{
 									Path: indexPath,
-									Backend: networkingv1beta.IngressBackend{
-										ServiceName: svc.Name,
-										ServicePort: intstr.IntOrString{IntVal: port},
+									Backend: networkingv1.IngressBackend{
+										Service: &networkingv1.IngressServiceBackend{
+											Name: svc.Name,
+											Port: networkingv1.ServiceBackendPort{
+												Number: port,
+											},
+										},
 									},
 								},
 							},

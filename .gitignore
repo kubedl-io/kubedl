@@ -1,3 +1,10 @@
+# console
+console/backend-server
+console/frontend/package-lock.json
+**/node_modules
+**/.umi/**
+**/dist/**
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -24,3 +31,4 @@ bin
 .DS_Store
 
 .vscode
+

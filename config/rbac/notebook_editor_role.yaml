@@ -1,0 +1,24 @@
+# permissions for end users to edit notebooks.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: notebook-editor-role
+rules:
+- apiGroups:
+  - notebook.kubedl.io
+  resources:
+  - notebooks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - notebook.kubedl.io
+  resources:
+  - notebooks/status
+  verbs:
+  - get
