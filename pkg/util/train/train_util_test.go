@@ -50,3 +50,38 @@ func TestIsRetryableExitCode(t *testing.T) {
 		}
 	}
 }
+
+func TestIsRetryableReason(t *testing.T) {
+	tcs := []struct {
+		reason   string
+		expected bool
+	}{
+		{
+			reason:   "Error",
+			expected: false,
+		},
+		{
+			reason:   "OOMKilled",
+			expected: true,
+		},
+		{
+			reason:   "Killed",
+			expected: true,
+		},
+		{
+			reason:   "Evicted",
+			expected: true,
+		},
+		{
+			reason:   "Unknown",
+			expected: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		actual := IsRetryablePodFailedReason(tc.reason)
+		if actual != tc.expected {
+			t.Errorf("Reason %s: Expected %t, got %t", tc.reason, tc.expected, actual)
+		}
+	}
+}
