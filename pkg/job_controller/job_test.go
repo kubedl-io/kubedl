@@ -6,18 +6,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/kubedl/cmd/options"
-	"github.com/alibaba/kubedl/pkg/metrics"
-
-	"github.com/alibaba/kubedl/apis/model/v1alpha1"
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/test_job/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
+	"github.com/alibaba/kubedl/cmd/options"
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/alibaba/kubedl/pkg/test_job/v1"
 )
 
 func TestDeletePodsAndServices(T *testing.T) {
@@ -289,6 +289,13 @@ func newPod(name string, phase corev1.PodPhase) *corev1.Pod {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name: "default-container",
+				},
+			},
 		},
 		Status: corev1.PodStatus{
 			Phase: phase,
