@@ -13,7 +13,7 @@ To enable the CacheBackend created by the previous Job can be reused by the next
 
 Here's a simple illustration:
 
-<img src="../../img/cache_reuse.png" style="zoom:20%;" />
+![](../../img/cache_reuse.png)
 
 In addition, to release CacheBackend that has not been used for a long time, I think we can also add an option to CacheBackend, maxIdleTime, to set the maximum amount of time CacheBackend can be idle. KubeDL automatically deletes the unused CacheBackend to ensure that cache files do not consume too many space in the cluster.
 
@@ -31,44 +31,65 @@ Added use cases for cache reuse:
 3. The user wants to specify the name of CacheBackend when creating a job to use the CacheBackend retained in a previous job
 4. When creating CacheBackend, the user can specify maxIdleTime. If a CacheBackend is idle for more than maxIdleTime, the CacheBackend is automatically deleted to save space.
 
-### Demo Configuration
+### Demo 
 
+CacheBackend needs to be created for the first time use.
 ```yaml
 apiVersion: "training.kubedl.io/v1alpha1"
 kind: "TFJob"
 metadata:
-  name: "mnist"
+  name: "mnist1"
   namespace: kubedl
 spec:
   cleanPodPolicy: None
   CacheBackend:
-+   name: "DemoCacheBackend"
-    mountPath: "/data"   
-    dataset:
-      dataSources:
-        - location: local:///dataset/mnist
-          subDirName: mnist
-    cacheEngine:
-      fluid:
-        alluxioRuntime:
-          replicas: 1
-          tieredStorage:
-            - cachePath: /dev/shm
-              quota: "1Gi"
-              mediumType: MEM
-+   options:
-+     maxIdleTime: "10h"
+    metadata:
+      name: "DemoCacheBackend"
+    spec:
+      mountPath: "/data"   
+      dataset:
+        dataSources:
+          - location: local:///dataset/mnist
+            subDirName: mnist
+      options:
+        maxIdleTime: "10h"
+      cacheEngine:
+        fluid:
+          alluxioRuntime:
+            replicas: 1
+            tieredStorage:
+              - cachePath: /dev/shm
+                quota: "1Gi"
+                mediumType: MEM
   tfReplicaSpecs:
     ...
     No additional dataset volumes need to be configured. 
     The cache controller will automatically inject the pvc created by fluid into the container
 ```
 
+Next time only need to specify the name of CacheBackend and the mount path in containers can enable cache.
+```yaml
+apiVersion: "training.kubedl.io/v1alpha1"
+kind: "TFJob"
+metadata:
+  name: "mnist2"
+  namespace: kubedl
+spec:
+  cleanPodPolicy: None
+  CacheBackend:
+    metadata:
+      name: "DemoCacheBackend"
+    spec:
+      mountPath: "/data"   
+  tfReplicaSpecs:
+    ...
+```
+
 ## Proposal
 
 For CacheBackend in KubeDL to have the ability to be reused by multiple jobs, we may need to add the following fields to existing CacheBackend:
 
-1. `spec.CacheBackendName`：A user specifies which CacheBackend to use by giving a `CacheBackendName`
+1. `metadata.name`：A user specifies which CacheBackend to use by giving a CacheBackend's  `name`
 2. `status.usedBy`：A list of  jobs that use the CacheBackend. When the length of usedBy list is 0, CacheBackend enters idle time.
 3. `spec.options.maxIdleTime`：Used to configure the maximum idle time (the duration for which `status.usedBy` is null) for a CacheBackend. If maxIdelTime is not configured, we can always keep this CacheBackend.
 5. `status.currentIdleTime`：Current idle time of the  CacheBackend. When the value of `status.currentIdleTime` equals maxIdleTime, CacheBackend and the resources it occupies are released
@@ -89,7 +110,7 @@ According to the above description, the major changes are in these:
      - No parameter is configured, then the state of CacheBackend is updated and the created pvc is injected into the pods of the job
      - CacheBackend specifies parameters. Check whether it can update existing CacheBackend. If it can be merged, update the configuration. If not, report conflict and requests user to resubmit the job.
 
-   - If CacheBackend does not exist, create it with the CacheBackendName specified by the Job
+   - If CacheBackend does not exist, create it with the CacheBackend's name specified by the Job
 
 2. The CacheBackend Controller checks whether usedBy list is null before reconciling
 
