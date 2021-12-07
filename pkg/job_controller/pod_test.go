@@ -3,10 +3,11 @@ package job_controller
 import (
 	"testing"
 
+	"k8s.io/api/core/v1"
+
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	testjobv1 "github.com/alibaba/kubedl/pkg/test_job/v1"
 	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
-	"k8s.io/api/core/v1"
 )
 
 func TestSetRestartPolicy(t *testing.T) {

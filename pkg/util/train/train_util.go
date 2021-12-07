@@ -15,6 +15,10 @@
 // Package that various helper routines for training.
 package train
 
+import (
+	"k8s.io/apimachinery/pkg/util/sets"
+)
+
 func IsRetryableExitCode(exitCode int32) bool {
 	if exitCode == 1 || exitCode == 2 || exitCode == 126 ||
 		exitCode == 127 || exitCode == 128 || exitCode == 139 {
@@ -50,4 +54,12 @@ func IsRetryableExitCode(exitCode int32) bool {
 
 	// We make no guarantee for other exit status. Currently handling them same as permanent errors.
 	return false
+}
+
+// failed pod due to certain reasons is retryable, i.e., rescheduled to resume the job
+func IsRetryablePodFailedReason(reason string) bool {
+	return sets.NewString(
+		// potential pod failed known reasons that can be fail-overed.
+		"OOMKilled", "Killed", "Evicted",
+	).Has(reason)
 }

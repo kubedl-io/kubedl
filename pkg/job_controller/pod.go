@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -36,8 +38,6 @@ import (
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	trainutil "github.com/alibaba/kubedl/pkg/util/train"
-	"github.com/golang/glog"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -303,7 +303,8 @@ func (jc *JobController) ReconcilePods(
 
 			// Check if the pod is retryable.
 			if spec.RestartPolicy == apiv1.RestartPolicyExitCode {
-				if pod.Status.Phase == v1.PodFailed && trainutil.IsRetryableExitCode(exitCode) {
+				if pod.Status.Phase == v1.PodFailed &&
+					(trainutil.IsRetryableExitCode(exitCode) || trainutil.IsRetryablePodFailedReason(pod.Status.Reason)) {
 					logger.Infof("Need to restart the pod: %v.%v", pod.Namespace, pod.Name)
 					runtimeJob, ok := job.(runtime.Object)
 					if !ok {
