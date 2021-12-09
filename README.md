@@ -16,7 +16,7 @@ KubeDL is a [CNCF sandbox](https://www.cncf.io/sandbox-projects/) project.
     <img src="https://v6d.io/_static/cncf-color.svg" width="400" title="">
 </div> <br/>
 
-Its core functionalities include:
+## Features
 
 - Support training and inferences workloads (Tensorflow, Pytorch. [Mars](https://github.com/mars-project/mars) etc.)in a single unified controller.  Features include advanced scheduling, acceleration using cache, metadata persistentcy, file sync, enable service discovery for training in host network  etc.
 - Automatically tunes the best container-level configurations before an ML model is deployed as inference services. - [Morphling Github](https://github.com/alibaba/morphling)
@@ -30,7 +30,9 @@ Check the website: https://kubedl.io
  <img src="docs/img/kubedl.png" width="700" title="">
 </div> <br/>
 
+## Publications
 
+KubeDL-Morphling paper accepted at ACM Socc 2021: Morphling: Fast, Near-Optimal Auto-Configuration for Cloud-Native Model Serving
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl?ref=badge_large)
