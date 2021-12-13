@@ -96,13 +96,6 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 		jc.BackoffStatesQueue.Forget(jobKey)
 	}()
 
-	if jc.Config.EnableGangScheduling {
-		log.Infof("gang schedule enabled, start to syncing for job %s", jobKey)
-		if _, err = jc.CreateGang(metaObject, replicas); err != nil {
-			return result, err
-		}
-	}
-
 	oldStatus := jobStatus.DeepCopy()
 
 	err = code_sync.InjectCodeSyncInitContainers(metaObject, replicas)
@@ -236,6 +229,13 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			return result, jc.Controller.UpdateJobStatusInApiServer(job, &jobStatus)
 		}
 		return result, nil
+	}
+
+	if jc.Config.EnableGangScheduling {
+		log.Infof("gang schedule enabled, start to syncing for job %s", jobKey)
+		if _, err = jc.CreateGang(metaObject, replicas); err != nil {
+			return result, err
+		}
 	}
 
 	// Save the current state of the replicas
