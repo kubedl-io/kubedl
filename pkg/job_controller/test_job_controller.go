@@ -3,12 +3,13 @@ package job_controller
 import (
 	"context"
 
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	testv1 "github.com/alibaba/kubedl/pkg/test_job/v1"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	testv1 "github.com/alibaba/kubedl/pkg/test_job/v1"
 )
 
 var _ apiv1.ControllerInterface = &TestJobController{}

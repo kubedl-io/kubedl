@@ -220,7 +220,7 @@ func syncPod(jc job_controller.JobController, c client.Client, metaObj metav1.Ob
 		}
 	}
 
-	if err := jc.CreatePodReplica(metaObj, tbRT, index, template, false); err != nil {
+	if err := jc.CreatePod(metaObj, tbRT, index, template, false); err != nil {
 		return err
 	}
 
@@ -271,7 +271,7 @@ func syncService(jc job_controller.JobController, c client.Client,
 	}
 	service.Labels = commonutil.MergeMap(service.Labels, labels)
 
-	if err := jc.CreateCommonService(metaObj, apiv1.ReplicaTypeTensorBoard, service, index); err != nil {
+	if err := jc.CreateService(metaObj, apiv1.ReplicaTypeTensorBoard, service, index); err != nil {
 		return err
 	}
 

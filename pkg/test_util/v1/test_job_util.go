@@ -17,9 +17,10 @@ package v1
 import (
 	"time"
 
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 
 	testjobv1 "github.com/alibaba/kubedl/pkg/test_job/v1"
 )
@@ -43,6 +44,34 @@ func NewTestJob(worker int) *testjobv1.TestJob {
 		workerReplicaSpec := &apiv1.ReplicaSpec{
 			Replicas: &worker,
 			Template: NewTestReplicaSpecTemplate(),
+		}
+		testJob.Spec.TestReplicaSpecs[testjobv1.TestReplicaTypeWorker] = workerReplicaSpec
+	}
+
+	return testJob
+}
+
+func NewTestNamedJob(name string, worker int) *testjobv1.TestJob {
+	testJob := &testjobv1.TestJob{
+		TypeMeta: metav1.TypeMeta{
+			Kind: testjobv1.Kind,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: metav1.NamespaceDefault,
+		},
+		Spec: testjobv1.TestJobSpec{
+			RunPolicy:        &apiv1.RunPolicy{},
+			TestReplicaSpecs: make(map[apiv1.ReplicaType]*apiv1.ReplicaSpec),
+		},
+	}
+
+	if worker > 0 {
+		worker := int32(worker)
+		workerReplicaSpec := &apiv1.ReplicaSpec{
+			Replicas:      &worker,
+			RestartPolicy: apiv1.RestartPolicyExitCode,
+			Template:      NewTestReplicaSpecTemplate(),
 		}
 		testJob.Spec.TestReplicaSpecs[testjobv1.TestReplicaTypeWorker] = workerReplicaSpec
 	}

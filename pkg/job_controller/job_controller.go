@@ -46,6 +46,11 @@ type JobController struct {
 	Controller apiv1.ControllerInterface
 
 	Config options.JobControllerConfiguration
+	// podControl knows how to add or delete pods created as an interface to allow testing.
+	podControl controller.PodControlInterface
+
+	// serviceControl knows how to add or delete services created as an interface to allow testing.
+	serviceControl ServiceControlInterface
 
 	// Gang Scheduler is a abstract gang scheduling clientset.
 	GangScheduler gang_schedule.GangScheduler
@@ -106,7 +111,9 @@ func NewJobController(
 			newPatchObj := newObj.DeepCopyObject()
 			return cli.Patch(context.Background(), newPatchObj, client.MergeFrom(oldObj))
 		},
-		Client: cli,
+		Client:         cli,
+		podControl:     NewPodControl(cli, recorder),
+		serviceControl: NewServiceControl(cli, recorder),
 	}
 }
 

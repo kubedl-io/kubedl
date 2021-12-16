@@ -18,14 +18,10 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -39,24 +35,10 @@ func (r *MarsJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error
 	})
 	// List all pods to include those that don't match the selector anymore
 	// but have a ControllerRef pointing to this controller.
-	podlist := &corev1.PodList{}
-	err = r.List(context.Background(), podlist, client.MatchingLabelsSelector{Selector: selector})
+	podList := &corev1.PodList{}
+	err = r.List(context.Background(), podList, client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, err
 	}
-	pods := util.ToPodPointerList(podlist.Items)
-	// If any adoptions are attempted, we should first recheck for deletion
-	// with an uncached quorum read sometime after listing Pods (see #42639).
-	canAdoptFunc := job_controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := r.GetJobFromAPIClient(job.GetNamespace(), job.GetName())
-		if err != nil {
-			return nil, err
-		}
-		if fresh.GetUID() != job.GetUID() {
-			return nil, fmt.Errorf("original Job %v/%v is gone: got uid %v, wanted %v", job.GetNamespace(), job.GetName(), fresh.GetUID(), job.GetUID())
-		}
-		return fresh, nil
-	})
-	cm := controller.NewPodControllerRefManager(job_controller.NewPodControl(r.Client, r.recorder), job, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
-	return cm.ClaimPods(pods)
+	return r.ctrl.AdoptAndClaimPods(job, podList)
 }

@@ -21,11 +21,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -187,7 +185,7 @@ func (jc *JobController) FilterPodsForReplicaType(pods []*v1.Pod, replicaType st
 	return result, nil
 }
 
-// getPodSlices returns a slice, which element is the slice of pod.
+// GetPodSlices returns a slice, which element is the slice of pod.
 func (jc *JobController) GetPodSlices(pods []*v1.Pod, replicas int, logger *log.Entry) [][]*v1.Pod {
 	podSlices := make([][]*v1.Pod, replicas)
 	for _, pod := range pods {
@@ -200,11 +198,18 @@ func (jc *JobController) GetPodSlices(pods []*v1.Pod, replicas int, logger *log.
 			logger.Warningf("Error when strconv.Atoi: %v", err)
 			continue
 		}
-		if index < 0 || index >= replicas {
+		if index < 0 {
 			logger.Warningf("The label index is not expected: %d", index)
-		} else {
-			podSlices[index] = append(podSlices[index], pod)
+			continue
+		} else if index >= replicas {
+			// Pod index out of range, which indicates that it is a scale in
+			// reconciliation and pod index>=replica will be deleted later, so
+			// we'd increase capacity of pod slice to collect.
+			newPodSlices := make([][]*v1.Pod, index+1)
+			copy(newPodSlices, podSlices)
+			podSlices = newPodSlices
 		}
+		podSlices[index] = append(podSlices[index], pod)
 	}
 	return podSlices
 }
@@ -218,7 +223,6 @@ func (jc *JobController) ReconcilePods(
 	pods []*v1.Pod,
 	rtype apiv1.ReplicaType,
 	spec *apiv1.ReplicaSpec,
-	rstatus map[string]v1.PodPhase,
 	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, restart *bool) error {
 
 	metaObject, ok := job.(metav1.Object)
@@ -284,6 +288,20 @@ func (jc *JobController) ReconcilePods(
 		} else {
 			// Check the status of the current pod.
 			pod := podSlice[0]
+
+			// Check if index is in valid range, otherwise we should scale in extra pods since
+			// the expected replicas has been modified.
+			if index < 0 || index >= numReplicas {
+				if pod.DeletionTimestamp == nil {
+					jc.Recorder.Eventf(runtimeObject, v1.EventTypeNormal, "DeletePod",
+						"pod %s/%s with index %v is out of expected replicas %v and should be deleted", pod.Namespace, pod.Name, index, numReplicas)
+					if err = jc.podControl.DeletePod(pod.Namespace, pod.Name, runtimeObject); err != nil {
+						return err
+					}
+				}
+				continue
+			}
+
 			// Get the exit code of the container.
 			var exitCode int32 = 0xbeef // magic number
 			for _, status := range pod.Status.ContainerStatuses {
@@ -306,11 +324,10 @@ func (jc *JobController) ReconcilePods(
 				if pod.Status.Phase == v1.PodFailed &&
 					(trainutil.IsRetryableExitCode(exitCode) || trainutil.IsRetryablePodFailedReason(pod.Status.Reason)) {
 					logger.Infof("Need to restart the pod: %v.%v", pod.Namespace, pod.Name)
-					runtimeJob, ok := job.(runtime.Object)
 					if !ok {
-						return fmt.Errorf("%+v is not a runtime job", runtimeJob)
+						return fmt.Errorf("%+v is not a runtime job", runtimeObject)
 					}
-					if err := jc.DeletePod(runtimeJob, pod); err != nil {
+					if err = jc.podControl.DeletePod(pod.Namespace, pod.Name, runtimeObject); err != nil {
 						return err
 					}
 					*restart = true
@@ -384,11 +401,11 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		}
 	}
 
-	return jc.CreatePodReplica(job, rt, index, podTemplate, masterRole)
+	return jc.CreatePod(job, rt, index, podTemplate, masterRole)
 }
 
-// CreatePodReplica creates a new common pod for the given index and type.
-func (jc *JobController) CreatePodReplica(job interface{}, rt, index string, podTemplate *v1.PodTemplateSpec, masterRole bool) error {
+// CreatePod creates a new common pod for the given index and type.
+func (jc *JobController) CreatePod(job interface{}, rt, index string, podTemplate *v1.PodTemplateSpec, masterRole bool) error {
 	metaObject, ok := job.(metav1.Object)
 	if !ok {
 		return fmt.Errorf("job is not a metav1.Object type")
@@ -417,7 +434,7 @@ func (jc *JobController) CreatePodReplica(job interface{}, rt, index string, pod
 
 	controllerRef := jc.GenOwnerReference(metaObject)
 
-	err = jc.createPodWithControllerRef(metaObject.GetNamespace(), podTemplate, runtimeObject, controllerRef)
+	err = jc.podControl.CreatePodsWithControllerRef(metaObject.GetNamespace(), podTemplate, runtimeObject, controllerRef)
 	if err != nil && errors.IsTimeout(err) {
 		// Pod is created but its initialization has timed out.
 		// If the initialization is successful eventually, the
@@ -429,41 +446,6 @@ func (jc *JobController) CreatePodReplica(job interface{}, rt, index string, pod
 		return nil
 	} else if err != nil {
 		return err
-	}
-	return nil
-}
-
-func (jc *JobController) createPodWithControllerRef(namespace string, template *v1.PodTemplateSpec,
-	controllerObject runtime.Object, controllerRef *metav1.OwnerReference) error {
-	if err := validateControllerRef(controllerRef); err != nil {
-		return err
-	}
-	return jc.createPod("", namespace, template, controllerObject, controllerRef)
-}
-
-func (jc *JobController) createPod(nodeName, namespace string, template *v1.PodTemplateSpec, object runtime.Object, controllerRef *metav1.OwnerReference) error {
-	pod, err := GetPodFromTemplate(template, object, controllerRef)
-	if err != nil {
-		return err
-	}
-	pod.Namespace = namespace
-	if len(nodeName) != 0 {
-		pod.Spec.NodeName = nodeName
-	}
-	if labels.Set(pod.Labels).AsSelectorPreValidated().Empty() {
-		return fmt.Errorf("unable to create pods, no labels")
-	}
-	if err := jc.Client.Create(context.Background(), pod); err != nil {
-		jc.Recorder.Eventf(object, v1.EventTypeWarning, FailedCreatePodReason, "Error creating: %v", err)
-		return err
-	} else {
-		accessor, err := meta.Accessor(object)
-		if err != nil {
-			glog.Errorf("parentObject does not have ObjectMeta, %v", err)
-			return nil
-		}
-		glog.V(4).Infof("Controller %v created pod %v", accessor.GetName(), pod.Name)
-		jc.Recorder.Eventf(object, v1.EventTypeNormal, SuccessfulCreatePodReason, "Created pod: %v", pod.Name)
 	}
 	return nil
 }
@@ -495,12 +477,26 @@ func setRestartPolicy(podTemplateSpec *v1.PodTemplateSpec, spec *apiv1.ReplicaSp
 	}
 }
 
-func (jc *JobController) DeletePod(job runtime.Object, pod *v1.Pod) error {
-	log.Info("Deleting pod", "controller name", jc.Controller.ControllerName(), "pod name", pod.Namespace+"/"+pod.Name)
-	if err := jc.Client.Delete(context.Background(), pod); err != nil && !errors.IsNotFound(err) {
-		jc.Recorder.Eventf(job, v1.EventTypeWarning, FailedDeletePodReason, "Error deleting: %v", err)
-		return err
+func (jc *JobController) AdoptAndClaimPods(job metav1.Object, podList *v1.PodList) ([]*v1.Pod, error) {
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: jc.GenLabels(job.GetName()),
+	})
+	if err != nil {
+		return nil, err
 	}
-	jc.Recorder.Eventf(job, v1.EventTypeNormal, SuccessfulDeletePodReason, "Deleted pod: ") //%v",  pod.Name)
-	return nil
+	pods := commonutil.ToPodPointerList(podList.Items)
+	// If any adoptions are attempted, we should first recheck for deletion
+	// with an uncached quorum read sometime after listing Pods (see #42639).
+	canAdoptFunc := RecheckDeletionTimestamp(func() (metav1.Object, error) {
+		fresh, err := jc.Controller.GetJobFromAPIClient(job.GetNamespace(), job.GetName())
+		if err != nil {
+			return nil, err
+		}
+		if fresh.GetUID() != job.GetUID() {
+			return nil, fmt.Errorf("original Job %v/%v is gone: got uid %v, wanted %v", job.GetNamespace(), job.GetName(), fresh.GetUID(), job.GetUID())
+		}
+		return fresh, nil
+	})
+	cm := controller.NewPodControllerRefManager(jc.podControl, job, selector, jc.Controller.GetAPIGroupVersionKind(), canAdoptFunc)
+	return cm.ClaimPods(pods)
 }

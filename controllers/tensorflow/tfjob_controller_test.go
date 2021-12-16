@@ -5,6 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/spf13/pflag"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -15,16 +19,12 @@ import (
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/util"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/pflag"
-	"github.com/stretchr/testify/assert"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/workqueue"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -77,15 +77,7 @@ func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 	}
 	r.recorder = recorder
 	// Initialize pkg job controller with components we only need.
-	r.ctrl = job_controller.JobController{
-		Controller:         r,
-		Expectations:       k8scontroller.NewControllerExpectations(),
-		Config:             config,
-		BackoffStatesQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
-		Recorder:           r.recorder,
-		Metrics:            metrics.NewJobMetrics(training.TFJobKind, r.Client),
-		Client:             client,
-	}
+	r.ctrl = job_controller.NewJobController(client, r, config, recorder, metrics.NewJobMetrics(training.TFJobKind, client))
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
