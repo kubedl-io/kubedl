@@ -2,6 +2,8 @@ package job_controller
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"strconv"
 	"testing"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	appv1 "github.com/alibaba/kubedl/apis/apps/v1alpha1"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -113,7 +116,7 @@ func TestDeletePodsAndServices(T *testing.T) {
 			&testJobController,
 			options.JobControllerConfiguration{},
 			eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
-			&metrics.JobMetrics{},
+			&metrics.JobMetrics{}, scheme,
 		)
 
 		runPolicy := apiv1.RunPolicy{
@@ -358,4 +361,91 @@ func TestPodTemplateAddModelPathEnv(T *testing.T) {
 	}
 	addModelPathEnv(replicas, &modelVersion.Spec)
 	assert.Equal(T, v1alpha1.KubeDLModelPath, replicas["Worker"].Template.Spec.Containers[0].Env[1].Name)
+}
+
+func TestCreateCronJob(t *testing.T) {
+	name := "pytorch-dist-sendrecv-example"
+	namespace := "kubedk"
+	job := &v1.TestJob{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: v1.TestJobSpec{
+			RunPolicy: &apiv1.RunPolicy{
+				CronPolicy: &apiv1.CronPolicy{
+					Schedule:          "0 0/1 * * *",
+					ConcurrencyPolicy: "Allow",
+				},
+			},
+		},
+	}
+	testJobController := &v1.TestJobController{
+		Job: job,
+	}
+	scheme := runtime.NewScheme()
+	_ = corev1.AddToScheme(scheme)
+	_ = v1.AddToScheme(scheme)
+	_ = appv1.AddToScheme(scheme)
+	fakeClient := fake.NewFakeClientWithScheme(scheme, job)
+
+	mainJobController := JobController{
+		Controller: testJobController,
+		Client:     fakeClient,
+	}
+	//create
+	err := mainJobController.CreateCronJob(job, job, job.Spec.RunPolicy)
+	if err != nil {
+		t.Error(err)
+	}
+	cronJob := &appv1.Cron{}
+	err = GetJobByName(mainJobController, namespace, name, cronJob)
+	if errors.IsNotFound(err) {
+		t.Error("createCronJob failed", err)
+	}
+	//update
+	updateJob := job.DeepCopy()
+	updateSchedule := "0 0/2 * * *"
+	updateJob.Spec.RunPolicy.CronPolicy.Schedule = updateSchedule
+	err = mainJobController.CreateCronJob(updateJob, updateJob, updateJob.Spec.RunPolicy)
+	if err != nil {
+		t.Error(err)
+	}
+	err = GetJobByName(mainJobController, namespace, name, cronJob)
+	if errors.IsNotFound(err) {
+		t.Error("createCronJob failed", err)
+	}
+	if cronJob.Spec.CronPolicy.Schedule != updateSchedule {
+		t.Error("update failed", cronJob)
+	}
+	//normal
+	err = mainJobController.CreateCronJob(job, job, job.Spec.RunPolicy)
+	if err != nil {
+		t.Error(err)
+	}
+	err = GetJobByName(mainJobController, namespace, name, cronJob)
+	if errors.IsNotFound(err) {
+		t.Error("reconcile failed", err)
+	}
+	//delete
+	err = GetJobByName(mainJobController, namespace, name, cronJob)
+	if errors.IsNotFound(err) {
+		t.Error("cronJob not found,unable to verify deletion logic", err)
+	}
+	updateJob.Spec.RunPolicy.CronPolicy = nil
+	err = mainJobController.CreateCronJob(updateJob, updateJob, updateJob.Spec.RunPolicy)
+	if err != nil {
+		t.Error(err)
+	}
+	err = GetJobByName(mainJobController, namespace, name, cronJob)
+	if !errors.IsNotFound(err) {
+		t.Error("delete failed", err)
+	}
+}
+
+func GetJobByName(mainJobController JobController, namespace string, name string, obj runtime.Object) error {
+	return mainJobController.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}, obj)
 }

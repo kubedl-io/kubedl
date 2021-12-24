@@ -66,7 +66,7 @@ func NewReconciler(mgr manager.Manager, config options.JobControllerConfiguratio
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(xdlv1alpha1.XDLJobKind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(xdlv1alpha1.XDLJobKind, r.Client), mgr.GetScheme())
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}

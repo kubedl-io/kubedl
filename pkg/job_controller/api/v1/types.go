@@ -229,6 +229,7 @@ type RunPolicy struct {
 	// +optional
 	SchedulingPolicy *SchedulingPolicy `json:"schedulingPolicy,omitempty"`
 
+	// +optional
 	CronPolicy *CronPolicy `json:"cronPolicy,omitempty"`
 }
 
@@ -257,6 +258,7 @@ type CronPolicy struct {
 	// +optional
 	HistoryLimit *int32 `json:"historyLimit,omitempty"`
 
+	// +optional
 	PropagationDelete *bool `json:"propagationDelete,omitempty"`
 }
 

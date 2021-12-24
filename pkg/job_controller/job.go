@@ -3,12 +3,8 @@ package job_controller
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
-	"time"
-
 	appv1 "github.com/alibaba/kubedl/apis/apps/v1alpha1"
+	pkgruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -16,7 +12,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"strings"
+	"time"
 
 	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
@@ -87,8 +87,8 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	log.Infof("Reconciling for job %s", metaObject.GetName())
 
 	//if it's a scheduled task
-	if runPolicy != nil && runPolicy.CronPolicy != nil {
-		jc.CreateCronJob(metaObject, runtimeObject, runPolicy)
+	if err := jc.CreateCronJob(metaObject, runtimeObject, runPolicy); err != nil {
+		return result, err
 	}
 	defer func() {
 		// Add job key into backoff-states queue since it will be retried in
@@ -332,42 +332,69 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 
 func (jc *JobController) CreateCronJob(meta metav1.Object, runtimeObj runtime.Object, policy *apiv1.RunPolicy) error {
 	cronJob := &appv1.Cron{}
+	isCronJob := policy != nil && policy.CronPolicy != nil
 	if err := jc.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: meta.GetNamespace(),
 		Name:      meta.GetName(),
 	}, cronJob); err != nil {
 		if errors.IsNotFound(err) {
-			instance := createCronInstance(meta, policy, runtimeObj)
-			return jc.Client.Create(context.Background(), instance)
+			if isCronJob {
+				instance, err := jc.createCronInstance(meta, policy, runtimeObj)
+				if err != nil {
+					return err
+				}
+				return jc.Client.Create(context.Background(), instance)
+			}
+			return nil
 		}
 		return err
 	}
+	if !isCronJob {
+		//New job no need to support scheduled execution, delete the originally created cronJob
+		return jc.Client.Delete(context.Background(), cronJob)
+	}
 	//update
+	newCronJob := cronJob.DeepCopy()
+	needUpdate := false
 	if !reflect.DeepEqual(cronJob.Spec.CronPolicy, policy.CronPolicy) {
-		instance := createCronInstance(meta, policy, runtimeObj)
-		instance.UID = cronJob.UID
-		return jc.Client.Patch(context.Background(), instance, client.MergeFrom(cronJob))
+		newCronJob.Spec.CronPolicy = *policy.CronPolicy
+		needUpdate = true
+	}
+	newInstance, err := jc.createCronInstance(meta, policy, runtimeObj)
+	if err != nil {
+		return err
+	}
+	if !reflect.DeepEqual(cronJob.Spec.CronTemplate, newInstance.Spec.CronTemplate) {
+		newCronJob.Spec.CronTemplate = newInstance.Spec.CronTemplate
+		needUpdate = true
+	}
+	if needUpdate {
+		return jc.Client.Patch(context.Background(), newCronJob, client.MergeFrom(cronJob))
 	}
 	return nil
 }
 
-func createCronInstance(meta metav1.Object, policy *apiv1.RunPolicy, newMeta runtime.Object) *appv1.Cron {
+func (jc *JobController) createCronInstance(meta metav1.Object, policy *apiv1.RunPolicy, newMeta runtime.Object) (*appv1.Cron, error) {
 	tempPolicy := policy.DeepCopy()
 	defer func() {
-		policy = tempPolicy
+		policy.CronPolicy = tempPolicy.CronPolicy
 	}()
 	//Clear the CronPolicy under the cronjob created by simulation
 	policy.CronPolicy = nil
+	kind := newMeta.GetObjectKind().GroupVersionKind().Kind
+	apiversion := newMeta.GetObjectKind().GroupVersionKind().Group + "/" + newMeta.GetObjectKind().GroupVersionKind().Kind
 	//create
-	cronPolicy := policy.CronPolicy
+	extCodec := pkgruntime.NewRawExtensionCodec(jc.Scheme)
+	rawObj, err := extCodec.EncodeRaw(newMeta)
+	if err != nil {
+		return nil, err
+	}
 	cronTemplateSpec := appv1.CronTemplateSpec{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Cron",
-			APIVersion: "apps.kubedl.io/v1alpha1",
+			Kind:       kind,
+			APIVersion: apiversion,
 		},
-		Workload: &runtime.RawExtension{
-			Object: newMeta,
-		},
+		Workload: rawObj,
 	}
 	instance := &appv1.Cron{
 		ObjectMeta: metav1.ObjectMeta{
@@ -375,11 +402,11 @@ func createCronInstance(meta metav1.Object, policy *apiv1.RunPolicy, newMeta run
 			Namespace: meta.GetNamespace(),
 		},
 		Spec: appv1.CronSpec{
-			CronPolicy:   cronPolicy,
+			CronPolicy:   *tempPolicy.CronPolicy,
 			CronTemplate: cronTemplateSpec,
 		},
 	}
-	return instance
+	return instance, nil
 }
 
 // addModelPathEnv add the model path into each container's env

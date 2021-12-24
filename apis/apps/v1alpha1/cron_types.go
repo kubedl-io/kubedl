@@ -36,7 +36,7 @@ type CronTemplateSpec struct {
 type CronSpec struct {
 
 	// `CronPolicy` provides some core configurations for timing scheduling
-	*v1.CronPolicy `json:",inline"`
+	v1.CronPolicy `json:",inline"`
 
 	// Specifies the job that will be created when executing a CronTask.
 	CronTemplate CronTemplateSpec `json:"template"`

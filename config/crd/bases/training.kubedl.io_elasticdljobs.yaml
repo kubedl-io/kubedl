@@ -49,6 +49,25 @@ spec:
                 type: integer
               cleanPodPolicy:
                 type: string
+              cronPolicy:
+                properties:
+                  concurrencyPolicy:
+                    type: string
+                  deadline:
+                    format: date-time
+                    type: string
+                  historyLimit:
+                    format: int32
+                    type: integer
+                  propagationDelete:
+                    type: boolean
+                  schedule:
+                    type: string
+                  suspend:
+                    type: boolean
+                required:
+                - schedule
+                type: object
               elasticdlReplicaSpecs:
                 additionalProperties:
                   properties:
