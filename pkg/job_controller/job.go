@@ -52,11 +52,11 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 		if !ok {
 			return fmt.Errorf("%+v is not a runtime job", runtimeJob)
 		}
-		if err := jc.DeletePod(runtimeJob, pod); err != nil {
+		if err := jc.podControl.DeletePod(pod.Namespace, pod.Name, runtimeJob); err != nil {
 			return err
 		}
 		// Pod and service have the same name, thus the service could be deleted using pod's name.
-		if err := jc.DeleteService(runtimeJob, pod.Name, pod.Namespace); err != nil {
+		if err := jc.serviceControl.DeleteService(pod.Namespace, pod.Name, runtimeJob); err != nil {
 			return err
 		}
 	}
@@ -239,7 +239,6 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	}
 
 	// Save the current state of the replicas
-	replicasStatus := make(map[string]v1.PodPhase)
 	restart := false
 
 	// add model path to container env
@@ -261,7 +260,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			continue
 		}
 
-		err = jc.ReconcilePods(ctx, metaObject, &jobStatus, pods, rtype, spec, replicasStatus, replicas, &restart)
+		err = jc.ReconcilePods(ctx, metaObject, &jobStatus, pods, rtype, spec, replicas, &restart)
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
 			return result, err

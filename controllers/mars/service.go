@@ -18,10 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/util"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -44,19 +40,5 @@ func (r *MarsJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Servic
 	if err != nil {
 		return nil, err
 	}
-	services := util.ToServicePointerList(serviceList.Items)
-	// If any adoptions are attempted, we should first recheck for deletion
-	// with an uncached quorum read sometime after listing services (see #42639).
-	canAdoptFunc := job_controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := r.GetJobFromInformerCache(job.GetNamespace(), job.GetName())
-		if err != nil {
-			return nil, err
-		}
-		if fresh.GetUID() != job.GetUID() {
-			return nil, fmt.Errorf("original Job %v/%v is gone: got uid %v, wanted %v", job.GetNamespace(), job.GetName(), fresh.GetUID(), job.GetUID())
-		}
-		return fresh, nil
-	})
-	cm := job_controller.NewServiceControllerRefManager(job_controller.NewServiceControl(r.Client, r.recorder), job, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
-	return cm.ClaimServices(services)
+	return r.ctrl.AdoptAndClaimServices(job, serviceList)
 }

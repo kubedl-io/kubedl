@@ -22,7 +22,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,9 +31,10 @@ import (
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
+	log "github.com/sirupsen/logrus"
+
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
-	log "github.com/sirupsen/logrus"
 )
 
 // When a service is created, enqueue the controller that manages it and update its expectations.
@@ -161,7 +161,7 @@ func (jc *JobController) FilterServicesForReplicaType(services []*v1.Service, re
 	return result, nil
 }
 
-// getServiceSlices returns a slice, which element is the slice of service.
+// GetServiceSlices returns a slice, which element is the slice of service.
 // Assume the return object is serviceSlices, then serviceSlices[i] is an
 // array of pointers to services corresponding to Services for replica i.
 func (jc *JobController) GetServiceSlices(services []*v1.Service, replicas int, logger *log.Entry) [][]*v1.Service {
@@ -178,9 +178,15 @@ func (jc *JobController) GetServiceSlices(services []*v1.Service, replicas int, 
 		}
 		if index < 0 || index >= replicas {
 			logger.Warningf("The label index is not expected: %d", index)
-		} else {
-			serviceSlices[index] = append(serviceSlices[index], service)
+		} else if index >= replicas {
+			// Service index out of range, which indicates that it is a scale in
+			// reconciliation and pod index>=replica will be deleted later, so
+			// we'd increase capacity of pod slice to collect.
+			newServiceSlices := make([][]*v1.Service, index+1)
+			copy(newServiceSlices, serviceSlices)
+			serviceSlices = newServiceSlices
 		}
+		serviceSlices[index] = append(serviceSlices[index], service)
 	}
 	return serviceSlices
 }
@@ -215,20 +221,33 @@ func (jc *JobController) ReconcileServices(
 			if err != nil {
 				return err
 			}
-		} else if EnableHostNetwork(job) { /* len(serviceSlice) == 1 */
+		} else { /* len(serviceSlice) == 1 */
 			service := serviceSlice[0]
-			hostPort, ok := GetHostNetworkPortFromContext(ctx, rt, strconv.Itoa(index))
-			if ok && len(service.Spec.Ports) > 0 && service.Spec.Ports[0].TargetPort.IntVal != hostPort {
-				commonutil.LoggerForReplica(job, rt).Infof("update target service: %s-%d, new port: %d",
-					rt, index, hostPort)
-				// Update service target port to latest container host port, because replicas may fail-over
-				// and its host port changed, so we'd ensure that other replicas can reach it with correct
-				// target port.
-				newService := service.DeepCopy()
-				newService.Spec.Ports[0].TargetPort = intstr.FromInt(int(hostPort))
-				err = jc.patcher(service, newService)
-				if err != nil {
-					return err
+			// Check if index is in valid range, otherwise we should scale in extra pods since
+			// the expected replicas has been modified.
+			if index >= replicas {
+				if service.DeletionTimestamp == nil {
+					jc.Recorder.Eventf(job.(runtime.Object), v1.EventTypeNormal, "DeleteService",
+						"service %s/%s with index %v is out of expected replicas %v and should be deleted", service.Namespace, service.Name, index, replicas)
+					if err = jc.serviceControl.DeleteService(service.Namespace, service.Name, job.(runtime.Object)); err != nil {
+						return err
+					}
+				}
+			}
+			if EnableHostNetwork(job) {
+				hostPort, ok := GetHostNetworkPortFromContext(ctx, rt, strconv.Itoa(index))
+				if ok && len(service.Spec.Ports) > 0 && service.Spec.Ports[0].TargetPort.IntVal != hostPort {
+					commonutil.LoggerForReplica(job, rt).Infof("update target service: %s-%d, new port: %d",
+						rt, index, hostPort)
+					// Update service target port to latest container host port, because replicas may fail-over
+					// and its host port changed, so we'd ensure that other replicas can reach it with correct
+					// target port.
+					newService := service.DeepCopy()
+					newService.Spec.Ports[0].TargetPort = intstr.FromInt(int(hostPort))
+					err = jc.patcher(service, newService)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -250,11 +269,6 @@ func (jc *JobController) GetPortFromJob(spec *apiv1.ReplicaSpec) (int32, error) 
 		}
 	}
 	return -1, fmt.Errorf("failed to find the port")
-}
-
-// CreateService creates the service
-func (jc *JobController) CreateService(job interface{}, service *v1.Service) error {
-	return jc.Client.Create(context.Background(), service)
 }
 
 // createNewService creates a new service for the given index and type.
@@ -303,11 +317,11 @@ func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object
 	}
 	service.Labels = commonutil.MergeMap(service.Labels, labels)
 
-	return jc.CreateCommonService(job, rtype, service, index)
+	return jc.CreateService(job, rtype, service, index)
 }
 
-// CreateCommonService creates a new common service for the given index and type.
-func (jc *JobController) CreateCommonService(job metav1.Object, rtype apiv1.ReplicaType,
+// CreateService creates a new common service with the given index and type.
+func (jc *JobController) CreateService(job metav1.Object, rtype apiv1.ReplicaType,
 	service *v1.Service, index string) error {
 	jobKey, err := KeyFunc(job)
 	if err != nil {
@@ -327,7 +341,7 @@ func (jc *JobController) CreateCommonService(job metav1.Object, rtype apiv1.Repl
 	// Create OwnerReference.
 	controllerRef := jc.GenOwnerReference(job)
 
-	err = jc.CreateServicesWithControllerRef(job.GetNamespace(), service, job.(runtime.Object), controllerRef)
+	err = jc.serviceControl.CreateServicesWithControllerRef(job.GetNamespace(), service, job.(runtime.Object), controllerRef)
 	if err != nil && errors.IsTimeout(err) {
 		// Service is created but its initialization has timed out.
 		// If the initialization is successful eventually, the
@@ -343,49 +357,26 @@ func (jc *JobController) CreateCommonService(job metav1.Object, rtype apiv1.Repl
 	return nil
 }
 
-func (jc *JobController) CreateServicesWithControllerRef(namespace string, service *v1.Service, controllerObject runtime.Object, controllerRef *metav1.OwnerReference) error {
-	if err := validateControllerRef(controllerRef); err != nil {
-		return err
-	}
-	return jc.createServices(namespace, service, controllerObject, controllerRef)
-}
-
-func (jc *JobController) createServices(namespace string, service *v1.Service, object runtime.Object, controllerRef *metav1.OwnerReference) error {
-	if labels.Set(service.Labels).AsSelectorPreValidated().Empty() {
-		return fmt.Errorf("unable to create Services, no labels")
-	}
-	serviceWithOwner, err := getServiceFromTemplate(service, object, controllerRef)
+func (jc *JobController) AdoptAndClaimServices(job metav1.Object, serviceList *v1.ServiceList) ([]*v1.Service, error) {
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: jc.GenLabels(job.GetName()),
+	})
 	if err != nil {
-		jc.Recorder.Eventf(object, v1.EventTypeWarning, FailedCreateServiceReason, "Error creating: %v", err)
-		return fmt.Errorf("unable to create services: %v", err)
+		return nil, err
 	}
-	serviceWithOwner.Namespace = namespace
-
-	err = jc.CreateService(object, serviceWithOwner)
-	if err != nil {
-		jc.Recorder.Eventf(object, v1.EventTypeWarning, FailedCreateServiceReason, "Error creating: %v", err)
-		return fmt.Errorf("unable to create services: %v", err)
-	}
-
-	accessor, err := meta.Accessor(object)
-	if err != nil {
-		log.Errorf("parentObject does not have ObjectMeta, %v", err)
-		return nil
-	}
-	log.Infof("Controller %v created service %v", accessor.GetName(), serviceWithOwner.Name)
-	jc.Recorder.Eventf(object, v1.EventTypeNormal, SuccessfulCreateServiceReason, "Created service: %v", serviceWithOwner.Name)
-
-	return nil
-}
-
-func (jc *JobController) DeleteService(job runtime.Object, name string, namespace string) error {
-
-	service := &v1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}}
-	log.Info("Deleting service", "controller name", jc.Controller.ControllerName(), "service name", namespace+"/"+name)
-	if err := jc.Client.Delete(context.Background(), service); err != nil && !errors.IsNotFound(err) {
-		jc.Recorder.Eventf(job, v1.EventTypeWarning, FailedDeleteServiceReason, "Error deleting: %v", err)
-		return fmt.Errorf("unable to delete service: %v", err)
-	}
-	jc.Recorder.Eventf(job, v1.EventTypeNormal, SuccessfulDeleteServiceReason, "Deleted service: %v", name)
-	return nil
+	services := commonutil.ToServicePointerList(serviceList.Items)
+	// If any adoptions are attempted, we should first recheck for deletion
+	// with an uncached quorum read sometime after listing Pods (see #42639).
+	canAdoptFunc := RecheckDeletionTimestamp(func() (metav1.Object, error) {
+		fresh, err := jc.Controller.GetJobFromAPIClient(job.GetNamespace(), job.GetName())
+		if err != nil {
+			return nil, err
+		}
+		if fresh.GetUID() != job.GetUID() {
+			return nil, fmt.Errorf("original Job %v/%v is gone: got uid %v, wanted %v", job.GetNamespace(), job.GetName(), fresh.GetUID(), job.GetUID())
+		}
+		return fresh, nil
+	})
+	cm := NewServiceControllerRefManager(jc.serviceControl, job, selector, jc.Controller.GetAPIGroupVersionKind(), canAdoptFunc)
+	return cm.ClaimServices(services)
 }

@@ -20,14 +20,11 @@ import (
 	"context"
 	"fmt"
 
-	mpiv1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	"github.com/alibaba/kubedl/pkg/util"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	mpiv1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 )
 
 func (r *MPIJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error) {
@@ -40,24 +37,10 @@ func (r *MPIJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error)
 	})
 	// List all pods to include those that don't match the selector anymore
 	// but have a ControllerRef pointing to this controller.
-	podlist := &corev1.PodList{}
-	err = r.List(context.Background(), podlist, client.InNamespace(mpiJob.GetNamespace()), client.MatchingLabelsSelector{Selector: selector})
+	podList := &corev1.PodList{}
+	err = r.List(context.Background(), podList, client.InNamespace(mpiJob.GetNamespace()), client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, err
 	}
-	pods := util.ToPodPointerList(podlist.Items)
-	// If any adoptions are attempted, we should first recheck for deletion
-	// with an uncached quorum read sometime after listing Pods (see #42639).
-	canAdoptFunc := job_controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := r.GetJobFromAPIClient(mpiJob.GetNamespace(), mpiJob.GetName())
-		if err != nil {
-			return nil, err
-		}
-		if fresh.GetUID() != mpiJob.GetUID() {
-			return nil, fmt.Errorf("original Job %v/%v is gone: got uid %v, wanted %v", mpiJob.GetNamespace(), mpiJob.GetName(), fresh.GetUID(), mpiJob.GetUID())
-		}
-		return fresh, nil
-	})
-	cm := controller.NewPodControllerRefManager(job_controller.NewPodControl(r.Client, r.recorder), mpiJob, selector, r.GetAPIGroupVersionKind(), canAdoptFunc)
-	return cm.ClaimPods(pods)
+	return r.ctrl.AdoptAndClaimPods(mpiJob, podList)
 }
