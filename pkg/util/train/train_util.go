@@ -60,6 +60,6 @@ func IsRetryableExitCode(exitCode int32) bool {
 func IsRetryablePodFailedReason(reason string) bool {
 	return sets.NewString(
 		// potential pod failed known reasons that can be fail-overed.
-		"OOMKilled", "Killed", "Evicted",
+		"OOMKilled", "Killed", "Evicted", "UnexpectedAdmissionError",
 	).Has(reason)
 }
