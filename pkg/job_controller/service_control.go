@@ -17,6 +17,8 @@ package job_controller
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
@@ -27,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sync"
 )
 
 const (
@@ -110,6 +111,8 @@ func (r ServiceControl) createServices(namespace string, service *v1.Service, ob
 		r.recorder.Eventf(object, v1.EventTypeWarning, FailedCreateServiceReason, "Error creating: %v", err)
 		return fmt.Errorf("unable to create services: %v", err)
 	}
+
+	serviceWithOwner.Namespace = namespace
 	err = r.client.Create(context.Background(), serviceWithOwner)
 	if err != nil {
 		r.recorder.Eventf(object, v1.EventTypeWarning, FailedCreateServiceReason, "Error creating: %v", err)
