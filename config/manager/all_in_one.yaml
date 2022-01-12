@@ -487,7 +487,7 @@ spec:
         app: kubedl
     spec:
       containers:
-      - image: kubedl/kubedl:0.4.1
+      - image: jianhe6/kubedl:0.1
         imagePullPolicy: IfNotPresent
         name: kubedl-manager
         ports:
