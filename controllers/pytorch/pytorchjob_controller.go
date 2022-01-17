@@ -216,6 +216,9 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 			return fmt.Errorf("invalid config: There should be only a single master with index=0")
 		}
 		masterAddr = "localhost"
+		if hostPort, ok := job_controller.GetHostNetworkPortFromContext(ctx, rtype, index); ok && job_controller.EnableHostNetwork(pytorchJob) {
+			masterPort = hostPort
+		}
 	} else {
 		rank++
 	}

@@ -451,17 +451,13 @@ func (jc *JobController) CreatePod(job interface{}, rt, index string, podTemplat
 }
 
 func (jc *JobController) setupHostNetwork(ctx context.Context, spec *v1.PodTemplateSpec, rtype, index string) error {
-	const (
-		randomPortLowerBound = 30001
-		randomPortUpperBound = 65535
-	)
-
-	port := int32(rand.IntnRange(randomPortLowerBound, randomPortUpperBound))
+	port := int32(rand.IntnRange(jc.Config.HostNetworkPortRange.Base,
+		jc.Config.HostNetworkPortRange.Base+jc.Config.HostNetworkPortRange.Size-1))
 	// 1) enable pod hostnetwork mode.
 	spec.Spec.HostNetwork = true
 	// 2) [CRITICAL] setup dns policy with hostnet instead of ClusterFirst by default.
 	spec.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	// 3) setup container port with a random port ranged [30001, 65535).
+	// 3) setup container port with a random port ranged [range_base, range_base+range_size).
 	setupContainerHostNetworkPort(spec, jc.Controller.GetDefaultContainerName(), jc.Controller.GetDefaultContainerPortName(), port)
 	// 4) record selected port by context keyed with replica-index.
 	storeHostNetworkPortToContext(ctx, rtype, index, port)

@@ -18,6 +18,7 @@ package options
 
 import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/net"
 )
 
 var (
@@ -43,6 +44,9 @@ type JobControllerConfiguration struct {
 
 	// Name of global default gang scheduler.
 	GangSchedulerName string
+
+	// HostNetworkPortRange specifies host ports range to randomize for hostnetwork-enabled jobs.
+	HostNetworkPortRange net.PortRange
 
 	// The container builder image name, Kaniko image
 	ModelImageBuilder string
