@@ -19,6 +19,8 @@ package main
 import (
 	"os"
 
+	"k8s.io/apimachinery/pkg/util/net"
+
 	"github.com/alibaba/kubedl/pkg/features"
 
 	"github.com/spf13/pflag"
@@ -51,9 +53,10 @@ func init() {
 
 func main() {
 	var (
-		ctrlMetricsAddr      string
-		metricsAddr          int
 		enableLeaderElection bool
+		metricsAddr          int
+		ctrlMetricsAddr      string
+		hostPortRange        string
 	)
 	pflag.StringVar(&ctrlMetricsAddr, "controller-metrics-addr", ":8080", "The address the controller metric endpoint binds to.")
 	pflag.IntVar(&metricsAddr, "metrics-addr", 8443, "The address the default endpoints binds to.")
@@ -62,11 +65,12 @@ func main() {
 	pflag.StringVar(&options.CtrlConfig.GangSchedulerName, "gang-scheduler-name", "", "specify the name of gang scheduler")
 	pflag.IntVar(&options.CtrlConfig.MaxConcurrentReconciles, "max-reconciles", 1, "specify the number of max concurrent reconciles of each controller")
 	pflag.StringVar(&options.CtrlConfig.ModelImageBuilder, "model-image-builder", "kubedl/kaniko:latest", "The image name of container builder for building the model image")
-
+	pflag.StringVar(&hostPortRange, "hostnetwork-port-range", "20000-30000", "hostnetwork port range for hostnetwork-enabled jobs")
 	features.KubeDLFeatureGates.AddFlag(pflag.CommandLine)
 	pflag.Parse()
 
 	options.CtrlConfig.EnableGangScheduling = options.CtrlConfig.GangSchedulerName != ""
+	options.CtrlConfig.HostNetworkPortRange = *net.ParsePortRangeOrDie(hostPortRange)
 
 	if options.CtrlConfig.MaxConcurrentReconciles <= 0 {
 		options.CtrlConfig.MaxConcurrentReconciles = 1
