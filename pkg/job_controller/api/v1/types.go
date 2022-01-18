@@ -80,6 +80,11 @@ type ReplicaSpec struct {
 	// If unspecified, defaults to 1.
 	Replicas *int32 `json:"replicas,omitempty"`
 
+	// Spot replicas are a subset of Replicas that allow for interruptions. They can use resources with less SLO guarantee.
+	// Spot replicas are suitable for stateless or fault-tolerant jobs.
+	// These replicas can be scheduled with higher chance at lower resource pricing.
+	SpotReplicaSpec *SpotReplicaSpec `json:"spotReplicaSpec,omitempty"`
+
 	// Template is the object that describes the pod that
 	// will be created for this replica. RestartPolicy in PodTemplateSpec
 	// will be overide by RestartPolicy in ReplicaSpec
@@ -95,6 +100,16 @@ type ReplicaSpec struct {
 	// default DependOn based on each framework's requirements. This feature is enabled by default, and can be
 	// disabled with DAGScheduling feature gate.
 	DependOn []DAGCondition `json:"-"`
+}
+
+// SpotReplicaSpec is the differential spec of spot replicas, to override the replica template
+type SpotReplicaSpec struct {
+	// SpotReplicaNumber is the desired number of spot replicas.
+	// If unspecified, SpotReplicaNumber defaults to 0.
+	// By default, replicas with index in the range from (Replicas - SpotReplicaNumber) to (Replicas -1 ) are spot replicas.
+	SpotReplicaNumber int32             `json:"spotReplicaNumber,omitempty"`
+	PriorityClassName string            `json:"priorityClassName,omitempty"`
+	Labels            map[string]string `json:"labels,omitempty"`
 }
 
 // JobCondition describes the state of the job at a certain point.

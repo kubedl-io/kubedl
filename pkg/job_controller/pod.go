@@ -401,7 +401,30 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		}
 	}
 
+	// apply spotReplicaSpec for spot replicas
+	// by default, replicas with index in the range from (Replicas - SpotReplicaNumber) to (Replicas -1 ) are spot replicas.
+	// If SpotReplicaNumber >= Replicas, all replicas are spot.
+	if spec.SpotReplicaSpec != nil {
+		index, _ := strconv.Atoi(index)
+		if index >= int(*spec.Replicas)-int(spec.SpotReplicaSpec.SpotReplicaNumber) {
+			applySpotReplicaSpec(podTemplate, spec.SpotReplicaSpec)
+		}
+	}
+
 	return jc.CreatePod(job, rt, index, podTemplate, masterRole)
+}
+
+func applySpotReplicaSpec(template *v1.PodTemplateSpec, spotReplicaSpec *apiv1.SpotReplicaSpec) {
+	if spotReplicaSpec == nil || template == nil {
+		return
+	}
+	template.Spec.PriorityClassName = spotReplicaSpec.PriorityClassName
+	if template.Labels == nil {
+		template.Labels = make(map[string]string)
+	}
+	for key, value := range spotReplicaSpec.Labels {
+		template.Labels[key] = value
+	}
 }
 
 // CreatePod creates a new common pod for the given index and type.
