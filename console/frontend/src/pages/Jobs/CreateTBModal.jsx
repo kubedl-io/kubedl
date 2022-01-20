@@ -1,23 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  Button,
-  Modal,
-  Form,
-  Input,
-  Descriptions,
-  Tooltip,
-  Spin,
-  Divider,
-  message,
-} from "antd";
-import {
-  QuestionCircleTwoTone,
-  EditOutlined,
-  CheckOutlined,
-} from "@ant-design/icons";
+import React, {useEffect, useRef, useState} from "react";
+import {Button, Descriptions, Divider, Form, Input, message, Modal, Spin, Tooltip,} from "antd";
+import {CheckOutlined, EditOutlined, QuestionCircleTwoTone,} from "@ant-design/icons";
 import PodStatus from "@/components/PodStatus";
-import { getJobTensorboardStatus, reApplyJobTensorboard } from "./service";
-import { useIntl } from "umi";
+import {getJobTensorboardStatus, reApplyJobTensorboard} from "./service";
+import {useIntl} from "umi";
 
 const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
   const intl = useIntl();
@@ -76,8 +62,8 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
       {
         logDir: form.logDir,
         ingressSpec: {
-          host: window.location.hostname,
-          pathPrefix: "/",
+          // host: window.location.hostname,
+          pathPrefix: "/tensorboards",
         },
       }
     );
@@ -103,8 +89,8 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
         {
           logDir: logDir,
           ingressSpec: {
-            host: window.location.hostname,
-            pathPrefix: "/",
+            // host: window.location.hostname,
+            pathPrefix: "/tensorboards",
           },
         }
       );
@@ -123,7 +109,7 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
           <Tooltip
             title={
               "Job " +
-              intl.formatMessage({ id: "kubedl-dashboard-output-log-url" })
+              intl.formatMessage({ id: "kubedl-dashboard-events-dir-prompt" })
             }
           >
             {intl.formatMessage({ id: "kubedl-dashboard-events-dir" })}{" "}
@@ -147,94 +133,108 @@ const CreateTBModal = ({ onCancel, selectedJob = null, isViewing = false }) => {
     </Form>
   );
 
-  let ViewContainer = () => (
-    <div>
-      {tbLoading ? (
-        <div style={{ textAlign: "center", padding: "30px" }}>
-          <Spin />
-        </div>
-      ) : (
+  let ViewContainer = () => {
+
+    let ingress = tbStatus?.ingresses?.[0]?.status?.loadBalancer?.ingress?.[0]
+    let fullUrl
+    let job_namespace = selectedJob.namespace;
+    let job_name = selectedJob.name;
+    if (ingress) {
+      if (ingress.ip) {
+        fullUrl = `http://${ingress.ip}/tensorboards/${job_namespace}/${job_name}`
+      } else if (ingress.hostname) {
+        fullUrl = `http://${ingress.hostname}/tensorboards/${job_namespace}/${job_name}`
+      }
+    }
+    return (
         <div>
-          <Descriptions size="small">
-            <Descriptions.Item
-              label={intl.formatMessage({ id: "kubedl-dashboard-domain-name" })}
-              span={3}
-            >
-              {tbStatus.ingresses ? (
-                <a
-                  target="_blank"
-                  href={`${window.location.protocol}//${tbStatus.ingresses[0].spec.rules[0].host}/${selectedJob.namespace}/${selectedJob.name}`}
-                >
-                  {intl.formatMessage({ id: "kubedl-dashboard-open" })} Tensorboard
-                </a>
-              ) : (
-                "-"
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item
-              label={intl.formatMessage({ id: "kubedl-dashboard-status" })}
-              span={3}
-            >
-              <PodStatus status={tbStatus.phase}></PodStatus>
-            </Descriptions.Item>
-            <Descriptions.Item
-              label={intl.formatMessage({ id: "kubedl-dashboard-details" })}
-              span={3}
-            >
-              {tbStatus.message || "-"}
-            </Descriptions.Item>
-          </Descriptions>
-          <Divider />
-          <Descriptions size="small">
-            <Descriptions.Item
-              label={intl.formatMessage({ id: "kubedl-dashboard-events-dir" })}
-              span={3}
-            >
-              {isEditing ? (
-                <div>
-                  <Form form={updateForm}>
-                    <Form.Item
-                      label={null}
-                      name={["logDir"]}
-                      initialValue={tbStatus?.config?.logDir ?? null}
-                      rules={[
-                        {
-                          required: true,
-                          message: intl.formatMessage({
-                            id: "kubedl-dashboard-events-dir-required",
-                          }),
-                        },
-                      ]}
-                      noStyle
-                    >
-                      <Input
-                        style={{ width: "70%" }}
-                        placeholder={"/root/data/log/"}
-                      />
-                    </Form.Item>
-                    <Button
-                      type="link"
-                      icon={<CheckOutlined />}
-                      onClick={() => onUpdateConfig()}
-                    />
-                  </Form>
-                </div>
-              ) : (
-                <div>
-                  {tbStatus?.config?.logDir}
-                  <Button
-                    type="link"
-                    icon={<EditOutlined />}
-                    onClick={() => onEditConfig()}
-                  />
-                </div>
-              )}
-            </Descriptions.Item>
-          </Descriptions>
+          {tbLoading ? (
+              <div style={{textAlign: "center", padding: "30px"}}>
+                <Spin/>
+              </div>
+          ) : (
+              <div>
+                <Descriptions size="small">
+                  <Descriptions.Item
+                      label={intl.formatMessage({id: "kubedl-dashboard-domain-name"})}
+                      span={3}
+                  >
+                    {tbStatus.ingresses ? (
+                        <a
+                            target="_blank"
+                            href={fullUrl}
+                        >
+                          {intl.formatMessage({id: "kubedl-dashboard-open"})} Tensorboard
+                        </a>
+                    ) : (
+                        "-"
+                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item
+                      label={intl.formatMessage({id: "kubedl-dashboard-status"})}
+                      span={3}
+                  >
+                    <PodStatus status={tbStatus.phase}></PodStatus>
+                  </Descriptions.Item>
+                  <Descriptions.Item
+                      label={intl.formatMessage({id: "kubedl-dashboard-details"})}
+                      span={3}
+                  >
+                    {tbStatus.message || "-"}
+                  </Descriptions.Item>
+                </Descriptions>
+                <Divider/>
+                <Descriptions size="small">
+                  <Descriptions.Item
+                      label={intl.formatMessage({id: "kubedl-dashboard-events-dir"})}
+                      span={3}
+                  >
+                    {isEditing ? (
+                        <div>
+                          <Form form={updateForm}>
+                            <Form.Item
+                                label={null}
+                                name={["logDir"]}
+                                initialValue={tbStatus?.config?.logDir ?? null}
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: intl.formatMessage({
+                                      id: "kubedl-dashboard-events-dir-required",
+                                    }),
+                                  },
+                                ]}
+                                noStyle
+                            >
+                              <Input
+                                  style={{width: "70%"}}
+                                  placeholder={"/root/data/log/"}
+                              />
+                            </Form.Item>
+                            <Button
+                                type="link"
+                                icon={<CheckOutlined/>}
+                                onClick={() => onUpdateConfig()}
+                            />
+                          </Form>
+                        </div>
+                    ) : (
+                        <div>
+                          {tbStatus?.config?.logDir}
+                          <Button
+                              type="link"
+                              icon={<EditOutlined/>}
+                              onClick={() => onEditConfig()}
+                          />
+                        </div>
+                    )}
+                  </Descriptions.Item>
+                </Descriptions>
+              </div>
+          )}
         </div>
-      )}
-    </div>
-  );
+    );
+  }
 
   return (
     <Modal

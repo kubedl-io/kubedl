@@ -3,22 +3,29 @@ package apiserver
 import (
 	"context"
 	"fmt"
-	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
+	jobv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/console/backend/pkg/utils"
+
+	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
+	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
 	"github.com/alibaba/kubedl/pkg/storage/dmo/converters"
+	"github.com/alibaba/kubedl/pkg/util/tenancy"
 	"github.com/alibaba/kubedl/pkg/util/workloadgate"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -263,6 +270,300 @@ func (a *apiServerBackend) StopJob(ns, name, jobID, kind, region string) error {
 
 func (a *apiServerBackend) DeleteJob(ns, name, jobID, kind, region string) error {
 	return a.StopJob(ns, name, jobID, kind, region)
+}
+
+func (a *apiServerBackend) DeleteNotebook(ns, name, id, region string) error {
+	notebook := &v1alpha1.Notebook{}
+	err := a.client.Get(context.Background(), types.NamespacedName{
+		Namespace: ns,
+		Name:      name,
+	}, notebook)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+	return a.client.Delete(context.Background(), notebook)
+}
+
+// ListNotebooks list notebooks from api-server and convert to dmo
+func (a *apiServerBackend) ListNotebooks(query *backends.NotebookQuery) ([]*dmo.Notebook, error) {
+
+	var (
+		options         client.ListOptions
+		filters         []func(notebook *dmo.Notebook) bool
+		dmoNotebookList []*dmo.Notebook
+	)
+	nbList := &v1alpha1.NotebookList{}
+	if query.Namespace != "" {
+		options.Namespace = query.Namespace
+	}
+
+	if err := a.client.List(context.Background(), nbList, &options); err != nil {
+		return nil, err
+	}
+
+	if query.StartTime.IsZero() || query.EndTime.IsZero() {
+		return nil, fmt.Errorf("StartTime EndTime should not be empty")
+	}
+
+	filters = append(filters, func(nb *dmo.Notebook) bool {
+		if nb.GmtCreated.Before(query.StartTime) {
+			if nb.GmtTerminated == nil || nb.GmtTerminated.IsZero() {
+				// not finished yet, return true means should include
+				return true
+			}
+			if nb.GmtTerminated != nil && nb.GmtTerminated.After(query.StartTime) {
+				// finished after query.startTime, should include
+				return true
+			}
+			return false
+		}
+		if nb.GmtCreated.Before(query.EndTime) {
+			return true
+		}
+		return false
+	})
+	if query.Status != "" {
+		filters = append(filters, func(nb *dmo.Notebook) bool {
+			return strings.ToLower(string(nb.Status)) ==
+				strings.ToLower(string(query.Status))
+		})
+	}
+
+	// convert to dmo
+	for _, notebook := range nbList.Items {
+		dmoNotebook, err := converters.ConvertNotebookToDMONotebook(&notebook, query.Region)
+		if err != nil {
+			return nil, err
+		}
+		skip := false
+		for _, filter := range filters {
+			if !filter(dmoNotebook) {
+				// filter out
+				skip = true
+				break
+			}
+		}
+		if skip {
+			continue
+		}
+		dmoNotebookList = append(dmoNotebookList, dmoNotebook)
+	}
+	return dmoNotebookList, nil
+}
+
+func (h *apiServerBackend) DetectWorkloadsInNS(ns, kind string) bool {
+	var (
+		list     runtime.Object
+		detector func(object runtime.Object) bool
+	)
+
+	switch kind {
+	case jobv1alpha1.TFJobKind:
+		list = &jobv1alpha1.TFJobList{}
+		detector = func(object runtime.Object) bool {
+			tfJobs := object.(*jobv1alpha1.TFJobList)
+			return len(tfJobs.Items) > 0
+		}
+	case jobv1alpha1.PyTorchJobKind:
+		list = &jobv1alpha1.PyTorchJobList{}
+		detector = func(object runtime.Object) bool {
+			pytorchJobs := object.(*jobv1alpha1.PyTorchJobList)
+			return len(pytorchJobs.Items) > 0
+		}
+	case v1alpha1.NotebookKind:
+		list = &v1alpha1.NotebookList{}
+		detector = func(object runtime.Object) bool {
+			notebooks := object.(*v1alpha1.NotebookList)
+			return len(notebooks.Items) > 0
+		}
+	default:
+		return false
+	}
+
+	if err := h.client.List(context.Background(), list, &client.ListOptions{Namespace: ns}); err != nil {
+		return false
+	}
+	return detector(list)
+}
+
+func (a *apiServerBackend) ListWorkspaces(query *backends.WorkspaceQuery) ([]*model.WorkspaceInfo, error) {
+
+	var (
+		workspaceList []*model.WorkspaceInfo
+	)
+	namespaces := &corev1.NamespaceList{}
+	if err := a.client.List(context.Background(), namespaces); err != nil {
+		return nil, err
+	}
+	var nsWithWorkloads []corev1.Namespace
+
+	// find namespaces that has tfjob, pytorchjob, and notebook
+	for _, ns := range namespaces.Items {
+		if a.DetectWorkloadsInNS(ns.Name, v1.TFJobKind) ||
+			a.DetectWorkloadsInNS(ns.Name, v1.PyTorchJobKind) ||
+			a.DetectWorkloadsInNS(ns.Name, v1alpha1.NotebookKind) ||
+			utils.IsKubedlManagedNamespace(&ns) {
+			nsWithWorkloads = append(nsWithWorkloads, ns)
+		}
+	}
+
+	workspaceMap := make(map[string]*model.WorkspaceInfo)
+	now := time.Now()
+	for _, namespace := range nsWithWorkloads {
+		modelWorkspace := &model.WorkspaceInfo{
+			Username:     "",
+			Namespace:    namespace.Name,
+			Name:         namespace.Name,
+			CreateTime:   namespace.CreationTimestamp.String(),
+			DurationTime: model.GetTimeDiffer(namespace.CreationTimestamp.Time, now),
+		}
+
+		if tn, err := tenancy.GetTenancy(&namespace); err == nil && tn != nil {
+			modelWorkspace.Username = tn.User
+		} else {
+			modelWorkspace.Username = ""
+		}
+		workspaceList = append(workspaceList, modelWorkspace)
+		workspaceMap[modelWorkspace.Name] = modelWorkspace
+	}
+
+	//resourceQuotas := &corev1.ResourceQuotaList{}
+	//if err := a.client.List(context.Background(), resourceQuotas); err != nil {
+	//	return nil, err
+	//}
+	//
+	//for _, quota := range resourceQuotas.Items {
+	//	if ws, ok := workspaceMap[quota.Name]; ok {
+	//		ws.CPU = quota.Spec.Hard.Cpu().Value()
+	//		ws.Memory = quota.Spec.Hard.Memory().Value()
+	//		ws.GPU = quota.Spec.Hard.Name("nvidia.com/gpu", resource.DecimalSI).Value()
+	//	}
+	//}
+
+	for _, ws := range workspaceList {
+		pvc := &corev1.PersistentVolumeClaim{}
+		pvcName := types.NamespacedName{
+			Namespace: ws.Name,
+			Name:      model.WorkspacePrefix + ws.Name,
+		}
+		err := a.client.Get(context.Background(), pvcName, pvc)
+
+		if err != nil {
+			klog.Errorf("fail to get workspace pvc %s", pvcName.Name)
+			ws.Status = "Created"
+			continue
+		}
+		if pvc.Status.Phase == corev1.ClaimBound {
+			ws.Status = "Ready"
+		} else if pvc.Status.Phase == corev1.ClaimPending {
+			ws.Status = "Created"
+		} else if pvc.Status.Phase == corev1.ClaimLost {
+			ws.Status = "Created"
+		}
+	}
+	return workspaceList, nil
+}
+
+func (a *apiServerBackend) CreateWorkspace(workspace *model.WorkspaceInfo) error {
+	namespace := &corev1.Namespace{}
+	err := a.client.Get(context.Background(), types.NamespacedName{Name: workspace.Name}, namespace)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			namespace = &corev1.Namespace{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: workspace.Name,
+					Labels: map[string]string{
+						model.WorkspaceKubeDLLabel: workspace.Name,
+					},
+				},
+				Spec: corev1.NamespaceSpec{},
+			}
+			err = a.client.Create(context.Background(), namespace)
+			if err != nil {
+				klog.Errorf("fail to create workspace %s, err: %v", workspace.Name, err)
+			}
+			klog.Infof("create workspace %s.", workspace.Name)
+		} else {
+			klog.Errorf("fail to get workspace %s, err: %v", workspace.Name, err)
+			return err
+		}
+	}
+
+	pvc := &corev1.PersistentVolumeClaim{}
+	pvcName := types.NamespacedName{
+		Name:      model.WorkspacePrefix + namespace.Name,
+		Namespace: namespace.Namespace,
+	}
+
+	storageClassName := "my-azurefile"
+	err = a.client.Get(context.Background(), pvcName, pvc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// create a 1GB pvc by default
+			pvc = &corev1.PersistentVolumeClaim{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      pvcName.Name,
+					Namespace: workspace.Name,
+				},
+				Spec: corev1.PersistentVolumeClaimSpec{
+					AccessModes: []corev1.PersistentVolumeAccessMode{
+						corev1.ReadOnlyMany,
+					},
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceStorage: resource.MustParse(strconv.FormatInt(workspace.Storage, 10) + "Gi"),
+						},
+					},
+					StorageClassName: &storageClassName,
+				},
+			}
+			err = a.client.Create(context.Background(), pvc)
+			if err != nil {
+				klog.Errorf("fail to create workspace pvc: %s, err: %v", pvc.Name, err)
+			}
+			klog.Infof("create workspace pvc: %s", workspace.Name)
+		} else {
+			klog.Errorf("fail to get workspace pvc: %s, err: %v", workspace.Name, err)
+			return err
+		}
+	}
+	//resourceQuota := &corev1.ResourceQuota{
+	//	TypeMeta: metav1.TypeMeta{},
+	//	ObjectMeta: metav1.ObjectMeta{
+	//		Name:      workspace.Name,
+	//		Namespace: namespace.Name,
+	//	},
+	//	Spec: corev1.ResourceQuotaSpec{
+	//		Hard: map[corev1.ResourceName]resource.Quantity{
+	//			corev1.ResourceCPU:    resource.MustParse(strconv.FormatInt(workspace.CPU, 10)),
+	//			corev1.ResourceMemory: resource.MustParse(strconv.FormatInt(workspace.Memory, 10) + "Mi"),
+	//			"nvidia.com/gpu":      resource.MustParse(strconv.FormatInt(workspace.GPU, 10)),
+	//		},
+	//	},
+	//}
+	//err = a.client.Create(context.Background(), resourceQuota)
+	//if err != nil {
+	//	klog.Infof("fail to create quota %s", resourceQuota.Name)
+	//	return err
+	//}
+	return nil
+}
+
+func (a *apiServerBackend) DeleteWorkspace(name string) error {
+	namespace := &corev1.Namespace{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: corev1.NamespaceSpec{},
+	}
+	err := a.client.Delete(context.Background(), namespace)
+	return err
 }
 
 func (a *apiServerBackend) listJobsWithKind(kind string, nameLike, region string, options client.ListOptions, filters ...func(*dmo.Job) bool) ([]*dmo.Job, error) {

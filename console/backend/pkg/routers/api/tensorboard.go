@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
+
+	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	backendutils "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
@@ -15,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/networking/v1beta1"
 	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -150,9 +151,9 @@ func (tc *tensorBoardAPIsController) ReapplyTensorBoardInstance(c *gin.Context) 
 }
 
 type simpleIngress struct {
-	Name   string                `json:"name"`
-	Spec   v1beta1.IngressSpec   `json:"spec"`
-	Status v1beta1.IngressStatus `json:"status"`
+	Name   string                     `json:"name"`
+	Spec   networkingv1.IngressSpec   `json:"spec"`
+	Status networkingv1.IngressStatus `json:"status"`
 }
 
 type tensorboardStatus struct {
@@ -164,7 +165,7 @@ type tensorboardStatus struct {
 	Ingresses []simpleIngress `json:"ingresses"`
 }
 
-func wrapTensorBoardStatus(config *tb.TensorBoard, pod *v1.Pod, ingresses []*v1beta1.Ingress) tensorboardStatus {
+func wrapTensorBoardStatus(config *tb.TensorBoard, pod *v1.Pod, ingresses []*networkingv1.Ingress) tensorboardStatus {
 	status := tensorboardStatus{
 		Name:      pod.Name,
 		Namespace: pod.Namespace,

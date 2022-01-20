@@ -168,7 +168,7 @@ const JobSubmit = ({ globalConfig }) => {
       let config = {
         logDir: form.tensorboard.logDir,
         ingressSpec: {
-          host: window.location.hostname,
+          // host: window.location.hostname,
           pathPrefix: "/"
         }
       }

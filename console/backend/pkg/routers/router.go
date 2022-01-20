@@ -2,13 +2,16 @@ package routers
 
 import (
 	"flag"
-	md "github.com/alibaba/kubedl/console/backend/pkg/middleware"
-	"github.com/alibaba/kubedl/console/backend/pkg/routers/api"
-	"github.com/alibaba/kubedl/console/backend/pkg/utils"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
 	"strings"
+
+	md "github.com/alibaba/kubedl/console/backend/pkg/middleware"
+	"github.com/alibaba/kubedl/console/backend/pkg/routers/api"
+	"github.com/alibaba/kubedl/console/backend/pkg/storage"
+	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 
 	"github.com/alibaba/kubedl/console/backend/pkg/auth"
 	"github.com/alibaba/kubedl/console/backend/pkg/constants"
@@ -28,8 +31,9 @@ func init() {
 var (
 	//eventStorage storage backend plugin name, persist events into backend
 	eventStorage string
-	//objectStorage storage backend plugin name, persist jobs and pods into backend
-	objectStorage = "proxy"
+	//objectStorageName is the name of backend storage that persists jobs and pods into backend
+	// By default it is proxy that will first try read/write from api-server, and fall back to DB if not exists
+	objectStorageName = "proxy"
 )
 
 type APIController interface {
@@ -103,19 +107,31 @@ func initControllersRoute(r *gin.Engine, baseGroup string) error {
 	if err != nil {
 		return err
 	}
-	jobHandler, err := handlers.NewJobHandler(objectStorage, logHandler)
+	// init object backend storage
+	objBackend := storage.GetObjectBackend(objectStorageName)
+	if objBackend == nil {
+		return fmt.Errorf("no object backend storage named: %s", objectStorageName)
+	}
+	err = objBackend.Initialize()
 	if err != nil {
 		return err
 	}
+
+	jobHandler := handlers.NewJobHandler(objBackend, logHandler)
+	notebookHandler := handlers.NewNotebookHandler(objBackend)
+	dataSourceHandler := handlers.NewDataSourceHandler()
+
 	//register controllers
 	ctrls := []APIController{
 		api.NewJobAPIsController(jobHandler),
+		api.NewNotebookAPIsController(notebookHandler),
+		api.NewWorkspaceAPIsController(objBackend, dataSourceHandler),
 		api.NewAuthAPIsController(authHandler),
 		api.NewLogsAPIsController(logHandler),
 		api.NewKubeDLAPIsController(),
 		api.NewTensorBoardController(),
 		api.NewDataAPIsController(),
-		api.NewDataSourceAPIsController(),
+		api.NewDataSourceAPIsController(dataSourceHandler),
 		api.NewCodeSourceAPIsController(),
 	}
 	//register routes

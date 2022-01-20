@@ -1,27 +1,22 @@
 import {
+  CopyOutlined,
+  DeleteOutlined,
   ExclamationCircleOutlined,
+  FormOutlined,
   FundViewOutlined,
   PlusSquareOutlined,
-  FormOutlined,
-  DeleteOutlined,
-  CopyOutlined,
 } from "@ant-design/icons";
-import { Modal, message, Tooltip } from "antd";
-import React, { useRef, useState, useEffect, Fragment } from "react";
-import { PageHeaderWrapper } from "@ant-design/pro-layout";
+import {message, Modal, Tooltip} from "antd";
+import React, {Fragment, useEffect, useRef, useState} from "react";
 import ProTable from "@ant-design/pro-table";
-import {
-  deleteJobs,
-  queryJobs,
-  stopJobs,
-  getJobTensorboardStatus,
-} from "./service";
-import { cloneInfoJobs } from "../JobDetail/service";
+import {deleteJobs, getJobTensorboardStatus, queryJobs, stopJobs,} from "./service";
+import {cloneInfoJobs} from "../JobDetail/service";
 import CreateTBModal from "./CreateTBModal";
 import moment from "moment";
-import { connect, useIntl, history } from "umi";
-import { queryCurrentUser } from "@/services/global";
-const TableList = ({ globalConfig }) => {
+import {connect, history, useIntl} from "umi";
+import {queryCurrentUser} from "@/services/global";
+
+const TableList = ({ globalConfig, namespace }) => {
   const intl = useIntl();
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState([]);
@@ -43,6 +38,7 @@ const TableList = ({ globalConfig }) => {
     submitDateRange: [moment().subtract(30, "days"), moment()],
     current: 1,
     page_size: 20,
+    namespace: namespace
   };
 
   useEffect(() => {
@@ -80,6 +76,7 @@ const TableList = ({ globalConfig }) => {
     let jobs = await queryJobs({
       name: queryParams.name,
       // namespace: globalConfig.namespace,
+      namespace: queryParams.namespace,
       status:
         queryParams.jobStatus === "All" ? undefined : queryParams.jobStatus,
       start_time: moment(queryParams.submitDateRange[0])
@@ -177,11 +174,24 @@ const TableList = ({ globalConfig }) => {
       kind: job.jobType,
     });
     let tbStatus = res.data || {};
-    if (tbStatus.phase === "Running" && tbStatus.ingresses) {
-      let host = tbStatus.ingresses[0].spec.rules[0].host;
+    if (tbStatus === "no tensorboard configured") {
+      message.warning(
+          "Tensorboard " + intl.formatMessage({ id: "kubedl-dashboard-disabled-info" }),
+          3
+      );
+      return;
+    }
+    if (tbStatus.phase === "Running" && tbStatus.ingresses?.[0]?.status?.loadBalancer?.ingress?.[0]) {
+      let ingress = tbStatus.ingresses[0]?.status?.loadBalancer?.ingress?.[0]
+      let fullUrl
       let job_namespace = job.namespace;
       let job_name = job.name;
-      window.open(`http://${host}/${job_namespace}/${job_name}`, "_blank");
+      if (ingress.ip) {
+        fullUrl = `http://${ingress.ip}/tensorboards/${job_namespace}/${job_name}`
+      } else if (ingress.hostname) {
+        fullUrl = `http://${ingress.hostname}/tensorboards/${job_namespace}/${job_name}`
+      }
+      window.open(fullUrl, "_blank");
     } else {
       message.warning(
         "Tensorboard " + intl.formatMessage({ id: "kubedl-dashboard-start-info" }),
@@ -232,18 +242,9 @@ const TableList = ({ globalConfig }) => {
   };
   let columns = [
     {
-      // title: 'Date Range',
-      title: intl.formatMessage({ id: "kubedl-dashboard-time-interval" }),
-      dataIndex: "submitDateRange",
-      valueType: "dateRange",
-      initialValue: searchInitialParameters.submitDateRange,
-      hideInTable: true,
-    },
-    {
       // title: 'Namespace',
       title: intl.formatMessage({ id: "kubedl-dashboard-namespace" }),
       dataIndex: "namespace",
-      hideInSearch: true,
     },
     {
       title: intl.formatMessage({ id: "kubedl-dashboard-job-type" }),
@@ -308,6 +309,14 @@ const TableList = ({ globalConfig }) => {
       },
     },
     {
+      // title: 'Date Range',
+      title: intl.formatMessage({ id: "kubedl-dashboard-time-interval" }),
+      dataIndex: "submitDateRange",
+      valueType: "dateRange",
+      initialValue: searchInitialParameters.submitDateRange,
+      hideInTable: true,
+    },
+    {
       // title: 'Create Time',
       title: intl.formatMessage({ id: "kubedl-dashboard-creation-time" }),
       dataIndex: "createTime",
@@ -329,6 +338,57 @@ const TableList = ({ globalConfig }) => {
       render: (text) => <Fragment>{text && text.split(".")[0]}</Fragment>,
     },
     {
+      title: intl.formatMessage({ id: "kubedl-dashboard-tensorboard-operation" }),
+      dataIndex: "option",
+      valueType: "option",
+      render: (_, record) => {
+        let isDisabled;
+        if (users.loginId && users.loginId !== "") {
+          isDisabled = true;
+        }
+        let iconStyleMarginLeft = {
+          marginLeft: "10px",
+          color: isDisabled ? "#1890ff" : "",
+        };
+        return (
+            <Fragment>
+              {environment && (
+                  <>
+                    {(
+                        <>
+                          <Tip
+                              kubedl={"kubedl-dashboard-open"}
+                              Click={onTBCheckAndOpen.bind(this, record)}
+                              disabled={!isDisabled}
+                              IconComponent={
+                                <FundViewOutlined style={iconStyleMarginLeft} />
+                              }
+                          />
+                          <Tip
+                              kubedl={"kubedl-dashboard-edit"}
+                              Click={onTBOpen.bind(this, true, record)}
+                              disabled={!isDisabled}
+                              IconComponent={
+                                <FormOutlined style={iconStyleMarginLeft} />
+                              }
+                          />
+                          <Tip
+                              kubedl={"kubedl-dashboard-create"}
+                              Click={onTBOpen.bind(this, false, record)}
+                              disabled={!isDisabled}
+                              IconComponent={
+                                <PlusSquareOutlined style={iconStyleMarginLeft} />
+                              }
+                          />
+                        </>
+                    )}
+                  </>
+              )}
+            </Fragment>
+        );
+      },
+    },
+    {
       title: intl.formatMessage({ id: "kubedl-dashboard-operation" }),
       dataIndex: "option",
       valueType: "option",
@@ -336,72 +396,37 @@ const TableList = ({ globalConfig }) => {
         let isDisabled;
         if (users.loginId && users.loginId !== "") {
           isDisabled = true;
-        } 
+        }
         let iconStyleMarginLeft = {
           marginLeft: "10px",
           color: isDisabled ? "#1890ff" : "",
         };
         return (
-          <Fragment>
-            <Tip
-              kubedl={"kubedl-dashboard-clone"}
-              Click={ClickClone.bind(this, record)}
-              disabled={!isDisabled}
-              IconComponent={
-                <CopyOutlined
-                  style={{
-                    marginRight: "10px",
-                    color: isDisabled ? "#1890ff" : "",
-                  }}
-                />
-              }
-            />
-            <Tip
-              kubedl={"kubedl-dashboard-delete"}
-              Click={onJobDelete.bind(this, record)}
-              disabled={!isDisabled}
-              IconComponent={
-                <DeleteOutlined
-                  style={{ color: isDisabled ? "#d9363e" : "" }}
-                />
-              }
-            />
-            {environment && (
-              <>
-                {record.enableTensorboard === true ? (
-                  <>
-                    <Tip
-                      kubedl={"kubedl-dashboard-open"}
-                      Click={onTBCheckAndOpen.bind(this, record)}
-                      disabled={!isDisabled}
-                      IconComponent={
-                        <FundViewOutlined style={iconStyleMarginLeft} />
-                      }
+            <Fragment>
+              <Tip
+                  kubedl={"kubedl-dashboard-clone"}
+                  Click={ClickClone.bind(this, record)}
+                  disabled={!isDisabled}
+                  IconComponent={
+                    <CopyOutlined
+                        style={{
+                          marginRight: "10px",
+                          color: isDisabled ? "#1890ff" : "",
+                        }}
                     />
-                    <Tip
-                      kubedl={"kubedl-dashboard-edit"}
-                      Click={onTBOpen.bind(this, true, record)}
-                      disabled={!isDisabled}
-                      IconComponent={
-                        <FormOutlined style={iconStyleMarginLeft} />
-                      }
+                  }
+              />
+              <Tip
+                  kubedl={"kubedl-dashboard-delete"}
+                  Click={onJobDelete.bind(this, record)}
+                  disabled={!isDisabled}
+                  IconComponent={
+                    <DeleteOutlined
+                        style={{ color: isDisabled ? "#d9363e" : "" }}
                     />
-                  </>
-                ) : record.enableTensorboard === false ? (
-                  <Tip
-                    kubedl={"kubedl-dashboard-create"}
-                    Click={onTBOpen.bind(this, false, record)}
-                    disabled={!isDisabled}
-                    IconComponent={
-                      <PlusSquareOutlined style={iconStyleMarginLeft} />
-                    }
-                  />
-                ) : (
-                  ""
-                )}
-              </>
-            )}
-          </Fragment>
+                  }
+              />
+            </Fragment>
         );
       },
     },
@@ -446,6 +471,9 @@ const TableList = ({ globalConfig }) => {
           fullScreen: true,
           setting: true,
           reload: () => fetchJobs(),
+        }}
+        search={{
+          filterType: 'light',
         }}
         onChange={onTableChange}
         pagination={{ total: total }}

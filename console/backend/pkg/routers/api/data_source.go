@@ -10,9 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewDataSourceAPIsController() *dataSourceAPIsController {
+func NewDataSourceAPIsController(dataSourceHandler *handlers.DataSourceHandler) *dataSourceAPIsController {
 	return &dataSourceAPIsController{
-		dataSourceHandler: handlers.NewDataSourceHandler(),
+		dataSourceHandler: dataSourceHandler,
 	}
 }
 

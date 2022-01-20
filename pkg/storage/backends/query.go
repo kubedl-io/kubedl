@@ -19,9 +19,11 @@ package backends
 import (
 	"time"
 
+	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
+// Query for job via http
 type Query struct {
 	JobID      string
 	Name       string
@@ -33,6 +35,30 @@ type Query struct {
 	EndTime    time.Time
 	IsDel      *int
 	Pagination *QueryPagination
+}
+
+// NotebookQuery for notebooks via http
+type NotebookQuery struct {
+	NotebookID string
+	Name       string
+	Namespace  string
+	Region     string
+	Status     v1alpha1.NotebookCondition
+	StartTime  time.Time
+	EndTime    time.Time
+	IsDel      *int
+	Pagination *QueryPagination
+}
+
+type WorkspaceQuery struct {
+	WorkspaceID string
+	Name        string
+	Namespace   string
+	Region      string
+	StartTime   time.Time
+	EndTime     time.Time
+	IsDel       *int
+	Pagination  *QueryPagination
 }
 
 type QueryPagination struct {

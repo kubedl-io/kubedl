@@ -166,7 +166,7 @@ export default {
   'kubedl-dashboard-consistent': '一致',
   'kubedl-dashboard-local-storage-directory-data': '本地数据存储目录',
   'kubedl-dashboard-local-storage-directory-git': '本地Git存储目录',
-  'kubedl-dashboard-code-synchronization': '代码将同步到',
+  'kubedl-dashboard-code-synchronization': '代码将同步到:',
   'kubedl-dashboard-under-contents': '目录下',
   'kubedl-dashboard-code-local-directory': 'Git本地存储目录',
   'kubedl-dashboard-creator': '创建人',

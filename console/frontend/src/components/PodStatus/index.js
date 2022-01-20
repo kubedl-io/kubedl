@@ -3,33 +3,33 @@ import React from 'react';
 
 const STATUS_MAP = {
     'All': {
-      text: '全部',
-      // text: 'All',
+      // text: '全部',
+      text: 'All',
       status: 'default',
     },
     'Completed': {
-      text: '已完成',
-      // text: 'Created',
+      // text: '已完成',
+      text: 'Created',
       status: 'default',
     },
     'Pending': {
-      text: '创建中',
-      // text: 'Waiting',
+      // text: '创建中',
+      text: 'Waiting',
       status: 'processing',
     },
     'Running': {
-      text: '运行中',
-      // text: 'Running',
+      // text: '运行中',
+      text: 'Running',
       status: 'success',
     },
     'Failed': {
-      text: '执行失败',
-      // text: 'Failed',
+      // text: '执行失败',
+      text: 'Failed',
       status: 'error',
     },
     'Stopped': {
-      text: '已停止',
-      // text: 'Stopped',
+      // text: '已停止',
+      text: 'Stopped',
       status: 'error',
     },
 }

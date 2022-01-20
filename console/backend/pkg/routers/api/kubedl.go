@@ -3,15 +3,17 @@ package api
 import (
 	"flag"
 	"fmt"
+
+	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
-
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"k8s.io/klog"
 )
 
 func init() {
-	flag.BoolVar(&detectJobInNS, "detect-job-in-ns", false, "detect jobs in namespace when do listing and return a map")
+	flag.BoolVar(&detectJobInNS, "detect-job-in-ns", true, "detect jobs in namespace when do listing and return a map")
 }
 
 var (
@@ -40,7 +42,7 @@ func (dc *KubeDLAPIsController) getImages(c *gin.Context) {
 }
 
 func (dc *KubeDLAPIsController) getAvailableNamespaces(c *gin.Context) {
-	avaliableNS, err := dc.handler.ListAvailableNamespaces()
+	avaliableNS, nsList, err := dc.handler.ListAvailableNamespaces()
 	if err != nil {
 		Error(c, fmt.Sprintf("failed to list avaliable namespaces, err: %v", err))
 		return
@@ -50,10 +52,27 @@ func (dc *KubeDLAPIsController) getAvailableNamespaces(c *gin.Context) {
 		return
 	}
 
-	nsWithJob := make(map[string]bool)
+	var nsWithWorkloads []string
+	nsMap := make(map[string]bool)
+
+	// find ns with workloads
 	for _, ns := range avaliableNS {
-		nsWithJob[ns] = dc.handler.DetectJobsInNS(ns, v1.TFJobKind) ||
-			dc.handler.DetectJobsInNS(ns, v1.PyTorchJobKind)
+		if dc.handler.DetectJobsInNS(ns, v1.TFJobKind) ||
+			dc.handler.DetectJobsInNS(ns, v1.PyTorchJobKind) ||
+			dc.handler.DetectJobsInNS(ns, v1alpha1.NotebookKind) {
+			nsMap[ns] = true
+			nsWithWorkloads = append(nsWithWorkloads, ns)
+		}
 	}
-	utils.Succeed(c, nsWithJob)
+
+	// find ns with kubedl.io/workspace-name set
+	for _, ns := range nsList.Items {
+		if _, ok := nsMap[ns.Name]; !ok {
+			if utils.IsKubedlManagedNamespace(&ns) {
+				nsWithWorkloads = append(nsWithWorkloads, ns.Name)
+			}
+		}
+	}
+	klog.Infof("workspace list: %s ", nsWithWorkloads)
+	utils.Succeed(c, nsWithWorkloads)
 }

@@ -59,7 +59,8 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
             description: values.description,
             namespace: values.namespace,
             pvc_name: values.pvc_name,
-            local_path: defaultDataPath + values.local_path
+            // local_path: defaultDataPath + values.local_path
+            local_path: values.local_path
         };
         newDatasource(addValues).then(res => {
             message.success(intl.formatMessage({id: 'kubedl-dashboard-add-success'}));
@@ -77,7 +78,20 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
         setPvcs([]);
         fetchPVC();
     }
-    
+
+    const promptAlert = (
+        <Alert
+            type="info"
+            showIcon
+            message={
+                <span>
+                    {intl.formatMessage({id: 'kubedl-dashboard-volume-mount'})}&nbsp;
+                    {form.getFieldValue('local_path') ?  form.getFieldValue('local_path')+"/" : defaultDataPath}
+                </span>
+            }
+        />
+    );
+
     return (
         <div>
             <Form
@@ -88,7 +102,7 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                 onFinish={handleSubmit}
             >
                 <Row gutter={[24, 24]}>
-                    <Col span={18} offset={3}>
+                    <Col span={21} offset={3}>
                         <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'kubedl-dashboard-new-data-config'})}>
                             <Form.Item
                                 name="name"
@@ -184,15 +198,16 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
                                     name="local_path"
                                     noStyle>
                                     <Row gutter={[24, 24]}>
-                                        <Col span={3}>
-                                            <span style={{
-                                                lineHeight: '32px',
-                                                marginLeft: '10px'
-                                            }}>{defaultDataPath}</span>
-                                        </Col>
+                                        {/*<Col span={3}>*/}
+                                        {/*    <span style={{*/}
+                                        {/*        lineHeight: '32px',*/}
+                                        {/*        marginLeft: '10px'*/}
+                                        {/*    }}>{defaultDataPath}</span>*/}
+                                        {/*</Col>*/}
                                         <Col span={21}><Input/></Col>
                                     </Row>
                                 </Form.Item>
+                                {/*{promptAlert}*/}
                             </Form.Item>
                             <Form.Item wrapperCol={{span: 3, offset: 21}}>
                                 <Button type="primary" htmlType="submit" loading={isLoading}>{intl.formatMessage({id: 'kubedl-dashboard-submit'})}</Button>

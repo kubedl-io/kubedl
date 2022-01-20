@@ -86,6 +86,11 @@ func ConvertJobToDMOJob(job metav1.Object, kind string, specs map[v1.ReplicaType
 		return nil, err
 	}
 	dmoJob.Resources = string(resourcesBytes)
+
+	if _, ok := job.GetAnnotations()[v1.AnnotationTensorBoardConfig]; ok {
+		enableTB := RemarkEnableTensorBoard
+		dmoJob.Remark = &enableTB
+	}
 	return &dmoJob, nil
 }
 

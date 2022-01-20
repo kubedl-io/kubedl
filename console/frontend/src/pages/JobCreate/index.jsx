@@ -1,42 +1,39 @@
+import {DownOutlined, QuestionCircleTwoTone} from "@ant-design/icons";
 import {
-    DownOutlined,
-    QuestionCircleTwoTone
-} from "@ant-design/icons";
-import {
-    Button,
     Alert,
-    Dropdown,
-    Menu,
-    Select,
-    Tabs,
-    Radio,
+    AutoComplete,
+    Button,
     Card,
-    Row,
     Col,
+    Dropdown,
     Form,
     Input,
     InputNumber,
+    Menu,
+    message,
+    Radio,
+    Row,
+    Select,
     Switch,
-    message, AutoComplete
+    Tabs
 } from "antd";
-import React, { useState,  useEffect } from "react";
-import { connect } from "dva";
-import { PageHeaderWrapper } from "@ant-design/pro-layout";
-import {getDatasources, submitJob, getCodeSource, getNamespaces} from "./service";
+import React, {useEffect, useState} from "react";
+import {connect} from "dva";
+import {getCodeSource, getDatasources, getNamespaces, submitJob} from "./service";
 import Tooltip from "antd/es/tooltip";
 import FooterToolbar from "../JobSubmit/components/FooterToolbar";
-import { history, useIntl, getLocale } from 'umi';
+import {getLocale, history, useIntl} from 'umi';
 import {queryCurrentUser} from "@/services/global";
 import * as ComForm from "../../components/Form";
 import {
     getCommand,
-    handleDataSource,
+    getTasks,
+    getTensorboard,
     handleCodeSource,
     handleCodeSourceBranch,
-    getTensorboard,
-    getTasks,
-    handleRequirementsData,
+    handleDataSource,
     handleKindType,
+    handleRequirementsData,
     handleWorkingDir
 } from '@/utils/JobSubmit'
 import styles from "./style.less";
@@ -181,7 +178,7 @@ const JobSubmitNew = ({ globalConfig }) => {
     const onFormSubmit = async form => {
         const newFormKind = ["TFJob", "TFJobDistributed"].includes(form.kind) ? 'TFJob' : 'PyTorchJob';
         const data = {
-            apiVersion: "kubeflow.org/v1",
+            apiVersion: "training.kubedl.io/v1alpha1",
             kind: newFormKind,
             metadata: {
                 name: form.name,
@@ -194,8 +191,8 @@ const JobSubmitNew = ({ globalConfig }) => {
             let config = {
                 logDir: form.tensorboard.logDir,
                 ingressSpec: {
-                    host: window.location.hostname,
-                    pathPrefix: "/"
+                    // host: window.location.hostname,
+                    pathPrefix: "/tensorboards"
                 }
             }
             data.metadata.annotations['kubedl.io/tensorboard-config'] = JSON.stringify(config)
@@ -483,7 +480,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                 labelAlign="left">
                 <Row gutter={[24, 24]}>
                     <Col span={13}>
-                        <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'kubedl-dashboard-basic-info'})}>
+                        <Card style={{ marginBottom: 12 }} title={intl.formatMessage({id: 'kubedl-dashboard-job-submit'})}>
                             <Form.Item
                                 name="name"
                                 label={intl.formatMessage({id: 'kubedl-dashboard-job-name'})}
@@ -522,6 +519,12 @@ const JobSubmitNew = ({ globalConfig }) => {
                                 <Select placeholder="" onChange={nameSpaceChange}>
                                     {nameSpaces.length > 0 && nameSpaces.map((item) => <Select.Option key={item} value={item}>{item}</Select.Option>)}
                                 </Select>
+                            </Form.Item>
+                            <Form.Item
+                                required={true}
+                                name="command"
+                                label={intl.formatMessage({id: 'kubedl-dashboard-execute-command'})}>
+                                <Input.TextArea  placeholder={''}/>
                             </Form.Item>
                             <ComForm.FromAddDropDown
                               form={form}
@@ -578,7 +581,7 @@ const JobSubmitNew = ({ globalConfig }) => {
                                                             {
                                                                 codeSource.length > 0 &&
                                                                 codeSource.some((v) => v.name === form.getFieldValue("codeSource")) &&
-                                                                codeSource.filter((v) => v.name === form.getFieldValue("codeSource"))[0]['local_path'] +
+                                                                codeSource.filter((v) => v.name === form.getFieldValue("codeSource"))[0]['local_path'] + '/' +
                                                                 handleGitUrl(codeSource.filter((v) => v.name === form.getFieldValue("codeSource"))[0]['code_path'])
                                                             }
                                                         </span>
@@ -607,12 +610,6 @@ const JobSubmitNew = ({ globalConfig }) => {
                                 <Input
                                     placeholder={defaultWorkingDir}
                                     disabled={true}/>
-                            </Form.Item>
-                            <Form.Item
-                                required={true}
-                                name="command"
-                                label={intl.formatMessage({id: 'kubedl-dashboard-execute-command'})}>
-                                <Input.TextArea  placeholder={''}/>
                             </Form.Item>
                             <Form.Item
                                 label={intl.formatMessage({id: 'kubedl-dashboard-third-party-config'})}

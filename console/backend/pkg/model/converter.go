@@ -35,9 +35,15 @@ func ConvertDMOJobToJobInfo(dmoJob *dmo.Job) JobInfo {
 	if !util.Time(dmoJob.GmtJobFinished).IsZero() {
 		jobInfo.EndTime = dmoJob.GmtJobFinished.Local().Format(JobInfoTimeFormat)
 	}
-	if !dmoJob.GmtCreated.IsZero() && !util.Time(dmoJob.GmtJobFinished).IsZero() {
-		jobInfo.DurationTime = GetTimeDiffer(dmoJob.GmtCreated, *dmoJob.GmtJobFinished)
+	now := time.Now()
+	if !dmoJob.GmtCreated.IsZero() {
+		if !util.Time(dmoJob.GmtJobFinished).IsZero() {
+			jobInfo.DurationTime = GetTimeDiffer(dmoJob.GmtCreated, *dmoJob.GmtJobFinished)
+		} else {
+			jobInfo.DurationTime = GetTimeDiffer(dmoJob.GmtCreated, now)
+		}
 	}
+
 	if dmoJob.Remark != nil {
 		for _, remark := range strings.Split(*dmoJob.Remark, ",") {
 			if strings.TrimSpace(remark) == converters.RemarkEnableTensorBoard {
@@ -100,6 +106,13 @@ func ConvertDMOPodToJobSpec(pod *dmo.Pod) Spec {
 func GetTimeDiffer(startTime time.Time, endTime time.Time) (differ string) {
 	seconds := endTime.Sub(startTime).Seconds()
 	var buffer bytes.Buffer
+
+	days := math.Floor(seconds / 86400)
+	if days > 0 {
+		buffer.WriteString(strconv.FormatFloat(days, 'g', -1, 64))
+		buffer.WriteString("d")
+		seconds = seconds - 86400*days
+	}
 	hours := math.Floor(seconds / 3600)
 	if hours > 0 {
 		buffer.WriteString(strconv.FormatFloat(hours, 'g', -1, 64))
@@ -112,7 +125,40 @@ func GetTimeDiffer(startTime time.Time, endTime time.Time) (differ string) {
 		buffer.WriteString("m")
 		seconds = seconds - 60*minutes
 	}
-	buffer.WriteString(strconv.FormatFloat(seconds, 'g', -1, 64))
+	var s = int64(seconds)
+	buffer.WriteString(strconv.FormatInt(s, 10))
 	buffer.WriteString("s")
 	return buffer.String()
+}
+
+func ConvertDMONotebookToNotebookInfo(dmoNotebook *dmo.Notebook) NotebookInfo {
+	notebookInfo := NotebookInfo{
+		Id:             dmoNotebook.NotebookID,
+		Name:           dmoNotebook.Name,
+		NotebookStatus: dmoNotebook.Status,
+		Namespace:      dmoNotebook.Namespace,
+		Url:            dmoNotebook.Url,
+	}
+	if dmoNotebook.DeployRegion != nil {
+		notebookInfo.DeployRegion = *dmoNotebook.DeployRegion
+	}
+
+	if !dmoNotebook.GmtCreated.IsZero() {
+		notebookInfo.CreateTime = dmoNotebook.GmtCreated.Local().Format(JobInfoTimeFormat)
+	}
+	if !util.Time(dmoNotebook.GmtTerminated).IsZero() {
+		notebookInfo.EndTime = dmoNotebook.GmtTerminated.Local().Format(JobInfoTimeFormat)
+	}
+	now := time.Now()
+	if !dmoNotebook.GmtCreated.IsZero() {
+		if !util.Time(dmoNotebook.GmtTerminated).IsZero() {
+			// already terminated
+			notebookInfo.DurationTime = GetTimeDiffer(dmoNotebook.GmtCreated, *dmoNotebook.GmtTerminated)
+		} else {
+			notebookInfo.DurationTime = GetTimeDiffer(dmoNotebook.GmtCreated, now)
+		}
+	}
+	notebookInfo.UserName = *dmoNotebook.Owner
+
+	return notebookInfo
 }

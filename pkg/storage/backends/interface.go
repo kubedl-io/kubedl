@@ -19,11 +19,11 @@ package backends
 import (
 	"time"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
+	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ObjectStorageBackend provides a collection of abstract methods to
@@ -53,6 +53,16 @@ type ObjectStorageBackend interface {
 	// DeleteJob updates job as deleted from api-server, but not delete job record
 	// from backend, region is optional.
 	DeleteJob(ns, name, jobID, kind, region string) error
+	// ListNotebooks retrieves list of notebooks
+	ListNotebooks(query *NotebookQuery) ([]*dmo.Notebook, error)
+	// DeleteNotebook from backend, region is optional.
+	DeleteNotebook(ns, name, id, region string) error
+	// ListWorkspaces lists the workspaces
+	ListWorkspaces(query *WorkspaceQuery) ([]*model.WorkspaceInfo, error)
+	// DeleteWorkspace deletes the workspace
+	DeleteWorkspace(name string) error
+	// CreateWorkspace deletes the workspace
+	CreateWorkspace(workspace *model.WorkspaceInfo) error
 }
 
 // EventStorageBackend provides a collection of abstract methods to
