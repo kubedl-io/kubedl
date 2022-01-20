@@ -57,6 +57,18 @@ spec:
                       type: integer
                     restartPolicy:
                       type: string
+                    spotReplicaSpec:
+                      properties:
+                        labels:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        priorityClassName:
+                          type: string
+                        spotReplicaNumber:
+                          format: int32
+                          type: integer
+                      type: object
                     template:
                       properties:
                         metadata:
