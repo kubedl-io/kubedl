@@ -102,14 +102,16 @@ type ReplicaSpec struct {
 	DependOn []DAGCondition `json:"-"`
 }
 
-// SpotReplicaSpec is the differential spec of spot replicas, to override the replica template
+// SpotReplicaSpec is the differential spec of spot replicas, to override the replica template.
 type SpotReplicaSpec struct {
 	// SpotReplicaNumber is the desired number of spot replicas.
 	// If unspecified, SpotReplicaNumber defaults to 0.
 	// By default, replicas with index in the range from (Replicas - SpotReplicaNumber) to (Replicas -1 ) are spot replicas.
-	SpotReplicaNumber int32             `json:"spotReplicaNumber,omitempty"`
-	PriorityClassName string            `json:"priorityClassName,omitempty"`
-	Labels            map[string]string `json:"labels,omitempty"`
+	SpotReplicaNumber int32 `json:"spotReplicaNumber,omitempty"`
+	// PriorityClassName is the priorityClassName of spot replicas, to override that in replica template.
+	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// Labels are the extra set of labels to add on the spot replicas, overriding coinciding labels in the replica template if any.
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // JobCondition describes the state of the job at a certain point.
