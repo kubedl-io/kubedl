@@ -419,7 +419,7 @@ func TestCreateCronJob(t *testing.T) {
 		t.Error("update failed", cronJob)
 	}
 	//normal
-	err = mainJobController.CreateCronJob(job, job, job.Spec.RunPolicy)
+	err = mainJobController.CreateCronJob(updateJob, updateJob, updateJob.Spec.RunPolicy)
 	if err != nil {
 		t.Error(err)
 	}
@@ -430,7 +430,7 @@ func TestCreateCronJob(t *testing.T) {
 	//delete
 	err = GetJobByName(mainJobController, namespace, name, cronJob)
 	if errors.IsNotFound(err) {
-		t.Error("cronJob not found,unable to verify deletion logic", err)
+		t.Error("cronJob not found, unable to verify deletion logic", err)
 	}
 	updateJob.Spec.RunPolicy.CronPolicy = nil
 	err = mainJobController.CreateCronJob(updateJob, updateJob, updateJob.Spec.RunPolicy)

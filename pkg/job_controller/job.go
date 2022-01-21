@@ -86,7 +86,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	}
 	log.Infof("Reconciling for job %s", metaObject.GetName())
 
-	//if it's a scheduled task
+	//if it's a scheduled task，create a cronJob of the same name
 	if err := jc.CreateCronJob(metaObject, runtimeObject, runPolicy); err != nil {
 		return result, err
 	}
@@ -338,33 +338,34 @@ func (jc *JobController) CreateCronJob(meta metav1.Object, runtimeObj runtime.Ob
 		Name:      meta.GetName(),
 	}, cronJob); err != nil {
 		if errors.IsNotFound(err) {
-			if isCronJob {
-				instance, err := jc.createCronInstance(meta, policy, runtimeObj)
-				if err != nil {
-					return err
-				}
-				return jc.Client.Create(context.Background(), instance)
+			if !isCronJob {
+				//Do not need to run regularly
+				return nil
 			}
-			return nil
+			instance, err := jc.createCronInstance(policy, runtimeObj)
+			if err != nil {
+				return err
+			}
+			return jc.Client.Create(context.Background(), instance)
 		}
 		return err
 	}
 	if !isCronJob {
-		//New job no need to support scheduled execution, delete the originally created cronJob
+		//Job no longer needs to run regularly, delete the originally created cronJob
 		return jc.Client.Delete(context.Background(), cronJob)
 	}
-	//update
+	//If cronPolicy or cronTemplate change, the cronJob needs to be updated
 	newCronJob := cronJob.DeepCopy()
 	needUpdate := false
-	if !reflect.DeepEqual(cronJob.Spec.CronPolicy, policy.CronPolicy) {
+	if !reflect.DeepEqual(cronJob.Spec.CronPolicy, *policy.CronPolicy) {
 		newCronJob.Spec.CronPolicy = *policy.CronPolicy
 		needUpdate = true
 	}
-	newInstance, err := jc.createCronInstance(meta, policy, runtimeObj)
+	newInstance, err := jc.createCronInstance(policy, runtimeObj)
 	if err != nil {
 		return err
 	}
-	if !reflect.DeepEqual(cronJob.Spec.CronTemplate, newInstance.Spec.CronTemplate) {
+	if !reflect.DeepEqual(cronJob.Spec.CronTemplate.Workload.Raw, newInstance.Spec.CronTemplate.Workload.Raw) {
 		newCronJob.Spec.CronTemplate = newInstance.Spec.CronTemplate
 		needUpdate = true
 	}
@@ -374,21 +375,31 @@ func (jc *JobController) CreateCronJob(meta metav1.Object, runtimeObj runtime.Ob
 	return nil
 }
 
-func (jc *JobController) createCronInstance(meta metav1.Object, policy *apiv1.RunPolicy, newMeta runtime.Object) (*appv1.Cron, error) {
+func (jc *JobController) createCronInstance(policy *apiv1.RunPolicy, runtimeObj runtime.Object) (*appv1.Cron, error) {
 	tempPolicy := policy.DeepCopy()
 	defer func() {
 		policy.CronPolicy = tempPolicy.CronPolicy
 	}()
-	//Clear the CronPolicy under the cronjob created by simulation
+	// Clear the CronPolicy under the cronjob created by simulation
+	// If not cleared, the cronJob created here will continue to
+	// create a cronJob, resulting in a dead cycle
 	policy.CronPolicy = nil
-	kind := newMeta.GetObjectKind().GroupVersionKind().Kind
-	apiversion := newMeta.GetObjectKind().GroupVersionKind().Group + "/" + newMeta.GetObjectKind().GroupVersionKind().Kind
-	//create
+	kind := runtimeObj.GetObjectKind().GroupVersionKind().Kind
+	apiversion := runtimeObj.GetObjectKind().GroupVersionKind().GroupVersion().String()
 	extCodec := pkgruntime.NewRawExtensionCodec(jc.Scheme)
-	rawObj, err := extCodec.EncodeRaw(newMeta)
+	newMeta := runtimeObj.DeepCopyObject().(metav1.Object)
+	metaName := newMeta.GetName()
+	metaNs := newMeta.GetNamespace()
+	// The new Cron only need Spec info, but Spec cannot get here,
+	// it can only be converted into metaObj by force, then cleared
+	// some attributes of meta. The overall framework will be refactored
+	// and optimized in the future
+	clearMetaInfoForCronTemplate(newMeta)
+	rawObj, err := extCodec.EncodeRaw(newMeta.(runtime.Object))
 	if err != nil {
 		return nil, err
 	}
+	//create
 	cronTemplateSpec := appv1.CronTemplateSpec{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       kind,
@@ -398,8 +409,8 @@ func (jc *JobController) createCronInstance(meta metav1.Object, policy *apiv1.Ru
 	}
 	instance := &appv1.Cron{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      meta.GetName(),
-			Namespace: meta.GetNamespace(),
+			Name:      metaName,
+			Namespace: metaNs,
 		},
 		Spec: appv1.CronSpec{
 			CronPolicy:   *tempPolicy.CronPolicy,
@@ -407,6 +418,18 @@ func (jc *JobController) createCronInstance(meta metav1.Object, policy *apiv1.Ru
 		},
 	}
 	return instance, nil
+}
+
+// Extract the submitted job configuration to generate a cron
+// job configuration, and set the parameters that cannot
+// be assigned to empty.
+func clearMetaInfoForCronTemplate(newMeta metav1.Object) {
+	newMeta.SetName("")
+	newMeta.SetNamespace("")
+	newMeta.SetResourceVersion("")
+	newMeta.SetUID("")
+	newMeta.SetGeneration(0)
+	newMeta.SetCreationTimestamp(metav1.Time{})
 }
 
 // addModelPathEnv add the model path into each container's env
