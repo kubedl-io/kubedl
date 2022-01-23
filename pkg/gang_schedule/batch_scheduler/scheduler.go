@@ -19,10 +19,6 @@ package batch_scheduler
 import (
 	"context"
 
-	"github.com/alibaba/kubedl/apis"
-	"github.com/alibaba/kubedl/pkg/gang_schedule"
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 	"github.com/kubernetes-sigs/kube-batch/pkg/apis/scheduling/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -33,6 +29,11 @@ import (
 	"k8s.io/utils/pointer"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/alibaba/kubedl/apis"
+	"github.com/alibaba/kubedl/pkg/gang_schedule"
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 )
 
 func init() {
@@ -51,11 +52,15 @@ type kubeBatchScheduler struct {
 	client client.Client
 }
 
-func (kbs *kubeBatchScheduler) Name() string {
+func (kbs *kubeBatchScheduler) PluginName() string {
 	return "kube-batch"
 }
 
-func (kbs *kubeBatchScheduler) CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) (runtime.Object, error) {
+func (kbs *kubeBatchScheduler) SchedulerName() string {
+	return "kube-batch"
+}
+
+func (kbs *kubeBatchScheduler) CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, schedPolicy *apiv1.SchedulingPolicy) (runtime.Object, error) {
 	// Initialize pod group.
 	podGroup := &v1alpha1.PodGroup{
 		ObjectMeta: metav1.ObjectMeta{
@@ -88,15 +93,10 @@ func (kbs *kubeBatchScheduler) CreateGang(job metav1.Object, replicas map[apiv1.
 	return podGroup, err
 }
 
-func (kbs *kubeBatchScheduler) BindPodToGang(obj metav1.Object, entity runtime.Object) error {
-	podSpec := obj.(*v1.PodTemplateSpec)
-	podGroup := entity.(*v1alpha1.PodGroup)
-	// The newly-created pods should be submitted to target gang scheduler.
-	if podSpec.Spec.SchedulerName == "" || podSpec.Spec.SchedulerName != kbs.Name() {
-		podSpec.Spec.SchedulerName = kbs.Name()
-	}
+func (kbs *kubeBatchScheduler) BindPodToGang(job metav1.Object, podSpec *v1.PodTemplateSpec, gangEntity runtime.Object, rtype string) error {
+	podGroup := gangEntity.(*v1alpha1.PodGroup)
 	if podSpec.Annotations == nil {
-		podSpec.Annotations = map[string]string{}
+		podSpec.Annotations = make(map[string]string)
 	}
 	podSpec.Annotations[v1alpha1.GroupNameAnnotationKey] = podGroup.GetName()
 	return nil

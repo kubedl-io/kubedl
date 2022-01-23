@@ -233,7 +233,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 
 	if jc.Config.EnableGangScheduling {
 		log.Infof("gang schedule enabled, start to syncing for job %s", jobKey)
-		if _, err = jc.CreateGang(metaObject, replicas); err != nil {
+		if _, err = jc.CreateGang(metaObject, replicas, runPolicy.SchedulingPolicy); err != nil {
 			return result, err
 		}
 	}
