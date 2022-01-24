@@ -394,7 +394,7 @@ func TestCreateCronJob(t *testing.T) {
 		Client:     fakeClient,
 	}
 	//create
-	err := mainJobController.CreateCronJob(job, job, job.Spec.RunPolicy)
+	err := mainJobController.ReconcileCron(job, job, job.Spec.RunPolicy)
 	if err != nil {
 		t.Error(err)
 	}
@@ -407,7 +407,7 @@ func TestCreateCronJob(t *testing.T) {
 	updateJob := job.DeepCopy()
 	updateSchedule := "0 0/2 * * *"
 	updateJob.Spec.RunPolicy.CronPolicy.Schedule = updateSchedule
-	err = mainJobController.CreateCronJob(updateJob, updateJob, updateJob.Spec.RunPolicy)
+	err = mainJobController.ReconcileCron(updateJob, updateJob, updateJob.Spec.RunPolicy)
 	if err != nil {
 		t.Error(err)
 	}
@@ -419,7 +419,7 @@ func TestCreateCronJob(t *testing.T) {
 		t.Error("update failed", cronJob)
 	}
 	//normal
-	err = mainJobController.CreateCronJob(updateJob, updateJob, updateJob.Spec.RunPolicy)
+	err = mainJobController.ReconcileCron(updateJob, updateJob, updateJob.Spec.RunPolicy)
 	if err != nil {
 		t.Error(err)
 	}
@@ -433,7 +433,7 @@ func TestCreateCronJob(t *testing.T) {
 		t.Error("cronJob not found, unable to verify deletion logic", err)
 	}
 	updateJob.Spec.RunPolicy.CronPolicy = nil
-	err = mainJobController.CreateCronJob(updateJob, updateJob, updateJob.Spec.RunPolicy)
+	err = mainJobController.ReconcileCron(updateJob, updateJob, updateJob.Spec.RunPolicy)
 	if err != nil {
 		t.Error(err)
 	}

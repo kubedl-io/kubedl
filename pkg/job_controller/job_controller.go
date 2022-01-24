@@ -91,7 +91,7 @@ type JobController struct {
 	// Client talks to api-server
 	Client client.Client
 
-	//Schema
+	//Scheme
 	Scheme *runtime.Scheme
 }
 
@@ -118,7 +118,7 @@ func NewJobController(
 		Client:         cli,
 		podControl:     NewPodControl(cli, recorder),
 		serviceControl: NewServiceControl(cli, recorder),
-		Scheme: 		schema,
+		Scheme:         schema,
 	}
 }
 

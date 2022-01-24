@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -30,7 +31,6 @@ import (
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
 	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
-	"github.com/robfig/cron/v3"
 )
 
 var (
