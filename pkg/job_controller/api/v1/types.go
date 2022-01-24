@@ -258,7 +258,9 @@ type CronPolicy struct {
 	// +optional
 	HistoryLimit *int32 `json:"historyLimit,omitempty"`
 
-	// +optional
+	// +optional Default to false
+	// When this parameter is set to true, deleting the original Job(like PytorchJob/TF etc.)
+	// task will also delete the derived Cron job
 	PropagationDelete *bool `json:"propagationDelete,omitempty"`
 }
 

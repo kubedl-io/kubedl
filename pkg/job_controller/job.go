@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -383,6 +384,7 @@ func (jc *JobController) createCronInstance(policy *apiv1.RunPolicy, runtimeObj 
 	newMeta := runtimeObj.DeepCopyObject().(metav1.Object)
 	metaName := newMeta.GetName()
 	metaNs := newMeta.GetNamespace()
+	metaUid := newMeta.GetUID()
 	// The new Cron only need Spec info, but Spec cannot get here,
 	// it can only be converted into metaObj by force, then cleared
 	// some attributes of meta. The overall framework will be refactored
@@ -409,6 +411,21 @@ func (jc *JobController) createCronInstance(policy *apiv1.RunPolicy, runtimeObj 
 			CronPolicy:   *tempPolicy.CronPolicy,
 			CronTemplate: cronTemplateSpec,
 		},
+	}
+	if *tempPolicy.CronPolicy.PropagationDelete {
+		jobReference := metav1.OwnerReference{
+			APIVersion:         apiversion,
+			Kind:               kind,
+			Name:               metaName,
+			UID:                metaUid,
+			Controller:         pointer.BoolPtr(true),
+			BlockOwnerDeletion: pointer.BoolPtr(true),
+		}
+		if instance.OwnerReferences != nil {
+			instance.OwnerReferences = append(instance.OwnerReferences, jobReference)
+		} else {
+			instance.OwnerReferences = []metav1.OwnerReference{jobReference}
+		}
 	}
 	return instance, nil
 }
