@@ -1,15 +1,17 @@
 package batch_scheduler
 
 import (
-	testjobv1 "github.com/alibaba/kubedl/pkg/test_job/v1"
-	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
+	"testing"
+
 	"github.com/kubernetes-sigs/kube-batch/pkg/apis/scheduling/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
+
+	testjobv1 "github.com/alibaba/kubedl/pkg/test_job/v1"
+	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
 )
 
 func TestCreateGang(t *testing.T) {
@@ -25,7 +27,7 @@ func TestCreateGang(t *testing.T) {
 		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
 		testScheduler := &kubeBatchScheduler{client: fakeClient}
 
-		testObject, _ := testScheduler.CreateGang(testJob, testJob.Spec.TestReplicaSpecs)
+		testObject, _ := testScheduler.CreateGang(testJob, testJob.Spec.TestReplicaSpecs, testJob.Spec.RunPolicy.SchedulingPolicy)
 		testPodGroup := testObject.(*v1alpha1.PodGroup)
 		assert.Equal(t, testPodGroup.Name, testutilv1.TestJobName)
 		assert.Equal(t, testPodGroup.Namespace, metav1.NamespaceDefault)
@@ -46,10 +48,10 @@ func TestBindPodToGang(t *testing.T) {
 		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
 		testScheduler := &kubeBatchScheduler{client: fakeClient}
 
-		testObject, _ := testScheduler.CreateGang(testJob, testJob.Spec.TestReplicaSpecs)
+		testObject, _ := testScheduler.CreateGang(testJob, testJob.Spec.TestReplicaSpecs, testJob.Spec.RunPolicy.SchedulingPolicy)
 		testPodGroup := testObject.(*v1alpha1.PodGroup)
 		testPodSpec := testutilv1.NewTestReplicaSpecTemplate()
-		testScheduler.BindPodToGang(&testPodSpec, testPodGroup)
+		testScheduler.BindPodToGang(testJob, &testPodSpec, testPodGroup, "")
 		assert.Equal(t, testPodSpec.Annotations[v1alpha1.GroupNameAnnotationKey], testPodGroup.Name)
 	}
 }

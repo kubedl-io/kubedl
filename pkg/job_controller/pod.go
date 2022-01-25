@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
@@ -396,9 +397,17 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		if err != nil {
 			return err
 		}
-		if err = jc.GangScheduler.BindPodToGang(podTemplate, entity); err != nil {
+
+		klog.V(5).Infof("gang scheduling enabled, gang scheduler name: %s, bind pod to gang: %s",
+			jc.GangScheduler.PluginName(), metaObject.GetName())
+
+		if err = jc.GangScheduler.BindPodToGang(metaObject, podTemplate, entity, rt); err != nil {
 			return err
 		}
+
+		// 1) assign gang scheduler name if it's empty.
+		// 2) override scheduler name if it differs from the selected gang implementation.
+		podTemplate.Spec.SchedulerName = jc.GangScheduler.SchedulerName()
 	}
 
 	return jc.CreatePod(job, rt, index, podTemplate, masterRole)
