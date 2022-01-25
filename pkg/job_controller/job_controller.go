@@ -143,24 +143,13 @@ func (jc *JobController) GenLabels(jobName string) map[string]string {
 
 // CreateGang create a new gang schedule process, ensure the relationship between job, managed objects and
 // gang entity always maintained, so the consistency of gang scheduling never breaks.
-func (jc *JobController) CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) (runtime.Object, error) {
-	gangEntity, err := jc.GangScheduler.GetGang(types.NamespacedName{
-		Namespace: job.GetNamespace(),
-		Name:      job.GetName(),
-	})
+func (jc *JobController) CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, schedPolicy *apiv1.SchedulingPolicy) (runtime.Object, error) {
+	gangEntity, err := jc.GangScheduler.CreateGang(job, replicas, schedPolicy)
 	if err != nil {
-		// Gang entity not found, create a new one.
-		if k8serrors.IsNotFound(err) {
-			gangEntity, err = jc.GangScheduler.CreateGang(job, replicas)
-			if err != nil {
-				log.Errorf("failed to create gang schedule entity, gang scheduler: %s, err: %v", jc.GangScheduler.Name(), err)
-				return nil, err
-			}
-			log.Infof("gang schedule created, job name: %s ,scheduler name: %s", job.GetName(), jc.GangScheduler.Name())
-		} else {
-			return nil, err
-		}
+		log.Errorf("failed to create gang schedule entity, gang scheduler: %s, err: %v", jc.GangScheduler.PluginName(), err)
+		return nil, err
 	}
+	log.Infof("gang schedule created, job name: %s ,scheduler name: %s", job.GetName(), jc.GangScheduler.PluginName())
 	return gangEntity, nil
 }
 

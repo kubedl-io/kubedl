@@ -19,9 +19,10 @@ package registry
 import (
 	"sync"
 
-	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	"k8s.io/klog"
 	controllerruntime "sigs.k8s.io/controller-runtime"
+
+	"github.com/alibaba/kubedl/pkg/gang_schedule"
 )
 
 var (
@@ -32,7 +33,7 @@ var (
 func RegisterGangSchedulers(mgr controllerruntime.Manager) {
 	for _, newer := range NewGangSchedulers {
 		scheduler := newer(mgr)
-		klog.Infof("register gang scheduler %s", scheduler.Name())
+		klog.Infof("register gang scheduler %s", scheduler.PluginName())
 		defaultRegistry.Add(scheduler)
 	}
 }
@@ -57,7 +58,7 @@ type Registry struct {
 func (r *Registry) Add(scheduler gang_schedule.GangScheduler) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	r.registry[scheduler.Name()] = scheduler
+	r.registry[scheduler.PluginName()] = scheduler
 }
 
 func (r *Registry) Get(name string) gang_schedule.GangScheduler {

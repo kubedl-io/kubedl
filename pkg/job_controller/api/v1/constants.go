@@ -50,6 +50,8 @@ const (
 	LabelModelVersion = KubeDLPrefix + "/model-version"
 	// LabelCronName indicates the name of cron who created this job.
 	LabelCronName = KubeDLPrefix + "/cron-name"
+	// LabelGangSchedulingJobName indicates name of gang scheduled job.
+	LabelGangSchedulingJobName = KubeDLPrefix + "/gang-job-name"
 )
 
 // NetworkMode defines network mode for intra job communicating.

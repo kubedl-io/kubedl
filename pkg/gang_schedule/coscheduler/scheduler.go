@@ -18,19 +18,28 @@ package coscheduler
 
 import (
 	"context"
-	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+	"fmt"
+	"strconv"
+	"strings"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog"
+	"k8s.io/utils/pointer"
+	controllerruntime "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/scheduler-plugins/pkg/apis/scheduling/v1alpha1"
 
 	"github.com/alibaba/kubedl/apis"
+	"github.com/alibaba/kubedl/pkg/features"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	controllerruntime "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 )
 
 func init() {
@@ -38,6 +47,12 @@ func init() {
 	// controlled by scheduler.
 	apis.AddToSchemes = append(apis.AddToSchemes, v1alpha1.AddToScheme)
 }
+
+const (
+	LabelPodGroupIdentity     = "pod-group.scheduling.sigs.k8s.io"
+	LabelPodGroupName         = "pod-group.scheduling.sigs.k8s.io/name"
+	LabelPodGroupMinAvailable = "pod-group.scheduling.sigs.k8s.io/min-available"
+)
 
 func NewKubeCoscheduler(mgr controllerruntime.Manager) gang_schedule.GangScheduler {
 	return &kubeCoscheduler{client: mgr.GetClient()}
@@ -49,61 +64,172 @@ type kubeCoscheduler struct {
 	client client.Client
 }
 
-func (kbs *kubeCoscheduler) Name() string {
+func (kbs *kubeCoscheduler) PluginName() string {
 	return "kube-coscheduler"
 }
 
-func (kbs *kubeCoscheduler) CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) (runtime.Object, error) {
-	// Initialize pod group.
-	podGroup := &v1alpha1.PodGroup{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      job.GetName(),
-			Namespace: job.GetNamespace(),
-		},
-		Spec: v1alpha1.PodGroupSpec{
-			MinMember: k8sutil.GetTotalReplicas(replicas),
-		},
-	}
-	err := kbs.client.Create(context.Background(), podGroup)
-	return podGroup, err
+func (kbs *kubeCoscheduler) SchedulerName() string {
+	return "default-scheduler"
 }
 
-func (kbs *kubeCoscheduler) BindPodToGang(obj metav1.Object, entity runtime.Object) error {
-	podSpec := obj.(*v1.PodTemplateSpec)
-	podGroup := entity.(*v1alpha1.PodGroup)
-	// The newly-created pods should be submitted to target gang scheduler.
-	if podSpec.Spec.SchedulerName == "" || podSpec.Spec.SchedulerName != kbs.Name() {
-		podSpec.Spec.SchedulerName = kbs.Name()
+func (kbs *kubeCoscheduler) CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, schedPolicy *apiv1.SchedulingPolicy) (runtime.Object, error) {
+	accessor, err := meta.TypeAccessor(job)
+	if err != nil {
+		return nil, err
 	}
-	if podSpec.Labels == nil {
-		podSpec.Labels = map[string]string{}
+
+	var (
+		apiVersion = accessor.GetAPIVersion()
+		kind       = accessor.GetKind()
+		podGroups  *v1alpha1.PodGroupList
+	)
+
+	// If DAG scheduling is enabled, kubedl will create individual gang entity for each role
+	// to represent a separate stage, otherwise gang entity will be created in job granularity.
+	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
+		podGroups = kbs.generateGangByRoleUnit(apiVersion, kind, job.GetName(), job.GetNamespace(), job.GetUID(), replicas)
+	} else {
+		podGroups = kbs.generateGangByJobUnit(apiVersion, kind, job.GetName(), job.GetNamespace(), job.GetUID(), replicas, schedPolicy)
 	}
-	// Coscheduling based on PodGroup CRD
-	podSpec.Labels["pod-group.scheduling.sigs.k8s.io"] = podGroup.Name
-	// Lightweight coscheduling based on back-to-back queue sorting
-	podSpec.Labels["pod-group.scheduling.sigs.k8s.io/name"] = podGroup.Name
-	podSpec.Labels["pod-group.scheduling.sigs.k8s.io/min-available"] = string(podGroup.Spec.MinMember)
+
+	for i := range podGroups.Items {
+		pg := &podGroups.Items[i]
+		err = kbs.client.Get(context.Background(), types.NamespacedName{Name: pg.Name, Namespace: pg.Namespace}, &v1alpha1.PodGroup{})
+		if err != nil && errors.IsNotFound(err) {
+			err = kbs.client.Create(context.Background(), pg)
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return podGroups, err
+}
+
+func (kbs *kubeCoscheduler) BindPodToGang(job metav1.Object, podSpec *v1.PodTemplateSpec, gangEntity runtime.Object, rtype string) error {
+	podGroups, ok := gangEntity.(*v1alpha1.PodGroupList)
+	if !ok {
+		klog.Warningf("gang entity cannot convert to gang list, entity: %+v", gangEntity)
+		return nil
+	}
+	if len(podGroups.Items) == 0 {
+		return fmt.Errorf("unexpected empty gang entity list, job name: %s", job.GetName())
+	}
+
+	matchLabels := map[string]string{apiv1.LabelGangSchedulingJobName: job.GetName()}
+	if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) {
+		matchLabels[apiv1.ReplicaTypeLabel] = rtype
+	}
+	selector := labels.SelectorFromSet(matchLabels)
+
+	for i := range podGroups.Items {
+		pg := &podGroups.Items[i]
+		if pg.Labels != nil && selector.Matches(labels.Set(pg.Labels)) {
+			gang_schedule.AppendOwnerReference(podSpec, metav1.OwnerReference{
+				APIVersion:         pg.APIVersion,
+				Kind:               pg.Kind,
+				Name:               pg.Name,
+				UID:                pg.UID,
+				Controller:         pointer.BoolPtr(false),
+				BlockOwnerDeletion: pointer.BoolPtr(true),
+			})
+
+			if podSpec.Labels == nil {
+				podSpec.Labels = map[string]string{}
+			}
+			// For PodGroup CRD based coscheduling protocol.
+			podSpec.Labels[LabelPodGroupIdentity] = pg.Name
+			// For label based lightweight coscheduling protocol.
+			podSpec.Labels[LabelPodGroupName] = pg.Name
+			podSpec.Labels[LabelPodGroupMinAvailable] = strconv.Itoa(int(pg.Spec.MinMember))
+			break
+		}
+	}
 
 	return nil
 }
 
 func (kbs *kubeCoscheduler) GetGang(name types.NamespacedName) (runtime.Object, error) {
-	podGroup := &v1alpha1.PodGroup{}
-	if err := kbs.client.Get(context.Background(), name, podGroup); err != nil {
+	podGroups := &v1alpha1.PodGroupList{}
+	err := kbs.client.List(context.Background(), podGroups, client.MatchingLabels{
+		apiv1.LabelGangSchedulingJobName: name.Name,
+	}, client.InNamespace(name.Namespace))
+	if err != nil {
 		return nil, err
 	}
-	return podGroup, nil
+	return podGroups, nil
 }
 
 func (kbs *kubeCoscheduler) DeleteGang(name types.NamespacedName) error {
-	podGroup, err := kbs.GetGang(name)
+	pgs, err := kbs.GetGang(name)
 	if err != nil {
 		return err
 	}
-	err = kbs.client.Delete(context.Background(), podGroup)
-	// Discard deleted pod group object.
-	if err != nil && errors.IsNotFound(err) {
-		return nil
+	podGroups := pgs.(*v1alpha1.PodGroupList)
+
+	for i := range podGroups.Items {
+		pg := &podGroups.Items[i]
+		if err = kbs.client.Delete(context.Background(), pg); err != nil {
+			return err
+		}
 	}
 	return err
+}
+
+func (kbs *kubeCoscheduler) generateGangByJobUnit(apiVersion, kind, name, namespace string, uid types.UID, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, schedPolicy *apiv1.SchedulingPolicy) *v1alpha1.PodGroupList {
+	pg := v1alpha1.PodGroup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    map[string]string{apiv1.LabelGangSchedulingJobName: name},
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         apiVersion,
+					Kind:               kind,
+					Name:               name,
+					UID:                uid,
+					Controller:         pointer.BoolPtr(true),
+					BlockOwnerDeletion: pointer.BoolPtr(true),
+				},
+			},
+		},
+		Spec: v1alpha1.PodGroupSpec{MinMember: k8sutil.GetTotalReplicas(replicas)},
+	}
+
+	if schedPolicy != nil && schedPolicy.MinAvailable != nil && *schedPolicy.MinAvailable > 0 {
+		pg.Spec.MinMember = *schedPolicy.MinAvailable
+	}
+
+	return &v1alpha1.PodGroupList{Items: []v1alpha1.PodGroup{pg}}
+}
+
+func (kbs *kubeCoscheduler) generateGangByRoleUnit(apiVersion, kind, name, namespace string, uid types.UID, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) *v1alpha1.PodGroupList {
+	pgs := v1alpha1.PodGroupList{Items: make([]v1alpha1.PodGroup, 0, len(replicas))}
+
+	for rtype, spec := range replicas {
+		rt := strings.ToLower(string(rtype))
+		gangName := fmt.Sprintf("%s-%s", name, rt)
+		pgs.Items = append(pgs.Items, v1alpha1.PodGroup{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      gangName,
+				Namespace: namespace,
+				Labels: map[string]string{
+					apiv1.LabelGangSchedulingJobName: name,
+					apiv1.ReplicaTypeLabel:           rt,
+				},
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion:         apiVersion,
+						Kind:               kind,
+						Name:               name,
+						UID:                uid,
+						Controller:         pointer.BoolPtr(true),
+						BlockOwnerDeletion: pointer.BoolPtr(true),
+					},
+				},
+			},
+			Spec: v1alpha1.PodGroupSpec{MinMember: *spec.Replicas},
+		})
+	}
+	return &pgs
 }

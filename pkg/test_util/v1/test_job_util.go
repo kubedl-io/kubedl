@@ -36,6 +36,7 @@ func NewTestJob(worker int) *testjobv1.TestJob {
 		},
 		Spec: testjobv1.TestJobSpec{
 			TestReplicaSpecs: make(map[apiv1.ReplicaType]*apiv1.ReplicaSpec),
+			RunPolicy:        &apiv1.RunPolicy{},
 		},
 	}
 

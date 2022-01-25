@@ -17,11 +17,13 @@ limitations under the License.
 package gang_schedule
 
 import (
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // GangScheduler describe a abstract gang scheduler to implement job gang scheduling,
@@ -32,10 +34,10 @@ type GangScheduler interface {
 	// minNumber and select batch of pods by single or multiple label selector. The
 	// implementation should handle the relative relationship between job, pod and gang
 	// entity.
-	CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) (runtime.Object, error)
+	CreateGang(job metav1.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, schedPolicy *apiv1.SchedulingPolicy) (runtime.Object, error)
 
-	// BindPodToGang binds a object with named gang entity object.
-	BindPodToGang(obj metav1.Object, entity runtime.Object) error
+	// BindPodToGang binds an object with named gang entity object.
+	BindPodToGang(job metav1.Object, podSpec *corev1.PodTemplateSpec, gangEntity runtime.Object, rtype string) error
 
 	// GetGang get gang entity instance from cluster by name and namespace.
 	GetGang(name types.NamespacedName) (runtime.Object, error)
@@ -44,8 +46,13 @@ type GangScheduler interface {
 	// scheduling process.
 	DeleteGang(name types.NamespacedName) error
 
-	// Name of gang scheduler.
-	Name() string
+	// PluginName of gang scheduler implementation, user selectively enable gang-scheduling implementation
+	// by specifying --gang-scheduler-name={PluginName} in startup flags.
+	PluginName() string
+
+	// SchedulerName is the name of scheduler to dispatch pod, pod.spec.schedulerName will be
+	// overridden when pod binds to gang-scheduler in BindPodToGang.
+	SchedulerName() string
 }
 
 // NewGangScheduler receive a client as init parameter and return a new gang scheduler.
