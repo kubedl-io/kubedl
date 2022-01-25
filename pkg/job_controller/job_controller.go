@@ -91,7 +91,7 @@ type JobController struct {
 	// Client talks to api-server
 	Client client.Client
 
-	//Scheme
+	// Scheme defines methods for serializing and deserializing API objects
 	Scheme *runtime.Scheme
 }
 
@@ -101,7 +101,7 @@ func NewJobController(
 	config options.JobControllerConfiguration,
 	recorder record.EventRecorder,
 	metrics *metrics.JobMetrics,
-	schema *runtime.Scheme,
+	scheme *runtime.Scheme,
 ) JobController {
 	return JobController{
 		Controller:         controllerImpl,
@@ -118,7 +118,7 @@ func NewJobController(
 		Client:         cli,
 		podControl:     NewPodControl(cli, recorder),
 		serviceControl: NewServiceControl(cli, recorder),
-		Scheme:         schema,
+		Scheme:         scheme,
 	}
 }
 
