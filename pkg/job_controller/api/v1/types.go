@@ -257,11 +257,6 @@ type CronPolicy struct {
 	// This is a pointer to distinguish between explicit zero and not specified.
 	// +optional
 	HistoryLimit *int32 `json:"historyLimit,omitempty"`
-
-	// +optional Default to false
-	// When this parameter is set to true, deleting the original Job(like PytorchJob/TF etc.)
-	// task will also delete the derived Cron job
-	PropagationDelete *bool `json:"propagationDelete,omitempty"`
 }
 
 // ConcurrencyPolicy describes how the job will be handled.

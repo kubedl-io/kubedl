@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -89,8 +88,10 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	log.Infof("Reconciling for job %s", metaObject.GetName())
 
 	//if it's a scheduled task，create a cronJob of the same name
-	if err := jc.ReconcileCron(metaObject, runtimeObject, runPolicy); err != nil {
-		return result, err
+	if runPolicy != nil && runPolicy.CronPolicy != nil {
+		if err := jc.ReconcileCron(metaObject, runtimeObject, runPolicy); err != nil {
+			return result, err
+		}
 	}
 	defer func() {
 		// Add job key into backoff-states queue since it will be retried in
@@ -334,16 +335,15 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 
 func (jc *JobController) ReconcileCron(meta metav1.Object, runtimeObj runtime.Object, policy *apiv1.RunPolicy) error {
 	cronJob := &appv1.Cron{}
-	cronEnabled := policy != nil && policy.CronPolicy != nil
+	// check
+	if policy == nil || policy.CronPolicy == nil {
+		return nil
+	}
 	if err := jc.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: meta.GetNamespace(),
 		Name:      meta.GetName(),
 	}, cronJob); err != nil {
 		if errors.IsNotFound(err) {
-			if !cronEnabled {
-				//Do not need to run regularly
-				return nil
-			}
 			instance, err := jc.createCronInstance(policy, runtimeObj)
 			if err != nil {
 				return err
@@ -352,19 +352,23 @@ func (jc *JobController) ReconcileCron(meta metav1.Object, runtimeObj runtime.Ob
 		}
 		return err
 	}
-	if !cronEnabled {
-		// Job no longer needs to run regularly, delete the originally created cronJob
-		return jc.Client.Delete(context.Background(), cronJob)
-	}
-	// If cronPolicy or cronTemplate change, the cronJob needs to be updated
-	newCronJob := cronJob.DeepCopy()
+
 	newInstance, err := jc.createCronInstance(policy, runtimeObj)
 	if err != nil {
 		return err
 	}
-	if !reflect.DeepEqual(cronJob.Spec, newInstance.Spec) {
-		newCronJob.Spec.CronTemplate = newInstance.Spec.CronTemplate
-		return jc.Client.Patch(context.Background(), newCronJob, client.MergeFrom(cronJob))
+	if err := jc.updateCronJob(newInstance, cronJob); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (jc *JobController) updateCronJob(newInstance *appv1.Cron, oldCronJob *appv1.Cron) error {
+	// If spec or ownerReference change, the cronJob needs to be updated
+	dupCronJob := oldCronJob.DeepCopy()
+	if !reflect.DeepEqual(dupCronJob.Spec, newInstance.Spec) {
+		dupCronJob.Spec = newInstance.Spec
+		return jc.Client.Patch(context.Background(), dupCronJob, client.MergeFrom(oldCronJob))
 	}
 	return nil
 }
@@ -384,7 +388,6 @@ func (jc *JobController) createCronInstance(policy *apiv1.RunPolicy, runtimeObj 
 	newMeta := runtimeObj.DeepCopyObject().(metav1.Object)
 	metaName := newMeta.GetName()
 	metaNs := newMeta.GetNamespace()
-	metaUid := newMeta.GetUID()
 	// The new Cron only need Spec info, but Spec cannot get here,
 	// it can only be converted into metaObj by force, then cleared
 	// some attributes of meta. The overall framework will be refactored
@@ -411,21 +414,6 @@ func (jc *JobController) createCronInstance(policy *apiv1.RunPolicy, runtimeObj 
 			CronPolicy:   *tempPolicy.CronPolicy,
 			CronTemplate: cronTemplateSpec,
 		},
-	}
-	if *tempPolicy.CronPolicy.PropagationDelete {
-		jobReference := metav1.OwnerReference{
-			APIVersion:         apiversion,
-			Kind:               kind,
-			Name:               metaName,
-			UID:                metaUid,
-			Controller:         pointer.BoolPtr(true),
-			BlockOwnerDeletion: pointer.BoolPtr(true),
-		}
-		if instance.OwnerReferences != nil {
-			instance.OwnerReferences = append(instance.OwnerReferences, jobReference)
-		} else {
-			instance.OwnerReferences = []metav1.OwnerReference{jobReference}
-		}
 	}
 	return instance, nil
 }

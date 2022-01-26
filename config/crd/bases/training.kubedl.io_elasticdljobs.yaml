@@ -59,8 +59,6 @@ spec:
                   historyLimit:
                     format: int32
                     type: integer
-                  propagationDelete:
-                    type: boolean
                   schedule:
                     type: string
                   suspend:

@@ -2,11 +2,12 @@ package job_controller
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"strconv"
 	"testing"
 	"time"
+
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -426,20 +427,6 @@ func TestCreateCronJob(t *testing.T) {
 	err = GetJobByName(mainJobController, namespace, name, cronJob)
 	if errors.IsNotFound(err) {
 		t.Error("reconcile failed", err)
-	}
-	//delete
-	err = GetJobByName(mainJobController, namespace, name, cronJob)
-	if errors.IsNotFound(err) {
-		t.Error("cronJob not found, unable to verify deletion logic", err)
-	}
-	updateJob.Spec.RunPolicy.CronPolicy = nil
-	err = mainJobController.ReconcileCron(updateJob, updateJob, updateJob.Spec.RunPolicy)
-	if err != nil {
-		t.Error(err)
-	}
-	err = GetJobByName(mainJobController, namespace, name, cronJob)
-	if !errors.IsNotFound(err) {
-		t.Error("delete failed", err)
 	}
 }
 
