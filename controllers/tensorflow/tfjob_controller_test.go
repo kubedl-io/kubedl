@@ -77,7 +77,7 @@ func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 	}
 	r.recorder = recorder
 	// Initialize pkg job controller with components we only need.
-	r.ctrl = job_controller.NewJobController(client, r, config, recorder, metrics.NewJobMetrics(training.TFJobKind, client))
+	r.ctrl = job_controller.NewJobController(client, r, config, recorder, metrics.NewJobMetrics(training.TFJobKind, client), scheme)
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}

@@ -200,7 +200,7 @@ func (cc *CronController) scheduleNextIfPossible(cron *v1alpha1.Cron, now time.T
 		klog.V(4).Infof("Not starting because the scheduled time is already precessed, cron: %s/%s", cron.Namespace, cron.Name)
 		return nextScheduledTimeDuration(sched, now), nil
 	}
-	if cron.Spec.ConcurrencyPolicy == v1alpha1.ForbidConcurrent && len(cron.Status.Active) > 0 {
+	if cron.Spec.ConcurrencyPolicy == v1.ForbidConcurrent && len(cron.Status.Active) > 0 {
 		// Regardless which source of information we use for the set of active jobs,
 		// there is some risk that we won't see an active job when there is one.
 		// (because we haven't seen the status update to the Cron or the created pod).
@@ -212,7 +212,7 @@ func (cc *CronController) scheduleNextIfPossible(cron *v1alpha1.Cron, now time.T
 		cc.recorder.Eventf(cron, corev1.EventTypeNormal, "AlreadyActive", "Not starting because prior execution is running and concurrency policy is Forbid")
 		return nextScheduledTimeDuration(sched, now), nil
 	}
-	if cron.Spec.ConcurrencyPolicy == v1alpha1.ReplaceConcurrent {
+	if cron.Spec.ConcurrencyPolicy == v1.ReplaceConcurrent {
 		for _, active := range cron.Status.Active {
 			klog.V(4).Infof("Deleting workload that was still running at next scheduled start time, workload: %s/%s", active.Namespace, active.Name)
 
@@ -327,7 +327,7 @@ func (cc *CronController) newWorkloadFromTemplate(cron *v1alpha1.Cron, scheduled
 			metaWorkload.SetName(getDefaultJobName(cron, scheduledTime))
 		} else {
 			cc.recorder.Event(cron, corev1.EventTypeNormal, "OverridePolicy", "metadata.name has been specifeid in workload template, override cron concurrency policy as Forbidden")
-			cron.Spec.ConcurrencyPolicy = v1alpha1.ForbidConcurrent
+			cron.Spec.ConcurrencyPolicy = v1.ForbidConcurrent
 		}
 		label := metaWorkload.GetLabels()
 		if label == nil {

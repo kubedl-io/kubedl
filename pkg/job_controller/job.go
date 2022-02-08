@@ -14,8 +14,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	appv1 "github.com/alibaba/kubedl/apis/apps/v1alpha1"
 	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -26,6 +28,7 @@ import (
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+	pkgruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
 
 // Reasons for job events.
@@ -84,6 +87,12 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	}
 	log.Infof("Reconciling for job %s", metaObject.GetName())
 
+	//if it's a scheduled task，create a cronJob of the same name
+	if runPolicy != nil && runPolicy.CronPolicy != nil {
+		if err := jc.ReconcileCron(metaObject, runtimeObject, runPolicy); err != nil {
+			return result, err
+		}
+	}
 	defer func() {
 		// Add job key into backoff-states queue since it will be retried in
 		// next round util reconciling succeeded.
@@ -322,6 +331,103 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 		}
 	}
 	return result, nil
+}
+
+func (jc *JobController) ReconcileCron(meta metav1.Object, runtimeObj runtime.Object, policy *apiv1.RunPolicy) error {
+	cronJob := &appv1.Cron{}
+	// check
+	if policy == nil || policy.CronPolicy == nil {
+		return nil
+	}
+	if err := jc.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: meta.GetNamespace(),
+		Name:      meta.GetName(),
+	}, cronJob); err != nil {
+		if errors.IsNotFound(err) {
+			instance, err := jc.createCronInstance(policy, runtimeObj)
+			if err != nil {
+				return err
+			}
+			return jc.Client.Create(context.Background(), instance)
+		}
+		return err
+	}
+
+	newInstance, err := jc.createCronInstance(policy, runtimeObj)
+	if err != nil {
+		return err
+	}
+	if err := jc.updateCronJob(newInstance, cronJob); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (jc *JobController) updateCronJob(newInstance *appv1.Cron, oldCronJob *appv1.Cron) error {
+	// If spec or ownerReference change, the cronJob needs to be updated
+	dupCronJob := oldCronJob.DeepCopy()
+	if !reflect.DeepEqual(dupCronJob.Spec, newInstance.Spec) {
+		dupCronJob.Spec = newInstance.Spec
+		return jc.Client.Patch(context.Background(), dupCronJob, client.MergeFrom(oldCronJob))
+	}
+	return nil
+}
+
+func (jc *JobController) createCronInstance(policy *apiv1.RunPolicy, runtimeObj runtime.Object) (*appv1.Cron, error) {
+	tempPolicy := policy.DeepCopy()
+	defer func() {
+		policy.CronPolicy = tempPolicy.CronPolicy
+	}()
+	// Clear the CronPolicy under the cronjob created by simulation
+	// If not cleared, the cronJob created here will continue to
+	// create a cronJob, resulting in a dead cycle
+	policy.CronPolicy = nil
+	kind := runtimeObj.GetObjectKind().GroupVersionKind().Kind
+	apiversion := runtimeObj.GetObjectKind().GroupVersionKind().GroupVersion().String()
+	extCodec := pkgruntime.NewRawExtensionCodec(jc.Scheme)
+	newMeta := runtimeObj.DeepCopyObject().(metav1.Object)
+	metaName := newMeta.GetName()
+	metaNs := newMeta.GetNamespace()
+	// The new Cron only need Spec info, but Spec cannot get here,
+	// it can only be converted into metaObj by force, then cleared
+	// some attributes of meta. The overall framework will be refactored
+	// and optimized in the future
+	resetNonInheritableMetaFields(newMeta)
+	rawObj, err := extCodec.EncodeRaw(newMeta.(runtime.Object))
+	if err != nil {
+		return nil, err
+	}
+	//create
+	cronTemplateSpec := appv1.CronTemplateSpec{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       kind,
+			APIVersion: apiversion,
+		},
+		Workload: rawObj,
+	}
+	instance := &appv1.Cron{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      metaName,
+			Namespace: metaNs,
+		},
+		Spec: appv1.CronSpec{
+			CronPolicy:   *tempPolicy.CronPolicy,
+			CronTemplate: cronTemplateSpec,
+		},
+	}
+	return instance, nil
+}
+
+// Extract the submitted job configuration to generate a cron
+// job configuration, and set the parameters that cannot
+// be assigned to empty.
+func resetNonInheritableMetaFields(newMeta metav1.Object) {
+	newMeta.SetName("")
+	newMeta.SetNamespace("")
+	newMeta.SetResourceVersion("")
+	newMeta.SetUID("")
+	newMeta.SetGeneration(0)
+	newMeta.SetCreationTimestamp(metav1.Time{})
 }
 
 // addModelPathEnv add the model path into each container's env

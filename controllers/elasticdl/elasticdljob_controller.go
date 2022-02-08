@@ -53,7 +53,8 @@ func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) 
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(training.ElasticDLJobKind, r.Client))
+	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder,
+		metrics.NewJobMetrics(training.ElasticDLJobKind, r.Client), mgr.GetScheme())
 	return r
 }
 

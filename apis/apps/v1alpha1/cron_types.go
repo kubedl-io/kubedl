@@ -34,32 +34,12 @@ type CronTemplateSpec struct {
 
 // CronSpec defines the desired state of Cron
 type CronSpec struct {
-	// The schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
-	Schedule string `json:"schedule"`
+
+	// `CronPolicy` provides some core configurations for timing scheduling
+	v1.CronPolicy `json:",inline"`
 
 	// Specifies the job that will be created when executing a CronTask.
 	CronTemplate CronTemplateSpec `json:"template"`
-
-	// Specifies how to treat concurrent executions of a Task.
-	// Valid values are:
-	// - "Allow" (default): allows CronJobs to run concurrently;
-	// - "Forbid": forbids concurrent runs, skipping next run if previous run hasn't finished yet;
-	// - "Replace": cancels currently running job and replaces it with a new one
-	// +optional
-	ConcurrencyPolicy ConcurrencyPolicy `json:"concurrencyPolicy,omitempty"`
-
-	// This flag tells the controller to suspend subsequent executions, it does
-	// not apply to already started executions.  Defaults to false.
-	// +optional
-	Suspend *bool `json:"suspend,omitempty"`
-
-	// Deadline is the timestamp that a cron job can keep scheduling util then.
-	Deadline *metav1.Time `json:"deadline,omitempty"`
-
-	// The number of finished job history to retain.
-	// This is a pointer to distinguish between explicit zero and not specified.
-	// +optional
-	HistoryLimit *int32 `json:"historyLimit,omitempty"`
 }
 
 // CronStatus defines the observed state of Cron
@@ -87,24 +67,6 @@ type CronHistory struct {
 	// Finished is the failed or succeeded timestamp of job.
 	Finished *metav1.Time `json:"finished,omitempty"`
 }
-
-// ConcurrencyPolicy describes how the job will be handled.
-// Only one of the following concurrent policies may be specified.
-// If none of the following policies is specified, the default one
-// is AllowConcurrent.
-type ConcurrencyPolicy string
-
-const (
-	// AllowConcurrent allows CronJobs to run concurrently.
-	AllowConcurrent ConcurrencyPolicy = "Allow"
-
-	// ForbidConcurrent forbids concurrent runs, skipping next run if previous
-	// hasn't finished yet.
-	ForbidConcurrent ConcurrencyPolicy = "Forbid"
-
-	// ReplaceConcurrent cancels currently running job and replaces it with a new one.
-	ReplaceConcurrent ConcurrencyPolicy = "Replace"
-)
 
 // +kubebuilder:subresource:status
 // +kubebuilder:object:root=true
