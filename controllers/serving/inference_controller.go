@@ -25,11 +25,12 @@ import (
 	servingv1alpha1 "github.com/alibaba/kubedl/apis/serving/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+
 	beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
-
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,6 +41,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -88,6 +90,7 @@ func (ir *InferenceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups="apps",resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=serving.kubedl.io,resources=inferences,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=serving.kubedl.io,resources=inferences/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 
 func (ir *InferenceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	inference := servingv1alpha1.Inference{}
@@ -110,7 +113,13 @@ func (ir *InferenceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		return ctrl.Result{}, err
 	}
 
-	// 2) Sync each predictor to deploy containers mounted with specific model.
+	// 2) Sync istio-less ingress gateway
+	if err = ir.syncIstioLessIngressGateway(&inference); err != nil {
+		klog.Errorf("failed to sync ingress gateway for inference, err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	// 3) Sync each predictor to deploy containers mounted with specific model.
 	for pi := range inference.Spec.Predictors {
 		predictor := &inference.Spec.Predictors[pi]
 		result, err := ir.syncPredictor(&inference, pi, predictor)
@@ -120,16 +129,28 @@ func (ir *InferenceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		}
 	}
 
-	// 3) If inference serves multiple model version simultaneously and canary policy has been set,
+	//// 4) If inference serves multiple model version simultaneously and canary policy has been set,
+	//// serving traffic will be distributed with different ratio and routes to backend service.
+	//if len(inference.Spec.Predictors) > 1 {
+	//	if err = ir.syncTrafficDistribution(&inference); err != nil {
+	//		klog.Errorf("failed to sync traffic distribution of inference[%s], err: %v", inference.Name, err)
+	//		return ctrl.Result{}, err
+	//	}
+	//}
+
+	// 4) If inference serves multiple model version simultaneously and canary policy has been set,
 	// serving traffic will be distributed with different ratio and routes to backend service.
 	if len(inference.Spec.Predictors) > 1 {
-		if err = ir.syncTrafficDistribution(&inference); err != nil {
-			klog.Errorf("failed to sync traffic distribution of inference[%s], err: %v", inference.Name, err)
-			return ctrl.Result{}, err
+		for pi := range inference.Spec.Predictors {
+			predictor := &inference.Spec.Predictors[pi]
+			if err = ir.syncPredictorTrafficDistribution(&inference, pi, predictor); err != nil {
+				klog.Errorf("failed to sync predicator[%s] traffic distribution of inference[%s], err: %v", predictor.Name, inference.Name, err)
+				return ctrl.Result{}, err
+			}
 		}
 	}
 
-	// 4) Compare status before-and-after reconciling and update changes to cluster.
+	// 5) Compare status before-and-after reconciling and update changes to cluster.
 	if !reflect.DeepEqual(oldStatus, &inference.Status) {
 		if err = ir.client.Status().Update(context.Background(), &inference); err != nil {
 			if errors.IsConflict(err) {
@@ -273,6 +294,80 @@ func (ir *InferenceReconciler) syncTrafficDistribution(inf *servingv1alpha1.Infe
 	return nil
 }
 
+// syncPredictorTrafficDistribution syncs traffic-routing resources to ensure traffic is distributed by the
+// user configuration required.
+// For example, user A serves two models and distribute 90% traffic to model A.1 and the left to
+// model A.2, the network topology looks like this:
+//
+// User
+//  |---request---> VirtualService
+//                        |--- 90% ---> Deploy-Of-Model-A.1
+//                        |--- 10% ---> Deploy-Of-Model-B.1
+func (ir *InferenceReconciler) syncPredictorTrafficDistribution(inf *servingv1alpha1.Inference, index int, predictor *servingv1alpha1.PredictorSpec) error {
+	igInCluster := networkingv1beta1.Ingress{}
+	igExists := true
+	igName := genPredictorName(inf, predictor)
+	err := ir.client.Get(context.Background(), types.NamespacedName{Namespace: inf.Namespace, Name: igName}, &igInCluster)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	if err != nil && errors.IsNotFound(err) {
+		igExists = false
+	}
+
+	// At this point, ingress is not found and create a new one.
+
+	ratios := computePredictorTrafficRatios(inf)
+	// Traffic will firstly hit istio-less ingress gateway and then be dispatched to different
+	// destinated model servers.
+	ig := networkingv1beta1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      igName,
+			Namespace: inf.Namespace,
+		},
+		Spec: networkingv1beta1.IngressSpec{
+			Rules: []networkingv1beta1.IngressRule{
+				{
+					IngressRuleValue: networkingv1beta1.IngressRuleValue{
+						HTTP: &networkingv1beta1.HTTPIngressRuleValue{
+							Paths: []networkingv1beta1.HTTPIngressPath{
+								{
+									Backend: networkingv1beta1.IngressBackend{
+										ServiceName: svcHostForPredictor(inf, predictor),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if index != 0 {
+		ig.ObjectMeta.Annotations[CANARY_WEIGHT] = string(ratios[predictor.Name])
+	}
+
+	// Sync ingress for the first time, create it.
+	if !igExists {
+		return ir.client.Create(context.Background(), &ig)
+	}
+
+	// Compare generated ingress whether differs from in-cluster one or not, if so
+	// update it to latest configuration.
+	if !reflect.DeepEqual(igInCluster.Spec, ig.Spec) {
+		igInCluster.Spec = *ig.Spec.DeepCopy()
+		return ir.client.Update(context.Background(), &igInCluster)
+	}
+
+	// Update latest traffic distribution of the predictor status.
+	predictorStatus := &inf.Status.PredictorStatuses[index]
+	currentPercentage := ratios[predictor.Name]
+	predictorStatus.TrafficPercent = &currentPercentage
+
+	return nil
+}
+
 // syncServiceForInference sync an entrypoint service for inference service, it provides user with
 // a unified host to access inference service, thought the inference service may serves more than one
 // model version at a time, the backward network topology will handle traffic routing.
@@ -332,6 +427,72 @@ func (ir *InferenceReconciler) syncServiceForInference(inf *servingv1alpha1.Infe
 	}
 
 	inf.Status.InferenceEndpoint = svcHostForInference(inf)
+	return nil
+}
+
+// syncIstioLessIngressGateway sync the istio-less ingress gateway for inference service.
+func (ir *InferenceReconciler) syncIstioLessIngressGateway(inf *servingv1alpha1.Inference) error {
+	gatewayInCluster := v1.Deployment{}
+	err := ir.client.Get(context.Background(), types.NamespacedName{Namespace: inf.Namespace, Name: inf.Name}, &gatewayInCluster)
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+	svcExists := true
+	if err != nil && errors.IsNotFound(err) {
+		svcExists = false
+	}
+
+	gatewayLabels := map[string]string{
+		apiv1.LabelInferenceName: inf.Name,
+	}
+
+	gatewayName := getIstioLessGatewayName(inf)
+
+	replicas := int32(1)
+	selector := &metav1.LabelSelector{MatchLabels: gatewayLabels}
+	gateway := v1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      gatewayName,
+			Namespace: inf.Namespace,
+			Labels:    gatewayLabels,
+		},
+		Spec: v1.DeploymentSpec{
+			Replicas: &replicas,
+			Selector: selector,
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      gatewayName,
+					Namespace: inf.Namespace,
+					Labels:    gatewayLabels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  gatewayName,
+							Image: GATEWAY_IMAGE,
+						},
+					},
+				},
+			},
+			Strategy: v1.DeploymentStrategy{Type: v1.RollingUpdateDeploymentStrategyType},
+		},
+	}
+
+	// Set owner-reference to ingress gateway.
+	err = controllerutil.SetControllerReference(inf, &gateway, ir.scheme)
+	if err != nil {
+		return err
+	}
+
+	if !svcExists {
+		return ir.client.Create(context.Background(), &gateway)
+	}
+
+	if !reflect.DeepEqual(gateway.Spec, gatewayInCluster.Spec) {
+		gatewayInCluster.Spec = *gateway.Spec.DeepCopy()
+		return ir.client.Update(context.Background(), &gatewayInCluster)
+	}
+
 	return nil
 }
 

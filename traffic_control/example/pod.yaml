@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: caddy-demo
+  labels:
+    app: caddy
+spec:
+  serviceAccountName: caddy
+  containers:
+    - name: caddy-demo
+      image: xcaddy:v1

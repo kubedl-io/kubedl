@@ -22,6 +22,12 @@ import (
 	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
 )
 
+const (
+	CANARY_WEIGHT  = "kubedl.kubernetes.io/canary-weight"
+	GATEWAY_IMAGE  = "kubedl.io/istio-less-gateway:v1"
+	GATEWAY_SUFFIX = "gateway"
+)
+
 // genPredictorName generate predictor name formatted as {inference name}-{predictor name}.
 func genPredictorName(inf *v1alpha1.Inference, predictor *v1alpha1.PredictorSpec) string {
 	return fmt.Sprintf("%s-%s", inf.Name, predictor.Name)
@@ -29,6 +35,10 @@ func genPredictorName(inf *v1alpha1.Inference, predictor *v1alpha1.PredictorSpec
 
 func svcHostForInference(inf *v1alpha1.Inference) string {
 	return fmt.Sprintf("%s.%s", inf.Name, inf.Namespace)
+}
+
+func getIstioLessGatewayName(inf *v1alpha1.Inference) string {
+	return fmt.Sprintf("%s.%s", inf.Name, GATEWAY_SUFFIX)
 }
 
 func svcHostForPredictor(inf *v1alpha1.Inference, predictor *v1alpha1.PredictorSpec) string {
