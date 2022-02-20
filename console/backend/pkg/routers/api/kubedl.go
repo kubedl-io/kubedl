@@ -7,9 +7,11 @@ import (
 	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
-	"github.com/alibaba/kubedl/console/backend/pkg/utils"
-	"github.com/gin-gonic/gin"
 	"k8s.io/klog"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 )
 
 func init() {

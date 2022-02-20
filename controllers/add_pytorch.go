@@ -17,10 +17,11 @@ limitations under the License.
 package controllers
 
 import (
+	controllerruntime "sigs.k8s.io/controller-runtime"
+
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/alibaba/kubedl/controllers/pytorch"
-	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
 func init() {

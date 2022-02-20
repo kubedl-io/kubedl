@@ -1,11 +1,12 @@
 package api
 
 import (
-	"github.com/alibaba/kubedl/console/backend/pkg/auth"
-	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"k8s.io/klog"
+
+	"github.com/alibaba/kubedl/console/backend/pkg/auth"
+	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 )
 
 func NewAuthAPIsController(loginAuth auth.Auth) *authAPIsController {

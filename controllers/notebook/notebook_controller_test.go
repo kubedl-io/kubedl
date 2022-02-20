@@ -20,8 +20,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/alibaba/kubedl/apis"
-	notebookv1alpha1 "github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -33,6 +31,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/alibaba/kubedl/apis"
+	notebookv1alpha1 "github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 )
 
 func init() {
@@ -69,7 +70,7 @@ func TestNotebookController(t *testing.T) {
 
 	// first reconcile
 	request := reconcile.Request{NamespacedName: notebookName}
-	_, _ = notebookReconciler.Reconcile(request)
+	_, _ = notebookReconciler.Reconcile(context.Background(), request)
 
 	notebookPod := &corev1.Pod{}
 	_ = notebookReconciler.Get(context.TODO(), types.NamespacedName{
@@ -104,7 +105,7 @@ func TestNotebookController(t *testing.T) {
 	_ = notebookReconciler.Status().Update(context.TODO(), notebookPod)
 	// now, notebook pod is running,
 	// 2nd reconcile
-	_, _ = notebookReconciler.Reconcile(request)
+	_, _ = notebookReconciler.Reconcile(context.Background(), request)
 	// notebook is running
 	notebook = getNotebook(notebookReconciler, notebookName)
 	assert.Equal(t, notebookv1alpha1.NotebookRunning, notebook.Status.Condition)
@@ -113,7 +114,7 @@ func TestNotebookController(t *testing.T) {
 	notebookPod.Status.Phase = corev1.PodSucceeded
 	_ = notebookReconciler.Status().Update(context.TODO(), notebookPod)
 	// 3rd reconcile
-	_, _ = notebookReconciler.Reconcile(request)
+	_, _ = notebookReconciler.Reconcile(context.Background(), request)
 	// notebook is termniated
 	notebook = getNotebook(notebookReconciler, notebookName)
 	assert.Equal(t, notebookv1alpha1.NotebookTerminated, notebook.Status.Condition)

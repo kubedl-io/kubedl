@@ -14,10 +14,11 @@ limitations under the License.
 package controllers
 
 import (
+	ctrl "sigs.k8s.io/controller-runtime"
+
 	notebookv1alpha1 "github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	controllers "github.com/alibaba/kubedl/controllers/notebook"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 func init() {

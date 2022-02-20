@@ -19,9 +19,10 @@ package job_controller
 import (
 	"fmt"
 
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // SatisfiedExpectations returns true if the required adds/dels for the given job have been observed.

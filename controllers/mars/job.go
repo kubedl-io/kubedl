@@ -20,15 +20,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
-	"github.com/alibaba/kubedl/pkg/job_controller"
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/util"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/job_controller"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 func (r *MarsJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
@@ -48,12 +47,7 @@ func (r *MarsJobReconciler) GetJobFromInformerCache(namespace, name string) (met
 
 func (r *MarsJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
 	job := &v1alpha1.MarsJob{}
-	// Forcibly use client reader.
-	clientReader, err := util.GetClientReaderFromClient(r.Client)
-	if err != nil {
-		return nil, err
-	}
-	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
+	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("mars job not found", "namespace", namespace, "name", name)

@@ -3,9 +3,10 @@ package job_controller
 import (
 	"testing"
 
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 func TestUpdateJobReplicaStatuses(t *testing.T) {

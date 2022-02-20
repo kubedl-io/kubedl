@@ -149,7 +149,7 @@ func (kbs *kubeCoscheduler) BindPodToGang(job metav1.Object, podSpec *v1.PodTemp
 	return nil
 }
 
-func (kbs *kubeCoscheduler) GetGang(name types.NamespacedName) (runtime.Object, error) {
+func (kbs *kubeCoscheduler) GetGang(name types.NamespacedName) (client.ObjectList, error) {
 	podGroups := &v1alpha1.PodGroupList{}
 	err := kbs.client.List(context.Background(), podGroups, client.MatchingLabels{
 		apiv1.LabelGangSchedulingJobName: name.Name,

@@ -77,7 +77,13 @@ func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 	}
 	r.recorder = recorder
 	// Initialize pkg job controller with components we only need.
-	r.ctrl = job_controller.NewJobController(client, r, config, recorder, metrics.NewJobMetrics(training.TFJobKind, client), scheme)
+	r.ctrl = job_controller.JobController{
+		Client:     client,
+		Controller: r,
+		Config:     config,
+		Recorder:   recorder,
+		Metrics:    metrics.NewJobMetrics(training.TFJobKind, client),
+	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -111,14 +117,14 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 		},
 	}
 	// reconcile the job, it should create 2 replicas
-	_, _ = tfJobReconciler.Reconcile(jobRequest)
+	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
 
 	// mark two pods running
 	markPodStatus("job1-worker-0", corev1.PodRunning, tfJobReconciler)
 	markPodStatus("job1-worker-1", corev1.PodRunning, tfJobReconciler)
 
 	// Reconcile again, the job should go into Running state
-	_, _ = tfJobReconciler.Reconcile(jobRequest)
+	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
 	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
 	assert.True(t, util.HasCondition(tfjob.Status, v1.JobRunning))
 
@@ -126,7 +132,7 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 	markPodStatus("job1-worker-0", corev1.PodSucceeded, tfJobReconciler)
 
 	// reconcile again
-	_, _ = tfJobReconciler.Reconcile(jobRequest)
+	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
 	// one worker succeeded, because of AllWorker SuccessPolicy, the job is still running
 	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
 	assert.True(t, util.HasCondition(tfjob.Status, v1.JobRunning))
@@ -135,7 +141,7 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 	markPodStatus("job1-worker-1", corev1.PodSucceeded, tfJobReconciler)
 
 	// reconcile again
-	_, _ = tfJobReconciler.Reconcile(jobRequest)
+	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
 
 	// two workers succeeded, the jobs is succeeded
 	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
@@ -173,16 +179,16 @@ func TestJobCreateModel(t *testing.T) {
 		},
 	}
 	// reconcile the job, it should create 2 replicas
-	_, _ = tfJobReconciler.Reconcile(jobRequest)
+	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
 
 	// make job1-worker-0 succeed
 	markPodStatus("job1-worker-0", corev1.PodSucceeded, tfJobReconciler)
 	// reconcile
-	_, _ = tfJobReconciler.Reconcile(jobRequest)
+	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
 	// the jobs is succeeded
 	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
 	assert.True(t, util.HasCondition(tfjob.Status, v1.JobSucceeded))
-	_, _ = tfJobReconciler.Reconcile(jobRequest)
+	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
 
 	modelVersion := &v1alpha1.ModelVersion{}
 	_ = tfJobReconciler.Get(context.TODO(), types.NamespacedName{

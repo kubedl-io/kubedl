@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
@@ -40,7 +41,7 @@ type GangScheduler interface {
 	BindPodToGang(job metav1.Object, podSpec *corev1.PodTemplateSpec, gangEntity runtime.Object, rtype string) error
 
 	// GetGang get gang entity instance from cluster by name and namespace.
-	GetGang(name types.NamespacedName) (runtime.Object, error)
+	GetGang(name types.NamespacedName) (client.ObjectList, error)
 
 	// DeleteGang deletes gang entity object from cluster and finish corresponding gang
 	// scheduling process.

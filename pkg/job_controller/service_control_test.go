@@ -17,7 +17,7 @@ package job_controller
 import (
 	"context"
 	"fmt"
-	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/api/core/v1"
@@ -26,6 +26,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/record"
+
+	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
 )
 
 var _ = Describe("ServiceControl", func() {

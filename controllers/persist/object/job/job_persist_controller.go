@@ -19,6 +19,7 @@ package job
 import (
 	stderrors "errors"
 	"fmt"
+
 	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -28,7 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // PersistController implementations

@@ -6,17 +6,16 @@ import (
 
 	"github.com/alibaba/kubedl/pkg/util/resource_utils"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
 
-	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
-	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	corev1 "k8s.io/api/core/v1"
 	resources "k8s.io/apiserver/pkg/quota/v1"
 	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
+	"github.com/alibaba/kubedl/console/backend/pkg/model"
 )
 
 const (
@@ -27,7 +26,7 @@ const (
 )
 
 func NewDataHandler() *DataHandler {
-	clientmgr.IndexField(&corev1.Pod{}, IndexNodeName, func(obj runtime.Object) []string {
+	clientmgr.IndexField(&corev1.Pod{}, IndexNodeName, func(obj client.Object) []string {
 		pod, ok := obj.(*corev1.Pod)
 		if !ok {
 			return []string{}
@@ -38,7 +37,7 @@ func NewDataHandler() *DataHandler {
 		return []string{pod.Spec.NodeName}
 	})
 
-	clientmgr.IndexField(&corev1.Pod{}, IndexPhase, func(obj runtime.Object) []string {
+	clientmgr.IndexField(&corev1.Pod{}, IndexPhase, func(obj client.Object) []string {
 		pod, ok := obj.(*corev1.Pod)
 		if !ok {
 			return []string{}

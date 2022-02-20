@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -38,14 +37,13 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
-	"github.com/alibaba/kubedl/pkg/util"
 )
 
 const (
 	controllerName = "ElasticDLController"
 )
 
-var log = logf.Log.WithName("elasticdl-controller")
+var log = ctrl.Log.WithName("elasticdl-controller")
 
 func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) *ElasticDLJobReconciler {
 	r := &ElasticDLJobReconciler{
@@ -53,8 +51,7 @@ func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) 
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder,
-		metrics.NewJobMetrics(training.ElasticDLJobKind, r.Client), mgr.GetScheme())
+	r.ctrl = job_controller.NewJobController(mgr, r, config, r.recorder, metrics.NewJobMetrics(training.ElasticDLJobKind, r.Client), mgr.GetScheme())
 	return r
 }
 
@@ -78,10 +75,10 @@ type ElasticDLJobReconciler struct {
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=elasticdljobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=elasticdljobs/status,verbs=get;update;patch
 
-func (r *ElasticDLJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *ElasticDLJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest elasticdl job instance.
 	sharedElasticDLJob := &training.ElasticDLJob{}
-	err := util.GetObjectByPassCache(r.Client, req.NamespacedName, sharedElasticDLJob)
+	err := r.ctrl.APIReader.Get(context.Background(), req.NamespacedName, sharedElasticDLJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

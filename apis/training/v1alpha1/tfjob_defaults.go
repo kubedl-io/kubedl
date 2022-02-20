@@ -15,12 +15,14 @@
 package v1alpha1
 
 import (
-	"github.com/alibaba/kubedl/pkg/features"
 	"strings"
 
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/features"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
+
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // setDefaults_TFJobPort sets the default ports for tensorflow container.

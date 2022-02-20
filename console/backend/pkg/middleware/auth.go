@@ -3,10 +3,11 @@ package middleware
 import (
 	"strings"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/alibaba/kubedl/console/backend/pkg/auth"
 	"github.com/alibaba/kubedl/console/backend/pkg/constants"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
-	"github.com/gin-gonic/gin"
 
 	"k8s.io/klog"
 )

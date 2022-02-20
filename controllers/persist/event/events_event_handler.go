@@ -80,7 +80,7 @@ func (e *enqueueForEvent) Delete(evt event.DeleteEvent, queue workqueue.RateLimi
 }
 
 func (e *enqueueForEvent) Generic(evt event.GenericEvent, queue workqueue.RateLimitingInterface) {
-	e.Create(event.CreateEvent{Meta: evt.Meta, Object: evt.Object}, queue)
+	e.Create(event.CreateEvent{Object: evt.Object}, queue)
 }
 
 func (e *enqueueForEvent) isKubeDLManagedObject(ref corev1.ObjectReference) bool {

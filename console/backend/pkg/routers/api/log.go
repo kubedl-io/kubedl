@@ -7,9 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
-	"github.com/gin-gonic/gin"
 )
 
 func NewLogsAPIsController(logHandler *handlers.LogHandler) *logsAPIsController {

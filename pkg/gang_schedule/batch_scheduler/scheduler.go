@@ -102,12 +102,12 @@ func (kbs *kubeBatchScheduler) BindPodToGang(job metav1.Object, podSpec *v1.PodT
 	return nil
 }
 
-func (kbs *kubeBatchScheduler) GetGang(name types.NamespacedName) (runtime.Object, error) {
+func (kbs *kubeBatchScheduler) GetGang(name types.NamespacedName) (client.ObjectList, error) {
 	podGroup := &v1alpha1.PodGroup{}
 	if err := kbs.client.Get(context.Background(), name, podGroup); err != nil {
 		return nil, err
 	}
-	return podGroup, nil
+	return &v1alpha1.PodGroupList{Items: []v1alpha1.PodGroup{*podGroup}}, nil
 }
 
 func (kbs *kubeBatchScheduler) DeleteGang(name types.NamespacedName) error {
@@ -115,10 +115,16 @@ func (kbs *kubeBatchScheduler) DeleteGang(name types.NamespacedName) error {
 	if err != nil {
 		return err
 	}
-	err = kbs.client.Delete(context.Background(), podGroup)
-	// Discard deleted pod group object.
-	if err != nil && errors.IsNotFound(err) {
-		return nil
+	podGroups := podGroup.(*v1alpha1.PodGroupList)
+	for i := range podGroups.Items {
+		err = kbs.client.Delete(context.Background(), &podGroups.Items[i])
+		// Discard deleted pod group object.
+		if err != nil {
+			if errors.IsNotFound(err) {
+				continue
+			}
+			return err
+		}
 	}
-	return err
+	return nil
 }

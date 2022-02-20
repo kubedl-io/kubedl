@@ -23,14 +23,14 @@ import (
 	"strings"
 	"time"
 
+	cronutil "github.com/robfig/cron/v3"
+
 	"github.com/alibaba/kubedl/apis/apps/v1alpha1"
 	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/util"
 	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 	"github.com/alibaba/kubedl/pkg/util/workloadgate"
-	cronutil "github.com/robfig/cron/v3"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -54,19 +54,21 @@ const cronControllerName = "CronController"
 
 func NewCronController(mgr ctrl.Manager, _ options.JobControllerConfiguration) *CronController {
 	return &CronController{
-		client:   mgr.GetClient(),
-		scheme:   mgr.GetScheme(),
-		recorder: mgr.GetEventRecorderFor(cronControllerName),
-		extCodec: utilruntime.NewRawExtensionCodec(mgr.GetScheme()),
+		client:    mgr.GetClient(),
+		apiReader: mgr.GetAPIReader(),
+		scheme:    mgr.GetScheme(),
+		recorder:  mgr.GetEventRecorderFor(cronControllerName),
+		extCodec:  utilruntime.NewRawExtensionCodec(mgr.GetScheme()),
 	}
 }
 
 // CronController reconciles a Workload object.
 type CronController struct {
-	client   client.Client
-	recorder record.EventRecorder
-	scheme   *runtime.Scheme
-	extCodec *utilruntime.RawExtensionCodec
+	client    client.Client
+	apiReader client.Reader
+	recorder  record.EventRecorder
+	scheme    *runtime.Scheme
+	extCodec  *utilruntime.RawExtensionCodec
 }
 
 func (cc *CronController) SetupWithManager(mgr ctrl.Manager) error {
@@ -104,7 +106,7 @@ func (cc *CronController) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=apps.kubedl.io,resources=crons,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps.kubedl.io,resources=crons/status,verbs=get;update;patch
 
-func (cc *CronController) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (cc *CronController) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	klog.V(3).Infof("start to reconcile cron: %v", req.String())
 
 	cron := v1alpha1.Cron{}
@@ -293,7 +295,7 @@ func (cc *CronController) refreshCronHistory(cron *v1alpha1.Cron, workloads []me
 	return cc.client.Status().Update(context.Background(), cron)
 }
 
-func (cc *CronController) newWorkloadFromTemplate(cron *v1alpha1.Cron, scheduledTime time.Time) (runtime.Object, error) {
+func (cc *CronController) newWorkloadFromTemplate(cron *v1alpha1.Cron, scheduledTime time.Time) (client.Object, error) {
 	// In consideration of workload consistency, we uniformly handle workload decode from RAW bytes
 	// instead of type assertion.
 	if cron.Spec.CronTemplate.Workload == nil ||
@@ -376,8 +378,6 @@ func (cc *CronController) trimFinishedWorkloadsFromActiveList(cron *v1alpha1.Cro
 		}
 	}
 
-	// Extract uncached client to explicitly pull latest job from api-server to avoid slow watching.
-	uncached, _ := util.GetClientReaderFromClient(cc.client)
 	// Remove any reference from the active list if the corresponding workload does not exist any more.
 	// Otherwise, the cron may be stuck in active mode forever even though there is no matching running.
 	for _, ac := range cron.Status.Active {
@@ -390,7 +390,7 @@ func (cc *CronController) trimFinishedWorkloadsFromActiveList(cron *v1alpha1.Cro
 				ac.APIVersion, ac.Kind, err)
 			continue
 		}
-		err = uncached.Get(context.Background(), types.NamespacedName{Namespace: ac.Namespace, Name: ac.Name}, wl)
+		err = cc.apiReader.Get(context.Background(), types.NamespacedName{Namespace: ac.Namespace, Name: ac.Name}, wl)
 		switch {
 		case errors.IsNotFound(err):
 			cc.recorder.Eventf(cron, corev1.EventTypeNormal, "MissingWorkload", "Active workload went missing: %v", ac.Name)
@@ -440,7 +440,7 @@ func (cc *CronController) listActiveWorkloads(cron *v1alpha1.Cron) ([]metav1.Obj
 	return workloads, nil
 }
 
-func (cc *CronController) newEmptyWorkload(apiVersion, kind string) (runtime.Object, error) {
+func (cc *CronController) newEmptyWorkload(apiVersion, kind string) (client.Object, error) {
 	groupVersion := strings.Split(apiVersion, "/")
 	if len(groupVersion) != 2 {
 		return nil, fmt.Errorf("unexpected length of apiVersion after split, apiVersion: %s", apiVersion)
@@ -454,7 +454,10 @@ func (cc *CronController) newEmptyWorkload(apiVersion, kind string) (runtime.Obj
 	if err != nil {
 		return nil, err
 	}
-	return wl, nil
+	if wlo, ok := wl.(client.Object); ok {
+		return wlo, nil
+	}
+	return nil, fmt.Errorf("workload %+v has not implemented client.Object interface", groupVersion)
 }
 
 func (cc *CronController) deleteWorkload(cron *v1alpha1.Cron, ref corev1.ObjectReference) error {
@@ -477,7 +480,7 @@ func (cc *CronController) deleteWorkload(cron *v1alpha1.Cron, ref corev1.ObjectR
 
 var (
 	// workloads is a list of cron-able workloads.
-	workloads = []runtime.Object{
+	workloads = []client.Object{
 		&trainingv1alpha1.TFJob{},
 		&trainingv1alpha1.PyTorchJob{},
 		&trainingv1alpha1.MarsJob{},

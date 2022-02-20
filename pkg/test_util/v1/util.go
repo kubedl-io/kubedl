@@ -18,10 +18,11 @@ import (
 	"strings"
 	"testing"
 
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 
 	testjobv1 "github.com/alibaba/kubedl/pkg/test_job/v1"
 )

@@ -49,7 +49,7 @@ type PytorchJobPersistController struct {
 	handler *jobPersistHandler
 }
 
-func (pc *PytorchJobPersistController) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (pc *PytorchJobPersistController) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// Parse uid and object name from request.Name field.
 	id, name, err := util.ParseIDName(req.Name)
 	if err != nil {

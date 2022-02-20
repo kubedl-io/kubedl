@@ -130,7 +130,7 @@ func (r *MarsJobReconciler) updateGeneralJobStatus(marsJob *v1alpha1.MarsJob, re
 
 func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		marsJob, ok := e.Meta.(*v1alpha1.MarsJob)
+		marsJob, ok := e.Object.(*v1alpha1.MarsJob)
 		if !ok {
 			return false
 		}
@@ -140,7 +140,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 		}
 		reconciler.scheme.Default(marsJob)
 
-		msg := fmt.Sprintf("MarsJob %s is created.", e.Meta.GetName())
+		msg := fmt.Sprintf("MarsJob %s is created.", e.Object.GetName())
 		if err := commonutil.UpdateJobConditions(&marsJob.Status.JobStatus, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
 			log.Error(err, "append job condition error")
 			return false
@@ -152,7 +152,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 
 func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
-		marsJob, ok := e.Meta.(*v1alpha1.MarsJob)
+		marsJob, ok := e.Object.(*v1alpha1.MarsJob)
 		if !ok {
 			return false
 		}

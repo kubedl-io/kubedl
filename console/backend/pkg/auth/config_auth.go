@@ -3,11 +3,13 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/alibaba/kubedl/console/backend/pkg/model"
+	"io/ioutil"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
-	"io/ioutil"
+
+	"github.com/alibaba/kubedl/console/backend/pkg/model"
 )
 
 type configAuth struct{}

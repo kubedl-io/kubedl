@@ -4,7 +4,7 @@ VERSION ?= daily
 HELM_CHART_VERSION ?= 0.1.0
 IMG ?= kubedl/kubedl:$(VERSION)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,maxDescLen=0"
+CRD_OPTIONS ?= "crd:trivialVersions=true,maxDescLen=0,generateEmbeddedObjectMeta=true"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -93,7 +93,7 @@ release: helm-chart
 # download controller-gen if necessary
 controller-gen:
 ifeq (, $(shell which controller-gen))
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.1
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)

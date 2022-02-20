@@ -20,8 +20,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/alibaba/kubedl/apis"
-	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -31,6 +29,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/alibaba/kubedl/apis"
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 )
 
 func init() {
@@ -59,7 +60,7 @@ func TestCreateModelVersionWithLocalStorage(t *testing.T) {
 		Namespace: "default",
 		Name:      "model-v1",
 	}}
-	_, _ = versionReconciler.Reconcile(versionRequest)
+	_, _ = versionReconciler.Reconcile(context.Background(), versionRequest)
 
 	model := &v1alpha1.Model{}
 	_ = versionReconciler.Get(context.TODO(), types.NamespacedName{
@@ -78,7 +79,7 @@ func TestCreateModelVersionWithLocalStorage(t *testing.T) {
 	// bound the claim
 	pvc.Status.Phase = corev1.ClaimBound
 	_ = versionReconciler.Update(context.TODO(), pvc)
-	_, _ = versionReconciler.Reconcile(versionRequest)
+	_, _ = versionReconciler.Reconcile(context.Background(), versionRequest)
 
 	// check the img build pod exists
 	imgBuildPodName := GetBuildImagePodName(version.Spec.ModelName, string(version.UID[:5]))
@@ -92,7 +93,7 @@ func TestCreateModelVersionWithLocalStorage(t *testing.T) {
 
 	imgBuildPod.Status.Phase = corev1.PodSucceeded
 	_ = versionReconciler.Status().Update(context.TODO(), imgBuildPod)
-	_, _ = versionReconciler.Reconcile(versionRequest)
+	_, _ = versionReconciler.Reconcile(context.Background(), versionRequest)
 	_ = versionReconciler.Get(context.TODO(), types.NamespacedName{
 		Namespace: version.Namespace,
 		Name:      version.Name,

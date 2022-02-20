@@ -17,10 +17,11 @@ limitations under the License.
 package controllers
 
 import (
+	ctrl "sigs.k8s.io/controller-runtime"
+
 	"github.com/alibaba/kubedl/apis/apps/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	cron "github.com/alibaba/kubedl/controllers/apps"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 func init() {

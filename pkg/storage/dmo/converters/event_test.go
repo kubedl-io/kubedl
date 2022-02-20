@@ -17,12 +17,14 @@ limitations under the License.
 package converters
 
 import (
-	"github.com/alibaba/kubedl/pkg/storage/dmo"
+	"reflect"
+	"testing"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-	"reflect"
-	"testing"
+
+	"github.com/alibaba/kubedl/pkg/storage/dmo"
 )
 
 const (

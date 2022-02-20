@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
@@ -86,40 +87,46 @@ type JobController struct {
 	Metrics *metrics.JobMetrics
 
 	// patcher creates a new patch differentiated from old and new object.
-	patcher func(oldObj, newObj runtime.Object) error
+	patcher func(oldObj, newObj client.Object) error
 
-	// Client talks to api-server
+	// Client talks to api-server and knows how to perform CRUD operations on Kubernetes objects.
 	Client client.Client
 
 	// Scheme defines methods for serializing and deserializing API objects
 	Scheme *runtime.Scheme
+
+	// APIReader knows how to read and list Kubernetes objects bypass cache to avoid retrieving
+	// stale status for the reason of etcd slow-watch.
+	APIReader client.Reader
 }
 
 func NewJobController(
-	cli client.Client,
+	mgr controllerruntime.Manager,
 	controllerImpl apiv1.ControllerInterface,
 	config options.JobControllerConfiguration,
 	recorder record.EventRecorder,
 	metrics *metrics.JobMetrics,
 	scheme *runtime.Scheme,
 ) JobController {
-	return JobController{
+	jc := JobController{
 		Controller:         controllerImpl,
 		Config:             config,
 		Expectations:       controller.NewControllerExpectations(),
 		BackoffStatesQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		Recorder:           recorder,
 		Metrics:            metrics,
-		patcher: func(oldObj, newObj runtime.Object) error {
-			// deepcopy new object avoid of in-memory modifications being override by in-cluster object.
-			newPatchObj := newObj.DeepCopyObject()
-			return cli.Patch(context.Background(), newPatchObj, client.MergeFrom(oldObj))
-		},
-		Client:         cli,
-		podControl:     NewPodControl(cli, recorder),
-		serviceControl: NewServiceControl(cli, recorder),
-		Scheme:         scheme,
+		Client:             mgr.GetClient(),
+		APIReader:          mgr.GetAPIReader(),
+		Scheme:             scheme,
 	}
+	jc.patcher = func(oldObj, newObj client.Object) error {
+		// deepcopy new object avoid of in-memory modifications being override by in-cluster object.
+		newPatchObj := newObj.DeepCopyObject()
+		return mgr.GetClient().Patch(context.Background(), newPatchObj.(client.Object), client.MergeFrom(oldObj))
+	}
+	jc.podControl = NewPodControl(jc.Client, recorder)
+	jc.serviceControl = NewServiceControl(jc.Client, recorder)
+	return jc
 }
 
 func (jc *JobController) GenOwnerReference(obj metav1.Object) *metav1.OwnerReference {

@@ -52,7 +52,7 @@ const (
 
 // When a pod is created, enqueue the job that manages it and update its expectations.
 func (jc *JobController) OnPodCreateFunc(e event.CreateEvent) bool {
-	pod := e.Meta.(*v1.Pod)
+	pod := e.Object.(*v1.Pod)
 	if pod.DeletionTimestamp != nil {
 		// on a restart of the controller controller, it's possible a new pod shows up in a state that
 		// is already pending deletion. Prevent the pod from being a creation observation.
@@ -93,8 +93,8 @@ func (jc *JobController) OnPodCreateFunc(e event.CreateEvent) bool {
 // the pod have changed we need to awaken both the old and new replica set, old and new must
 // be *v1.Pod types.
 func (jc *JobController) OnPodUpdateFunc(e event.UpdateEvent) bool {
-	newPod := e.MetaNew.(*v1.Pod)
-	oldPod := e.MetaOld.(*v1.Pod)
+	newPod := e.ObjectNew.(*v1.Pod)
+	oldPod := e.ObjectOld.(*v1.Pod)
 	if newPod.ResourceVersion == oldPod.ResourceVersion {
 		// Periodic resync will send update events for all known pods.
 		// Two different versions of the same pod will always have different RVs.
@@ -129,7 +129,7 @@ func (jc *JobController) OnPodUpdateFunc(e event.UpdateEvent) bool {
 // When a pod is deleted, enqueue the job that manages the pod and update its expectations.
 // obj could be an *v1.Pod, or a DeletionFinalStateUnknown marker item.
 func (jc *JobController) OnPodDeleteFunc(e event.DeleteEvent) bool {
-	pod, ok := e.Meta.(*v1.Pod)
+	pod, ok := e.Object.(*v1.Pod)
 	logger := commonutil.LoggerForPod(pod, jc.Controller.GetAPIGroupVersionKind().Kind)
 
 	// When a delete is dropped, the relist will notice a pod in the store not

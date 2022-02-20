@@ -48,7 +48,7 @@ func TestCacheBackendStatus(t *testing.T) {
 			Name:      cacheBackend.Name,
 		}}
 
-		_, _ = cacheReconciler.Reconcile(request)
+		_, _ = cacheReconciler.Reconcile(context.Background(), request)
 
 		_ = cacheReconciler.Get(context.TODO(), types.NamespacedName{
 			Namespace: cacheBackend.Namespace,
@@ -78,7 +78,7 @@ func TestCacheBackendStatus(t *testing.T) {
 		assert.Equal(t, cacheBackend.Name, pvc.Name)
 
 		// Update status
-		_, _ = cacheReconciler.Reconcile(request)
+		_, _ = cacheReconciler.Reconcile(context.Background(), request)
 		_ = cacheReconciler.Get(context.TODO(), types.NamespacedName{
 			Namespace: cacheBackend.Namespace,
 			Name:      cacheBackend.Name,

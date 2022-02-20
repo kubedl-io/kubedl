@@ -83,7 +83,7 @@ func (th *TensorBoardHandler) ListIngressInstances(jobNamespace, jobName, jobUID
 }
 
 func (th *TensorBoardHandler) GetJob(jobNamespace, jobName, kind string) (metav1.Object, error) {
-	job := utils.InitRuntimeObjectByKind(kind)
+	job := utils.InitJobRuntimeObjectByKind(kind)
 	err := th.client.Get(context.Background(), types.NamespacedName{
 		Namespace: jobNamespace,
 		Name:      jobName,
@@ -105,7 +105,7 @@ func (th *TensorBoardHandler) ApplyNewTensorBoardConfig(jobNamespace, jobName, k
 		config.TTLSecondsAfterJobFinished = 60 * 60
 	}
 
-	job := utils.InitRuntimeObjectByKind(kind)
+	job := utils.InitJobRuntimeObjectByKind(kind)
 	err := th.client.Get(context.Background(), types.NamespacedName{
 		Namespace: jobNamespace,
 		Name:      jobName,

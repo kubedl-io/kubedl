@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/alibaba/kubedl/cmd/options"
 	"github.com/go-logr/logr"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -37,6 +36,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/alibaba/kubedl/cmd/options"
 
 	notebookv1alpha1 "github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 )
@@ -67,7 +68,7 @@ type NotebookReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="networking.k8s.io",resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 
-func (r *NotebookReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *NotebookReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("notebook", req.NamespacedName)
 
 	notebook := &notebookv1alpha1.Notebook{}

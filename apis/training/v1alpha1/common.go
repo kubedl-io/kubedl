@@ -1,10 +1,11 @@
 package v1alpha1
 
 import (
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 var SchemeGroupVersion = GroupVersion

@@ -17,13 +17,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/alibaba/kubedl/pkg/util"
 	metav1unstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+
+	"github.com/alibaba/kubedl/pkg/util"
 )
 
 // CRDRestClient defines an interface for working with CRDs using the REST client.

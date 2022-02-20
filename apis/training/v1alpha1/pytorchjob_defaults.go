@@ -15,12 +15,14 @@
 package v1alpha1
 
 import (
-	"github.com/alibaba/kubedl/pkg/features"
 	"strings"
 
-	common "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/features"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
+
+	common "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // setDefaults_PyTorchJobPort sets the default ports for pytorch container.

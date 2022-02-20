@@ -21,9 +21,10 @@ import (
 	"path"
 	"strings"
 
+	networkingv1 "k8s.io/api/networking/v1"
+
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 
 	v1 "k8s.io/api/core/v1"
 	networkingv1beta "k8s.io/api/networking/v1beta1"

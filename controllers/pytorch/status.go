@@ -127,7 +127,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *training.PyTor
 
 func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		pytorchJob, ok := e.Meta.(*training.PyTorchJob)
+		pytorchJob, ok := e.Object.(*training.PyTorchJob)
 		if !ok {
 			return true
 		}
@@ -136,7 +136,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 			return true
 		}
 		reconciler.scheme.Default(pytorchJob)
-		msg := fmt.Sprintf("PytorchJob %s is created.", e.Meta.GetName())
+		msg := fmt.Sprintf("PytorchJob %s is created.", e.Object.GetName())
 		if err := commonutil.UpdateJobConditions(&pytorchJob.Status, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
 			log.Error(err, "append job condition error")
 			return false
@@ -148,7 +148,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 
 func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
-		pytorchJob, ok := e.Meta.(*training.PyTorchJob)
+		pytorchJob, ok := e.Object.(*training.PyTorchJob)
 		if !ok {
 			return false
 		}

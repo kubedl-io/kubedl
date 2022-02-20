@@ -21,8 +21,9 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/jinzhu/gorm"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // Pod contains fields collected from original Pod object and extra info that

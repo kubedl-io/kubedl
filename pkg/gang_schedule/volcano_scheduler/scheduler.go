@@ -126,7 +126,7 @@ func (vs *volcanoScheduler) BindPodToGang(job metav1.Object, podSpec *v1.PodTemp
 	return nil
 }
 
-func (vs *volcanoScheduler) GetGang(name types.NamespacedName) (runtime.Object, error) {
+func (vs *volcanoScheduler) GetGang(name types.NamespacedName) (client.ObjectList, error) {
 	podGroups := &v1beta1.PodGroupList{}
 	if err := vs.client.List(context.Background(), podGroups, client.MatchingLabels{
 		apiv1.LabelGangSchedulingJobName: name.Name,

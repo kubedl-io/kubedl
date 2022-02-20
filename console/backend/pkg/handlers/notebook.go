@@ -65,7 +65,7 @@ func (nh *NotebookHandler) DeleteNotebookFromBackend(ns, name, notebookID, regio
 }
 
 func (nh *NotebookHandler) GetYamlData(ns, name, kind string) ([]byte, error) {
-	job := consoleutils.InitRuntimeObjectByKind(kind)
+	job := consoleutils.InitJobRuntimeObjectByKind(kind)
 	if job == nil {
 		return nil, fmt.Errorf("unsupported job kind: %s", kind)
 	}
@@ -82,7 +82,7 @@ func (nh *NotebookHandler) GetYamlData(ns, name, kind string) ([]byte, error) {
 }
 
 func (nh *NotebookHandler) GetJsonData(ns, name, kind string) ([]byte, error) {
-	job := consoleutils.InitRuntimeObjectByKind(kind)
+	job := consoleutils.InitJobRuntimeObjectByKind(kind)
 	if job == nil {
 		return nil, fmt.Errorf("unsupported job kind: %s", kind)
 	}

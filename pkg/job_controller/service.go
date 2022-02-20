@@ -39,7 +39,7 @@ import (
 
 // When a service is created, enqueue the controller that manages it and update its expectations.
 func (jc *JobController) OnServiceCreateFunc(e event.CreateEvent) bool {
-	service := e.Meta.(*v1.Service)
+	service := e.Object.(*v1.Service)
 	if service.DeletionTimestamp != nil {
 		// on a restart of the controller controller, it's possible a new service shows up in a state that
 		// is already pending deletion. Prevent the service from being a creation observation.
@@ -75,8 +75,8 @@ func (jc *JobController) OnServiceCreateFunc(e event.CreateEvent) bool {
 // If the labels of the service have changed we need to awaken both the old
 // and new replica set. old and new must be *v1.Service types.
 func (jc *JobController) OnServiceUpdateFunc(e event.UpdateEvent) bool {
-	newService := e.MetaNew.(*v1.Service)
-	oldService := e.MetaOld.(*v1.Service)
+	newService := e.ObjectNew.(*v1.Service)
+	oldService := e.ObjectOld.(*v1.Service)
 	if newService.ResourceVersion == oldService.ResourceVersion {
 		// Periodic resync will send update events for all known pods.
 		// Two different versions of the same pod will always have different RVs.
@@ -105,7 +105,7 @@ func (jc *JobController) OnServiceUpdateFunc(e event.UpdateEvent) bool {
 // When a service is deleted, enqueue the job that manages the service and update its expectations.
 // obj could be an *v1.Service, or a DeletionFinalStateUnknown marker item.
 func (jc *JobController) OnServiceDeleteFunc(e event.DeleteEvent) bool {
-	service, ok := e.Meta.(*v1.Service)
+	service, ok := e.Object.(*v1.Service)
 
 	// When a delete is dropped, the relist will notice a service in the store not
 	// in the list, leading to the insertion of a tombstone object which contains

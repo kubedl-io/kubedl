@@ -50,12 +50,7 @@ func (r *MPIJobReconciler) GetJobFromInformerCache(namespace, name string) (meta
 
 func (r *MPIJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
 	job := &training.MPIJob{}
-	// Forcibly use client reader.
-	clientReader, err := util.GetClientReaderFromClient(r.Client)
-	if err != nil {
-		return nil, err
-	}
-	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
+	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("mpi job not found", "namespace", namespace, "name", name)
@@ -182,7 +177,7 @@ func (r *MPIJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus
 
 func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		mpiJob, ok := e.Meta.(*training.MPIJob)
+		mpiJob, ok := e.Object.(*training.MPIJob)
 		if !ok {
 			return false
 		}
@@ -192,7 +187,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 		}
 		reconciler.scheme.Default(mpiJob)
 
-		msg := fmt.Sprintf("MPIJob %s is created.", e.Meta.GetName())
+		msg := fmt.Sprintf("MPIJob %s is created.", e.Object.GetName())
 		if err := util.UpdateJobConditions(&mpiJob.Status, v1.JobCreated, util.JobCreatedReason, msg); err != nil {
 			log.Error(err, "append job condition error")
 			return false
@@ -211,7 +206,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
 
 func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
-		mpiJob, ok := e.Meta.(*training.MPIJob)
+		mpiJob, ok := e.Object.(*training.MPIJob)
 		if !ok {
 			return false
 		}

@@ -33,8 +33,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlruntime "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -75,7 +75,7 @@ type PodPersistController struct {
 	podBackend backends.ObjectStorageBackend
 }
 
-func (pc *PodPersistController) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (pc *PodPersistController) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// Parse uid and object name from request.Name field.
 	id, name, err := persistutil.ParseIDName(req.Name)
 	if err != nil {

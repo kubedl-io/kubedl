@@ -69,12 +69,7 @@ func (r *XgboostJobReconciler) GetJobFromInformerCache(namespace, name string) (
 // GetJobFromAPIClient returns the Job from API server
 func (r *XgboostJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
 	job := &v1alpha1.XGBoostJob{}
-
-	clientReader, err := commonutil.GetClientReaderFromClient(r.Client)
-	if err != nil {
-		return nil, err
-	}
-	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
+	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("xgboost job not found", "namespace", namespace, "name", name)
@@ -205,7 +200,7 @@ func (r *XgboostJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobSt
 // onOwnerCreateFunc modify creation condition.
 func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		xgboostJob, ok := e.Meta.(*v1alpha1.XGBoostJob)
+		xgboostJob, ok := e.Object.(*v1alpha1.XGBoostJob)
 		if !ok {
 			return true
 		}
@@ -214,7 +209,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			return true
 		}
 		reconciler.scheme.Default(xgboostJob)
-		msg := fmt.Sprintf("xgboostJob %s is created.", e.Meta.GetName())
+		msg := fmt.Sprintf("xgboostJob %s is created.", e.Object.GetName())
 		if err := commonutil.UpdateJobConditions(&xgboostJob.Status.JobStatus, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
 			log.Error(err, "append job condition error")
 			return false
@@ -226,7 +221,7 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 
 func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
 	return func(e event.DeleteEvent) bool {
-		xgboostJob, ok := e.Meta.(*v1alpha1.XGBoostJob)
+		xgboostJob, ok := e.Object.(*v1alpha1.XGBoostJob)
 		if !ok {
 			return false
 		}
