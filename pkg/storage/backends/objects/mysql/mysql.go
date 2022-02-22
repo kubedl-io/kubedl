@@ -552,15 +552,15 @@ func (b *mysqlBackend) updateJob(oldJob, newJob *dmo.Job) error {
 }
 
 func (b *mysqlBackend) CreateWorkspace(workspace *model.WorkspaceInfo) error {
-	panic("implement me")
+	return nil
 }
 
 func (b *mysqlBackend) DeleteWorkspace(name string) error {
-	panic("implement me")
+	return nil
 }
 
 func (b *mysqlBackend) ListWorkspaces(query *backends.WorkspaceQuery) ([]*model.WorkspaceInfo, error) {
-	panic("implement me")
+	return nil, nil
 }
 
 func (b *mysqlBackend) init() error {

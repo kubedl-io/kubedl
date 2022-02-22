@@ -23,15 +23,15 @@ type NotebookInfo struct {
 	// url to the notebook
 	Url string `json:"url"`
 
-	// Namespace
+	// Namespace where the notebook instance is
 	Namespace string `json:"namespace"`
-	//
+
 	CreateTime string `json:"createTime"`
 
 	EndTime string `json:"endTime"`
-	//
+
 	DurationTime string `json:"durationTime"`
-	//
+
 	DeployRegion string `json:"deployRegion"`
 
 	NotebookConfig string `json:"notebookConfig,omitempty"`

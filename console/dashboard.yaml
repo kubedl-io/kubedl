@@ -16,7 +16,7 @@ spec:
         control-plane: kubedl-dashboard
     spec:
       containers:
-        - image: kubedl/dashboard:0.1.0
+        - image: kubedl/dashboard:daily
           name: kubedl-dashboard
           resources:
             requests:

@@ -56,7 +56,7 @@ func (nh *NotebookHandler) SubmitNotebook(data []byte) error {
 			klog.Errorf("failed to unmarshal notebook in yaml format, data: %s", string(data))
 			return err
 		}
-		return nil
+		return nh.client.Create(context.Background(), notebook)
 	}
 }
 
