@@ -42,14 +42,6 @@ rules:
   verbs:
   - get
   - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - list
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -78,7 +70,6 @@ rules:
   - ""
   resources:
   - pods
-  - pods/log
   verbs:
   - create
   - delete
