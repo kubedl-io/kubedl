@@ -499,6 +499,7 @@ func (a *apiServerBackend) CreateWorkspace(workspace *model.WorkspaceInfo) error
 		Namespace: namespace.Namespace,
 	}
 
+	// TODO create new workspace is disabled for now, when create a workspace, user may select a data volume instead,
 	storageClassName := "my-azurefile"
 	err = a.client.Get(context.Background(), pvcName, pvc)
 	if err != nil {

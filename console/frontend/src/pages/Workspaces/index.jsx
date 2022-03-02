@@ -271,13 +271,16 @@ const TableList = ({ globalConfig }) => {
 
   return (
       <div>
-        <Card style={{ marginBottom: 12 }} title={
-          <div style={{paddingBottom:"8px", textAlign: "right",display: 'inline-block', marginRight: '20px'}}>
-            <Button type="primary" onClick={onWorkspaceCreate} style={{minWidth: '120px'}} size='small'>
-              {intl.formatMessage({id: 'kubedl-dashboard-new-workspace'})}
-            </Button>
-          </div>
-        }>
+        <Card style={{ marginBottom: 12 }}
+              //TODO disable new workspace for now
+        //       title={
+        //   <div style={{paddingBottom:"8px", textAlign: "right",display: 'inline-block', marginRight: '20px'}}>
+        //     <Button type="primary" onClick={onWorkspaceCreate} style={{minWidth: '120px'}} size='small'>
+        //       {intl.formatMessage({id: 'kubedl-dashboard-new-workspace'})}
+        //     </Button>
+        //   </div>
+        // }
+        >
           <ProTable
               loading={loading}
               dataSource={workspaces}

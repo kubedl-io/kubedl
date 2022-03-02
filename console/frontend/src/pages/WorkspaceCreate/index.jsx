@@ -55,7 +55,6 @@ const DataConfig = ({ globalConfig, namespaces, currentUser }) => {
             local_path: defaultDataPath,
             storage: values.storage
         };
-        console.log("1111: " + Qs.stringify(addValues))
         newWorkspace(addValues).then(res => {
             message.success(intl.formatMessage({id: 'kubedl-dashboard-add-success'}));
             setIsLoading(false);

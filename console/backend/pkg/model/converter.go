@@ -158,7 +158,8 @@ func ConvertDMONotebookToNotebookInfo(dmoNotebook *dmo.Notebook) NotebookInfo {
 			notebookInfo.DurationTime = GetTimeDiffer(dmoNotebook.GmtCreated, now)
 		}
 	}
-	notebookInfo.UserName = *dmoNotebook.Owner
-
+	if dmoNotebook.Owner != nil {
+		notebookInfo.UserName = *dmoNotebook.Owner
+	}
 	return notebookInfo
 }
