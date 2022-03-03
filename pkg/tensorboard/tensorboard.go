@@ -282,9 +282,9 @@ func syncIngress(jc job_controller.JobController, c client.Client,
 	metaObj metav1.Object, opts TensorBoard, cfg string) error {
 
 	ingSpec := opts.Ingress
-	//if ingSpec == nil  {
-	//	return nil
-	//}
+	if ingSpec == nil {
+		return nil
+	}
 	pathPrefix := ""
 	if ingSpec.PathPrefix != nil {
 		pathPrefix = *ingSpec.PathPrefix
