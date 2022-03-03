@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	backendutils "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/tensorboard"
+	networkingv1 "k8s.io/api/networking/v1"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -56,8 +57,8 @@ func (th *TensorBoardHandler) GetTensorBoardInstance(jobNamespace, jobName, jobU
 	return tb, nil
 }
 
-func (th *TensorBoardHandler) ListIngressInstances(jobNamespace, jobName, jobUID string) ([]*v1beta1.Ingress, error) {
-	ingresses := v1beta1.IngressList{}
+func (th *TensorBoardHandler) ListIngressInstances(jobNamespace, jobName, jobUID string) ([]*networkingv1.Ingress, error) {
+	ingresses := networkingv1.IngressList{}
 	err := th.client.List(context.Background(), &ingresses, &client.ListOptions{
 		LabelSelector: labels.SelectorFromSet(map[string]string{
 			apiv1.ReplicaTypeLabel: "tensorboard",
@@ -70,7 +71,7 @@ func (th *TensorBoardHandler) ListIngressInstances(jobNamespace, jobName, jobUID
 	}
 
 	// There may multiple ingress belongs to one tensorboard instance.
-	validIngresses := make([]*v1beta1.Ingress, 0)
+	validIngresses := make([]*networkingv1.Ingress, 0)
 	for idx := range ingresses.Items {
 		ingress := &ingresses.Items[idx]
 		if validateOwnerReference(ingress.OwnerReferences, jobName, jobUID) {
@@ -82,7 +83,7 @@ func (th *TensorBoardHandler) ListIngressInstances(jobNamespace, jobName, jobUID
 }
 
 func (th *TensorBoardHandler) GetJob(jobNamespace, jobName, kind string) (metav1.Object, error) {
-	job := utils.InitJobRuntimeObjectByKind(kind)
+	job := utils.InitRuntimeObjectByKind(kind)
 	err := th.client.Get(context.Background(), types.NamespacedName{
 		Namespace: jobNamespace,
 		Name:      jobName,
@@ -104,7 +105,7 @@ func (th *TensorBoardHandler) ApplyNewTensorBoardConfig(jobNamespace, jobName, k
 		config.TTLSecondsAfterJobFinished = 60 * 60
 	}
 
-	job := utils.InitJobRuntimeObjectByKind(kind)
+	job := utils.InitRuntimeObjectByKind(kind)
 	err := th.client.Get(context.Background(), types.NamespacedName{
 		Namespace: jobNamespace,
 		Name:      jobName,

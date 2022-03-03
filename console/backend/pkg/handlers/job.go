@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/alibaba/kubedl/console/backend/pkg/storage"
 	"sort"
 	"strconv"
 	"time"
@@ -27,15 +26,7 @@ const (
 	defaultUser = "Anonymous"
 )
 
-func NewJobHandler(objStorage string, logHandler *LogHandler) (*JobHandler, error) {
-	objBackend := storage.GetObjectBackend(objStorage)
-	if objBackend == nil {
-		return nil, fmt.Errorf("no object backend storage named: %s", objStorage)
-	}
-	err := objBackend.Initialize()
-	if err != nil {
-		return nil, err
-	}
+func NewJobHandler(objBackend backends.ObjectStorageBackend, logHandler *LogHandler) *JobHandler {
 	return &JobHandler{
 		logHandler:    logHandler,
 		objectBackend: objBackend,
@@ -46,7 +37,7 @@ func NewJobHandler(objStorage string, logHandler *LogHandler) (*JobHandler, erro
 			tfJobPreSubmitTensorBoardDefaults,
 			pytorchJobPreSubmitTensorBoardDefaults,
 		},
-	}, nil
+	}
 }
 
 type JobHandler struct {
@@ -120,7 +111,7 @@ func (jh *JobHandler) DeleteJobFromBackend(ns, name, jobID, kind, region string)
 }
 
 func (jh *JobHandler) GetJobYamlData(ns, name, kind string) ([]byte, error) {
-	job := consoleutils.InitJobRuntimeObjectByKind(kind)
+	job := consoleutils.InitRuntimeObjectByKind(kind)
 	if job == nil {
 		return nil, fmt.Errorf("unsupported job kind: %s", kind)
 	}
@@ -137,7 +128,7 @@ func (jh *JobHandler) GetJobYamlData(ns, name, kind string) ([]byte, error) {
 }
 
 func (jh *JobHandler) GetJobJsonData(ns, name, kind string) ([]byte, error) {
-	job := consoleutils.InitJobRuntimeObjectByKind(kind)
+	job := consoleutils.InitRuntimeObjectByKind(kind)
 	if job == nil {
 		return nil, fmt.Errorf("unsupported job kind: %s", kind)
 	}
@@ -155,7 +146,7 @@ func (jh *JobHandler) GetJobJsonData(ns, name, kind string) ([]byte, error) {
 }
 
 func (jh *JobHandler) SubmitJobWithKind(data []byte, kind string) error {
-	job := consoleutils.InitJobRuntimeObjectByKind(kind)
+	job := consoleutils.InitRuntimeObjectByKind(kind)
 
 	err := json.Unmarshal(data, job)
 	if err == nil {

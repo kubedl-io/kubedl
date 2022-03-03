@@ -18,13 +18,15 @@ package mysql
 
 import (
 	"errors"
-	"github.com/alibaba/kubedl/pkg/storage/backends/utils"
 	"strconv"
 	"sync/atomic"
 	"time"
 
+	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
+	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
+	"github.com/alibaba/kubedl/pkg/storage/backends/utils"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
 	"github.com/alibaba/kubedl/pkg/storage/dmo/converters"
 	"github.com/alibaba/kubedl/pkg/util"
@@ -167,6 +169,20 @@ func (b *mysqlBackend) SaveJob(job metav1.Object, kind string, specs map[apiv1.R
 	return b.updateJob(&dmoJob, newJob)
 }
 
+func (b *mysqlBackend) GetNotebook(ns, name, ID, region string) (*dmo.Notebook, error) {
+	klog.V(5).Infof("[mysql.GetNotebook] notebookID: %s", ID)
+
+	notebook := dmo.Notebook{}
+	query := &dmo.Notebook{NotebookID: ID, Namespace: ns, Name: name}
+	if region != "" {
+		query.DeployRegion = &region
+	}
+	result := b.db.Where(query).First(&notebook)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &notebook, nil
+}
 func (b *mysqlBackend) GetJob(ns, name, jobID, kind, region string) (*dmo.Job, error) {
 	klog.V(5).Infof("[mysql.GetJob] jobID: %s", jobID)
 
@@ -218,6 +234,69 @@ func (b *mysqlBackend) ListJobs(query *backends.Query) ([]*dmo.Job, error) {
 		return nil, db.Error
 	}
 	return jobList, nil
+}
+
+func (b *mysqlBackend) ListNotebooks(query *backends.NotebookQuery) ([]*dmo.Notebook, error) {
+	klog.V(5).Infof("[mysql.ListNotebooks] query: %+v", query)
+
+	notebookList := make([]*dmo.Notebook, 0, initListSize)
+	db := b.db.Model(&dmo.Notebook{})
+	db = db.Where("gmt_created < ?", query.EndTime).
+		Where("gmt_created > ?", query.StartTime)
+	if query.IsDel != nil {
+		db = db.Where("deleted = ?", *query.IsDel)
+	}
+	if query.Status != "" {
+		db = db.Where("status = ?", query.Status)
+	}
+	if query.Name != "" {
+		db = db.Where("name LIKE ?", "%"+query.Name+"%")
+	}
+	if query.Namespace != "" {
+		db = db.Where("namespace LIKE ?", "%"+query.Namespace+"%")
+	}
+	if query.NotebookID != "" {
+		db = db.Where("notebook_id = ?", query.NotebookID)
+	}
+	if query.Region != "" {
+		db = db.Where("deploy_region = ?", query.Region)
+	}
+	db = db.Order("gmt_created DESC")
+	if query.Pagination != nil {
+		db = db.Count(&query.Pagination.Count).
+			Limit(query.Pagination.PageSize).
+			Offset((query.Pagination.PageNum - 1) * query.Pagination.PageSize)
+	}
+	db = db.Find(&notebookList)
+	if db.Error != nil {
+		return nil, db.Error
+	}
+	return notebookList, nil
+}
+
+func (b *mysqlBackend) DeleteNotebook(ns, name, id, region string) error {
+	klog.V(5).Infof("[mysql.DeleteNotebook] notebookID: %s, region: %s", id, region)
+
+	notebook, err := b.GetNotebook(ns, name, id, region)
+	if err != nil {
+		return err
+	}
+
+	if notebook.IsInEtcd != nil && *notebook.IsInEtcd == 1 {
+		return errors.New("notebook is still in etcd, must stop it first")
+	}
+	Deleted := 1
+	newNotebook := &dmo.Notebook{
+		Namespace:     notebook.Namespace,
+		NotebookID:    notebook.NotebookID,
+		Version:       notebook.Version,
+		Status:        notebook.Status,
+		DeployRegion:  notebook.DeployRegion,
+		Deleted:       &Deleted,
+		IsInEtcd:      notebook.IsInEtcd,
+		GmtTerminated: notebook.GmtTerminated,
+	}
+	return b.updateNotebook(notebook, newNotebook)
 }
 
 func (b *mysqlBackend) StopJob(ns, name, jobID, kind, region string) error {
@@ -348,6 +427,68 @@ func (b *mysqlBackend) createNewJob(job metav1.Object, kind string, specs map[ap
 	return b.db.Create(newJob).Error
 }
 
+func (b *mysqlBackend) updateNotebook(oldNotebook, newNotebook *dmo.Notebook) error {
+	var (
+		oldVersion, newVersion int64
+		err                    error
+	)
+	// Compare versions between two pods.
+	if oldVersion, err = strconv.ParseInt(oldNotebook.Version, 10, 64); err != nil {
+		return err
+	}
+	if newVersion, err = strconv.ParseInt(newNotebook.Version, 10, 64); err != nil {
+		return err
+	}
+	if oldVersion > newVersion {
+		klog.Warningf("try to update a job newer than the existing one, old version: %d, new version: %d",
+			oldVersion, newVersion)
+		return nil
+	}
+
+	// Only update job when the old one differs with the new one.
+	equals := oldVersion == newVersion && oldNotebook.Status == newNotebook.Status &&
+		(oldNotebook.IsInEtcd != nil && newNotebook.IsInEtcd != nil && *oldNotebook.IsInEtcd == *newNotebook.IsInEtcd) &&
+		(oldNotebook.Deleted != nil && newNotebook.Deleted != nil && *oldNotebook.Deleted == *newNotebook.Deleted)
+	if equals {
+		return nil
+	}
+
+	if oldNotebook.GmtRunning != nil && !oldNotebook.GmtRunning.IsZero() && newNotebook.GmtRunning == nil {
+		newNotebook.GmtRunning = oldNotebook.GmtRunning
+	}
+
+	result := b.db.Model(&dmo.Notebook{}).Where(&dmo.Notebook{
+		Name:         oldNotebook.Name,
+		NotebookID:   oldNotebook.NotebookID,
+		Version:      oldNotebook.Version,
+		DeployRegion: oldNotebook.DeployRegion,
+	}).Updates(&dmo.Notebook{
+		Status:        newNotebook.Status,
+		Namespace:     newNotebook.Namespace,
+		DeployRegion:  newNotebook.DeployRegion,
+		Version:       newNotebook.Version,
+		Deleted:       newNotebook.Deleted,
+		IsInEtcd:      newNotebook.IsInEtcd,
+		GmtCreated:    newNotebook.GmtCreated,
+		GmtRunning:    newNotebook.GmtRunning,
+		GmtTerminated: newNotebook.GmtTerminated,
+	})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if oldNotebook.Status != string(v1alpha1.NotebookTerminated) {
+		if newNotebook.GmtTerminated != nil {
+			klog.Infof("[updateJob digest] jobID: %s, duration: %dm, old status: %s, new status: %s",
+				newNotebook.NotebookID, newNotebook.GmtTerminated.Sub(oldNotebook.GmtCreated)/time.Minute, oldNotebook.Status, newNotebook.Status)
+		} else {
+			klog.Infof("[updateJob digest] jobID: %s, old status: %s, new status: %s",
+				newNotebook.NotebookID, oldNotebook.Status, newNotebook.Status)
+		}
+	}
+	return nil
+}
+
 func (b *mysqlBackend) updateJob(oldJob, newJob *dmo.Job) error {
 	var (
 		oldVersion, newVersion int64
@@ -408,6 +549,18 @@ func (b *mysqlBackend) updateJob(oldJob, newJob *dmo.Job) error {
 		}
 	}
 	return nil
+}
+
+func (b *mysqlBackend) CreateWorkspace(workspace *model.WorkspaceInfo) error {
+	return nil
+}
+
+func (b *mysqlBackend) DeleteWorkspace(name string) error {
+	return nil
+}
+
+func (b *mysqlBackend) ListWorkspaces(query *backends.WorkspaceQuery) ([]*model.WorkspaceInfo, error) {
+	return nil, nil
 }
 
 func (b *mysqlBackend) init() error {

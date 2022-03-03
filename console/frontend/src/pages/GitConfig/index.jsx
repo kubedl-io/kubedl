@@ -50,7 +50,7 @@ const GitConfig = ({ globalConfig, currentUser }) => {
             description: values.description,
             code_path: values.code_path,
             default_branch: values.default_branch,
-            local_path: defaultCodePath + values.local_path
+            local_path: values.local_path
         };
         newGitSource(addValues).then(res => {
             message.success(intl.formatMessage({id: 'kubedl-dashboard-add-success'}));
@@ -70,9 +70,9 @@ const GitConfig = ({ globalConfig, currentUser }) => {
             showIcon
             message={
                 <span>
-                    {intl.formatMessage({id: 'kubedl-dashboard-code-synchronization'})}&nbsp;{form.getFieldValue('local_path') ? defaultCodePath + form.getFieldValue('local_path') : defaultCodePath}
+                    {intl.formatMessage({id: 'kubedl-dashboard-code-synchronization'})}&nbsp;
+                    {form.getFieldValue('local_path') ?  form.getFieldValue('local_path')+"/" : defaultCodePath}
                     {handleGitUrl(form.getFieldValue('code_path')) !== '' && handleGitUrl(form.getFieldValue('code_path'))}
-                    &nbsp;{intl.formatMessage({id: 'kubedl-dashboard-under-contents'})}
                 </span>
             }
         />
@@ -157,12 +157,12 @@ const GitConfig = ({ globalConfig, currentUser }) => {
                                             name="local_path"
                                             noStyle>
                                             <Row gutter={[24, 24]}>
-                                                <Col span={3}>
-                                                    <span style={{
-                                                        lineHeight: '32px',
-                                                        marginLeft: '10px'
-                                                    }}>{defaultCodePath}</span>
-                                                </Col>
+                                                {/*<Col span={3}>*/}
+                                                {/*    <span style={{*/}
+                                                {/*        lineHeight: '32px',*/}
+                                                {/*        marginLeft: '10px'*/}
+                                                {/*    }}>{defaultCodePath}</span>*/}
+                                                {/*</Col>*/}
                                                 <Col span={21}><Input/></Col>
                                             </Row>
                                         </Form.Item>

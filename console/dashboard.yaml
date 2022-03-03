@@ -16,7 +16,7 @@ spec:
         control-plane: kubedl-dashboard
     spec:
       containers:
-        - image: kubedl/dashboard:0.1.0
+        - image: kubedl/dashboard:daily
           name: kubedl-dashboard
           resources:
             requests:
@@ -42,21 +42,35 @@ kind: ConfigMap
 metadata:
   namespace: kubedl-system
   name: kubedl-dashboard-config
+data:
+  images: '{
+    "tf-cpu-images":[
+      "kubedl/tf-mnist-with-summaries:1.0"
+    ],
+    "tf-gpu-images":[
+      "kubedl/tf-mnist-with-summaries-gpu:1.0"
+    ],
+    "pytorch-gpu-images":[
+      "kubedl/pytorch-dist-example",
+      "kubedl/pytorch-mnist-example"
+    ],
+    "notebook-images":[
+      "jupyter/tensorflow-notebook",
+      "jupyter/minimal-notebook"
+    ]
+  }'
+---
+#apiVersion: v1
+#kind: ConfigMap
+#metadata:
+#  namespace: kubedl-system
+#  name: kubedl-codesource-config
 #data:
-##  images: '{
-##    "tf-cpu-images":[
-##    "here set your default container image",
-##    ...
-##    ],
-##    "tf-gpu-images":[
-##    ...
-##    ],
-##    "pytorch-gpu-images":[
-##    ...
-##    ]'
-##  users: '[
-##          {
-##          "username":"admin",
-##          "password":"123456"
-##          }
-##      ]'
+#  codesource: '{
+#    "mnist": {
+#      "name": "mnist",
+#      "type": "git",
+#      "local_path": "/tmp"
+#      "code_path": "git://xxx"
+#    }
+#  }'

@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	"github.com/alibaba/kubedl/console/backend/pkg/storage/objects/apiserver"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
@@ -21,6 +22,22 @@ type proxyBackend struct {
 	apiServerBackend backends.ObjectStorageBackend
 	mysqlBackend     backends.ObjectStorageBackend
 	hasMysql         bool
+}
+
+func (p proxyBackend) ListWorkspaces(query *backends.WorkspaceQuery) ([]*model.WorkspaceInfo, error) {
+	workspaces, err := p.apiServerBackend.ListWorkspaces(query)
+	if (err == nil && workspaces != nil) || !p.hasMysql {
+		return workspaces, err
+	}
+	return p.mysqlBackend.ListWorkspaces(query)
+}
+
+func (p proxyBackend) DeleteWorkspace(name string) error {
+	return p.apiServerBackend.DeleteWorkspace(name)
+}
+
+func (p proxyBackend) CreateWorkspace(workspace *model.WorkspaceInfo) error {
+	return p.apiServerBackend.CreateWorkspace(workspace)
 }
 
 func (p proxyBackend) Initialize() error {
@@ -91,4 +108,16 @@ func (p proxyBackend) StopJob(ns, name, jobID, kind, region string) error {
 
 func (p proxyBackend) DeleteJob(ns, name, jobID, kind, region string) error {
 	return p.apiServerBackend.DeleteJob(ns, name, jobID, kind, region)
+}
+
+func (p proxyBackend) ListNotebooks(query *backends.NotebookQuery) ([]*dmo.Notebook, error) {
+	notebooks, err := p.apiServerBackend.ListNotebooks(query)
+	if (err == nil && notebooks != nil) || !p.hasMysql {
+		return notebooks, err
+	}
+	return p.mysqlBackend.ListNotebooks(query)
+}
+
+func (p proxyBackend) DeleteNotebook(ns, name, id, region string) error {
+	return p.apiServerBackend.DeleteNotebook(ns, name, id, region)
 }

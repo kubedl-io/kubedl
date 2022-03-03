@@ -13,16 +13,13 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
-
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/networking/v1beta1"
+	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -186,6 +183,8 @@ func syncPod(jc job_controller.JobController, c client.Client, metaObj metav1.Ob
 	labels[apiv1.ReplicaTypeLabel] = tbRT
 	labels[apiv1.ReplicaIndexLabel] = index
 	labels[apiv1.ReplicaNameLabel] = name
+	labels[apiv1.JobNameLabel] = metaObj.GetName()
+
 	template.Labels = commonutil.MergeMap(template.Labels, labels)
 
 	if template.Annotations == nil {
@@ -283,7 +282,7 @@ func syncIngress(jc job_controller.JobController, c client.Client,
 	metaObj metav1.Object, opts TensorBoard, cfg string) error {
 
 	ingSpec := opts.Ingress
-	if ingSpec == nil || ingSpec.Host == nil || len(validation.IsDNS1123Subdomain(*ingSpec.Host)) > 0 {
+	if ingSpec == nil {
 		return nil
 	}
 	pathPrefix := ""
@@ -292,7 +291,7 @@ func syncIngress(jc job_controller.JobController, c client.Client,
 	}
 
 	// get ingress from cache
-	in := &v1beta1.Ingress{}
+	in := &v1.Ingress{}
 	index := strconv.Itoa(0)
 	name := commonutil.GenGeneralName(metaObj.GetName(), tbRT, index)
 	if err := c.Get(context.Background(),
@@ -325,26 +324,29 @@ func syncIngress(jc job_controller.JobController, c client.Client,
 		return err
 	}
 
-	log.Infof("TensorBoard %v sync ingress not found.", name)
-
 	// ingress not found
 	labels := jc.GenLabels(metaObj.GetName())
 	labels[apiv1.ReplicaTypeLabel] = tbRT
 	labels[apiv1.ReplicaIndexLabel] = index
+	prefixPathType := v1.PathTypePrefix
 
-	in = &v1beta1.Ingress{
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+	in = &v1.Ingress{
+		Spec: v1.IngressSpec{
+			Rules: []v1.IngressRule{
 				{
-					Host: *ingSpec.Host,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: v1.IngressRuleValue{
+						HTTP: &v1.HTTPIngressRuleValue{
+							Paths: []v1.HTTPIngressPath{
 								{
-									Path: path.Join("/", pathPrefix, metaObj.GetNamespace(), metaObj.GetName()) + "/",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: name,
-										ServicePort: intstr.FromInt(port),
+									Path:     path.Join("/", pathPrefix, metaObj.GetNamespace(), metaObj.GetName()) + "/",
+									PathType: &prefixPathType,
+									Backend: v1.IngressBackend{
+										Service: &v1.IngressServiceBackend{
+											Name: name,
+											Port: v1.ServiceBackendPort{
+												Number: port,
+											},
+										},
 									},
 								},
 							},
@@ -366,14 +368,17 @@ func syncIngress(jc job_controller.JobController, c client.Client,
 		in.Annotations = map[string]string{}
 	}
 	in.Annotations[apiv1.AnnotationTensorBoardConfig] = cfg
+	in.Annotations["kubernetes.io/ingress.class"] = "nginx"
 
 	// Create OwnerReference.
 	controllerRef := jc.GenOwnerReference(metaObj)
 	in.OwnerReferences = append(in.OwnerReferences, *controllerRef)
 
 	if err := c.Create(context.Background(), in); err != nil {
+		log.Errorf("fail to create ingress %s", name)
 		return err
 	}
+	log.Infof("create ingress for tensorboard %v", name)
 
 	return nil
 }
@@ -385,7 +390,7 @@ func deleteTensorBoard(jc job_controller.JobController, c client.Client, metaObj
 	name := commonutil.GenGeneralName(metaObj.GetName(), tbRT, index)
 
 	// delete ingress
-	in := v1beta1.Ingress{}
+	in := v1.Ingress{}
 	if err := c.Get(context.Background(),
 		types.NamespacedName{
 			Namespace: ns,

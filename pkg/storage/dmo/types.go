@@ -138,6 +138,46 @@ type Event struct {
 	LastTimestamp time.Time `gorm:"type:datetime;column:last_timestamp" json:"last_timestamp"`
 }
 
+// Notebook contains fields collected from original Notebook object and extra info that
+// we concerned about, they will be persisted by storage backend.
+type Notebook struct {
+	// Primary ID auto incremented by underlying database.
+	ID uint64 `gorm:"column:id;not null;AUTO_INCREMENT;primary_key" json:"id"`
+	// Metadata we concerned aggregated from notebook object.
+	Name       string `gorm:"type:varchar(128);column:name" json:"name"`
+	Namespace  string `gorm:"type:varchar(128);column:namespace" json:"namespace"`
+	NotebookID string `gorm:"type:varchar(64);column:notebook_id" json:"notebook_id"`
+	Version    string `gorm:"type:varchar(32);column:version" json:"version"`
+	Status     string `gorm:"type:varchar(32);column:status" json:"status"`
+	Url        string `gorm:"type:text;column:url" json:"url,omitempty"`
+	Resources  string `gorm:"type:text;column:resources" json:"resources"`
+
+	// DeployRegion indicates the physical region(IDC) this notebook located in,
+	// reserved for notebooks running in across-region-clusters.
+	DeployRegion *string `gorm:"type:varchar(64);column:deploy_region" json:"deploy_region,omitempty"`
+
+	// Fields reserved for multi-tenancy  management scenarios, indicating
+	// which tenant this notebook belongs to and who's the owner(user).
+	Tenant *string `gorm:"type:varchar(255);column:tenant" json:"tenant,omitempty"`
+	Owner  *string `gorm:"type:varchar(255);column:owner" json:"owner,omitempty"`
+
+	// Deleted indicates that whether this notebook has been deleted or not.
+	Deleted *int `gorm:"type:tinyint(4);column:deleted" json:"deleted,omitempty"`
+
+	// IsInEtcd indicates that whether record of this notebook has been removed from etcd.
+	// Deleted notebook could stay up in etcd due to different runtime policies.
+	IsInEtcd *int `gorm:"type:tinyint(4);column:is_in_etcd" json:"is_in_etcd,omitempty"`
+
+	// Optional remark text reserved.
+	Remark *string `gorm:"type:text;column:remark" json:"remark,omitempty"`
+
+	// Timestamps of different notebook phases and status transitions.
+	GmtCreated    time.Time  `gorm:"type:datetime;column:gmt_created" json:"gmt_created"`
+	GmtModified   time.Time  `gorm:"type:datetime;column:gmt_modified" json:"gmt_modified"`
+	GmtRunning    *time.Time `gorm:"type:datetime;column:gmt_running" json:"gmt_running,omitempty"`
+	GmtTerminated *time.Time `gorm:"type:datetime;column:gmt_finished" json:"gmt_terminated,omitempty"`
+}
+
 func (pod Pod) TableName() string {
 	return "replica_info"
 }

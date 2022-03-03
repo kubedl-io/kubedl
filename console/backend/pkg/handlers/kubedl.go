@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+
+	nbv1alpha1 "github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	utils "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/constants"
@@ -21,10 +23,12 @@ type KubeDLHandler struct {
 	client client.Client
 }
 
+// ImageConfig contains the image for jobs and notebooks
 type ImageConfig struct {
 	TFCpuImages      []string `json:"tf-cpu-images"`
 	TFGpuImages      []string `json:"tf-gpu-images"`
 	PytorchGpuImages []string `json:"pytorch-gpu-images"`
+	NotebookImages   []string `json:"notebook-images"`
 }
 
 func (h *KubeDLHandler) GetImageConfig() *ImageConfig {
@@ -46,10 +50,10 @@ func (h *KubeDLHandler) GetImageConfig() *ImageConfig {
 	return &imageConfig
 }
 
-func (h *KubeDLHandler) ListAvailableNamespaces() ([]string, error) {
+func (h *KubeDLHandler) ListAvailableNamespaces() ([]string, *v1.NamespaceList, error) {
 	namespaces := v1.NamespaceList{}
 	if err := h.client.List(context.Background(), &namespaces); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	preservedNS := map[string]bool{
@@ -63,9 +67,8 @@ func (h *KubeDLHandler) ListAvailableNamespaces() ([]string, error) {
 		}
 		available = append(available, item.Name)
 	}
-	return available, nil
+	return available, &namespaces, nil
 }
-
 func (h *KubeDLHandler) DetectJobsInNS(ns, kind string) bool {
 	var (
 		list     runtime.Object
@@ -84,6 +87,12 @@ func (h *KubeDLHandler) DetectJobsInNS(ns, kind string) bool {
 		detector = func(object runtime.Object) bool {
 			pytorchJobs := object.(*v1alpha1.PyTorchJobList)
 			return len(pytorchJobs.Items) > 0
+		}
+	case nbv1alpha1.NotebookKind:
+		list = &nbv1alpha1.NotebookList{}
+		detector = func(object runtime.Object) bool {
+			notebooks := object.(*nbv1alpha1.NotebookList)
+			return len(notebooks.Items) > 0
 		}
 	default:
 		return false

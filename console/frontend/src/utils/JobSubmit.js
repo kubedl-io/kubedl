@@ -7,8 +7,16 @@ export const isGit = (info) => {
 };
 
 export const getCommand = (info) => {
-  const containersInfo = info?.kind === 'TFJob' ? Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec?.containers[0]
-    : Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec?.containers[0];
+  let containersInfo;
+  if (info?.kind === 'TFJob') {
+    containersInfo = Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec?.containers[0];
+  } else if  (info?.kind === 'PytorchJob') {
+    containersInfo = Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec?.containers[0];
+  } else if (info?.kind === 'Notebook') {
+    containersInfo = info?.spec?.template?.spec?.containers[0];
+  } else {
+    return ""
+  }
   const regExp = /^prepare_kubedl_environment\s&&\s/g;
   const command = containersInfo?.command ?? [];
   const inputValue = command.reverse()[0];
@@ -17,6 +25,9 @@ export const getCommand = (info) => {
   }
   if (command.includes('/bin/sh')) {
     return inputValue;
+  }
+  if (containersInfo.command == null) {
+    return null
   }
   return containersInfo.command.toString();
 };
@@ -104,8 +115,16 @@ export const getCookie = (name) => {
 };
 
 export const handleDataSource = (info) => {
-  const dataInfo = info?.kind === 'TFJob' ? Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec
-    : Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec;
+  let dataInfo;
+  if (info?.kind === 'TFJob') {
+    dataInfo = Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec;
+  } else if  (info?.kind === 'PytorchJob') {
+    dataInfo = Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec;
+  } else if (info?.kind === 'Notebook') {
+    dataInfo = info?.spec?.template?.spec;
+  } else {
+    return {}
+  }
   return (dataInfo.volumes || []).map(({ name }) => ({ dataSource: name.replace(/^data-/g, '') }));
 };
 
@@ -116,8 +135,7 @@ export const handleCodeSource = (info) => {
       return gitInfo.aliasName.slice(5);
     }
   } else {
-    const codeInfo = info?.kind === 'TFJob' ? Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec
-      : Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec;
+    let codeInfo = getSpec(info)
     if (codeInfo.volumes) {
       if (codeInfo.volumes.some(v => v.name.indexOf('code-') != -1)) {
         return codeInfo.volumes.filter(v => v.name.indexOf('code-') != -1)[0].name.slice(5);
@@ -127,9 +145,47 @@ export const handleCodeSource = (info) => {
   }
 };
 
+export const handleNamespaceData = (info) => {
+  return Object.values(info?.metadata?.namespace)
+}
+
+export const handleImageData = (info) => {
+  let spec = getSpec(info)
+  return spec.containers?.[0]?.image
+}
+
+export const handleResourceData = (info) => {
+  let spec = getSpec(info)
+  return {
+    gpu: spec.containers?.[0]?.resources?.limits?.['nvidia.com/gpu'] ?? 0,
+    cpu: spec.containers?.[0]?.resources?.limits?.cpu ?? 4,
+    memory: Number(spec.containers?.[0]?.resources?.limits?.memory?.split('Gi')[0]) ?? 8,
+  }
+}
+
+function getSpec(object) {
+  let spec
+  if (object?.kind === 'TFJob') {
+    spec = Object.values(object?.spec?.tfReplicaSpecs)[0]?.template?.spec
+  } else if (object?.kind === 'PytorchJob') {
+    spec = Object.values(object?.spec?.pytorchReplicaSpecs)[0]?.template?.spec;
+  } else if (object?.kind === 'Notebook') {
+    spec = object?.spec?.template?.spec;
+  }
+  return spec
+}
+
 export const handleRequirementsData = (info) => {
-  const requirementsInfo = info?.kind === 'TFJob' ? Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec?.containers[0]?.env
-    : Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec?.containers[0]?.env;
+  let requirementsInfo;
+  if (info?.kind === 'TFJob') {
+    requirementsInfo = Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec?.containers[0]?.env;
+  } else if  (info?.kind === 'PytorchJob') {
+    requirementsInfo = Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec?.containers[0]?.env;
+  } else if (info?.kind === 'Notebook') {
+    requirementsInfo = info?.spec?.template?.spec?.containers[0]?.env;
+  } else {
+    return {}
+  }
   return {
     enabled: requirementsInfo ? requirementsInfo.some(n => n.name === 'REQUIREMENTS_DIR') ? 'catalog' : 'textBox' : 'textBox',
     text: requirementsInfo && requirementsInfo.some(n => n.name === 'REQUIREMENTS_TEXT')
@@ -159,7 +215,15 @@ export const handleCodeSourceBranch = (info) => {
 };
 
 export const handleWorkingDir = (info) => {
-  const workingDirInfo = info?.kind === 'TFJob' ? Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec?.containers[0]?.workingDir
-    : Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec?.containers[0]?.workingDir;
-  return workingDirInfo;
+  let workingDirInfo;
+  if (info?.kind === 'TFJob') {
+    workingDirInfo = Object.values(info?.spec?.tfReplicaSpecs)[0]?.template?.spec?.containers[0]?.workingDir;
+  } else if  (info?.kind === 'PytorchJob') {
+    workingDirInfo = Object.values(info?.spec?.pytorchReplicaSpecs)[0]?.template?.spec?.containers[0]?.workingDir;
+  } else if (info?.kind === 'Notebook') {
+    workingDirInfo = info?.spec?.template?.spec?.containers[0]?.workingDir;
+  }
+  return workingDirInfo
+
 };
+
