@@ -114,12 +114,14 @@ func TestDeletePodsAndServices(T *testing.T) {
 
 		eventBroadcaster := record.NewBroadcaster()
 		mainJobController := JobController{
-			Client:     fakeClient,
-			Controller: &testJobController,
-			Config:     options.JobControllerConfiguration{},
-			Recorder:   eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
-			Metrics:    &metrics.JobMetrics{},
-			Scheme:     scheme,
+			Client:         fakeClient,
+			Controller:     &testJobController,
+			PodControl:     NewPodControl(fakeClient, record.NewFakeRecorder(100)),
+			ServiceControl: NewServiceControl(fakeClient, record.NewFakeRecorder(100)),
+			Config:         options.JobControllerConfiguration{},
+			Recorder:       eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
+			Metrics:        &metrics.JobMetrics{},
+			Scheme:         scheme,
 		}
 
 		runPolicy := apiv1.RunPolicy{

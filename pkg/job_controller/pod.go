@@ -296,7 +296,7 @@ func (jc *JobController) ReconcilePods(
 				if pod.DeletionTimestamp == nil {
 					jc.Recorder.Eventf(runtimeObject, v1.EventTypeNormal, "DeletePod",
 						"pod %s/%s with index %v is out of expected replicas %v and should be deleted", pod.Namespace, pod.Name, index, numReplicas)
-					if err = jc.podControl.DeletePod(pod.Namespace, pod.Name, runtimeObject); err != nil {
+					if err = jc.PodControl.DeletePod(pod.Namespace, pod.Name, runtimeObject); err != nil {
 						return err
 					}
 				}
@@ -328,7 +328,7 @@ func (jc *JobController) ReconcilePods(
 					if !ok {
 						return fmt.Errorf("%+v is not a runtime job", runtimeObject)
 					}
-					if err = jc.podControl.DeletePod(pod.Namespace, pod.Name, runtimeObject); err != nil {
+					if err = jc.PodControl.DeletePod(pod.Namespace, pod.Name, runtimeObject); err != nil {
 						return err
 					}
 					*restart = true
@@ -466,7 +466,7 @@ func (jc *JobController) CreatePod(job interface{}, rt, index string, podTemplat
 
 	controllerRef := jc.GenOwnerReference(metaObject)
 
-	err = jc.podControl.CreatePodsWithControllerRef(metaObject.GetNamespace(), podTemplate, runtimeObject, controllerRef)
+	err = jc.PodControl.CreatePodsWithControllerRef(metaObject.GetNamespace(), podTemplate, runtimeObject, controllerRef)
 	if err != nil && errors.IsTimeout(err) {
 		// Pod is created but its initialization has timed out.
 		// If the initialization is successful eventually, the
@@ -525,6 +525,6 @@ func (jc *JobController) AdoptAndClaimPods(job metav1.Object, podList *v1.PodLis
 		}
 		return fresh, nil
 	})
-	cm := controller.NewPodControllerRefManager(jc.podControl, job, selector, jc.Controller.GetAPIGroupVersionKind(), canAdoptFunc)
+	cm := controller.NewPodControllerRefManager(jc.PodControl, job, selector, jc.Controller.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimPods(pods)
 }

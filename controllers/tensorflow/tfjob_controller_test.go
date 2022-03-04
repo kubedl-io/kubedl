@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/client-go/util/workqueue"
 
 	"github.com/alibaba/kubedl/apis"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
@@ -78,11 +79,15 @@ func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 	r.recorder = recorder
 	// Initialize pkg job controller with components we only need.
 	r.ctrl = job_controller.JobController{
-		Client:     client,
-		Controller: r,
-		Config:     config,
-		Recorder:   recorder,
-		Metrics:    metrics.NewJobMetrics(training.TFJobKind, client),
+		Client:             client,
+		APIReader:          client,
+		BackoffStatesQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		Controller:         r,
+		PodControl:         job_controller.NewPodControl(client, recorder),
+		ServiceControl:     job_controller.NewServiceControl(client, recorder),
+		Config:             config,
+		Recorder:           recorder,
+		Metrics:            metrics.NewJobMetrics(training.TFJobKind, client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
