@@ -76,7 +76,7 @@ func main() {
 		options.CtrlConfig.MaxConcurrentReconciles = 1
 	}
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
