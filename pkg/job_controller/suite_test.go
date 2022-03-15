@@ -1,20 +1,22 @@
 package job_controller
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	"testing"
 	"time"
 
-	"github.com/alibaba/kubedl/apis"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
+	"github.com/alibaba/kubedl/apis"
+
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	// +kubebuilder:scaffold:imports
 )
 

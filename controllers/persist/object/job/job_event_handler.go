@@ -39,30 +39,30 @@ type enqueueForJob struct{}
 
 func (e *enqueueForJob) Create(evt event.CreateEvent, queue workqueue.RateLimitingInterface) {
 	queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: evt.Meta.GetNamespace(),
-		Name:      util.IDName(evt.Meta),
+		Namespace: evt.Object.GetNamespace(),
+		Name:      util.IDName(evt.Object),
 	}})
 }
 
 func (e *enqueueForJob) Update(evt event.UpdateEvent, queue workqueue.RateLimitingInterface) {
 	queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: evt.MetaOld.GetNamespace(),
-		Name:      util.IDName(evt.MetaOld),
+		Namespace: evt.ObjectOld.GetNamespace(),
+		Name:      util.IDName(evt.ObjectOld),
 	}})
 
 	queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: evt.MetaNew.GetNamespace(),
-		Name:      util.IDName(evt.MetaNew),
+		Namespace: evt.ObjectNew.GetNamespace(),
+		Name:      util.IDName(evt.ObjectNew),
 	}})
 }
 
 func (e *enqueueForJob) Delete(evt event.DeleteEvent, queue workqueue.RateLimitingInterface) {
 	queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: evt.Meta.GetNamespace(),
-		Name:      util.IDName(evt.Meta),
+		Namespace: evt.Object.GetNamespace(),
+		Name:      util.IDName(evt.Object),
 	}})
 }
 
 func (e *enqueueForJob) Generic(evt event.GenericEvent, queue workqueue.RateLimitingInterface) {
-	e.Create(event.CreateEvent{Meta: evt.Meta, Object: evt.Object}, queue)
+	e.Create(event.CreateEvent{Object: evt.Object}, queue)
 }

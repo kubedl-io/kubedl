@@ -1,10 +1,11 @@
 package suite_tests
 
 import (
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/net/context"
+
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

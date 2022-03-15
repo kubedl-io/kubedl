@@ -88,7 +88,7 @@ func (r ServiceControl) PatchService(namespace, name string, data []byte) error 
 	if err := r.client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, service); err != nil {
 		return err
 	}
-	return r.client.Patch(context.Background(), service, client.ConstantPatch(types.StrategicMergePatchType, data))
+	return r.client.Patch(context.Background(), service, client.RawPatch(types.StrategicMergePatchType, data))
 }
 
 func (r ServiceControl) CreateServices(namespace string, service *v1.Service, object runtime.Object) error {

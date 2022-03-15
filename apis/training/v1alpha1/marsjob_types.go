@@ -17,9 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	commonv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	commonv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // MarsJobSpec defines the desired state of MarsJob

@@ -31,9 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -58,7 +58,7 @@ func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) 
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(training.PyTorchJobKind, r.Client), mgr.GetScheme())
+	r.ctrl = job_controller.NewJobController(mgr, r, config, r.recorder, metrics.NewJobMetrics(training.PyTorchJobKind, r.Client), mgr.GetScheme())
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -100,10 +100,10 @@ func (r *PytorchJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeNa
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=pytorchjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=pytorchjobs/status,verbs=get;update;patch
 
-func (r *PytorchJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *PytorchJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// Fetch latest pytorch job instance.
 	sharedPytorchJob := &training.PyTorchJob{}
-	err := commonutil.GetObjectByPassCache(r.Client, req.NamespacedName, sharedPytorchJob)
+	err := r.ctrl.APIReader.Get(context.Background(), req.NamespacedName, sharedPytorchJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

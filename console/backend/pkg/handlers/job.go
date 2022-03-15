@@ -8,16 +8,16 @@ import (
 	"strconv"
 	"time"
 
+	"gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/types"
+
 	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
 	"github.com/alibaba/kubedl/console/backend/pkg/model"
 	consoleutils "github.com/alibaba/kubedl/console/backend/pkg/utils"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
 	"github.com/alibaba/kubedl/pkg/storage/backends/utils"
-	"gopkg.in/yaml.v2"
-	"k8s.io/apimachinery/pkg/types"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -111,7 +111,7 @@ func (jh *JobHandler) DeleteJobFromBackend(ns, name, jobID, kind, region string)
 }
 
 func (jh *JobHandler) GetJobYamlData(ns, name, kind string) ([]byte, error) {
-	job := consoleutils.InitRuntimeObjectByKind(kind)
+	job := consoleutils.InitJobRuntimeObjectByKind(kind)
 	if job == nil {
 		return nil, fmt.Errorf("unsupported job kind: %s", kind)
 	}
@@ -128,7 +128,7 @@ func (jh *JobHandler) GetJobYamlData(ns, name, kind string) ([]byte, error) {
 }
 
 func (jh *JobHandler) GetJobJsonData(ns, name, kind string) ([]byte, error) {
-	job := consoleutils.InitRuntimeObjectByKind(kind)
+	job := consoleutils.InitJobRuntimeObjectByKind(kind)
 	if job == nil {
 		return nil, fmt.Errorf("unsupported job kind: %s", kind)
 	}
@@ -146,7 +146,7 @@ func (jh *JobHandler) GetJobJsonData(ns, name, kind string) ([]byte, error) {
 }
 
 func (jh *JobHandler) SubmitJobWithKind(data []byte, kind string) error {
-	job := consoleutils.InitRuntimeObjectByKind(kind)
+	job := consoleutils.InitJobRuntimeObjectByKind(kind)
 
 	err := json.Unmarshal(data, job)
 	if err == nil {
@@ -161,7 +161,7 @@ func (jh *JobHandler) SubmitJobWithKind(data []byte, kind string) error {
 	return jh.submitJob(job)
 }
 
-func (jh *JobHandler) submitJob(job runtime.Object) error {
+func (jh *JobHandler) submitJob(job client.Object) error {
 	for _, hook := range jh.preSubmitHooks {
 		hook(job)
 	}

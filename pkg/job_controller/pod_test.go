@@ -242,8 +242,8 @@ func TestReconcilePods(t *testing.T) {
 				Expectations:   controller.NewControllerExpectations(),
 				Recorder:       fakeRecorder,
 				Controller:     &TestJobController{},
-				podControl:     NewPodControl(fakeClient, fakeRecorder),
-				serviceControl: NewServiceControl(fakeClient, fakeRecorder),
+				PodControl:     NewPodControl(fakeClient, fakeRecorder),
+				ServiceControl: NewServiceControl(fakeClient, fakeRecorder),
 			}
 
 			err := jc.ReconcilePods(context.Background(), c.job, &c.job.Status, c.pods, c.rtype, c.job.Spec.TestReplicaSpecs[c.rtype],

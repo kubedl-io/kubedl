@@ -17,8 +17,9 @@ limitations under the License.
 package registry
 
 import (
-	"github.com/alibaba/kubedl/pkg/storage/backends"
 	"sync"
+
+	"github.com/alibaba/kubedl/pkg/storage/backends"
 
 	"k8s.io/klog"
 )

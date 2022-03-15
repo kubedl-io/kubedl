@@ -30,10 +30,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -42,7 +42,6 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
-	"github.com/alibaba/kubedl/pkg/util"
 )
 
 const (
@@ -66,7 +65,7 @@ func NewReconciler(mgr manager.Manager, config options.JobControllerConfiguratio
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(xdlv1alpha1.XDLJobKind, r.Client), mgr.GetScheme())
+	r.ctrl = job_controller.NewJobController(mgr, r, config, r.recorder, metrics.NewJobMetrics(xdlv1alpha1.XDLJobKind, r.Client), mgr.GetScheme())
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -95,10 +94,10 @@ type XDLJobReconciler struct {
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=xdljobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=xdljobs/status,verbs=get;update;patch
 
-func (r *XDLJobReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *XDLJobReconciler) Reconcile(_ context.Context, request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the latest xdlJob instance.
 	sharedXdlJob := &xdlv1alpha1.XDLJob{}
-	err := util.GetObjectByPassCache(r.Client, request.NamespacedName, sharedXdlJob)
+	err := r.ctrl.APIReader.Get(context.Background(), request.NamespacedName, sharedXdlJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", request.String())

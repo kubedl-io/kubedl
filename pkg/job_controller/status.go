@@ -1,8 +1,9 @@
 package job_controller
 
 import (
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	corev1 "k8s.io/api/core/v1"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // initializeReplicaStatuses initializes the ReplicaStatuses for replica.

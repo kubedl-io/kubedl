@@ -10,16 +10,17 @@ import (
 
 	md "github.com/alibaba/kubedl/console/backend/pkg/middleware"
 	"github.com/alibaba/kubedl/console/backend/pkg/routers/api"
-	"github.com/alibaba/kubedl/console/backend/pkg/storage"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
+	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
 
-	"github.com/alibaba/kubedl/console/backend/pkg/auth"
-	"github.com/alibaba/kubedl/console/backend/pkg/constants"
-	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+
+	"github.com/alibaba/kubedl/console/backend/pkg/auth"
+	"github.com/alibaba/kubedl/console/backend/pkg/constants"
+	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
 
 	"k8s.io/klog"
 )
@@ -108,7 +109,7 @@ func initControllersRoute(r *gin.Engine, baseGroup string) error {
 		return err
 	}
 	// init object backend storage
-	objBackend := storage.GetObjectBackend(objectStorageName)
+	objBackend := registry.GetObjectBackend(objectStorageName)
 	if objBackend == nil {
 		return fmt.Errorf("no object backend storage named: %s", objectStorageName)
 	}

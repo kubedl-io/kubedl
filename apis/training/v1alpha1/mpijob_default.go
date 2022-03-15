@@ -17,9 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/alibaba/kubedl/pkg/features"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // setDefaultPort sets the default ports for mpi container.

@@ -32,10 +32,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	"github.com/spf13/pflag"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
@@ -43,8 +45,6 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
-	"github.com/alibaba/kubedl/pkg/util"
-	"github.com/spf13/pflag"
 )
 
 func init() {
@@ -73,7 +73,7 @@ func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) 
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(training.MPIJobKind, r.Client), mgr.GetScheme())
+	r.ctrl = job_controller.NewJobController(mgr, r, config, r.recorder, metrics.NewJobMetrics(training.MPIJobKind, r.Client), mgr.GetScheme())
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -104,7 +104,7 @@ type MPIJobReconciler struct {
 
 // Reconcile reads that state of the cluster for a MPIJob object and makes changes based on the state read
 // and what is in the MPIJob.Spec
-func (r *MPIJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *MPIJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var (
 		result ctrl.Result
 		err    error
@@ -112,7 +112,7 @@ func (r *MPIJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Fetch the latest mpi job.
 	sharedMPIJob := &training.MPIJob{}
-	err = util.GetObjectByPassCache(r.Client, req.NamespacedName, sharedMPIJob)
+	err = r.ctrl.APIReader.Get(context.Background(), req.NamespacedName, sharedMPIJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

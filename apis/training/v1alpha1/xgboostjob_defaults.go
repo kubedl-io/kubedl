@@ -17,8 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/alibaba/kubedl/pkg/features"
 	"strings"
+
+	"github.com/alibaba/kubedl/pkg/features"
 
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 

@@ -17,8 +17,9 @@ limitations under the License.
 package pod
 
 import (
-	"github.com/alibaba/kubedl/controllers/persist/util"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/alibaba/kubedl/controllers/persist/util"
 
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
@@ -41,8 +42,8 @@ type enqueueForPod struct{}
 func (e *enqueueForPod) Create(evt event.CreateEvent, queue workqueue.RateLimitingInterface) {
 	if util.IsKubeDLManagedPod(evt.Object.(*v1.Pod)) {
 		queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-			Namespace: evt.Meta.GetNamespace(),
-			Name:      util.IDName(evt.Meta),
+			Namespace: evt.Object.GetNamespace(),
+			Name:      util.IDName(evt.Object),
 		}})
 	}
 }
@@ -50,15 +51,15 @@ func (e *enqueueForPod) Create(evt event.CreateEvent, queue workqueue.RateLimiti
 func (e *enqueueForPod) Update(evt event.UpdateEvent, queue workqueue.RateLimitingInterface) {
 	if util.IsKubeDLManagedPod(evt.ObjectOld.(*v1.Pod)) {
 		queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-			Namespace: evt.MetaOld.GetNamespace(),
-			Name:      util.IDName(evt.MetaOld),
+			Namespace: evt.ObjectOld.GetNamespace(),
+			Name:      util.IDName(evt.ObjectOld),
 		}})
 	}
 
 	if util.IsKubeDLManagedPod(evt.ObjectNew.(*v1.Pod)) {
 		queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-			Namespace: evt.MetaNew.GetNamespace(),
-			Name:      util.IDName(evt.MetaNew),
+			Namespace: evt.ObjectNew.GetNamespace(),
+			Name:      util.IDName(evt.ObjectNew),
 		}})
 	}
 }
@@ -66,12 +67,12 @@ func (e *enqueueForPod) Update(evt event.UpdateEvent, queue workqueue.RateLimiti
 func (e *enqueueForPod) Delete(evt event.DeleteEvent, queue workqueue.RateLimitingInterface) {
 	if util.IsKubeDLManagedPod(evt.Object.(*v1.Pod)) {
 		queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-			Namespace: evt.Meta.GetNamespace(),
-			Name:      util.IDName(evt.Meta),
+			Namespace: evt.Object.GetNamespace(),
+			Name:      util.IDName(evt.Object),
 		}})
 	}
 }
 
 func (e *enqueueForPod) Generic(evt event.GenericEvent, queue workqueue.RateLimitingInterface) {
-	e.Create(event.CreateEvent{Meta: evt.Meta, Object: evt.Object}, queue)
+	e.Create(event.CreateEvent{Object: evt.Object}, queue)
 }

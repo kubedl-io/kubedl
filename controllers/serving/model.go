@@ -19,8 +19,9 @@ package serving
 import (
 	"fmt"
 
-	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 )
 
 func (ir *InferenceReconciler) buildModelLoaderInitContainer(mv *v1alpha1.ModelVersion, sharedVolumeName, destModelPath string) (c *v1.Container, err error) {

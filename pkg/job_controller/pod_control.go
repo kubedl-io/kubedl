@@ -112,7 +112,7 @@ func (r PodControl) PatchPod(namespace, name string, data []byte) error {
 	if err := r.client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, pod); err != nil {
 		return err
 	}
-	return r.client.Patch(context.Background(), pod, client.ConstantPatch(types.StrategicMergePatchType, data))
+	return r.client.Patch(context.Background(), pod, client.RawPatch(types.StrategicMergePatchType, data))
 }
 
 func GetPodFromTemplate(template *v1.PodTemplateSpec, parentObject runtime.Object, controllerRef *metav1.OwnerReference) (*v1.Pod, error) {

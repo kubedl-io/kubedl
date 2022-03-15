@@ -24,10 +24,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	sls "github.com/aliyun/aliyun-log-go-sdk"
+
 	"github.com/alibaba/kubedl/pkg/storage/backends"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
 	"github.com/alibaba/kubedl/pkg/util"
-	sls "github.com/aliyun/aliyun-log-go-sdk"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog"

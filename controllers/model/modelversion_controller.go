@@ -64,7 +64,7 @@ type ModelVersionReconciler struct {
 // +kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 
 // ModelVersionController creates a kaniko container that builds a container image including the model.
-func (r *ModelVersionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *ModelVersionReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	//Get the modelVersion
 	modelVersion := &modelv1alpha1.ModelVersion{}
 	err := r.Get(context.Background(), req.NamespacedName, modelVersion)
@@ -474,7 +474,7 @@ func createImageBuildDockerfile(ns string) *v1.ConfigMap {
 func (r *ModelVersionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	var predicates = predicate.Funcs{
 		CreateFunc: func(event event.CreateEvent) bool {
-			version := event.Meta.(*modelv1alpha1.ModelVersion)
+			version := event.Object.(*modelv1alpha1.ModelVersion)
 			if version.DeletionTimestamp != nil {
 				return false
 			}

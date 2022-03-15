@@ -17,9 +17,10 @@ limitations under the License.
 package framework
 
 import (
+	v1 "k8s.io/api/core/v1"
+
 	modelv1alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/alibaba/kubedl/apis/serving/v1alpha1"
-	v1 "k8s.io/api/core/v1"
 )
 
 // Setter is an interface definition to setup specification for predictor template.

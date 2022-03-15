@@ -41,25 +41,22 @@ func Init() {
 		klog.Fatal(err)
 	}
 
-	cmgr.ctrlClient = &client.DelegatingClient{
-		Reader: &client.DelegatingReader{
-			CacheReader:  ctrlCache,
-			ClientReader: c,
-		},
-		Writer:       c,
-		StatusClient: c,
+	cmgr.ctrlClient, err = client.NewDelegatingClient(client.NewDelegatingClientInput{
+		CacheReader: ctrlCache,
+		Client:      c,
+	})
+	if err != nil {
+		klog.Fatal(err)
 	}
-
 }
 
-func Start() {
+func Start(ctx context.Context) {
 	go func() {
-		stop := make(chan struct{})
-		cmgr.ctrlCache.Start(stop)
+		cmgr.ctrlCache.Start(ctx)
 	}()
 }
 
-func IndexField(obj runtime.Object, field string, extractValue client.IndexerFunc) error {
+func IndexField(obj client.Object, field string, extractValue client.IndexerFunc) error {
 	return cmgr.ctrlCache.IndexField(context.Background(), obj, field, extractValue)
 }
 

@@ -20,8 +20,9 @@ import (
 	"reflect"
 	"testing"
 
-	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "k8s.io/api/core/v1"
+
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 )
 
 func TestAppendOrOverrideContainerPort(t *testing.T) {

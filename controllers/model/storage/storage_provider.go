@@ -1,8 +1,9 @@
 package storage
 
 import (
-	modelv1alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
 	v1 "k8s.io/api/core/v1"
+
+	modelv1alpha1 "github.com/alibaba/kubedl/apis/model/v1alpha1"
 )
 
 var StorageProviders = make(map[string]StorageProvider)

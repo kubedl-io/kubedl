@@ -20,6 +20,7 @@ import (
 	"context"
 	stderrors "errors"
 	"fmt"
+
 	"github.com/alibaba/kubedl/pkg/storage/backends/registry"
 
 	"github.com/alibaba/kubedl/pkg/storage/backends"
@@ -29,8 +30,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlruntime "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -71,7 +72,7 @@ type EventPersistController struct {
 	eventBackend backends.EventStorageBackend
 }
 
-func (pc *EventPersistController) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (pc *EventPersistController) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	event := corev1.Event{}
 	err := pc.client.Get(context.Background(), req.NamespacedName, &event)
 	if err != nil {

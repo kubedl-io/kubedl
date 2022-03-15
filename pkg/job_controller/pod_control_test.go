@@ -17,9 +17,10 @@ package job_controller
 import (
 	"context"
 
-	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	testutilv1 "github.com/alibaba/kubedl/pkg/test_util/v1"
 
 	"k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"

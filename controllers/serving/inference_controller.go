@@ -21,12 +21,13 @@ import (
 	"fmt"
 	"reflect"
 
+	beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
+
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	servingv1alpha1 "github.com/alibaba/kubedl/apis/serving/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	beta1 "istio.io/api/networking/v1beta1"
-	"istio.io/client-go/pkg/apis/networking/v1beta1"
 
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -89,7 +90,7 @@ func (ir *InferenceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=serving.kubedl.io,resources=inferences,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=serving.kubedl.io,resources=inferences/status,verbs=get;update;patch
 
-func (ir *InferenceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (ir *InferenceReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	inference := servingv1alpha1.Inference{}
 	err := ir.client.Get(context.Background(), req.NamespacedName, &inference)
 	if err != nil {

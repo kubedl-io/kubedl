@@ -19,10 +19,11 @@ package persist
 import (
 	"os"
 
+	"github.com/spf13/pflag"
+
 	"github.com/alibaba/kubedl/controllers/persist/event"
 	"github.com/alibaba/kubedl/controllers/persist/object/job"
 	"github.com/alibaba/kubedl/controllers/persist/object/pod"
-	"github.com/spf13/pflag"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )

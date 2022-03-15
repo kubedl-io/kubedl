@@ -18,8 +18,9 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 var (

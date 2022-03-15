@@ -18,10 +18,11 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"k8s.io/klog"
 	"net/http"
 	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"k8s.io/klog"
 )
 
 func StartMonitoringForDefaultRegistry(metricsPort int) {

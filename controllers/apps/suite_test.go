@@ -19,16 +19,14 @@ package cron
 import (
 	"testing"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	appsv1alpha1 "github.com/alibaba/kubedl/apis/apps/v1alpha1"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -48,7 +46,6 @@ func TestAPIs(t *testing.T) {
 var _ = BeforeSuite(func(done Done) {
 	defer func() { close(done) }()
 
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 	By("bootstrapping test environment")
 
 	err := appsv1alpha1.AddToScheme(scheme.Scheme)

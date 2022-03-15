@@ -17,9 +17,10 @@ package v1
 import (
 	"strings"
 
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // Int32 is a helper routine that allocates a new int32 value

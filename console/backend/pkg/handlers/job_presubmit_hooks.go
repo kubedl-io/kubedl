@@ -2,13 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"path"
+	"strings"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/tensorboard"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"path"
-	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"

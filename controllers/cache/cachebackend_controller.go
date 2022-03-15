@@ -54,7 +54,7 @@ type CacheBackendReconciler struct {
 //+kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 
-func (r *CacheBackendReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *CacheBackendReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 
 	// Get cacheBackend
 	cacheBackend := &cachev1alpha1.CacheBackend{}

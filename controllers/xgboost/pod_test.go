@@ -18,10 +18,11 @@ package xgboostjob
 import (
 	"testing"
 
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
-	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 func NewXGBoostJobWithMaster(worker int) *v1alpha1.XGBoostJob {

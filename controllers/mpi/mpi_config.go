@@ -22,11 +22,12 @@ import (
 	"fmt"
 	"strings"
 
-	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 )
 
 const (

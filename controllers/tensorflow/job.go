@@ -28,7 +28,6 @@ import (
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/util"
 )
 
 // GetJobFromInformerCache returns the Job from Informer Cache
@@ -50,12 +49,7 @@ func (r *TFJobReconciler) GetJobFromInformerCache(namespace, name string) (metav
 // GetJobFromAPIClient returns the Job from API server
 func (r *TFJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
 	job := &training.TFJob{}
-	// Forcibly use client reader.
-	clientReader, err := util.GetClientReaderFromClient(r.Client)
-	if err != nil {
-		return nil, err
-	}
-	err = clientReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
+	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("tf job not found", "namespace", namespace, "name", name)

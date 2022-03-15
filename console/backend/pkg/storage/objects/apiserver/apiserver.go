@@ -48,7 +48,7 @@ type apiServerBackend struct {
 }
 
 func (a *apiServerBackend) Initialize() error {
-	fn := func(obj runtime.Object) []string {
+	fn := func(obj client.Object) []string {
 		meta, err := apimeta.Accessor(obj)
 		if err != nil {
 			return []string{}
@@ -356,7 +356,7 @@ func (a *apiServerBackend) ListNotebooks(query *backends.NotebookQuery) ([]*dmo.
 
 func (h *apiServerBackend) DetectWorkloadsInNS(ns, kind string) bool {
 	var (
-		list     runtime.Object
+		list     client.ObjectList
 		detector func(object runtime.Object) bool
 	)
 
@@ -602,7 +602,7 @@ func (a *apiServerBackend) listJobsWithKind(kind string, nameLike, region string
 	return dmoJobs, nil
 }
 
-func initJobWithKind(kind string) (job runtime.Object) {
+func initJobWithKind(kind string) (job client.Object) {
 	switch kind {
 	case v1.TFJobKind:
 		job = &v1.TFJob{}
@@ -644,15 +644,15 @@ func initJobPropertiesWithKind(kind string) (getter jobPropertiesGetter) {
 	return
 }
 
-type jobLister func(list runtime.Object) []runtime.Object
+type jobLister func(list client.ObjectList) []client.Object
 
-func initJobListWithKind(kind string) (list runtime.Object, lister jobLister) {
+func initJobListWithKind(kind string) (list client.ObjectList, lister jobLister) {
 	switch kind {
 	case v1.TFJobKind:
 		list = &v1.TFJobList{}
-		lister = func(list runtime.Object) []runtime.Object {
+		lister = func(list client.ObjectList) []client.Object {
 			tfList := list.(*v1.TFJobList)
-			jobs := make([]runtime.Object, 0, len(tfList.Items))
+			jobs := make([]client.Object, 0, len(tfList.Items))
 			for i := range tfList.Items {
 				jobs = append(jobs, &tfList.Items[i])
 			}
@@ -660,9 +660,9 @@ func initJobListWithKind(kind string) (list runtime.Object, lister jobLister) {
 		}
 	case v1.PyTorchJobKind:
 		list = &v1.PyTorchJobList{}
-		lister = func(list runtime.Object) []runtime.Object {
+		lister = func(client.ObjectList) []client.Object {
 			pytorchList := list.(*v1.PyTorchJobList)
-			jobs := make([]runtime.Object, 0, len(pytorchList.Items))
+			jobs := make([]client.Object, 0, len(pytorchList.Items))
 			for i := range pytorchList.Items {
 				jobs = append(jobs, &pytorchList.Items[i])
 			}
@@ -670,9 +670,9 @@ func initJobListWithKind(kind string) (list runtime.Object, lister jobLister) {
 		}
 	case v1.XDLJobKind:
 		list = &v1.XDLJobList{}
-		lister = func(list runtime.Object) []runtime.Object {
+		lister = func(client.ObjectList) []client.Object {
 			xdlList := list.(*v1.XDLJobList)
-			jobs := make([]runtime.Object, 0, len(xdlList.Items))
+			jobs := make([]client.Object, 0, len(xdlList.Items))
 			for i := range xdlList.Items {
 				jobs = append(jobs, &xdlList.Items[i])
 			}
@@ -680,9 +680,9 @@ func initJobListWithKind(kind string) (list runtime.Object, lister jobLister) {
 		}
 	case v1.XGBoostJobKind:
 		list = &v1.XGBoostJobList{}
-		lister = func(list runtime.Object) []runtime.Object {
+		lister = func(client.ObjectList) []client.Object {
 			xgboostList := list.(*v1.XGBoostJobList)
-			jobs := make([]runtime.Object, 0, len(xgboostList.Items))
+			jobs := make([]client.Object, 0, len(xgboostList.Items))
 			for i := range xgboostList.Items {
 				jobs = append(jobs, &xgboostList.Items[i])
 			}

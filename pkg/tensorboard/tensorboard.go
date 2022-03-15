@@ -18,7 +18,6 @@ import (
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -53,41 +52,41 @@ type IngressSpec struct {
 }
 
 // ReconcileTensorBoard reads that state of the cluster for the TensorBoard object and makes changes based on the state read.
-func ReconcileTensorBoard(jc job_controller.JobController, c client.Client, metaObj metav1.Object, masterType apiv1.ReplicaType, spec *apiv1.ReplicaSpec,
+func ReconcileTensorBoard(jc job_controller.JobController, c client.Client, object client.Object, masterType apiv1.ReplicaType, spec *apiv1.ReplicaSpec,
 	jobStatus apiv1.JobStatus, result *reconcile.Result) error {
 
 	opts := TensorBoard{}
-	cfg, ok := metaObj.GetAnnotations()[apiv1.AnnotationTensorBoardConfig]
+	cfg, ok := object.GetAnnotations()[apiv1.AnnotationTensorBoardConfig]
 	if ok {
 		if err := json.Unmarshal([]byte(cfg), &opts); err != nil {
 			return err
 		}
 	} else {
 		// annotation not found ,try to delete tensorboard
-		if err := deleteTensorBoard(jc, c, metaObj); err != nil {
+		if err := deleteTensorBoard(jc, c, object); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if needSync, err := cleanupAndCheckNeedSync(jc, c, metaObj, jobStatus, result, opts); err != nil {
+	if needSync, err := cleanupAndCheckNeedSync(jc, c, object, jobStatus, result, opts); err != nil {
 		return err
 	} else if !needSync {
-		log.Infof("no need to sync tensorboard, job: %s/%s", metaObj.GetNamespace(), metaObj.GetName())
+		log.Infof("no need to sync tensorboard, job: %s/%s", object.GetNamespace(), object.GetName())
 		return nil
 	}
 
-	if err := syncPod(jc, c, metaObj, masterType, spec, opts, cfg); err != nil {
+	if err := syncPod(jc, c, object, masterType, spec, opts, cfg); err != nil {
 		log.Errorf("TensorBoard sync pod error %v", err)
 		return err
 	}
 
-	if err := syncService(jc, c, metaObj, opts); err != nil {
+	if err := syncService(jc, c, object, opts); err != nil {
 		log.Errorf("TensorBoard sync service error %v", err)
 		return err
 	}
 
-	if err := syncIngress(jc, c, metaObj, opts, cfg); err != nil {
+	if err := syncIngress(jc, c, object, opts, cfg); err != nil {
 		log.Errorf("TensorBoard sync ingress error %v", err)
 		return err
 	}
@@ -96,13 +95,13 @@ func ReconcileTensorBoard(jc job_controller.JobController, c client.Client, meta
 }
 
 // cleanupAndCheckNeedSync cleanup the tensorboard if needed and check if the tensorboard need sync
-func cleanupAndCheckNeedSync(jc job_controller.JobController, c client.Client, metaObj metav1.Object,
+func cleanupAndCheckNeedSync(jc job_controller.JobController, c client.Client, object client.Object,
 	jobStatus apiv1.JobStatus, result *reconcile.Result, opts TensorBoard) (bool, error) {
 
 	if commonutil.IsSucceeded(jobStatus) || commonutil.IsFailed(jobStatus) {
 		currentTime := time.Now()
 		if jobStatus.CompletionTime == nil {
-			return false, fmt.Errorf("cleanup TensorBoard for Job %s, but job has CompletionTime not set", metaObj.GetName())
+			return false, fmt.Errorf("cleanup TensorBoard for Job %s, but job has CompletionTime not set", object.GetName())
 		}
 		duration := time.Second * time.Duration(opts.TTLSecondsAfterJobFinished)
 		deleteTime := jobStatus.CompletionTime.Add(duration)
@@ -116,10 +115,10 @@ func cleanupAndCheckNeedSync(jc job_controller.JobController, c client.Client, m
 			log.Infof("delete tensorboard, TTL: %d", opts.TTLSecondsAfterJobFinished)
 			// Remove tensorboard config from annotation and clean up tensorboard instances/ingress
 			// in next reconcile.
-			anno := metaObj.GetAnnotations()
+			anno := object.GetAnnotations()
 			delete(anno, apiv1.AnnotationTensorBoardConfig)
-			metaObj.SetAnnotations(anno)
-			if err := c.Update(context.Background(), metaObj.(runtime.Object)); err != nil {
+			object.SetAnnotations(anno)
+			if err := c.Update(context.Background(), object); err != nil {
 				return true, err
 			}
 			return false, nil
@@ -129,7 +128,7 @@ func cleanupAndCheckNeedSync(jc job_controller.JobController, c client.Client, m
 			if result.RequeueAfter > after || result.RequeueAfter == 0 {
 				result.RequeueAfter = after
 			}
-			log.Infof("reconcile after %v, job: %s/%s", after, metaObj.GetNamespace(), metaObj.GetName())
+			log.Infof("reconcile after %v, job: %s/%s", after, object.GetNamespace(), object.GetName())
 		}
 	}
 	return true, nil

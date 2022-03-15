@@ -18,7 +18,6 @@ import (
 	"net"
 	"os"
 
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,6 +26,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // for gcp auth
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 // RecommendedConfigPathEnvVar is a environment variable for path configuration

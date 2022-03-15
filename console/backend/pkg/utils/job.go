@@ -1,15 +1,17 @@
 package utils
 
 import (
-	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
-	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
+	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 )
 
-func InitRuntimeObjectByKind(kind string) runtime.Object {
+func InitJobRuntimeObjectByKind(kind string) client.Object {
 	var (
-		object runtime.Object
+		object client.Object
 	)
 
 	switch kind {

@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 
-	nbv1alpha1 "github.com/alibaba/kubedl/apis/notebook/v1alpha1"
-	"github.com/alibaba/kubedl/apis/training/v1alpha1"
-	utils "github.com/alibaba/kubedl/console/backend/pkg/client"
-	"github.com/alibaba/kubedl/console/backend/pkg/constants"
 	"github.com/golang/glog"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	nbv1alpha1 "github.com/alibaba/kubedl/apis/notebook/v1alpha1"
+	"github.com/alibaba/kubedl/apis/training/v1alpha1"
+	utils "github.com/alibaba/kubedl/console/backend/pkg/client"
+	"github.com/alibaba/kubedl/console/backend/pkg/constants"
 )
 
 func NewKubeDLHandler() *KubeDLHandler {
@@ -71,7 +72,7 @@ func (h *KubeDLHandler) ListAvailableNamespaces() ([]string, *v1.NamespaceList, 
 }
 func (h *KubeDLHandler) DetectJobsInNS(ns, kind string) bool {
 	var (
-		list     runtime.Object
+		list     client.ObjectList
 		detector func(object runtime.Object) bool
 	)
 

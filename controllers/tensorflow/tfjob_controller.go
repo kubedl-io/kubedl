@@ -32,9 +32,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -44,7 +44,6 @@ import (
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/tensorboard"
-	"github.com/alibaba/kubedl/pkg/util"
 )
 
 const (
@@ -65,7 +64,7 @@ func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) 
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(r.Client, r, config, r.recorder, metrics.NewJobMetrics(training.TFJobKind, r.Client), mgr.GetScheme())
+	r.ctrl = job_controller.NewJobController(mgr, r, config, r.recorder, metrics.NewJobMetrics(training.TFJobKind, r.Client), mgr.GetScheme())
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
@@ -135,10 +134,10 @@ func (r *TFJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) string {
 // Note, this is added for kubedl-dashboard to list nodes, not for kubedl-controller
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
 
-func (r *TFJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *TFJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// Fetch the TFJob tfJob
 	sharedTfJob := &training.TFJob{}
-	err := util.GetObjectByPassCache(r.Client, req.NamespacedName, sharedTfJob)
+	err := r.ctrl.APIReader.Get(context.Background(), req.NamespacedName, sharedTfJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("try to get job but it has been deleted", "key", req.String())

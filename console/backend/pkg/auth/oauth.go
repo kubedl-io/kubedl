@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"flag"
+
 	"github.com/gin-gonic/gin"
 )
 

@@ -8,6 +8,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -21,7 +22,7 @@ import (
 	"github.com/alibaba/kubedl/cmd/options"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
-	"github.com/alibaba/kubedl/pkg/test_job/v1"
+	v1 "github.com/alibaba/kubedl/pkg/test_job/v1"
 )
 
 func TestDeletePodsAndServices(T *testing.T) {
@@ -112,13 +113,16 @@ func TestDeletePodsAndServices(T *testing.T) {
 		fakeClient.Create(context.Background(), succeededPodService)
 
 		eventBroadcaster := record.NewBroadcaster()
-		mainJobController := NewJobController(
-			fakeClient,
-			&testJobController,
-			options.JobControllerConfiguration{},
-			eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
-			&metrics.JobMetrics{}, scheme,
-		)
+		mainJobController := JobController{
+			Client:         fakeClient,
+			Controller:     &testJobController,
+			PodControl:     NewPodControl(fakeClient, record.NewFakeRecorder(100)),
+			ServiceControl: NewServiceControl(fakeClient, record.NewFakeRecorder(100)),
+			Config:         options.JobControllerConfiguration{},
+			Recorder:       eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"}),
+			Metrics:        &metrics.JobMetrics{},
+			Scheme:         scheme,
+		}
 
 		runPolicy := apiv1.RunPolicy{
 			CleanPodPolicy: &tc.cleanPodPolicy,
@@ -430,7 +434,7 @@ func TestCreateCronJob(t *testing.T) {
 	}
 }
 
-func GetJobByName(mainJobController JobController, namespace string, name string, obj runtime.Object) error {
+func GetJobByName(mainJobController JobController, namespace string, name string, obj client.Object) error {
 	return mainJobController.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: namespace,
 		Name:      name,

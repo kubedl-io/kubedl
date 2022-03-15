@@ -27,15 +27,15 @@ import (
 // by CronTask.
 
 func onCronWorkloadCreate(evt event.CreateEvent) bool {
-	return isControlledByCronTask(evt.Meta)
+	return isControlledByCronTask(evt.Object)
 }
 
 func onCronWorkloadUpdate(newEvt event.UpdateEvent) bool {
-	return isControlledByCronTask(newEvt.MetaNew)
+	return isControlledByCronTask(newEvt.ObjectNew)
 }
 
 func onCronWorkloadDelete(evt event.DeleteEvent) bool {
-	return isControlledByCronTask(evt.Meta)
+	return isControlledByCronTask(evt.Object)
 }
 
 func isControlledByCronTask(obj metav1.Object) bool {
