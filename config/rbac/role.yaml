@@ -38,7 +38,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - nodes
+  - namespaces
   verbs:
   - get
   - list
@@ -46,10 +46,10 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - namespaces
+  - nodes
   verbs:
+  - get
   - list
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -78,7 +78,6 @@ rules:
   - ""
   resources:
   - pods
-  - pods/log
   verbs:
   - create
   - delete

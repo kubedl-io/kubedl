@@ -25,6 +25,9 @@ import (
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
+// Global shared RBAC configurations, e.g. dashboard.
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list
+
 // SetupWithManagerFunc is a list of functions to setup all controllers to the manager.
 var SetupWithManagerMap = make(map[runtime.Object]func(mgr controllerruntime.Manager, config options.JobControllerConfiguration) error)
 
