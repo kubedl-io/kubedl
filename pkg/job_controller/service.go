@@ -33,6 +33,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/alibaba/kubedl/pkg/features"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
@@ -290,7 +291,7 @@ func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object
 	targetPort := svcPort
 	clusterIP := "None"
 
-	if EnableHostNetwork(job) {
+	if !features.KubeDLFeatureGates.Enabled(features.HostNetNoRedirect) && EnableHostNetwork(job) {
 		// Communications between replicas use headless services by default, as for hostnetwork mode,
 		// headless service can not forward traffic from one port to another, so we use normal service
 		// when hostnetwork enabled.

@@ -38,6 +38,7 @@ import (
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/features"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -210,12 +211,21 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 		return err
 	}
 
+	masterRole := rtype == strings.ToLower(string(training.PyTorchReplicaTypeMaster))
+	if hostPort, ok := job_controller.GetHostNetworkPortFromContext(ctx, strings.ToLower(string(training.PyTorchReplicaTypeMaster)), "0"); job_controller.EnableHostNetwork(pytorchJob) && ok {
+		if masterRole || features.KubeDLFeatureGates.Enabled(features.HostNetNoRedirect) {
+			masterPort = hostPort
+		}
+	}
+
 	masterAddr := commonutil.GenGeneralName(pytorchJob.Name, strings.ToLower(string(training.PyTorchReplicaTypeMaster)), strconv.Itoa(0))
-	if rtype == strings.ToLower(string(training.PyTorchReplicaTypeMaster)) {
+	if masterRole {
 		if rank != 0 {
 			return fmt.Errorf("invalid config: There should be only a single master with index=0")
 		}
-		masterAddr = "localhost"
+		if features.KubeDLFeatureGates.Enabled(features.PyTorchLocalMasterAddr) {
+			masterAddr = "localhost"
+		}
 		if hostPort, ok := job_controller.GetHostNetworkPortFromContext(ctx, rtype, index); ok && job_controller.EnableHostNetwork(pytorchJob) {
 			masterPort = hostPort
 		}

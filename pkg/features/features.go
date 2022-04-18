@@ -28,7 +28,14 @@ const (
 	// DAGScheduling enables DAG scheduling workflow between different job roles.
 	DAGScheduling featuregate.Feature = "DAGScheduling"
 
-	// TODO: migrate other features into featuregates pattern.
+	// PyTorchLocalMasterAddr explicitly declare to use localhost as master self listened
+	// address, it's usually adopted in version < torch 1.9, in >=1.9 distributed communication
+	// style, master address value should be aligned with workers, set by master service name.
+	PyTorchLocalMasterAddr featuregate.Feature = "PyTorchLocalMasterAddr"
+
+	// HostNetNoRedirect disables traffic redirecting through service under hostnetwork mode,
+	// however it invalidates port correctness after failover.
+	HostNetNoRedirect featuregate.Feature = "HostNetNoRedirect"
 )
 
 func init() {
@@ -39,7 +46,9 @@ var (
 	KubeDLFeatureGates = featuregate.NewFeatureGate()
 
 	defaultKubeDLFeatureGates = map[featuregate.Feature]featuregate.FeatureSpec{
-		GangScheduling: {Default: true, PreRelease: featuregate.Beta},
-		DAGScheduling:  {Default: true, PreRelease: featuregate.Beta},
+		GangScheduling:         {Default: true, PreRelease: featuregate.Beta},
+		DAGScheduling:          {Default: true, PreRelease: featuregate.Beta},
+		PyTorchLocalMasterAddr: {Default: true, PreRelease: featuregate.Beta},
+		HostNetNoRedirect:      {Default: false, PreRelease: featuregate.Alpha},
 	}
 )
