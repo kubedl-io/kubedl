@@ -44,6 +44,7 @@ import (
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/tensorboard"
+	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
 
 const (
@@ -80,6 +81,7 @@ type TFJobReconciler struct {
 	scheme   *runtime.Scheme
 	recorder record.EventRecorder
 	ctrl     job_controller.JobController
+	utilruntime.EmptyScaleImpl
 }
 
 func (r *TFJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) string {

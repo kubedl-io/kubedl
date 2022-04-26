@@ -36,6 +36,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
 
 const (
@@ -67,6 +68,7 @@ type XgboostJobReconciler struct {
 	scheme   *runtime.Scheme
 	ctrl     job_controller.JobController
 	recorder record.EventRecorder
+	utilruntime.EmptyScaleImpl
 }
 
 // Reconcile reads that state of the cluster for a XGBoostJob object and makes changes based on the state read

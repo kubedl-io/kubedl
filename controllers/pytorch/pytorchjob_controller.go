@@ -24,9 +24,11 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -45,6 +47,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/metrics"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+	patchutil "github.com/alibaba/kubedl/pkg/util/patch"
 )
 
 const (
@@ -107,6 +110,25 @@ func (r *PytorchJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (c
 	err := r.ctrl.APIReader.Get(context.Background(), req.NamespacedName, sharedPytorchJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			selector, _ := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+				MatchLabels: r.ctrl.GenLabels(req.Name),
+			})
+			pods := corev1.PodList{}
+			if err = r.Client.List(context.Background(), &pods, client.InNamespace(req.Namespace), client.MatchingLabelsSelector{Selector: selector}); err != nil {
+				return reconcile.Result{}, err
+			}
+			for i := range pods.Items {
+				pod := &pods.Items[i]
+				if k8sutil.HasFinalizer(pod.Finalizers, v1.FinalizerPreemptProtector) {
+					klog.Infof("pod %s has finalizer %s, need to remove", pod.Name, v1.FinalizerPreemptProtector)
+					patch := patchutil.NewStrategicPatch()
+					patch.RemoveFinalizer(v1.FinalizerPreemptProtector)
+					if err = r.Client.Patch(context.Background(), pod, patch); err != nil {
+						return ctrl.Result{}, err
+					}
+				}
+			}
+
 			log.Info("try to get job but it has been deleted", "key", req.String())
 			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
@@ -230,7 +252,18 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 		rank++
 	}
 
-	totalReplicas := int(k8sutil.GetTotalReplicas(pytorchJob.Spec.PyTorchReplicaSpecs))
+	totalReplicas := int(k8sutil.GetTotalExcludedReplicas(pytorchJob.Spec.PyTorchReplicaSpecs, v1.JobReplicaTypeAIMaster))
+	enableElasticScaling := pytorchJob.Annotations[v1.AnnotationEnableElasticTraining] == "true"
+	if enableElasticScaling && !masterRole && rtype != "aimaster" {
+		AddImageWarmupForWorker(podTemplate, r.GetDefaultContainerName())
+		err = AddMasterWaiterForWorker(podTemplate, InitContainerParam{
+			MasterAddr:         masterAddr,
+			InitContainerImage: "docker.io/alpine:3.10",
+		})
+		if err != nil {
+			return err
+		}
+	}
 
 	for i := range podTemplate.Spec.Containers {
 		if len(podTemplate.Spec.Containers[i].Env) == 0 {
@@ -245,10 +278,6 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 			Value: masterAddr,
 		})
 		podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
-			Name:  "WORLD_SIZE",
-			Value: strconv.Itoa(totalReplicas),
-		})
-		podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
 			Name:  "RANK",
 			Value: strconv.Itoa(rank),
 		})
@@ -256,6 +285,33 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 			Name:  "PYTHONUNBUFFERED",
 			Value: "0",
 		})
+		if enableElasticScaling && rtype != "aimaster" {
+			// Job enables elastic scaling select value of AnnotationWorldSize as its
+			// WORLD_SIZE env value via field-path, the annotated value will be mutated
+			// during scaling progress and processes in container will acknowledge the
+			// updated world-size value after restarted.
+			if podTemplate.Annotations == nil {
+				podTemplate.Annotations = make(map[string]string)
+			}
+			podTemplate.Annotations[AnnotationWorldSize] = strconv.Itoa(totalReplicas)
+
+			podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
+				Name: "WORLD_SIZE",
+				ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: fmt.Sprintf("metadata.annotations['%s']", AnnotationWorldSize),
+				}},
+			})
+
+			// Overwrite restart policy as OnFailure so that container will be started again
+			// by kubelet after kruise daemonset forcefully execute restarting container through
+			// CRI calls bypasses kubelet.
+			podTemplate.Spec.RestartPolicy = corev1.RestartPolicyOnFailure
+		} else {
+			podTemplate.Spec.Containers[i].Env = append(podTemplate.Spec.Containers[i].Env, corev1.EnvVar{
+				Name:  "WORLD_SIZE",
+				Value: strconv.Itoa(totalReplicas),
+			})
+		}
 	}
 	return nil
 }
@@ -277,6 +333,7 @@ func (r *PytorchJobReconciler) GetDefaultContainerPortNumber() int32 {
 
 func (r *PytorchJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 	return []v1.ReplicaType{
+		v1.JobReplicaTypeAIMaster,
 		training.PyTorchReplicaTypeMaster,
 		training.PyTorchReplicaTypeWorker,
 	}

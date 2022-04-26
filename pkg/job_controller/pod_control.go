@@ -28,6 +28,10 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+	patchutil "github.com/alibaba/kubedl/pkg/util/patch"
 )
 
 // Reasons for pod events
@@ -89,8 +93,8 @@ func getPodsOwnerReferences(template *v1.PodTemplateSpec) []metav1.OwnerReferenc
 	return desiredOwnerReferences
 }
 
-func (r PodControl) CreatePods(namespace string, template *v1.PodTemplateSpec, object runtime.Object) error {
-	return r.createPods("", namespace, template, object, nil)
+func (r PodControl) CreatePods(namespace string, template *v1.PodTemplateSpec, object runtime.Object, controllerRef *metav1.OwnerReference) error {
+	return r.createPods("", namespace, template, object, controllerRef)
 }
 
 func (r PodControl) CreatePodsWithControllerRef(namespace string, template *v1.PodTemplateSpec, controllerObject runtime.Object, controllerRef *metav1.OwnerReference) error {
@@ -105,6 +109,15 @@ func (r PodControl) CreatePodsOnNode(nodeName, namespace string, template *v1.Po
 		return err
 	}
 	return r.createPods(nodeName, namespace, template, object, controllerRef)
+}
+
+func (r PodControl) CreatePodsWithGenerateName(namespace string, template *v1.PodTemplateSpec, object runtime.Object, controllerRef *metav1.OwnerReference, generateName string) error {
+	if err := validateControllerRef(controllerRef); err != nil {
+		return err
+	}
+	template.Name = ""
+	template.GenerateName = generateName
+	return r.createPods("", namespace, template, object, controllerRef)
 }
 
 func (r PodControl) PatchPod(namespace, name string, data []byte) error {
@@ -126,6 +139,7 @@ func GetPodFromTemplate(template *v1.PodTemplateSpec, parentObject runtime.Objec
 			Labels:          desiredLabels,
 			Annotations:     desiredAnnotations,
 			Name:            template.Name,
+			GenerateName:    template.GenerateName,
 			Finalizers:      desiredFinalizers,
 			OwnerReferences: desiredOwnerReferences,
 		},
@@ -169,6 +183,13 @@ func (r PodControl) DeletePod(namespace string, name string, object runtime.Obje
 	err := r.client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, pod)
 	if err != nil {
 		return err
+	}
+	if k8sutil.HasFinalizer(pod.Finalizers, apiv1.FinalizerPreemptProtector) {
+		patch := patchutil.NewStrategicPatch()
+		patch.RemoveFinalizer(apiv1.FinalizerPreemptProtector)
+		if err = r.client.Patch(context.Background(), pod, patch); err != nil {
+			return err
+		}
 	}
 	if pod.DeletionTimestamp != nil {
 		glog.V(3).Infof("pod %s/%s is terminating, skip deleting", pod.Namespace, pod.Name)

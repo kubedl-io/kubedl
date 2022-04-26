@@ -37,6 +37,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
+	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
 
 const (
@@ -64,6 +65,7 @@ type ElasticDLJobReconciler struct {
 	scheme   *runtime.Scheme
 	recorder record.EventRecorder
 	ctrl     job_controller.JobController
+	utilruntime.EmptyScaleImpl
 }
 
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete

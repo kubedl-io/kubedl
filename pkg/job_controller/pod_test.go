@@ -247,7 +247,7 @@ func TestReconcilePods(t *testing.T) {
 			}
 
 			err := jc.ReconcilePods(context.Background(), c.job, &c.job.Status, c.pods, c.rtype, c.job.Spec.TestReplicaSpecs[c.rtype],
-				c.job.Spec.TestReplicaSpecs, pointer.BoolPtr(false))
+				c.job.Spec.TestReplicaSpecs, &apiv1.RunPolicy{}, pointer.BoolPtr(false))
 			if err != nil {
 				t.Errorf("failed to ReconcilePods, err: %v", err)
 			}

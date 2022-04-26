@@ -17,11 +17,13 @@ package k8sutil
 import (
 	"net"
 	"os"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // for gcp auth
 	"k8s.io/client-go/rest"
@@ -117,6 +119,65 @@ func IsPodActive(p *v1.Pod) bool {
 		p.DeletionTimestamp == nil
 }
 
+func FilterStalePodsByReplicaType(pods []*v1.Pod, generation int64, excludes ...string) (total int, result map[string][]*v1.Pod) {
+	var (
+		excludeReplicas = sets.NewString(excludes...)
+	)
+	result = make(map[string][]*v1.Pod)
+	for _, p := range pods {
+		staled := IsStalePod(p, generation)
+		rt := p.Labels[apiv1.ReplicaTypeLabel]
+		if staled && !excludeReplicas.Has(rt) {
+			total++
+			result[rt] = append(result[rt], p)
+		}
+	}
+	return total, result
+}
+
+func IsStalePod(pod *v1.Pod, generation int64) bool {
+	gen := pod.Labels[apiv1.LabelGeneration]
+	if gen == "" {
+		return true
+	}
+	current, err := strconv.ParseInt(gen, 10, 64)
+	if err != nil {
+		return false
+	}
+	return current < generation
+}
+
+func GetTotalExcludedReplicas(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, excludes ...apiv1.ReplicaType) int32 {
+	excludeSet := sets.NewString()
+	for _, e := range excludes {
+		excludeSet.Insert(string(e))
+	}
+
+	jobReplicas := int32(0)
+	for t, r := range replicas {
+		if excludeSet.Has(string(t)) {
+			continue
+		}
+		jobReplicas += *r.Replicas
+	}
+	return jobReplicas
+}
+
+func GetNumReplicasForLatestGeneration(pods []*v1.Pod, generation int64) int32 {
+	g := strconv.FormatInt(generation, 10)
+	replicas := int32(0)
+	for _, p := range pods {
+		if p.Labels[apiv1.LabelGeneration] == g {
+			replicas++
+		}
+	}
+	return replicas
+}
+
+func IsVictimCandidatePod(p *v1.Pod) bool {
+	return p.DeletionTimestamp != nil && HasFinalizer(p.Finalizers, apiv1.FinalizerPreemptProtector)
+}
+
 // filterPodCount returns pods based on their phase.
 func FilterPodCount(pods []*v1.Pod, phase v1.PodPhase) int32 {
 	var result int32
@@ -162,4 +223,13 @@ func ResolveDependentOwner(metaObj metav1.Object) (id, name string) {
 func GetReplicaType(pod *v1.Pod) (rtype string, ok bool) {
 	rtype, ok = pod.Labels[apiv1.ReplicaTypeLabel]
 	return
+}
+
+func HasFinalizer(finalizers []string, target string) bool {
+	for _, f := range finalizers {
+		if f == target {
+			return true
+		}
+	}
+	return false
 }

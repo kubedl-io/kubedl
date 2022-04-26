@@ -67,4 +67,24 @@ type ControllerInterface interface {
 	// IsMasterRole Returns if this replica type with index specified is a master role.
 	// MasterRole pod will have "job-role=master" set in its label
 	IsMasterRole(replicas map[ReplicaType]*ReplicaSpec, rtype ReplicaType, index int) bool
+
+	ElasticScaling
+}
+
+// ElasticScaling defines the interface to be implemented by custom workload elastic behaviors.
+type ElasticScaling interface {
+	// EnableElasticScaling indicates workload enables elastic scaling or not.
+	EnableElasticScaling(job v1.Object, runPolicy *RunPolicy) bool
+
+	// ScaleOut defines how to scale out a job instance(i.e. scale workers from n to 2*n), usually
+	// the scaling progress is incremental and the implementation guarantees idempotence.
+	ScaleOut(job interface{}, replicas map[ReplicaType]*ReplicaSpec, activePods []*corev1.Pod, activeServices []*corev1.Service) error
+
+	// ScaleIn defines how to scale in a job instance(i.e. scale workers from 2*n to n), usually
+	// the scaling progress is incremental and the implementation guarantees idempotence.
+	ScaleIn(job interface{}, replicas map[ReplicaType]*ReplicaSpec, activePods []*corev1.Pod, activeServices []*corev1.Service) error
+
+	// CheckpointIfNecessary triggers job checkpoints when it is necessary, e.g. workers are going to be
+	// preempted after a grace termination period.
+	CheckpointIfNecessary(job interface{}, activePods []*corev1.Pod) (completed bool, err error)
 }
