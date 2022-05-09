@@ -423,6 +423,7 @@ func createPytorchJob(jobName string, workerReplicas int32, runPolicy *v1.RunPol
 }
 
 func createPodGroup(name, uid, jobName, rtype string, minMember int32, owner *metav1.OwnerReference) v1beta1.PodGroup {
+	empty := make(corev1.ResourceList)
 	pg := v1beta1.PodGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            name,
@@ -430,7 +431,7 @@ func createPodGroup(name, uid, jobName, rtype string, minMember int32, owner *me
 			ResourceVersion: "1",
 			Labels:          map[string]string{},
 		},
-		Spec: v1beta1.PodGroupSpec{MinMember: minMember},
+		Spec: v1beta1.PodGroupSpec{MinMember: minMember, MinResources: &empty},
 	}
 	if uid != "" {
 		pg.UID = types.UID(uid)
