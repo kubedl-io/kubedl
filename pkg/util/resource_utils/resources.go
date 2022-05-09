@@ -37,6 +37,24 @@ func MaximumContainersResources(containers []v1.Container) v1.ResourceRequiremen
 	return max
 }
 
+func JobResourceRequests(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) v1.ResourceList {
+	result := make(v1.ResourceList)
+	for _, rspec := range replicas {
+		result = quota.Add(result, ReplicaResourceRequests(rspec))
+	}
+
+	return result
+}
+
+func ReplicaResourceRequests(rspec *apiv1.ReplicaSpec) v1.ResourceList {
+	resources := ComputePodSpecResourceRequest(&rspec.Template.Spec)
+	replicas := int32(1)
+	if rspec.Replicas != nil {
+		replicas = *rspec.Replicas
+	}
+	return Multiply(int64(replicas), resources)
+}
+
 // ComputePodResourceRequest returns the requested resource of the Pod
 func ComputePodResourceRequest(pod *v1.Pod) v1.ResourceList {
 	return ComputePodSpecResourceRequest(&pod.Spec)

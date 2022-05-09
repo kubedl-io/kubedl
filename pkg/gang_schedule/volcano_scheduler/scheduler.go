@@ -24,6 +24,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+	resourceutils "github.com/alibaba/kubedl/pkg/util/resource_utils"
 )
 
 func init() {
@@ -58,10 +59,16 @@ func (vs *volcanoScheduler) CreateGang(job metav1.Object, replicas map[apiv1.Rep
 	}
 
 	var (
-		apiVersion = accessor.GetAPIVersion()
-		kind       = accessor.GetKind()
-		podGroups  *v1beta1.PodGroupList
+		apiVersion                   = accessor.GetAPIVersion()
+		kind                         = accessor.GetKind()
+		queueName, priorityClassName string
+		podGroups                    *v1beta1.PodGroupList
 	)
+
+	if schedPolicy != nil {
+		queueName = schedPolicy.Queue
+		priorityClassName = schedPolicy.PriorityClassName
+	}
 
 	// If DAG scheduling is enabled, kubedl will create individual podgrpoups entity for each role
 	// to represent a separate stage, otherwise podgrpoups entity will be created in job granularity.
@@ -73,6 +80,8 @@ func (vs *volcanoScheduler) CreateGang(job metav1.Object, replicas map[apiv1.Rep
 
 	for i := range podGroups.Items {
 		pg := &podGroups.Items[i]
+		pg.Spec.Queue = queueName
+		pg.Spec.PriorityClassName = priorityClassName
 		err = vs.client.Get(context.Background(), types.NamespacedName{Name: pg.Name, Namespace: pg.Namespace}, &v1beta1.PodGroup{})
 		if err != nil && errors.IsNotFound(err) {
 			err = vs.client.Create(context.Background(), pg)
@@ -175,7 +184,8 @@ func (vs *volcanoScheduler) generateGangByJobUnit(apiVersion, kind, name, namesp
 	if schedPolicy != nil && schedPolicy.MinAvailable != nil && *schedPolicy.MinAvailable > 0 {
 		pg.Spec.MinMember = *schedPolicy.MinAvailable
 	}
-
+	jobResource := resourceutils.JobResourceRequests(replicas)
+	pg.Spec.MinResources = &jobResource
 	return &v1beta1.PodGroupList{Items: []v1beta1.PodGroup{pg}}
 }
 
@@ -185,6 +195,7 @@ func (vs *volcanoScheduler) generateGangByRoleUnit(apiVersion, kind, name, names
 	for rtype, spec := range replicas {
 		rt := strings.ToLower(string(rtype))
 		gangName := fmt.Sprintf("%s-%s", name, rt)
+		resources := resourceutils.ReplicaResourceRequests(spec)
 		pgs.Items = append(pgs.Items, v1beta1.PodGroup{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      gangName,
@@ -204,7 +215,10 @@ func (vs *volcanoScheduler) generateGangByRoleUnit(apiVersion, kind, name, names
 					},
 				},
 			},
-			Spec: v1beta1.PodGroupSpec{MinMember: *spec.Replicas},
+			Spec: v1beta1.PodGroupSpec{
+				MinMember:    *spec.Replicas,
+				MinResources: &resources,
+			},
 		})
 	}
 
