@@ -3097,6 +3097,13 @@ spec:
                       minAvailable:
                         format: int32
                         type: integer
+                      priority:
+                        format: int32
+                        type: integer
+                      priorityClassName:
+                        type: string
+                      queue:
+                        type: string
                     type: object
                   ttlSecondsAfterFinished:
                     format: int32
@@ -3107,6 +3114,13 @@ spec:
                   minAvailable:
                     format: int32
                     type: integer
+                  priority:
+                    format: int32
+                    type: integer
+                  priorityClassName:
+                    type: string
+                  queue:
+                    type: string
                 type: object
               slotsPerWorker:
                 format: int32

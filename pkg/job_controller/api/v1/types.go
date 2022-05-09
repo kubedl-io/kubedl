@@ -17,7 +17,7 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -139,6 +139,12 @@ const (
 	// but one or more of the pods/services has not been started.
 	// This includes time before pods being scheduled and launched.
 	JobCreated JobConditionType = "Created"
+
+	// JobQueuing means the job has been acknowledged by controller and
+	// queueing in its tenant queue, waiting to be dequeued and start to
+	// reconcile.
+	// The training is waiting to be scheduled by kubedl.
+	JobQueuing JobConditionType = "Queuing"
 
 	// JobRunning means all sub-resources (e.g. services/pods) of this job
 	// have been successfully scheduled and launched.
@@ -280,7 +286,24 @@ const (
 // SchedulingPolicy encapsulates various scheduling policies of the distributed training
 // job, for example `minAvailable` for gang-scheduling.
 type SchedulingPolicy struct {
+	// MinAvailable is the minimum number of scheduable instances for a gang-scheduling to go.
 	MinAvailable *int32 `json:"minAvailable,omitempty"`
+	// The priority value. KubeDL use this field to find the priority of the job.
+	// The controller populates this field from PriorityClassName by default.
+	// The higher the value, the higher the priority.
+	// +optional
+	Priority *int32 `json:"priority,omitempty"`
+	// If specified, indicates the jobs's priority. Any other name must be defined
+	// by creating a PriorityClass object with that name.
+	// If not specified, the job priority will be default or zero if there is no
+	// default.
+	// +optional
+	PriorityClassName string `json:"priorityClassName,omitempty"`
+	// Queue indicates the name of tenant queue the job should be enqueued to, this field
+	// can be specified manually by job owner, or partitioned by built-in plugin on basis
+	// of its namespace/quota or other granularity.
+	// +optional
+	Queue string `json:"queue,omitempty"`
 }
 
 type DAGCondition struct {
