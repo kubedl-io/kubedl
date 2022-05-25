@@ -61,6 +61,12 @@ const (
 )
 
 const (
+	// ContextFailedPodContents collects failed pod exit codes while with its failed
+	// reason if they are not retryable.
+	ContextFailedPodContents = KubeDLPrefix + "/failed-pod-contents"
+)
+
+const (
 	FinalizerPreemptProtector = KubeDLPrefix + "/preempt-protector"
 )
 

@@ -27,12 +27,16 @@ import (
 
 // setDefaults_PyTorchJobPort sets the default ports for pytorch container.
 func setDefaults_PyTorchJobPort(spec *v1.PodSpec) {
-	index := 0
+	index := -1
 	for i, container := range spec.Containers {
 		if container.Name == PyTorchJobDefaultContainerName {
 			index = i
 			break
 		}
+	}
+
+	if index < 0 {
+		return
 	}
 
 	hasPyTorchJobPort := false

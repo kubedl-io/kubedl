@@ -27,6 +27,15 @@ var (
 	errPortNotFound = fmt.Errorf("failed to found the port")
 )
 
+func ContainsReplicaType(rspecs map[v1.ReplicaType]*v1.ReplicaSpec, rtypes ...v1.ReplicaType) bool {
+	for _, rtype := range rtypes {
+		if _, ok := rspecs[rtype]; ok {
+			return true
+		}
+	}
+	return false
+}
+
 // RecheckDeletionTimestamp returns a CanAdopt() function to recheck deletion.
 //
 // The CanAdopt() function calls getObject() to fetch the latest value,

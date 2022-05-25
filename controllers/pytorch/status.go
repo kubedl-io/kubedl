@@ -44,6 +44,15 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *training.PyTor
 
 	previousRestarting := commonutil.IsRestarting(*jobStatus)
 	previousFailed := commonutil.IsFailed(*jobStatus)
+	allWorkersSucceed := false
+	workerRep, workerFound := replicaSpecs[training.PyTorchReplicaTypeWorker]
+	if workerFound {
+		succeed := int32(0)
+		if jobStatus.ReplicaStatuses[training.PyTorchReplicaTypeWorker] != nil {
+			succeed = jobStatus.ReplicaStatuses[training.PyTorchReplicaTypeWorker].Succeeded
+		}
+		allWorkersSucceed = *workerRep.Replicas == succeed
+	}
 
 	for rtype, spec := range replicaSpecs {
 		replicas := *spec.Replicas
@@ -61,30 +70,36 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *training.PyTor
 		log.Info("Update pytorch job status", "PyTorchJob", pytorchJob.Name,
 			"ReplicaType", rtype, "expected", expected, "running", running, "failed", failed)
 
-		if ContainMasterSpec(pytorchJob) {
-			if rtype == training.PyTorchReplicaTypeMaster {
-				if running > 0 {
-					msg := fmt.Sprintf("PyTorchJob %s is running.", pytorchJob.Name)
-					err := commonutil.UpdateJobConditions(jobStatus, v1.JobRunning, commonutil.JobRunningReason, msg)
-					if err != nil {
-						log.Info("Append job condition", " error:", err)
-						return err
-					}
+		if job_controller.ContainsReplicaType(replicaSpecs, training.PyTorchReplicaTypeMaster, v1.JobReplicaTypeAIMaster) {
+			if running > 0 {
+				msg := fmt.Sprintf("PyTorchJob %s is running.", pytorchJob.Name)
+				err := commonutil.UpdateJobConditions(jobStatus, v1.JobRunning, commonutil.JobRunningReason, msg)
+				if err != nil {
+					log.Info("Append job condition", " error:", err)
+					return err
 				}
-				if expected == 0 {
-					msg := fmt.Sprintf("PyTorchJob %s is successfully completed.", pytorchJob.Name)
-					r.recorder.Event(pytorchJob, corev1.EventTypeNormal, commonutil.JobSucceededReason, msg)
-					if jobStatus.CompletionTime == nil {
-						now := metav1.Now()
-						jobStatus.CompletionTime = &now
-					}
-					err := commonutil.UpdateJobConditions(jobStatus, v1.JobSucceeded, commonutil.JobSucceededReason, msg)
-					if err != nil {
-						log.Info("Append job condition", "error:", err)
-						return err
-					}
-					r.ctrl.Metrics.SuccessInc()
+			}
+			// Conditions for marking job as succeeded:
+			// 1. master exit successfully with success policy is none.
+			// 2. if success policy is AllWorkers, then wait util all workers succeed.
+			// 3. aimaster is enabled and it exits successfully.
+			succeed := replicas > 0 && expected == 0
+			if rtype != v1.JobReplicaTypeAIMaster && workerFound {
+				succeed = succeed && allWorkersSucceed
+			}
+			if succeed {
+				msg := fmt.Sprintf("PyTorchJob %s is successfully completed.", pytorchJob.Name)
+				r.recorder.Event(pytorchJob, corev1.EventTypeNormal, commonutil.JobSucceededReason, msg)
+				if jobStatus.CompletionTime == nil {
+					now := metav1.Now()
+					jobStatus.CompletionTime = &now
 				}
+				err := commonutil.UpdateJobConditions(jobStatus, v1.JobSucceeded, commonutil.JobSucceededReason, msg)
+				if err != nil {
+					log.Info("Append job condition", "error:", err)
+					return err
+				}
+				r.ctrl.Metrics.SuccessInc()
 			}
 		} else {
 			log.Info("Invalid config: Job must contain master replica spec")
@@ -92,7 +107,7 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *training.PyTor
 		}
 
 		if failed > 0 {
-			if restart {
+			if restart && rtype != v1.JobReplicaTypeAIMaster {
 				msg := fmt.Sprintf("PyTorchJob %s is restarting because %d %s replica(s) failed.", pytorchJob.Name, failed, rtype)
 				r.recorder.Event(pytorchJob, corev1.EventTypeWarning, commonutil.JobRestartingReason, msg)
 				err := commonutil.UpdateJobConditions(jobStatus, v1.JobRestarting, commonutil.JobRestartingReason, msg)
