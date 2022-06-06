@@ -234,11 +234,11 @@ func (r *PytorchJobReconciler) scale(pytorchJob *trainingv1alpha1.PyTorchJob, re
 	}
 	total -= len(staleMasters)
 
-	tickets := 100 // max semaphere tickets limited.
+	tickets := 100 // max semaphore tickets limited.
 	if len(staleWorkers) < 100 {
 		tickets = len(staleWorkers)
 	}
-	sema := concurrent.NewSemaphere(tickets)
+	sema := concurrent.NewSemaphore(tickets)
 	for _, p := range staleWorkers {
 		sema.Acquire()
 
@@ -454,7 +454,7 @@ func (r *PytorchJobReconciler) triggerJobCheckpoint(pytorchJob *trainingv1alpha1
 }
 
 func (r *PytorchJobReconciler) cleanupVictimPods(job *trainingv1alpha1.PyTorchJob, victims []*corev1.Pod) error {
-	sema := concurrent.NewSemaphere(10)
+	sema := concurrent.NewSemaphore(10)
 	errs := make(chan error, 10)
 	for _, v := range victims {
 		sema.Acquire()
