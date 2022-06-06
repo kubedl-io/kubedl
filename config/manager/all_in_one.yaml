@@ -490,7 +490,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: leader-election-role
+  name: kubedl-leader-election-role
 subjects:
   - kind: ServiceAccount
     name: default
@@ -514,7 +514,7 @@ spec:
         app: kubedl
     spec:
       containers:
-      - image: docker.io/kubedl/kubedl:easyscale-test
+      - image: docker.io/kubedl/kubedl:0.4.2
         imagePullPolicy: IfNotPresent
         name: kubedl-manager
         ports:

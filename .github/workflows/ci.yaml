@@ -79,11 +79,11 @@ jobs:
           set -ex
           kubectl cluster-info
           kubectl describe node
-          IMG=kubedl/kubedl:e2e-${GITHUB_RUN_ID} ./scripts/deploy_kubedl.sh
+          IMG_TAG=e2e-${GITHUB_RUN_ID} ./scripts/deploy_kubedl.sh
           for ((i=1;i<10;i++));
           do
             set +e
-            PODS=$(kubectl get pod -n kubedl-system | grep 'Running' | wc -l)
+            PODS=$(kubectl get pod -n kubedl-system | grep 'kubedl' | grep 'Running' | wc -l)
             set -e
             if [ "$PODS" -eq 1 ]; then
               break
@@ -91,7 +91,7 @@ jobs:
             sleep 3
           done
           set +e
-          PODS=$(kubectl get pod -n kubedl-system | grep 'Running' | wc -l)
+          PODS=$(kubectl get pod -n kubedl-system | grep 'kubedl' | grep 'Running' | wc -l)
           kubectl get all -n kubedl-system -o yaml
           set -e
           if [ "$PODS" -eq 1 ]; then
