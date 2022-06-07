@@ -110,25 +110,11 @@ func (r *PytorchJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (c
 	err := r.ctrl.APIReader.Get(context.Background(), req.NamespacedName, sharedPytorchJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			selector, _ := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-				MatchLabels: r.ctrl.GenLabels(req.Name),
-			})
-			pods := corev1.PodList{}
-			if err = r.Client.List(context.Background(), &pods, client.InNamespace(req.Namespace), client.MatchingLabelsSelector{Selector: selector}); err != nil {
-				return reconcile.Result{}, err
+			// Cleanup preempt protector finalizers for elastic training jobs, however object
+			// has completely deleted, and we'd clean up finalizers to sweep remaining pods.
+			if err = r.cleanUpPreemptFinalizers(req.Namespace, req.Name); err != nil {
+				return ctrl.Result{}, err
 			}
-			for i := range pods.Items {
-				pod := &pods.Items[i]
-				if k8sutil.HasFinalizer(pod.Finalizers, v1.FinalizerPreemptProtector) {
-					klog.Infof("pod %s has finalizer %s, need to remove", pod.Name, v1.FinalizerPreemptProtector)
-					patch := patchutil.NewStrategicPatch()
-					patch.RemoveFinalizer(v1.FinalizerPreemptProtector)
-					if err = r.Client.Patch(context.Background(), pod, patch); err != nil {
-						return ctrl.Result{}, err
-					}
-				}
-			}
-
 			log.Info("try to get job but it has been deleted", "key", req.String())
 			r.ctrl.Metrics.DeletedInc()
 			// Object not found, return.  Created objects are automatically garbage collected.
@@ -344,4 +330,26 @@ func (r *PytorchJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 func (r *PytorchJobReconciler) IsMasterRole(replicas map[v1.ReplicaType]*v1.ReplicaSpec, rtype v1.ReplicaType, index int) bool {
 	_, ok := replicas[training.PyTorchReplicaTypeMaster]
 	return ok && rtype == training.PyTorchReplicaTypeMaster
+}
+
+func (r *PytorchJobReconciler) cleanUpPreemptFinalizers(namespace, name string) error {
+	selector, _ := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: r.ctrl.GenLabels(name),
+	})
+	pods := corev1.PodList{}
+	if err := r.Client.List(context.Background(), &pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector}); err != nil {
+		return err
+	}
+	for i := range pods.Items {
+		pod := &pods.Items[i]
+		if k8sutil.HasFinalizer(pod.Finalizers, v1.FinalizerPreemptProtector) {
+			klog.V(2).Infof("pod %s has finalizer %s, need to remove", pod.Name, v1.FinalizerPreemptProtector)
+			patch := patchutil.NewStrategicPatch()
+			patch.RemoveFinalizer(v1.FinalizerPreemptProtector)
+			if err := r.Client.Patch(context.Background(), pod, patch); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

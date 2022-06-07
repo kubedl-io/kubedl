@@ -59,6 +59,13 @@ func (jc *JobController) OnPodCreateFunc(e event.CreateEvent) bool {
 		// on a restart of the controller controller, it's possible a new pod shows up in a state that
 		// is already pending deletion. Prevent the pod from being a creation observation.
 		// jc.deletePod(pod)
+		if k8sutil.HasFinalizer(pod.Finalizers, apiv1.FinalizerPreemptProtector) {
+			patch := patchutil.NewStrategicPatch()
+			patch.RemoveFinalizer(apiv1.FinalizerPreemptProtector)
+			if err := jc.Client.Patch(context.Background(), pod, patch); err != nil {
+				klog.Errorf("failed to remove finalizer %s, err: %v", apiv1.FinalizerPreemptProtector, err)
+			}
+		}
 		return false
 	}
 
@@ -263,6 +270,9 @@ func (jc *JobController) ReconcilePods(
 		if len(podSlice) > 1 {
 			logger.Warningf("We have too many pods for %s %d", rt, index)
 		} else if len(podSlice) == 0 {
+			if index >= numReplicas {
+				continue
+			}
 			logger.Infof("Need to create new pod: %s-%d", rt, index)
 
 			// check if this replica is the master role
