@@ -252,6 +252,10 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 		rank++
 	}
 
+	if job_controller.EnableErrorMonitoring(pytorchJob) {
+		podTemplate.Finalizers = append(podTemplate.Finalizers, v1.FinalizerPreemptProtector)
+	}
+
 	totalReplicas := int(k8sutil.GetTotalExcludedReplicas(pytorchJob.Spec.PyTorchReplicaSpecs, v1.JobReplicaTypeAIMaster))
 	enableElasticScaling := pytorchJob.Annotations[v1.AnnotationEnableElasticTraining] == "true"
 	if enableElasticScaling && !masterRole && rtype != "aimaster" {

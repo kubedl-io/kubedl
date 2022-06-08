@@ -592,6 +592,9 @@ func (jc *JobController) AdoptAndClaimPods(job metav1.Object, podList *v1.PodLis
 }
 
 func (jc *JobController) reactForAIMasterErrorAnalyzeResult(job client.Object, rtype apiv1.ReplicaType, pods []*v1.Pod, jobStatus *apiv1.JobStatus, logger *log.Entry) (err error) {
+	if rtype == apiv1.JobReplicaTypeAIMaster {
+		return nil
+	}
 	restartList := getToBeRestartedPods(job)
 	if len(restartList) > 0 {
 		logger.Infof("job %s asks to recreate pods: %+v", job.GetName(), restartList)
