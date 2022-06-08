@@ -36,6 +36,8 @@ import (
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
+	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+	patchutil "github.com/alibaba/kubedl/pkg/util/patch"
 	trainutil "github.com/alibaba/kubedl/pkg/util/train"
 )
 
@@ -57,6 +59,13 @@ func (jc *JobController) OnPodCreateFunc(e event.CreateEvent) bool {
 		// on a restart of the controller controller, it's possible a new pod shows up in a state that
 		// is already pending deletion. Prevent the pod from being a creation observation.
 		// jc.deletePod(pod)
+		if k8sutil.HasFinalizer(pod.Finalizers, apiv1.FinalizerPreemptProtector) {
+			patch := patchutil.NewStrategicPatch()
+			patch.RemoveFinalizer(apiv1.FinalizerPreemptProtector)
+			if err := jc.Client.Patch(context.Background(), pod, patch); err != nil {
+				klog.Errorf("failed to remove finalizer %s, err: %v", apiv1.FinalizerPreemptProtector, err)
+			}
+		}
 		return false
 	}
 
@@ -131,6 +140,14 @@ func (jc *JobController) OnPodUpdateFunc(e event.UpdateEvent) bool {
 func (jc *JobController) OnPodDeleteFunc(e event.DeleteEvent) bool {
 	pod, ok := e.Object.(*v1.Pod)
 	logger := commonutil.LoggerForPod(pod, jc.Controller.GetAPIGroupVersionKind().Kind)
+
+	if k8sutil.HasFinalizer(pod.Finalizers, apiv1.FinalizerPreemptProtector) {
+		patch := patchutil.NewStrategicPatch()
+		patch.RemoveFinalizer(apiv1.FinalizerPreemptProtector)
+		if err := jc.Client.Patch(context.Background(), pod, patch); err != nil {
+			klog.Errorf("failed to remove finalizer %s, err: %v", apiv1.FinalizerPreemptProtector, err)
+		}
+	}
 
 	// When a delete is dropped, the relist will notice a pod in the store not
 	// in the list, leading to the insertion of a tombstone object which contains
@@ -224,7 +241,7 @@ func (jc *JobController) ReconcilePods(
 	pods []*v1.Pod,
 	rtype apiv1.ReplicaType,
 	spec *apiv1.ReplicaSpec,
-	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, restart *bool) error {
+	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, runPolicy *apiv1.RunPolicy, restart *bool) error {
 
 	metaObject, ok := job.(metav1.Object)
 	if !ok {
@@ -253,11 +270,14 @@ func (jc *JobController) ReconcilePods(
 		if len(podSlice) > 1 {
 			logger.Warningf("We have too many pods for %s %d", rt, index)
 		} else if len(podSlice) == 0 {
+			if index >= numReplicas {
+				continue
+			}
 			logger.Infof("Need to create new pod: %s-%d", rt, index)
 
 			// check if this replica is the master role
 			masterRole = jc.Controller.IsMasterRole(replicas, rtype, index)
-			err = jc.createNewPod(ctx, job, rt, strconv.Itoa(index), spec, masterRole, replicas)
+			err = jc.createNewPod(ctx, job, rt, strconv.Itoa(index), spec, masterRole, runPolicy)
 			if err != nil {
 				// When controller tries to create a new pod but api-server returns a AlreadyExists error,
 				// there may comes with two case:
@@ -343,7 +363,7 @@ func (jc *JobController) ReconcilePods(
 
 // createNewPod creates a new pod for the given index and type.
 func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, index string, spec *apiv1.ReplicaSpec, masterRole bool,
-	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
+	runPolicy *apiv1.RunPolicy) error {
 
 	metaObject, ok := job.(metav1.Object)
 	if !ok {
@@ -366,6 +386,10 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 	if masterRole {
 		labels[apiv1.JobRoleLabel] = "master"
 	}
+	if jc.Controller.EnableElasticScaling(metaObject, runPolicy) {
+		podTemplate.Finalizers = append(podTemplate.Finalizers, apiv1.FinalizerPreemptProtector)
+		labels[apiv1.LabelGeneration] = strconv.Itoa(int(metaObject.GetGeneration()))
+	}
 
 	if EnableHostNetwork(metaObject) {
 		commonutil.LoggerForReplica(metaObject, rt).Infof("pod enable host network, name: %s, masterRole: %v",
@@ -377,10 +401,6 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 
 	podTemplate.Labels = commonutil.MergeMap(podTemplate.Labels, labels)
 
-	if err := jc.Controller.SetClusterSpec(ctx, job, podTemplate, rt, index); err != nil {
-		return err
-	}
-
 	// Submit a warning event if the user specifies restart policy for
 	// the pod template. We recommend to set it from the replica level.
 	if podTemplate.Spec.RestartPolicy != v1.RestartPolicy("") {
@@ -389,6 +409,10 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		jc.Recorder.Event(runtimeObject, v1.EventTypeWarning, podTemplateRestartPolicyReason, errMsg)
 	}
 	setRestartPolicy(podTemplate, spec)
+
+	if err := jc.Controller.SetClusterSpec(ctx, job, podTemplate, rt, index); err != nil {
+		return err
+	}
 
 	// If gang-scheduling is enabled, try re-bind this pod with gang entity to maintain the gang relationship,
 	// if it has existed, binding is a no-op.
@@ -466,7 +490,7 @@ func (jc *JobController) CreatePod(job interface{}, rt, index string, podTemplat
 
 	controllerRef := jc.GenOwnerReference(metaObject)
 
-	err = jc.PodControl.CreatePodsWithControllerRef(metaObject.GetNamespace(), podTemplate, runtimeObject, controllerRef)
+	err = jc.PodControl.CreatePods(metaObject.GetNamespace(), podTemplate, runtimeObject, controllerRef)
 	if err != nil && errors.IsTimeout(err) {
 		// Pod is created but its initialization has timed out.
 		// If the initialization is successful eventually, the

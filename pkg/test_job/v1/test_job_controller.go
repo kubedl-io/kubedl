@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/util/runtime"
 )
 
 var _ apiv1.ControllerInterface = &TestJobController{}
@@ -17,6 +18,7 @@ type TestJobController struct {
 	Job      *TestJob
 	Pods     []*corev1.Pod
 	Services []*corev1.Service
+	runtime.EmptyScaleImpl
 }
 
 func (in *TestJobController) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {

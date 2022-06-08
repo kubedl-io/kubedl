@@ -247,6 +247,35 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 		}
 	}
 
+	// Scaling will be triggered when following conditions satisfied:
+	// 1. job has been in running state.
+	// 2. elastic scaling feature gate has been enabled.
+	// 3. generation has incremented, which represents the expected replicas changed.
+	if commonutil.IsRunning(*oldStatus) && jc.Controller.EnableElasticScaling(metaObject, runPolicy) {
+		// Firstly check necessity of checkpoint, notify aimaster executing checkpoint if it is.
+		// Once checkpoint triggered, scale out/in progress will be hold util it completed.
+		done, err := jc.Controller.CheckpointIfNecessary(job, pods)
+		if err != nil {
+			log.Errorf("failed to checkpoint if necessary, err: %v", err)
+			return result, err
+		}
+		// No in-progressing checkpoint and generation has incremented (scale out or scale in happened).
+		if done && metaObject.GetGeneration() > 1 {
+			activeReplicasInNewGeneration := k8sutil.GetNumReplicasForLatestGeneration(pods, metaObject.GetGeneration())
+
+			if totalReplicas > activeReplicasInNewGeneration {
+				err = jc.Controller.ScaleOut(job, replicas, pods, services)
+			} else if totalReplicas < activeReplicasInNewGeneration {
+				err = jc.Controller.ScaleIn(job, replicas, pods, services)
+			}
+
+			if err != nil {
+				log.Errorf("failed to handle elastic scaling, err: %v", err)
+				return result, err
+			}
+		}
+	}
+
 	// Save the current state of the replicas
 	restart := false
 
@@ -261,6 +290,13 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			continue
 		}
 
+		// Hack for AIMaster and DO-NOT-REMOVE-THIS.
+		if _, amExists := replicas[apiv1.JobReplicaTypeAIMaster]; rtype != apiv1.JobReplicaTypeAIMaster &&
+			amExists && metaObject.GetAnnotations()["aimaster"] != "ready" {
+			log.Infof("aimaster has not ready and reconciling is freezed.")
+			return reconcile.Result{}, nil
+		}
+
 		log.Infof("reconciles for replica type: %s", rtype)
 		// If DAG scheduling has been enabled and current replica has upstream vertex(replica:phase),
 		// wait util all upstream replicas ready then trigger next reconciling.
@@ -269,7 +305,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			continue
 		}
 
-		err = jc.ReconcilePods(ctx, metaObject, &jobStatus, pods, rtype, spec, replicas, &restart)
+		err = jc.ReconcilePods(ctx, metaObject, &jobStatus, pods, rtype, spec, replicas, runPolicy, &restart)
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
 			return result, err

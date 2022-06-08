@@ -55,8 +55,17 @@ var _ = Describe("PodControl", func() {
 			podTemplate.Labels = testutilv1.GenLabels(testJob.Name)
 			podTemplate.SetOwnerReferences([]metav1.OwnerReference{})
 
+			boolPtr := func(b bool) *bool { return &b }
+			controllerRef := &metav1.OwnerReference{
+				APIVersion:         testJob.APIVersion,
+				Kind:               testJob.Kind,
+				Name:               testJob.Name,
+				UID:                testJob.UID,
+				BlockOwnerDeletion: boolPtr(true),
+				Controller:         boolPtr(true),
+			}
 			// Make sure createReplica sends a POST to the apiserver with a pod from the controllers pod template
-			err := podControl.CreatePods(testJob.Namespace, &podTemplate, testJob)
+			err := podControl.CreatePods(testJob.Namespace, &podTemplate, testJob, controllerRef)
 			Expect(err).Should(Succeed())
 
 			expectedPod := v1.Pod{

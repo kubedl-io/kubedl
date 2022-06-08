@@ -32,6 +32,10 @@ const (
 	AnnotationTenancyInfo = KubeDLPrefix + "/tenancy"
 	// AnnotationNetworkMode annotate job network mode.
 	AnnotationNetworkMode = KubeDLPrefix + "/network-mode"
+	// AnnotationEnableElasticTraining indicates job enables elastic training.
+	AnnotationEnableElasticTraining = KubeDLPrefix + "/enable-elastic-training"
+	// AnnotationElasticScaleState indicates current progress of elastic scaling (inflight | done)
+	AnnotationElasticScaleState = KubeDLPrefix + "/scale-state"
 
 	// AnnotationTensorBoardConfig annotate tensorboard configurations.
 	AnnotationTensorBoardConfig = KubeDLPrefix + "/tensorboard-config"
@@ -52,6 +56,17 @@ const (
 	LabelCronName = KubeDLPrefix + "/cron-name"
 	// LabelGangSchedulingJobName indicates name of gang scheduled job.
 	LabelGangSchedulingJobName = KubeDLPrefix + "/gang-job-name"
+	// LabelGeneration indicates the generation of this job referenced to.
+	LabelGeneration = KubeDLPrefix + "/job-generation"
+)
+
+const (
+	FinalizerPreemptProtector = KubeDLPrefix + "/preempt-protector"
+)
+
+const (
+	// JobReplicaTypeAIMaster means the AIMaster role for all job
+	JobReplicaTypeAIMaster ReplicaType = "AIMaster"
 )
 
 // NetworkMode defines network mode for intra job communicating.
@@ -60,4 +75,9 @@ type NetworkMode string
 const (
 	// HostNetworkMode indicates that replicas use host-network to communicate with each other.
 	HostNetworkMode NetworkMode = "host"
+)
+
+const (
+	ElasticScaleInflight = "inflight"
+	ElasticScaleDone     = "done"
 )

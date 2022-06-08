@@ -1,49 +1,6 @@
-module github.com/alibaba/kubedl
+module github.com/SimonCqk/kubedl/example/pytorch
 
 go 1.16
-
-require (
-	github.com/aliyun/aliyun-log-go-sdk v0.1.6
-	github.com/fluid-cloudnative/fluid v0.7.0
-	github.com/gin-contrib/sessions v0.0.3
-	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
-	github.com/gin-gonic/gin v1.7.0
-	github.com/go-logr/logr v0.4.0
-	github.com/go-logr/zapr v0.4.1-0.20210423233217-9f3e0b1ce51b // indirect
-	github.com/go-sql-driver/mysql v1.4.1
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/jinzhu/gorm v1.9.12
-	github.com/kubernetes-sigs/kube-batch v0.0.0-20200402033359-1ebe60e4af4f
-	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.15.0
-	github.com/openkruise/kruise v1.1.0
-	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
-	github.com/prometheus/client_golang v1.11.0
-	github.com/robfig/cron/v3 v3.0.1
-	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
-	github.com/tidwall/gjson v1.8.0
-	golang.org/x/net v0.0.0-20211209124913-491a49abca63
-	gopkg.in/yaml.v2 v2.4.0
-	istio.io/api v0.0.0-20210420211535-1c598ea4139c
-	istio.io/client-go v1.9.4
-	istio.io/gogo-genproto v0.0.0-20210113155706-4daf5697332f // indirect
-	k8s.io/api v0.22.6
-	k8s.io/apimachinery v0.22.6
-	k8s.io/apiserver v0.22.6
-	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
-	k8s.io/code-generator v0.22.6
-	k8s.io/component-base v0.22.6
-	k8s.io/klog v1.0.0
-	k8s.io/kubernetes v1.22.6
-	k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a
-	sigs.k8s.io/controller-runtime v0.10.3
-	sigs.k8s.io/controller-tools v0.6.1
-	sigs.k8s.io/scheduler-plugins v0.19.9
-	sigs.k8s.io/yaml v1.2.0
-	volcano.sh/apis v1.3.0-k8s1.18.3-alpha.3
-)
 
 replace (
 	k8s.io/api => k8s.io/api v0.22.6
@@ -76,4 +33,14 @@ replace (
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.22.6
 	k8s.io/sample-cli-plugin => k8s.io/sample-cli-plugin v0.22.6
 	k8s.io/sample-controller => k8s.io/sample-controller v0.22.6
+)
+
+require (
+	github.com/alibaba/kubedl v0.4.1
+	k8s.io/api v0.23.5
+	k8s.io/apimachinery v0.23.5
+	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
+	k8s.io/klog v1.0.0
+	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
+	sigs.k8s.io/controller-runtime v0.11.2
 )

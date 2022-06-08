@@ -90,6 +90,14 @@ func setDefaultPyTorchDAGConditions(job *PyTorchJob) {
 	//
 	//  Master
 	//  |--> Worker
+
+	if job.Spec.PyTorchReplicaSpecs[common.JobReplicaTypeAIMaster] != nil &&
+		job.Spec.PyTorchReplicaSpecs[PyTorchReplicaTypeMaster] != nil {
+		job.Spec.PyTorchReplicaSpecs[PyTorchReplicaTypeMaster].DependOn = []common.DAGCondition{
+			{Upstream: common.JobReplicaTypeAIMaster, OnPhase: v1.PodRunning},
+		}
+	}
+
 	if job.Spec.PyTorchReplicaSpecs[PyTorchReplicaTypeWorker] != nil &&
 		job.Spec.PyTorchReplicaSpecs[PyTorchReplicaTypeMaster] != nil {
 		job.Spec.PyTorchReplicaSpecs[PyTorchReplicaTypeWorker].DependOn = []common.DAGCondition{
