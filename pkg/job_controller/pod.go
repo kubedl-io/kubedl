@@ -469,7 +469,9 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 
 		// 1) assign gang scheduler name if it's empty.
 		// 2) override scheduler name if it differs from the selected gang implementation.
-		podTemplate.Spec.SchedulerName = jc.GangScheduler.SchedulerName()
+		if podTemplate.Spec.SchedulerName == "" {
+			podTemplate.Spec.SchedulerName = jc.GangScheduler.SchedulerName()
+		}
 	}
 
 	// apply spotReplicaSpec for spot replicas

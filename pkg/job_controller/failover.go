@@ -95,7 +95,7 @@ func (jc *JobController) RecreatePods(job client.Object, pods []*corev1.Pod) err
 		tickets = len(pods)
 	}
 
-	sema := concurrent.NewSemaphere(tickets)
+	sema := concurrent.NewSemaphore(tickets)
 	for _, p := range pods {
 		sema.Acquire()
 		go func(pod *corev1.Pod) {
@@ -118,7 +118,7 @@ func (jc *JobController) RestartPods(job client.Object, pods []*corev1.Pod) erro
 	}
 
 	total := len(pods)
-	sema := concurrent.NewSemaphere(tickets)
+	sema := concurrent.NewSemaphore(tickets)
 
 	for _, p := range pods {
 		if !k8sutil.IsPodActive(p) {

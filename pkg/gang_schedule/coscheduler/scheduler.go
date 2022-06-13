@@ -107,6 +107,10 @@ func (kbs *kubeCoscheduler) CreateGang(job metav1.Object, replicas map[apiv1.Rep
 }
 
 func (kbs *kubeCoscheduler) BindPodToGang(job metav1.Object, podSpec *v1.PodTemplateSpec, gangEntity runtime.Object, rtype string) error {
+	if rtype == strings.ToLower(string(apiv1.JobReplicaTypeAIMaster)) {
+		podSpec.Spec.SchedulerName = "default-scheduler"
+		return nil
+	}
 	podGroups, ok := gangEntity.(*v1alpha1.PodGroupList)
 	if !ok {
 		klog.Warningf("gang entity cannot convert to gang list, entity: %+v", gangEntity)
@@ -196,6 +200,12 @@ func (kbs *kubeCoscheduler) generateGangByJobUnit(apiVersion, kind, name, namesp
 		Spec: v1alpha1.PodGroupSpec{MinMember: k8sutil.GetTotalReplicas(replicas)},
 	}
 
+	if aimaster := replicas[apiv1.JobReplicaTypeAIMaster]; aimaster != nil && aimaster.Replicas != nil {
+		if *aimaster.Replicas > 0 {
+			pg.Spec.MinMember -= *aimaster.Replicas
+		}
+	}
+
 	if schedPolicy != nil && schedPolicy.MinAvailable != nil && *schedPolicy.MinAvailable > 0 {
 		pg.Spec.MinMember = *schedPolicy.MinAvailable
 	}
@@ -207,6 +217,9 @@ func (kbs *kubeCoscheduler) generateGangByRoleUnit(apiVersion, kind, name, names
 	pgs := v1alpha1.PodGroupList{Items: make([]v1alpha1.PodGroup, 0, len(replicas))}
 
 	for rtype, spec := range replicas {
+		if rtype == apiv1.JobReplicaTypeAIMaster {
+			continue
+		}
 		rt := strings.ToLower(string(rtype))
 		gangName := fmt.Sprintf("%s-%s", name, rt)
 		pgs.Items = append(pgs.Items, v1alpha1.PodGroup{
