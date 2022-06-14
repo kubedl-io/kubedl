@@ -20,7 +20,7 @@ KubeDL is a [CNCF sandbox](https://www.cncf.io/sandbox-projects/) project.
 
 - Support training and inferences workloads (Tensorflow, Pytorch. [Mars](https://github.com/mars-project/mars) etc.)in a single unified controller.  Features include advanced scheduling, acceleration using cache, metadata persistentcy, file sync, enable service discovery for training in host network  etc.
 - Automatically tunes the best configurations for ML model deployment. - [Morphling Github](https://github.com/alibaba/morphling)
-- Package and deploy ML Model in container and track the model lineage natively with Kubernentes CRD 
+- Package and deploy ML Model in container and track the model lineage natively with Kubernentes CRD.
 
 Check the website: https://kubedl.io
 
