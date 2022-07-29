@@ -19,7 +19,6 @@ import (
 
 	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
-	cachectrl "github.com/alibaba/kubedl/controllers/cache"
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
@@ -199,10 +198,10 @@ func (jc *JobController) resolveControllerRef(namespace string, controllerRef *m
 	return job
 }
 
-func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec *cachev1alpha1.CacheBackendSpec,
-	jobStatus *apiv1.JobStatus) error {
+func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) error {
 	cacheBackend := &cachev1alpha1.CacheBackend{}
-	cacheBackendName := cachectrl.GetCacheName(metaObject)
+	//cacheBackendName := cachectrl.GetCacheName(metaObject)
+	cacheBackendName := cacheBackendSpec.CacheBackendName
 	cacheBackendNameSpace := metaObject.GetNamespace()
 	err := jc.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: cacheBackendNameSpace,
@@ -211,54 +210,65 @@ func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec 
 
 	if err == nil {
 		// Already been created
-		log.Infof("cache backend has been created")
+		log.Infof("CacheBackend has been created")
 		return nil
 	} else {
 		if k8serrors.IsNotFound(err) {
-			log.Infof("cache backend is not exist, start to create %s", cacheBackendName)
+			log.Infof("CacheBackend is not exist, start to create %s", cacheBackendName)
 
 			// If haven't created yet
 			cacheBackend = &cachev1alpha1.CacheBackend{}
 			cacheBackend.Name = cacheBackendName
 			cacheBackend.Namespace = cacheBackendNameSpace
 			cacheBackend.Spec = *cacheBackendSpec
-			controllerRef := jc.GenOwnerReference(metaObject)
-			cacheBackend.OwnerReferences = append(cacheBackend.OwnerReferences, *controllerRef)
+			//controllerRef := jc.GenOwnerReference(metaObject)
+			//cacheBackend.OwnerReferences = append(cacheBackend.OwnerReferences, *controllerRef)
 			err = jc.Client.Create(context.Background(), cacheBackend)
 			if err != nil {
-				log.Errorf("failed to create cache backend %s", cacheBackend.Name)
+				log.Errorf("Failed to create cache backend %s", cacheBackend.Name)
 				return err
 			}
 
 			// Update job status
-			jobStatus.CacheBackendName = cacheBackendName
+			//jobStatus.CacheBackendName = cacheBackendName
 
 			// Update cache backend status
-			cacheCopy := cacheBackend.DeepCopy()
-			cacheCopy.Status.JobName = metaObject.GetName()
-			cacheCopy.Status.CacheStatus = cachev1alpha1.CacheCreating
-			err = jc.Client.Status().Update(context.Background(), cacheCopy)
-			if err != nil {
-				log.Error(err, "failed to update job name", "cacheBackend", cacheBackend.Name)
-				return err
-			}
+			//cacheCopy := cacheBackend.DeepCopy()
+			//cacheCopy.Status.JobName = metaObject.GetName()
+			//cacheCopy.Status.CacheStatus = cachev1alpha1.CacheCreating
+			//err = jc.Client.Status().Update(context.Background(), cacheCopy)
+			//if err != nil {
+			//	log.Error(err, "failed to update job name", "cacheBackend", cacheBackend.Name)
+			//	return err
+			//}
 
 		} else {
-			log.Errorf("failed to get cache backend %s", cacheBackend.Name)
+			log.Errorf("Failed to get cache backend %s", cacheBackend.Name)
 			return err
 		}
 	}
-	log.Infof("cache backend %s created", cacheBackendName)
+	log.Infof("CacheBackend %s created", cacheBackendName)
 	return nil
 }
 
 func (jc JobController) addCachePathToContainer(metaObject metav1.Object, cacheBackend *cachev1alpha1.CacheBackendSpec,
 	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
 
+	cacheObj := &cachev1alpha1.CacheBackend{}
+	err := jc.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: metaObject.GetNamespace(),
+		Name:      cacheBackend.CacheBackendName,
+	}, cacheObj)
+
+	if err != nil {
+		log.Errorf("Failed to get cacheBackend instance %s when inject cache to cantainers", cacheBackend.CacheBackendName)
+	}
+
 	// Check whether the PVC has been created
 	pvc := &v1.PersistentVolumeClaim{}
-	pvcName := cachectrl.GetCacheName(metaObject)
-	err := jc.Client.Get(context.Background(), types.NamespacedName{
+	//pvcName := cachectrl.GetCacheName(metaObject)
+	pvcName := cacheBackend.CacheBackendName
+	err = jc.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: metaObject.GetNamespace(),
 		Name:      pvcName,
 	}, pvc)
@@ -283,20 +293,20 @@ func (jc JobController) addCachePathToContainer(metaObject metav1.Object, cacheB
 					})
 				}
 			}
-			jc.addCacheVolumeToPodSpec(pvcName, cacheBackend, &spec.Template)
+			jc.addCacheVolumeToPodSpec(pvcName, cacheBackend.MountPath, &spec.Template)
 		}
 
 	} else {
 		if k8serrors.IsNotFound(err) {
-			log.Errorf("cannot find pvc %s, waiting to be created", pvcName)
+			log.Errorf("Cannot find pvc %s, waiting to be created", pvcName)
 		} else {
-			log.Errorf("fail to get pvc %s", pvcName)
+			log.Errorf("Failed to get pvc %s", pvcName)
 		}
 	}
 	return err
 }
 
-func (jc JobController) addCacheVolumeToPodSpec(pvcName string, cacheBackend *cachev1alpha1.CacheBackendSpec, pod *v1.PodTemplateSpec) {
+func (jc JobController) addCacheVolumeToPodSpec(pvcName, mountPath string, pod *v1.PodTemplateSpec) {
 	pod.Spec.Volumes = append(pod.Spec.Volumes,
 		v1.Volume{
 			Name: "cachevolume",
@@ -309,7 +319,7 @@ func (jc JobController) addCacheVolumeToPodSpec(pvcName string, cacheBackend *ca
 	for i, c := range pod.Spec.Containers {
 		pod.Spec.Containers[i].VolumeMounts = append(c.VolumeMounts,
 			v1.VolumeMount{
-				Name: "cachevolume", MountPath: cacheBackend.MountPath,
+				Name: "cachevolume", MountPath: mountPath,
 			})
 	}
 }

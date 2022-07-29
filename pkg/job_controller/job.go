@@ -109,17 +109,22 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 	if cacheBackend != nil {
 		// Create cache backend
 		// if cache backend has been created, the func also returns nil
-		err = jc.createCache(job, cacheBackend, &jobStatus)
+		err = jc.createCache(job, cacheBackend)
 		if err != nil {
-			log.Error(err, " failed to create cacheBackend")
+			log.Error(err, "Failed to create cacheBackend")
 			return reconcile.Result{Requeue: true}, err
 		}
 
 		// Next step is to get pvc and inject it to containers
 		err = jc.addCachePathToContainer(job, cacheBackend, replicas)
 		if err != nil {
-			log.Error(err, " failed to inject pvc to containers")
+			log.Error(err, "Failed to inject pvc to containers")
 			return reconcile.Result{Requeue: true}, err
+		}
+
+		if jobStatus.CacheBackendName == "" {
+			log.Infof("Update cacheBackend Name in job status")
+			jobStatus.CacheBackendName = cacheBackend.CacheBackendName // update to api-server later
 		}
 	}
 

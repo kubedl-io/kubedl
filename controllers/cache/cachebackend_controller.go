@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
@@ -67,12 +68,14 @@ func (r *CacheBackendReconciler) Reconcile(_ context.Context, req ctrl.Request) 
 		r.Log.Error(err, "fail to get cacheBackend")
 		return reconcile.Result{}, err
 	}
+	status := cacheBackend.Status
+	oldStatus := cacheBackend.Status.DeepCopy()
 
 	// When pvc has created, no need for reconcile
-	if cacheBackend.Status.CacheStatus == cachev1alpha1.PVCCreated {
-		r.Log.Info(fmt.Sprintf("cacheBackend status: is %s, pvc has created, skip reconcile", cacheBackend.Status.CacheStatus), "cacheBackend", cacheBackend.Name)
-		return reconcile.Result{}, nil
-	}
+	//if cacheBackend.Status.CacheStatus == cachev1alpha1.PVCCreated {
+	//	r.Log.Info(fmt.Sprintf("cacheBackend status: is %s, pvc has created, skip reconcile", cacheBackend.Status.CacheStatus), "cacheBackend", cacheBackend.Name)
+	//	return reconcile.Result{}, nil
+	//}
 
 	// Check if pvc has created, if created, then update status to PVCCreated and return
 	pvc := &v1.PersistentVolumeClaim{}
@@ -83,8 +86,9 @@ func (r *CacheBackendReconciler) Reconcile(_ context.Context, req ctrl.Request) 
 	}, pvc)
 
 	if err == nil {
-		r.Log.Info(fmt.Sprintf("pvc %s found", pvc.Name))
-		err = r.updateCacheBackendStatus(cacheBackend, cachev1alpha1.PVCCreated)
+		r.Log.Info(fmt.Sprintf("PVC %s found", pvc.Name))
+		status.CacheStatus = cachev1alpha1.PVCCreated
+		err = r.updateCacheBackendStatus(cacheBackend, &status)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -93,50 +97,61 @@ func (r *CacheBackendReconciler) Reconcile(_ context.Context, req ctrl.Request) 
 
 	// If the pvc is not found, then there are two possible scenarios
 	// 1) Cache job has already been committed and pvc is creating
-	r.Log.Info(fmt.Sprintf("pvc %s not found, try to create cache backend", pvcName))
+	r.Log.Info(fmt.Sprintf("PVC %s not found, try to create cache backend", pvcName))
 	if cacheBackend.Status.CacheStatus == cachev1alpha1.PVCCreating {
-		r.Log.Info(fmt.Sprintf("pvc %s is creating", pvcName), "cacheBackend", cacheBackend.Name)
+		r.Log.Info(fmt.Sprintf("PVC %s is creating", pvcName), "cacheBackend", cacheBackend.Name)
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	// 2) Cache job has not create, reconciler will start creating a cache job to generate the pvc
+	// 2) Cache job has not created, reconciler will start creating a cache job to generate the pvc
 	if cacheBackend.Spec.CacheEngine == nil {
-		r.Log.Error(err, "cacheEngine is undefined", "cache backend", cacheBackend.Name)
+		r.Log.Error(err, "CacheEngine is undefined", "cache backend", cacheBackend.Name)
 		return reconcile.Result{}, nil
 	} else {
 		// Different cache job are created based on the cacheEngine specified in cacheBackend.spec, which is pluggable
 		cacheBackendName, err := registry.CacheBackendName(cacheBackend.Spec.CacheEngine)
+		status.CacheEngine = cacheBackendName
 		if err != nil {
 			r.Log.Error(err, "failed to get cache backend name in registry", "cacheBackend", cacheBackend.Name)
-			return ctrl.Result{}, err
+			return reconcile.Result{Requeue: true}, err
 		}
 		cacheEngine := registry.Get(cacheBackendName)
 		err = cacheEngine.CreateCacheJob(cacheBackend)
 		if err != nil {
 			r.Log.Error(err, "failed to create job with cache engine", "cacheBackend", cacheBackend.Name)
 			// Update status
-			err = r.updateCacheBackendStatus(cacheBackend, cachev1alpha1.CacheFailed)
+			status.CacheStatus = cachev1alpha1.CacheFailed
+			err = r.updateCacheBackendStatus(cacheBackend, &status)
 			if err != nil {
-				return ctrl.Result{}, err
+				return reconcile.Result{Requeue: true}, err
 			}
 			return reconcile.Result{Requeue: true}, err
 		}
 
 		// Update status
-		err = r.updateCacheBackendStatus(cacheBackend, cachev1alpha1.PVCCreating)
+		status.CacheStatus = cachev1alpha1.PVCCreating
+		err = r.updateCacheBackendStatus(cacheBackend, &status)
 		if err != nil {
-			return ctrl.Result{}, err
+			return reconcile.Result{Requeue: true}, err
+		}
+	}
+
+	if !reflect.DeepEqual(oldStatus, status) {
+		err := r.updateCacheBackendStatus(cacheBackend, &status)
+		if err != nil {
+			return reconcile.Result{Requeue: true}, err
 		}
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *CacheBackendReconciler) updateCacheBackendStatus(cacheBackend *cachev1alpha1.CacheBackend, status cachev1alpha1.CacheStatus) error {
-	cacheBackendStatus := cacheBackend.Status.DeepCopy()
+func (r *CacheBackendReconciler) updateCacheBackendStatus(cacheBackend *cachev1alpha1.CacheBackend,
+	status *cachev1alpha1.CacheBackendStatus) error {
+
 	cacheCopy := cacheBackend.DeepCopy()
-	cacheCopy.Status = *cacheBackendStatus
-	cacheCopy.Status.CacheStatus = status
+	cacheCopy.Status = *status.DeepCopy()
+
 	err := r.Status().Update(context.Background(), cacheCopy)
 	if err != nil {
 		r.Log.Error(err, "failed to update cacheBackend", "cacheBackend", cacheBackend.Name)

@@ -26,7 +26,6 @@ func NewFluidCacheBackend(name string, namespace string) *v1alpha1.CacheBackend 
 			},
 		},
 		Status: v1alpha1.CacheBackendStatus{
-			JobName:     "testJobName",
 			CacheStatus: v1alpha1.CacheCreating,
 		},
 	}

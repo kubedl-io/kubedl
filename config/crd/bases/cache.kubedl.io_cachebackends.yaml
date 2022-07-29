@@ -17,12 +17,15 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.jobName
-      name: Job-Name
+    - jsonPath: .status.cacheEngine
+      name: Engine
       type: string
     - jsonPath: .status.cacheStatus
-      name: Cache-Status
+      name: Status
       type: string
+    - jsonPath: .status.usedNum
+      name: Used-Num
+      type: integer
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
@@ -75,13 +78,23 @@ spec:
                 type: object
               mountPath:
                 type: string
+              name:
+                type: string
             type: object
           status:
             properties:
+              cacheEngine:
+                type: string
               cacheStatus:
                 type: string
-              jobName:
+              idleTime:
                 type: string
+              usedBy:
+                items:
+                  type: string
+                type: array
+              usedNum:
+                type: integer
             type: object
         type: object
     served: true
