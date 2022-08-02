@@ -22,8 +22,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -140,36 +138,4 @@ func (r *PytorchJobReconciler) updateGeneralJobStatus(pytorchJob *training.PyTor
 		}
 	}
 	return nil
-}
-
-func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
-	return func(e event.CreateEvent) bool {
-		pytorchJob, ok := e.Object.(*training.PyTorchJob)
-		if !ok {
-			return true
-		}
-		reconciler, ok := r.(*PytorchJobReconciler)
-		if !ok {
-			return true
-		}
-		reconciler.scheme.Default(pytorchJob)
-		msg := fmt.Sprintf("PytorchJob %s is created.", e.Object.GetName())
-		if err := commonutil.UpdateJobConditions(&pytorchJob.Status, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
-			log.Error(err, "append job condition error")
-			return false
-		}
-		reconciler.ctrl.Metrics.CreatedInc()
-		return true
-	}
-}
-
-func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
-	return func(e event.DeleteEvent) bool {
-		pytorchJob, ok := e.Object.(*training.PyTorchJob)
-		if !ok {
-			return false
-		}
-		jc.DeleteExpectations(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs)
-		return true
-	}
 }

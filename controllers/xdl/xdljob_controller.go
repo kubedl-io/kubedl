@@ -36,11 +36,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/features"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/core"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
@@ -66,9 +68,12 @@ func NewReconciler(mgr manager.Manager, config options.JobControllerConfiguratio
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
-	r.ctrl = job_controller.NewJobController(mgr, r, config, r.recorder, metrics.NewJobMetrics(xdlv1alpha1.XDLJobKind, r.Client), mgr.GetScheme())
+	r.ctrl = job_controller.NewJobController(mgr, r, config, r.recorder, metrics.NewJobMetrics(training.XDLJobKind, r.Client), mgr.GetScheme())
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
+	}
+	if features.KubeDLFeatureGates.Enabled(features.JobCoordinator) {
+		r.coordinator = core.NewCoordinator(mgr)
 	}
 	return r
 }
@@ -79,9 +84,10 @@ var _ v1.ControllerInterface = &XDLJobReconciler{}
 // XDLJobReconciler reconciles a XDLJob object
 type XDLJobReconciler struct {
 	client.Client
-	scheme   *runtime.Scheme
-	recorder record.EventRecorder
-	ctrl     job_controller.JobController
+	scheme      *runtime.Scheme
+	recorder    record.EventRecorder
+	ctrl        job_controller.JobController
+	coordinator core.Coordinator
 	utilruntime.EmptyScaleImpl
 }
 
@@ -98,7 +104,7 @@ type XDLJobReconciler struct {
 
 func (r *XDLJobReconciler) Reconcile(_ context.Context, request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the latest xdlJob instance.
-	sharedXdlJob := &xdlv1alpha1.XDLJob{}
+	sharedXdlJob := &training.XDLJob{}
 	err := r.ctrl.APIReader.Get(context.Background(), request.NamespacedName, sharedXdlJob)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -144,16 +150,17 @@ func (r *XDLJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch owner resource with create event filter.
-	if err = c.Watch(&source.Kind{Type: &xdlv1alpha1.XDLJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
-		CreateFunc: onOwnerCreateFunc(r),
-		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
+	if err = c.Watch(&source.Kind{Type: &training.XDLJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+		CreateFunc: job_controller.OnOwnerCreateFunc(r.scheme, training.ExtractMetaFieldsFromObject, log, r.coordinator, r.ctrl.Metrics),
+		UpdateFunc: job_controller.OnOwnerUpdateFunc(r.scheme, training.ExtractMetaFieldsFromObject, log, r.coordinator),
+		DeleteFunc: job_controller.OnOwnerDeleteFunc(r.ctrl, training.ExtractMetaFieldsFromObject, log),
 	}); err != nil {
 		return err
 	}
 
 	// Watch managed resource with owner and create/delete event filter.
 	if err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &xdlv1alpha1.XDLJob{},
+		OwnerType:    &training.XDLJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnPodCreateFunc,
@@ -164,7 +171,7 @@ func (r *XDLJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	return c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &xdlv1alpha1.XDLJob{},
+		OwnerType:    &training.XDLJob{},
 		IsController: true,
 	}, predicate.Funcs{
 		CreateFunc: r.ctrl.OnServiceCreateFunc,
@@ -180,12 +187,12 @@ func (r *XDLJobReconciler) ControllerName() string {
 
 // GetAPIGroupVersionKind returns the GroupVersionKind of the API
 func (r *XDLJobReconciler) GetAPIGroupVersionKind() schema.GroupVersionKind {
-	return xdlv1alpha1.SchemeGroupVersion.WithKind(xdlv1alpha1.XDLJobKind)
+	return training.SchemeGroupVersion.WithKind(training.XDLJobKind)
 }
 
 // GetAPIGroupVersion returns the GroupVersion of the API
 func (r *XDLJobReconciler) GetAPIGroupVersion() schema.GroupVersion {
-	return xdlv1alpha1.SchemeGroupVersion
+	return training.SchemeGroupVersion
 }
 
 // GetGroupNameLabelValue returns the Group Name(value) in the labels of the job
@@ -195,7 +202,7 @@ func (r *XDLJobReconciler) GetGroupNameLabelValue() string {
 
 // SetClusterSpec sets the cluster spec for the pod
 func (r *XDLJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
-	xdlJob, ok := job.(*xdlv1alpha1.XDLJob)
+	xdlJob, ok := job.(*training.XDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of XDLJob", job)
 	}
@@ -224,25 +231,25 @@ func (r *XDLJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, 
 
 // GetDefaultContainerName returns the default container name in pod
 func (r *XDLJobReconciler) GetDefaultContainerName() string {
-	return xdlv1alpha1.XDLJobDefaultContainerName
+	return training.XDLJobDefaultContainerName
 }
 
 // GetDefaultContainerPortName Get the default container port name
 func (r *XDLJobReconciler) GetDefaultContainerPortName() string {
-	return xdlv1alpha1.XDLJobDefaultContainerPortName
+	return training.XDLJobDefaultContainerPortName
 }
 
 // GetDefaultContainerPortNumber get the default container port number
 func (r *XDLJobReconciler) GetDefaultContainerPortNumber() int32 {
-	return xdlv1alpha1.XDLJobDefaultPort
+	return training.XDLJobDefaultPort
 }
 
 func (r *XDLJobReconciler) GetReconcileOrders() []v1.ReplicaType {
 	return []v1.ReplicaType{
-		xdlv1alpha1.XDLReplicaTypePS,
-		xdlv1alpha1.XDLReplicaTypeScheduler,
-		xdlv1alpha1.XDLReplicaTypeWorker,
-		xdlv1alpha1.XDLReplicaTypeExtendRole,
+		training.XDLReplicaTypePS,
+		training.XDLReplicaTypeScheduler,
+		training.XDLReplicaTypeWorker,
+		training.XDLReplicaTypeExtendRole,
 	}
 }
 

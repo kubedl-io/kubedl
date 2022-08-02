@@ -28,6 +28,10 @@ const (
 	// DAGScheduling enables DAG scheduling workflow between different job roles.
 	DAGScheduling featuregate.Feature = "DAGScheduling"
 
+	// JobCoordinator enables coordinator to orchestrate waiting in queue jobs for
+	// better fairness and efficiency.
+	JobCoordinator featuregate.Feature = "JobCoordinator"
+
 	// PyTorchLocalMasterAddr explicitly declare to use localhost as master self listened
 	// address, it's usually adopted in version < torch 1.9, in >=1.9 distributed communication
 	// style, master address value should be aligned with workers, set by master service name.
@@ -50,6 +54,7 @@ var (
 		GangScheduling:         {Default: true, PreRelease: featuregate.Beta},
 		DAGScheduling:          {Default: true, PreRelease: featuregate.Beta},
 		PyTorchLocalMasterAddr: {Default: true, PreRelease: featuregate.Beta},
+		JobCoordinator:         {Default: true, PreRelease: featuregate.Alpha},
 		HostNetWithHeadlessSvc: {Default: false, PreRelease: featuregate.Alpha},
 	}
 )

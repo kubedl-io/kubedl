@@ -89,3 +89,8 @@ func MergeMap(a, b map[string]string) map[string]string {
 	}
 	return a
 }
+
+func JsonDump(obj interface{}) string {
+	content, _ := json.Marshal(obj)
+	return string(content)
+}

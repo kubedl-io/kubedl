@@ -34,8 +34,10 @@ import (
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/features"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/core"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
@@ -52,6 +54,9 @@ func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) 
 		scheme: mgr.GetScheme(),
 	}
 	r.recorder = mgr.GetEventRecorderFor(r.ControllerName())
+	if features.KubeDLFeatureGates.Enabled(features.JobCoordinator) {
+		r.coordinator = core.NewCoordinator(mgr)
+	}
 	r.ctrl = job_controller.NewJobController(mgr, r, config, r.recorder, metrics.NewJobMetrics(training.ElasticDLJobKind, r.Client), mgr.GetScheme())
 	return r
 }
@@ -62,9 +67,10 @@ var _ v1.ControllerInterface = &ElasticDLJobReconciler{}
 // ElasticDLJobReconciler reconcile a ElastiDLJob object
 type ElasticDLJobReconciler struct {
 	client.Client
-	scheme   *runtime.Scheme
-	recorder record.EventRecorder
-	ctrl     job_controller.JobController
+	scheme      *runtime.Scheme
+	recorder    record.EventRecorder
+	ctrl        job_controller.JobController
+	coordinator core.Coordinator
 	utilruntime.EmptyScaleImpl
 }
 
@@ -124,8 +130,9 @@ func (r *ElasticDLJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Watch owner resource with create event filter.
 	if err = c.Watch(&source.Kind{Type: &training.ElasticDLJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
-		CreateFunc: onOwnerCreateFunc(r),
-		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
+		CreateFunc: job_controller.OnOwnerCreateFunc(r.scheme, training.ExtractMetaFieldsFromObject, log, r.coordinator, r.ctrl.Metrics),
+		UpdateFunc: job_controller.OnOwnerUpdateFunc(r.scheme, training.ExtractMetaFieldsFromObject, log, r.coordinator),
+		DeleteFunc: job_controller.OnOwnerDeleteFunc(r.ctrl, training.ExtractMetaFieldsFromObject, log),
 	}); err != nil {
 		return err
 	}

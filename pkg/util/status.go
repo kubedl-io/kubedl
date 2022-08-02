@@ -16,9 +16,13 @@ const (
 	JobRunningReason = "JobRunning"
 	// JobFailedReason is added in a job when it is failed.
 	JobFailedReason = "JobFailed"
-	// JobRestarting is added in a job when it is restarting.
+	// JobRestartingReason is added in a job when it is restarting.
 	JobRestartingReason = "JobRestarting"
-	// JobEvicted is added in a job when it is evicted.
+	// JobEnqueuedReason is added in a job when it is queuing and being enqueued.
+	JobEnqueuedReason = "JobEnqueued"
+	// JobDequeuedReason is added in a job when it is queuing and being dequeued.
+	JobDequeuedReason = "JobDequeued"
+	// JobEvictedReason is added in a job when it is evicted.
 	JobEvictedReason = "JobEvicted"
 )
 
@@ -61,6 +65,33 @@ func UpdateJobConditions(jobStatus *apiv1.JobStatus, conditionType apiv1.JobCond
 	condition := newCondition(conditionType, reason, message)
 	setCondition(jobStatus, condition)
 	return nil
+}
+
+func IsEnqueued(status apiv1.JobStatus) bool {
+	cond := GetLastCondition(status, apiv1.JobQueuing)
+	if cond != nil && cond.Reason == JobEnqueuedReason {
+		return true
+	}
+	return false
+}
+
+func IsDequeued(status apiv1.JobStatus) bool {
+	cond := GetLastCondition(status, apiv1.JobQueuing)
+	if cond != nil && cond.Reason == JobDequeuedReason {
+		return true
+	}
+	return false
+}
+
+// IsJustCreated checks if the job has created.
+func IsJustCreated(status apiv1.JobStatus) bool {
+	return GetLastCondition(status, apiv1.JobCreated) != nil
+}
+
+// NeedEnqueueToCoordinator checks if the job need to be enqueued into
+// coordinator if feature-gate is enabled
+func NeedEnqueueToCoordinator(status apiv1.JobStatus) bool {
+	return len(status.Conditions) == 0 || IsJustCreated(status) || IsEnqueued(status)
 }
 
 // GetCondition returns the condition with the provided type.
@@ -118,6 +149,17 @@ func setCondition(status *apiv1.JobStatus, condition apiv1.JobCondition) {
 	// Append the updated condition to the conditions
 	newConditions := filterOutCondition(status.Conditions, condition.Type)
 	status.Conditions = append(newConditions, condition)
+}
+
+func GetLastCondition(status apiv1.JobStatus, condType apiv1.JobConditionType) *apiv1.JobCondition {
+	if len(status.Conditions) == 0 {
+		return nil
+	}
+	condition := status.Conditions[len(status.Conditions)-1]
+	if condition.Type == condType {
+		return &condition
+	}
+	return nil
 }
 
 // filterOutCondition returns a new slice of job conditions without conditions with the provided type.

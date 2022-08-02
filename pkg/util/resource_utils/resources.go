@@ -3,7 +3,7 @@ package resource_utils
 import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	quota "k8s.io/apiserver/pkg/quota/v1"
+	quotav1 "k8s.io/apiserver/pkg/quota/v1"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
@@ -16,8 +16,8 @@ func SumUpContainersResources(containers []v1.Container) v1.ResourceRequirements
 	}
 	for idx := range containers {
 		container := &containers[idx]
-		sum.Requests = quota.Add(sum.Requests, container.Resources.Requests)
-		sum.Limits = quota.Add(sum.Limits, container.Resources.Limits)
+		sum.Requests = quotav1.Add(sum.Requests, container.Resources.Requests)
+		sum.Limits = quotav1.Add(sum.Limits, container.Resources.Limits)
 	}
 	return sum
 }
@@ -31,19 +31,32 @@ func MaximumContainersResources(containers []v1.Container) v1.ResourceRequiremen
 	}
 	for idx := range containers {
 		container := &containers[idx]
-		max.Requests = quota.Max(max.Requests, container.Resources.Requests)
-		max.Limits = quota.Max(max.Limits, container.Resources.Limits)
+		max.Requests = quotav1.Max(max.Requests, container.Resources.Requests)
+		max.Limits = quotav1.Max(max.Limits, container.Resources.Limits)
 	}
 	return max
 }
 
-func JobResourceRequests(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) v1.ResourceList {
-	result := make(v1.ResourceList)
+func JobResourceRequests(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec) (normal, spot v1.ResourceList) {
 	for _, rspec := range replicas {
-		result = quota.Add(result, ReplicaResourceRequests(rspec))
+		resources := ComputePodSpecResourceRequest(&rspec.Template.Spec)
+		replicas := int32(1)
+		if rspec.Replicas != nil {
+			replicas = *rspec.Replicas
+		}
+		if rspec.SpotReplicaSpec != nil && rspec.SpotReplicaSpec.SpotReplicaNumber > 0 {
+			replicas -= rspec.SpotReplicaSpec.SpotReplicaNumber
+			spotDelta := Multiply(int64(rspec.SpotReplicaSpec.SpotReplicaNumber), resources)
+			spot = quotav1.Add(spot, spotDelta)
+			if replicas < 0 {
+				replicas = 0
+			}
+		}
+		resources = Multiply(int64(replicas), resources)
+		normal = quotav1.Add(normal, resources)
 	}
 
-	return result
+	return normal, spot
 }
 
 func ReplicaResourceRequests(rspec *apiv1.ReplicaSpec) v1.ResourceList {
@@ -64,15 +77,15 @@ func ComputePodResourceRequest(pod *v1.Pod) v1.ResourceList {
 func ComputePodSpecResourceRequest(spec *v1.PodSpec) v1.ResourceList {
 	result := v1.ResourceList{}
 	for _, container := range spec.Containers {
-		result = quota.Add(result, container.Resources.Requests)
+		result = quotav1.Add(result, container.Resources.Requests)
 	}
 	// take max_resource(sum_pod, any_init_container)
 	for _, container := range spec.InitContainers {
-		result = quota.Max(result, container.Resources.Requests)
+		result = quotav1.Max(result, container.Resources.Requests)
 	}
 	// If Overhead is being utilized, add to the total requests for the pod
 	if spec.Overhead != nil {
-		result = quota.Add(result, spec.Overhead)
+		result = quotav1.Add(result, spec.Overhead)
 	}
 	return result
 }
@@ -138,4 +151,22 @@ func Multiply(factor int64, res v1.ResourceList) v1.ResourceList {
 		result[key] = scaled
 	}
 	return result
+}
+
+// AnyLessThanOrEqual returns true if a < b for any key in b
+// If false, it returns the keys in a that exceeded b
+func AnyLessThanOrEqual(a v1.ResourceList, b v1.ResourceList) (bool, []v1.ResourceName) {
+	var (
+		resourceNames []v1.ResourceName
+		result        = false
+	)
+	for key, value := range b {
+		if other, found := a[key]; found {
+			if other.Cmp(value) < 0 {
+				result = true
+				resourceNames = append(resourceNames, key)
+			}
+		}
+	}
+	return result, resourceNames
 }
