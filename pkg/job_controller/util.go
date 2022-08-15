@@ -75,3 +75,10 @@ func ReplicaTypes(specs map[v1.ReplicaType]*v1.ReplicaSpec) []v1.ReplicaType {
 	}
 	return replicas
 }
+
+func maxInt(x, y int) int {
+	if x < y {
+		return y
+	}
+	return x
+}

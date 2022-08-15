@@ -16,9 +16,23 @@ limitations under the License.
 
 package pytorch
 
-import training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+import (
+	"fmt"
+	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+)
 
 func ContainMasterSpec(job *training.PyTorchJob) bool {
 	_, ok := job.Spec.PyTorchReplicaSpecs[training.PyTorchReplicaTypeMaster]
 	return ok
+}
+
+// computeDesiredReplicas retrieve user's replica setting in specs
+func computeDesiredReplicas(elasticJob *training.PyTorchJob) (int32, error) {
+	workerSpecs, exist := elasticJob.Spec.PyTorchReplicaSpecs[v1.ReplicaType(training.PyTorchReplicaTypeMaster)]
+	if !exist {
+		return 0, fmt.Errorf("elasticJob %v doesn't have %s", elasticJob, training.PyTorchReplicaTypeMaster)
+	}
+
+	return *workerSpecs.Replicas, nil
 }

@@ -125,6 +125,9 @@ func SetDefaults_PyTorchJob(job *PyTorchJob) {
 		// Set default replicas and restart policy.
 		if rType == PyTorchReplicaTypeWorker {
 			setDefaults_PyTorchJobWorkerReplicas(spec)
+			if job.Spec.EnableElastic && job.Spec.ElasticPolicy != nil {
+				setDefaults_PyTorchJobPort(&spec.Template.Spec)
+			}
 		}
 		if rType == PyTorchReplicaTypeMaster {
 			setDefaults_PyTorchJobMasterReplicas(spec)

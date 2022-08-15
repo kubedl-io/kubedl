@@ -162,11 +162,28 @@ func (jc *JobController) FilterServicesForReplicaType(services []*v1.Service, re
 	return result, nil
 }
 
+// calculateServiceSliceSize compare max pod index with desired replicas and return larger size
+func calculateServiceSliceSize(services []*v1.Service, replicas int) int {
+	size := 0
+	for _, svc := range services {
+		if _, ok := svc.Labels[apiv1.ReplicaIndexLabel]; !ok {
+			continue
+		}
+		index, err := strconv.Atoi(svc.Labels[apiv1.ReplicaIndexLabel])
+		if err != nil {
+			continue
+		}
+		size = maxInt(size, index)
+	}
+	// size comes from index, need to +1 to indicate real size
+	return maxInt(size+1, replicas)
+}
+
 // GetServiceSlices returns a slice, which element is the slice of service.
 // Assume the return object is serviceSlices, then serviceSlices[i] is an
 // array of pointers to services corresponding to Services for replica i.
 func (jc *JobController) GetServiceSlices(services []*v1.Service, replicas int, logger *log.Entry) [][]*v1.Service {
-	serviceSlices := make([][]*v1.Service, replicas)
+	serviceSlices := make([][]*v1.Service, calculateServiceSliceSize(services, replicas))
 	for _, service := range services {
 		if _, ok := service.Labels[apiv1.ReplicaIndexLabel]; !ok {
 			logger.Warning("The service do not have the index label.")

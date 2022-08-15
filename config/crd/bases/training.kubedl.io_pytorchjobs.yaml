@@ -112,6 +112,26 @@ spec:
                 required:
                 - schedule
                 type: object
+              elasticPolicy:
+                properties:
+                  maxReplicas:
+                    format: int32
+                    type: integer
+                  minReplicas:
+                    format: int32
+                    type: integer
+                  nProcPerNode:
+                    format: int32
+                    type: integer
+                  rdzvBackend:
+                    type: string
+                  rdzvEndpoint:
+                    type: string
+                required:
+                - rdzvEndpoint
+                type: object
+              enableElastic:
+                type: boolean
               modelVersion:
                 properties:
                   createdBy:
@@ -3198,6 +3218,24 @@ spec:
                   - type
                   type: object
                 type: array
+              elasticScaling:
+                additionalProperties:
+                  properties:
+                    continue:
+                      type: boolean
+                    currentReplicas:
+                      format: int32
+                      type: integer
+                    lastReplicas:
+                      format: int32
+                      type: integer
+                    message:
+                      type: string
+                    startTime:
+                      format: date-time
+                      type: string
+                  type: object
+                type: object
               lastReconcileTime:
                 format: date-time
                 type: string

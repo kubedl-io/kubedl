@@ -265,6 +265,40 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 		}
 	}
 
+	desiredReplicas, err := computeDesiredReplicas(pytorchJob)
+	if err != nil {
+		return err
+	}
+
+	// Set default value if minReplicas and maxReplicas are not set
+	var minReplicas, maxReplicas int32
+	if pytorchJob.Spec.ElasticPolicy.MinReplicas != nil {
+		minReplicas = *pytorchJob.Spec.ElasticPolicy.MinReplicas
+	} else {
+		minReplicas = desiredReplicas
+	}
+
+	if pytorchJob.Spec.ElasticPolicy.MaxReplicas != nil {
+		maxReplicas = *pytorchJob.Spec.ElasticPolicy.MaxReplicas
+	} else {
+		maxReplicas = desiredReplicas
+	}
+
+	var procPerNode int32
+	if pytorchJob.Spec.ElasticPolicy.NProcPerNode != nil {
+		procPerNode = *pytorchJob.Spec.ElasticPolicy.NProcPerNode
+	} else {
+		procPerNode = int32(1)
+	}
+
+	//Generate torch elastic env args.
+	launchElasticArgs := []string{
+		"--rdzv_backend=" + pytorchJob.Spec.ElasticPolicy.RDZVBackend,
+		"--rdzv_endpoint=" + pytorchJob.Spec.ElasticPolicy.RdzvEndpoint,
+		"--rdzv_id=" + pytorchJob.Name,
+		"--nproc_per_node=" + strconv.Itoa(int(procPerNode)),
+		"--nnodes=" + strconv.Itoa(int(minReplicas)) + ":" + strconv.Itoa(int(maxReplicas))}
+
 	for i := range podTemplate.Spec.Containers {
 		if len(podTemplate.Spec.Containers[i].Env) == 0 {
 			podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
@@ -285,6 +319,8 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 			Name:  "PYTHONUNBUFFERED",
 			Value: "0",
 		})
+		podTemplate.Spec.Containers[i].Args = append(launchElasticArgs, podTemplate.Spec.Containers[i].Args...)
+
 		if enableElasticScaling && rtype != "aimaster" {
 			// Job enables elastic scaling select value of AnnotationWorldSize as its
 			// WORLD_SIZE env value via field-path, the annotated value will be mutated

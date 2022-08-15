@@ -3111,6 +3111,24 @@ spec:
                   - type
                   type: object
                 type: array
+              elasticScaling:
+                additionalProperties:
+                  properties:
+                    continue:
+                      type: boolean
+                    currentReplicas:
+                      format: int32
+                      type: integer
+                    lastReplicas:
+                      format: int32
+                      type: integer
+                    message:
+                      type: string
+                    startTime:
+                      format: date-time
+                      type: string
+                  type: object
+                type: object
               lastReconcileTime:
                 format: date-time
                 type: string

@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"github.com/alibaba/kubedl/controllers/torchelastic"
 	"os"
 
 	"k8s.io/apimachinery/pkg/util/net"
@@ -114,6 +115,11 @@ func main() {
 	// Setup persist controllers if storage backends are specified.
 	if err = persist.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to setup persist controllers")
+		os.Exit(1)
+	}
+
+	if err = torchelastic.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to setup elastic scaling controllers")
 		os.Exit(1)
 	}
 
