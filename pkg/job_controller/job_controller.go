@@ -217,30 +217,19 @@ func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec 
 			log.Infof("CacheBackend is not exist, start to create %s", cacheBackendName)
 
 			// If haven't created yet
-			cacheBackend = &cachev1alpha1.CacheBackend{}
-			cacheBackend.Name = cacheBackendName
-			cacheBackend.Namespace = cacheBackendNameSpace
-			cacheBackend.Spec = *cacheBackendSpec
-			//controllerRef := jc.GenOwnerReference(metaObject)
-			//cacheBackend.OwnerReferences = append(cacheBackend.OwnerReferences, *controllerRef)
+			cacheBackend = &cachev1alpha1.CacheBackend{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cacheBackendName,
+					Namespace: cacheBackendNameSpace,
+				},
+				Spec: *cacheBackendSpec,
+			}
+
 			err = jc.Client.Create(context.Background(), cacheBackend)
 			if err != nil {
 				log.Errorf("Failed to create cache backend %s", cacheBackend.Name)
 				return err
 			}
-
-			// Update job status
-			//jobStatus.CacheBackendName = cacheBackendName
-
-			// Update cache backend status
-			//cacheCopy := cacheBackend.DeepCopy()
-			//cacheCopy.Status.JobName = metaObject.GetName()
-			//cacheCopy.Status.CacheStatus = cachev1alpha1.CacheCreating
-			//err = jc.Client.Status().Update(context.Background(), cacheCopy)
-			//if err != nil {
-			//	log.Error(err, "failed to update job name", "cacheBackend", cacheBackend.Name)
-			//	return err
-			//}
 
 		} else {
 			log.Errorf("Failed to get cache backend %s", cacheBackend.Name)

@@ -16,6 +16,7 @@ import (
 	"github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	cacheregistry "github.com/alibaba/kubedl/pkg/cache_backend/registry"
 	testcase "github.com/alibaba/kubedl/pkg/cache_backend/test"
+
 )
 
 func TestCacheBackendStatus(t *testing.T) {
@@ -32,7 +33,7 @@ func TestCacheBackendStatus(t *testing.T) {
 
 		cacheBackend := &testCase
 
-		fakeClient := fake.NewFakeClientWithScheme(scheme, cacheBackend)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(cacheBackend).Build()
 
 		// register cacheBackend
 		cacheregistry.RegisterCacheBackends(fakeClient)

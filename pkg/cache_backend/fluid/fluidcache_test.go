@@ -20,7 +20,7 @@ func TestCreateCacheJob(t *testing.T) {
 	_ = apis.AddToScheme(scheme)
 
 	cacheBackend := testcase.NewFluidCacheBackend("testCacheBackend", "jobName")
-	fakeClient := fake.NewFakeClientWithScheme(scheme, cacheBackend)
+	fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(cacheBackend).Build()
 	testFluidCache := &Cache{client: fakeClient}
 
 	// create job
