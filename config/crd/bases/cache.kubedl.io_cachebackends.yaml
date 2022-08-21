@@ -88,7 +88,8 @@ spec:
               cacheStatus:
                 type: string
               idleTime:
-                type: string
+                format: int64
+                type: integer
               usedBy:
                 items:
                   type: string

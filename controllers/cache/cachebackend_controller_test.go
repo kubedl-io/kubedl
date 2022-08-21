@@ -16,7 +16,6 @@ import (
 	"github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	cacheregistry "github.com/alibaba/kubedl/pkg/cache_backend/registry"
 	testcase "github.com/alibaba/kubedl/pkg/cache_backend/test"
-
 )
 
 func TestCacheBackendStatus(t *testing.T) {

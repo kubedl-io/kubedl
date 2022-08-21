@@ -224,6 +224,7 @@ func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec 
 				},
 				Spec: *cacheBackendSpec,
 			}
+			cacheBackend.Status.CacheStatus = cachev1alpha1.CacheCreating
 
 			err = jc.Client.Create(context.Background(), cacheBackend)
 			if err != nil {

@@ -3,7 +3,6 @@ kind: "CacheBackend"
 metadata:
   name: "test-cachebackend"
 spec:
-  name: test-cachebackend
   dataset:
     dataSources:
       - location: local:///dataset/mnist  # path property can be any legal UFS path acknowledged by Alluxio

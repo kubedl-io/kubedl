@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -54,7 +56,7 @@ type CacheBackendStatus struct {
 	UsedNum int `json:"usedNum,omitempty"`
 
 	// IdleTime means how long cacheBackend is not currently in use
-	IdleTime string `json:"idleTime,omitempty"`
+	IdleTime time.Duration `json:"idleTime,omitempty"`
 }
 
 // Dataset is used to define where specific data sources are stored and mounted
