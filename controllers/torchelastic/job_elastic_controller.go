@@ -17,18 +17,21 @@ limitations under the License.
 package torchelastic
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func SetupWithManager(mgr ctrl.Manager) error {
-	// New torch elastic controller.
-	// period represents the time elastic scaling loop repeats.
-	// count represents the length of training metrics collection for each replica.
-	torchElasticController := NewTorchElasticController(mgr, 30, 5)
-
-	if err := torchElasticController.SetupWithManager(mgr); err != nil {
-		return err
-	}
-	return nil
-
+// ElasticController implementations
+type ElasticController interface {
+	SetupWithManager(mgr ctrl.Manager) error
 }
+
+var _ ElasticController = &TorchElasticController{}
+
+type newJobElasticController func(mgr ctrl.Manager, period, count int) ElasticController
+
+var (
+	log               = logf.Log.WithName("job-elastic-controller")
+	jobElasticCtrlMap = make(map[runtime.Object]newJobElasticController)
+)

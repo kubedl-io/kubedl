@@ -319,7 +319,10 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 			Name:  "PYTHONUNBUFFERED",
 			Value: "0",
 		})
-		podTemplate.Spec.Containers[i].Args = append(launchElasticArgs, podTemplate.Spec.Containers[i].Args...)
+
+		if pytorchJob.Spec.EnableElastic && pytorchJob.Spec.ElasticPolicy != nil {
+			podTemplate.Spec.Containers[i].Args = append(launchElasticArgs, podTemplate.Spec.Containers[i].Args...)
+		}
 
 		if enableElasticScaling && rtype != "aimaster" {
 			// Job enables elastic scaling select value of AnnotationWorldSize as its

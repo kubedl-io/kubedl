@@ -128,6 +128,7 @@ spec:
                   rdzvEndpoint:
                     type: string
                 required:
+                - rdzvBackend
                 - rdzvEndpoint
                 type: object
               enableElastic:
@@ -3226,6 +3227,8 @@ spec:
                     currentReplicas:
                       format: int32
                       type: integer
+                    elasticCondition:
+                      type: string
                     lastReplicas:
                       format: int32
                       type: integer

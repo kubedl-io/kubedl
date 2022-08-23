@@ -62,15 +62,19 @@ type JobStatus struct {
 type ReplicaType string
 
 // ElasticScalingStatus represents the current elastic scaling status of the training job.
+// +k8s:deepcopy-gen=true
 type ElasticScalingStatus struct {
+	// Type of elastic scaling condition.
+	ElasticCondition ElasticConditionType `json:"elasticCondition,omitempty"`
+
+	// Continue represents whether the job needs to continue scaling.
+	Continue bool `json:"continue,omitempty"`
+
 	// The number of current scaling pod replicas.
 	CurrentReplicas int32 `json:"currentReplicas,omitempty"`
 
 	// The number of last scaling pod replicas.
 	LastReplicas int32 `json:"lastReplicas,omitempty"`
-
-	// Continue represents whether the job needs to continue scaling.
-	Continue bool `json:"continue,omitempty"`
 
 	// The time this elastic scaling loop was started.
 	LastUpdateTime *metav1.Time `json:"startTime,omitempty"`
@@ -152,6 +156,23 @@ type JobCondition struct {
 	// Last time the condition transitioned from one status to another.
 	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 }
+
+// ElasticConditionType defines all kinds of elastic scaling conditions.
+type ElasticConditionType string
+
+const (
+	ElasticJobPending ElasticConditionType = "HasPendingPod"
+	// ElasticStart means the elastic scaling has been started.
+	ElasticStart ElasticConditionType = "Start"
+	// ElasticStop means the elastic scaling has been stopped.
+	ElasticStop ElasticConditionType = "Stop"
+	// ElasticContinue means the elastic scaling continues.
+	ElasticContinue ElasticConditionType = "Continue"
+	// ElasticMaxMetric means the training metrics have reached the max.
+	ElasticMaxMetric ElasticConditionType = "ReachMaxMetric"
+	// ElasticMaxReplica means the replicas have reached the maxReplicas.
+	ElasticMaxReplica ElasticConditionType = "ReachMaxReplicas"
+)
 
 // JobConditionType defines all kinds of types of JobStatus.
 type JobConditionType string

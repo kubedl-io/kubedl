@@ -49,7 +49,7 @@ type PyTorchJobSpec struct {
 
 	// EnableElastic decides whether torch elastic is enabled for job.
 	// +optional
-	EnableElastic bool `json:"enableElastic"`
+	EnableElastic bool `json:"enableElastic,omitempty"`
 
 	// ElasticPolicy is used to configure the torch elastic-based elastic scaling support for distributed training job.
 	// +optional
@@ -64,7 +64,7 @@ type ElasticPolicy struct {
 	// upper limit for the number of pods that can be set by the autoscaler; cannot be smaller than MinReplicas, defaults to null.
 	MaxReplicas *int32 `json:"maxReplicas,omitempty"`
 
-	RDZVBackend  string `json:"rdzvBackend,omitempty"`
+	RDZVBackend  string `json:"rdzvBackend"`
 	RdzvEndpoint string `json:"rdzvEndpoint"`
 
 	// Number of workers per node; supported values: [auto, cpu, gpu, int].

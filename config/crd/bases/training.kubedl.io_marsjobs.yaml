@@ -3141,6 +3141,8 @@ spec:
                     currentReplicas:
                       format: int32
                       type: integer
+                    elasticCondition:
+                      type: string
                     lastReplicas:
                       format: int32
                       type: integer
