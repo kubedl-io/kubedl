@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -32,13 +33,14 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 	patchutil "github.com/alibaba/kubedl/pkg/util/patch"
-	trainutil "github.com/alibaba/kubedl/pkg/util/train"
+	commonutilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
 
 const (
@@ -236,36 +238,36 @@ func (jc *JobController) GetPodSlices(pods []*v1.Pod, replicas int, logger *log.
 // It will requeue the job in case of an error while creating/deleting pods.
 func (jc *JobController) ReconcilePods(
 	ctx context.Context,
-	job interface{},
+	job client.Object,
 	jobStatus *apiv1.JobStatus,
 	pods []*v1.Pod,
 	rtype apiv1.ReplicaType,
 	spec *apiv1.ReplicaSpec,
 	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, runPolicy *apiv1.RunPolicy, restart *bool) error {
 
-	metaObject, ok := job.(metav1.Object)
-	if !ok {
-		return fmt.Errorf("job is not a metav1.Object type")
-	}
-	runtimeObject, ok := job.(runtime.Object)
-	if !ok {
-		return fmt.Errorf("job is not a runtime.Object type")
-	}
-
 	// Convert ReplicaType to lower string.
 	rt := strings.ToLower(string(rtype))
-	logger := commonutil.LoggerForReplica(metaObject, rt)
+	logger := commonutil.LoggerForReplica(job, rt)
 	// Get all pods for the type rt.
 	pods, err := jc.FilterPodsForReplicaType(pods, rt)
 	if err != nil {
 		return err
 	}
-	numReplicas := int(*spec.Replicas)
-	var masterRole bool
 
+	var (
+		// Aggregate errors occur in reconciling loop instead of interrupting and returning directly, which
+		// may cause an incorrect job status, e.g. create pod failed due to webhook forbidden and interrupt
+		// reconciling, lead to a stale replicaStatus.
+		errs              = commonutil.NewAggregatedErrors()
+		failedPodContents = make(commonutilruntime.FailedPodContents)
+		numReplicas       = int(*spec.Replicas)
+		podSlices         = jc.GetPodSlices(pods, numReplicas, logger)
+		podsToFailover    = make([]*v1.Pod, 0)
+	)
+
+	ctx = context.WithValue(ctx, apiv1.ContextFailedPodContents, failedPodContents)
 	initializeReplicaStatuses(jobStatus, rtype)
 
-	podSlices := jc.GetPodSlices(pods, numReplicas, logger)
 	for index, podSlice := range podSlices {
 		if len(podSlice) > 1 {
 			logger.Warningf("We have too many pods for %s %d", rt, index)
@@ -276,8 +278,7 @@ func (jc *JobController) ReconcilePods(
 			logger.Infof("Need to create new pod: %s-%d", rt, index)
 
 			// check if this replica is the master role
-			masterRole = jc.Controller.IsMasterRole(replicas, rtype, index)
-			err = jc.createNewPod(ctx, job, rt, strconv.Itoa(index), spec, masterRole, runPolicy)
+			err = jc.createNewPod(ctx, job, rt, strconv.Itoa(index), spec, jc.Controller.IsMasterRole(replicas, rtype, index), runPolicy)
 			if err != nil {
 				// When controller tries to create a new pod but api-server returns a AlreadyExists error,
 				// there may comes with two case:
@@ -302,7 +303,7 @@ func (jc *JobController) ReconcilePods(
 					jc.Expectations.CreationObserved(expectationServiceKey)
 
 					logger.Infof("try create new pod %s but got a AlreadyExists error, generate a new expectation",
-						commonutil.GenGeneralName(metaObject.GetName(), rt, strconv.Itoa(index)))
+						commonutil.GenGeneralName(job.GetName(), rt, strconv.Itoa(index)))
 				}
 				return err
 			}
@@ -310,55 +311,92 @@ func (jc *JobController) ReconcilePods(
 			// Check the status of the current pod.
 			pod := podSlice[0]
 
-			// Check if index is in valid range, otherwise we should scale in extra pods since
-			// the expected replicas has been modified.
-			if index < 0 || index >= numReplicas {
-				if pod.DeletionTimestamp == nil {
-					jc.Recorder.Eventf(runtimeObject, v1.EventTypeNormal, "DeletePod",
-						"pod %s/%s with index %v is out of expected replicas %v and should be deleted", pod.Namespace, pod.Name, index, numReplicas)
-					if err = jc.PodControl.DeletePod(pod.Namespace, pod.Name, runtimeObject); err != nil {
-						return err
-					}
-				}
-				continue
+			failOver, exitCode, err := jc.reconcileOnePod(ctx, job, jobStatus, spec, pod, index, numReplicas, rtype, logger)
+			if failOver {
+				podsToFailover = append(podsToFailover, pod)
+			} else if pod.Status.Phase == v1.PodFailed {
+				failedPodContents.Add(pod, exitCode)
 			}
 
-			// Get the exit code of the container.
-			var exitCode int32 = 0xbeef // magic number
-			for _, status := range pod.Status.ContainerStatuses {
-				state := status.State
-				if status.Name == jc.Controller.GetDefaultContainerName() && state.Terminated != nil {
-					exitCode = state.Terminated.ExitCode
-					logger.Infof("Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
-					jc.Recorder.Eventf(runtimeObject, v1.EventTypeNormal, exitedWithCodeReason, "Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
-					break
-				}
-			}
-			// Get and pass its container port by context if pod enables hostnetwork mode.
-			if EnableHostNetwork(metaObject) {
-				storeHostNetworkPortToContext(ctx, rt, strconv.Itoa(index),
-					getContainerHostNetworkPort(pod, jc.Controller.GetDefaultContainerName(), jc.Controller.GetDefaultContainerPortName()))
-			}
-
-			// Check if the pod is retryable.
-			if spec.RestartPolicy == apiv1.RestartPolicyExitCode {
-				if pod.Status.Phase == v1.PodFailed &&
-					(trainutil.IsRetryableExitCode(exitCode) || trainutil.IsRetryablePodFailedReason(pod.Status.Reason)) {
-					logger.Infof("Need to restart the pod: %v.%v", pod.Namespace, pod.Name)
-					if !ok {
-						return fmt.Errorf("%+v is not a runtime job", runtimeObject)
-					}
-					if err = jc.PodControl.DeletePod(pod.Namespace, pod.Name, runtimeObject); err != nil {
-						return err
-					}
-					*restart = true
-				}
-			}
-
-			updateJobReplicaStatuses(jobStatus, rtype, pod)
+			*restart = *restart || failOver
+			errs.Collect(err)
 		}
 	}
+
+	// If workload enables AIMaster based error monitoring, kubedl will wait AIMaster analyze result
+	// and react by it, job will be Failed only when AIMaster exit unexpectedly.
+	if ContainsReplicaType(replicas, apiv1.JobReplicaTypeAIMaster) && EnableErrorMonitoring(job) {
+		errs.Collect(jc.reactForAIMasterErrorAnalyzeResult(job, rtype, pods, jobStatus, logger))
+		// Clear out podsToFailover slice when AIMaster echos back its analysis result,
+		// which is pod slice AIMaster explicitly declared to recreate.
+		if len(podsToFailover) > 0 {
+			podsToFailover = podsToFailover[:0]
+		}
+		if rtype != apiv1.JobReplicaTypeAIMaster {
+			*restart = true
+		}
+	}
+
+	// Emit failed pods contents and its exitcode through events for quick debugging.
+	if len(failedPodContents) > 0 {
+		msg := fmt.Sprintf("job %s %d %v pods failed with non-retryable exitcode: %+v",
+			job.GetName(), len(failedPodContents), rtype, failedPodContents.String())
+		logger.Info(msg)
+		jc.Recorder.Eventf(job, v1.EventTypeWarning, "PodFailed", msg)
+	}
+
+	if *restart && len(podsToFailover) > 0 {
+		errs.Collect(jc.DoFailOver(job, jobStatus, rtype, podsToFailover))
+	}
+
 	return nil
+}
+
+func (jc *JobController) reconcileOnePod(ctx context.Context, job client.Object, jobStatus *apiv1.JobStatus,
+	spec *apiv1.ReplicaSpec, pod *v1.Pod, index, numReplicas int, rtype apiv1.ReplicaType, logger *log.Entry) (failOver bool, exitCode int32, err error) {
+	const (
+		// magic number
+		initialExitCode int32 = 0xbeef
+	)
+
+	// Get the exit code of the container.
+	exitCode = initialExitCode
+
+	// Check if the index is in the valid range, otherwise we should scale down the pod
+	// since the expected replicas of job role has adjusted by user.
+	if index < 0 || index >= numReplicas {
+		logger.Infof("pod %s.%s has a out of range index %v and should be cleaned", pod.Namespace, pod.Name, index)
+		return false, exitCode, jc.PodControl.DeletePod(pod.Namespace, pod.Name, job)
+	}
+
+	for _, status := range pod.Status.ContainerStatuses {
+		state := status.State
+		if status.Name == jc.Controller.GetDefaultContainerName() && state.Terminated != nil {
+			exitCode = state.Terminated.ExitCode
+			logger.Infof("Pod: %v.%v exited with code %v, terminated reason: %v, message: %v",
+				pod.Namespace, pod.Name, exitCode, state.Terminated.Reason, state.Terminated.Message)
+			jc.Recorder.Eventf(job, v1.EventTypeNormal, exitedWithCodeReason, "Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
+			break
+		}
+	}
+
+	// Get and pass its container port by context if pod enables hostnetwork mode.
+	if EnableHostNetwork(job) {
+		storeHostNetworkPortToContext(ctx, strings.ToLower(string(rtype)), strconv.Itoa(index),
+			getContainerHostNetworkPort(pod, jc.Controller.GetDefaultContainerName(), jc.Controller.GetDefaultContainerPortName()))
+	}
+
+	// Check if failed pod or exited main container is retryable and triggers failover action if necessary.
+	if pod.Status.Phase == v1.PodFailed || exitCode != initialExitCode {
+		if ShouldPodFailOver(spec, pod, exitCode) {
+			logger.Infof("Pod %s/%s should be failovered, failed reason: %s, message: %s, exitcode: %d",
+				pod.Namespace, pod.Name, pod.Status.Reason, pod.Status.Message, exitCode)
+			failOver = true
+		}
+	}
+
+	updateJobReplicaStatuses(jobStatus, rtype, pod)
+	return failOver, exitCode, nil
 }
 
 // createNewPod creates a new pod for the given index and type.
@@ -431,7 +469,9 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 
 		// 1) assign gang scheduler name if it's empty.
 		// 2) override scheduler name if it differs from the selected gang implementation.
-		podTemplate.Spec.SchedulerName = jc.GangScheduler.SchedulerName()
+		if podTemplate.Spec.SchedulerName == "" {
+			podTemplate.Spec.SchedulerName = jc.GangScheduler.SchedulerName()
+		}
 	}
 
 	// apply spotReplicaSpec for spot replicas
@@ -551,4 +591,78 @@ func (jc *JobController) AdoptAndClaimPods(job metav1.Object, podList *v1.PodLis
 	})
 	cm := controller.NewPodControllerRefManager(jc.PodControl, job, selector, jc.Controller.GetAPIGroupVersionKind(), canAdoptFunc)
 	return cm.ClaimPods(pods)
+}
+
+func (jc *JobController) reactForAIMasterErrorAnalyzeResult(job client.Object, rtype apiv1.ReplicaType, pods []*v1.Pod, jobStatus *apiv1.JobStatus, logger *log.Entry) (err error) {
+	if rtype == apiv1.JobReplicaTypeAIMaster {
+		return nil
+	}
+	restartList := getToBeRestartedPods(job)
+	if len(restartList) > 0 {
+		logger.Infof("job %s asks to recreate pods: %+v", job.GetName(), restartList)
+
+		for _, podName := range restartList {
+			if err = jc.PodControl.DeletePod(job.GetNamespace(), podName, job); err != nil {
+				logger.Errorf("failed to restart(delete) pod %s, err: %v", podName, err)
+				return err
+			}
+		}
+
+		patch := patchutil.NewMergePatch()
+		patch.InsertAnnotation(AnnotationImmediatelyRestartPod, "")
+		if err = jc.Client.Patch(context.Background(), job, patch); err != nil {
+			return err
+		}
+
+		logger.Infof("job %s recreate succeeded, set annotation %s as empty",
+			job.GetName(), AnnotationImmediatelyRestartPod)
+		jc.Recorder.Eventf(job, v1.EventTypeNormal, "SucceedRestartPods",
+			"succeed to restart pods %+v", restartList)
+		return nil
+	}
+
+	if job.GetAnnotations()[AnnotationImmediatelyStartWorker] == "true" {
+		// When AIMaster asks to immediately restart workers, trigger a thoroughly recreate action
+		// that impose on all replicas.
+		now := time.Now()
+		patch := patchutil.NewMergePatch()
+		patch.InsertAnnotation(AnnotationLastFailoverTimestamp, now.Format(time.RFC3339))
+		patch.InsertAnnotation(AnnotationImmediatelyStartWorker, "false")
+
+		// Commit failover timestamp changes to apiserver, hence fail-over actions can
+		// be correctly handled after interrupted and pods will not be repeatedly failovered.
+		logger.Infof("job %s asks to restart all workers, update failover timestamp as %v",
+			job.GetName(), now.String())
+		jc.Recorder.Event(job, v1.EventTypeNormal, "RestartAllPods", "job asks to restart all pods")
+		if err = jc.Client.Patch(context.Background(), job, patch); err != nil {
+			return err
+		}
+	}
+
+	if tsRaw := job.GetAnnotations()[AnnotationLastFailoverTimestamp]; tsRaw != "" {
+		t, err := time.Parse(time.RFC3339, tsRaw)
+		if err != nil {
+			return err
+		}
+		lastFailOverTimestamp := metav1.NewTime(t)
+		// Filter pods started before failover timestamp to ensure that each pod will be failovered exactly once,
+		// and failover timestamp has been committed.
+		foPods := filterPodsStartedBeforeFailOverTime(pods, &lastFailOverTimestamp)
+		if err = jc.DoFailOverByAction(job, foPods, FailOverRecreate); err != nil {
+			return err
+		}
+		klog.Infof("job %s recreate %d pods of replica type: %s", job.GetName(), len(foPods), rtype)
+	}
+
+	return nil
+}
+
+func filterPodsStartedBeforeFailOverTime(pods []*v1.Pod, foTime *metav1.Time) []*v1.Pod {
+	foPods := make([]*v1.Pod, 0, len(pods))
+	for _, p := range pods {
+		if k8sutil.IsPodStartedBefore(p, foTime) {
+			foPods = append(foPods, p)
+		}
+	}
+	return foPods
 }

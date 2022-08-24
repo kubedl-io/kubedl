@@ -3,6 +3,7 @@ package job_controller
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alibaba/kubedl/apis"
 	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -185,4 +186,61 @@ func createPodForJob(podName, rt, index, jobName string, phase corev1.PodPhase) 
 		},
 		Status: corev1.PodStatus{Phase: phase},
 	}
+}
+
+func NewFakeTFJobBuilder() *FakeTFJobBuilder {
+	return &FakeTFJobBuilder{
+		j: &trainingv1alpha1.TFJob{
+			ObjectMeta: metav1.ObjectMeta{},
+
+			Spec: trainingv1alpha1.TFJobSpec{
+				TFReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{},
+			},
+			Status: v1.JobStatus{},
+		},
+	}
+}
+
+type FakeTFJobBuilder struct {
+	j *trainingv1alpha1.TFJob
+}
+
+func (fb *FakeTFJobBuilder) WithName(name string) *FakeTFJobBuilder {
+	fb.j.Name = name
+	return fb
+}
+
+func (fb *FakeTFJobBuilder) WithReplicaSpec(replicas int32, rtype v1.ReplicaType, restartPolicy v1.RestartPolicy) *FakeTFJobBuilder {
+	fb.j.Spec.TFReplicaSpecs[rtype] = &v1.ReplicaSpec{
+		Replicas:      &replicas,
+		RestartPolicy: restartPolicy,
+		Template: corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  "tensorflow",
+						Image: "kubedl/tf-mnist-with-summaries:1.0",
+					},
+				},
+			},
+		},
+	}
+
+	return fb
+}
+
+func (fb *FakeTFJobBuilder) WithJobStatus(status v1.JobStatus) *FakeTFJobBuilder {
+	fb.j.Status = status
+	return fb
+}
+
+func (fb *FakeTFJobBuilder) Build() *trainingv1alpha1.TFJob {
+	return fb.j
+}
+
+func createPodForJobWithStartTime(podName, rt, index, jobName string, phase corev1.PodPhase, starTime time.Time) *corev1.Pod {
+	p := createPodForJob(podName, rt, index, jobName, phase)
+	st := metav1.NewTime(starTime)
+	p.Status.StartTime = &st
+	return p
 }

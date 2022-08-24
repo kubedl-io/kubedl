@@ -147,6 +147,13 @@ func IsStalePod(pod *v1.Pod, generation int64) bool {
 	return current < generation
 }
 
+func IsPodStartedBefore(p *v1.Pod, ts *metav1.Time) bool {
+	if p.Status.StartTime == nil {
+		return false
+	}
+	return p.Status.StartTime.Before(ts)
+}
+
 func GetTotalExcludedReplicas(replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, excludes ...apiv1.ReplicaType) int32 {
 	excludeSet := sets.NewString()
 	for _, e := range excludes {

@@ -242,6 +242,7 @@ func TestReconcilePods(t *testing.T) {
 				Expectations:   controller.NewControllerExpectations(),
 				Recorder:       fakeRecorder,
 				Controller:     &TestJobController{},
+				Client:         fakeClient,
 				PodControl:     NewPodControl(fakeClient, fakeRecorder),
 				ServiceControl: NewServiceControl(fakeClient, fakeRecorder),
 			}

@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
@@ -49,4 +50,24 @@ func (rc *RawExtensionCodec) EncodeRaw(obj runtime.Object) (*runtime.RawExtensio
 		return nil, err
 	}
 	return &runtime.RawExtension{Raw: data, Object: obj}, nil
+}
+
+// FailedPodContents collects failed reasons while with its exit codes of failed pods.
+// key is {reason}-{exit code}, value is a slice of related pods.
+type FailedPodContents map[string][]string
+
+func (fc FailedPodContents) Add(pod *v1.Pod, exitCode int32) {
+	key := fmt.Sprintf("%s-%d", pod.Status.Reason, exitCode)
+	if len(fc[key]) > 10 {
+		return
+	}
+	fc[key] = append(fc[key], pod.Name)
+}
+
+func (fc FailedPodContents) String() string {
+	if fc == nil {
+		return ""
+	}
+	bytes, _ := json.Marshal(&fc)
+	return string(bytes)
 }

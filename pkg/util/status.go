@@ -99,7 +99,7 @@ func newCondition(conditionType apiv1.JobConditionType, reason, message string) 
 // and has the same status and reason then we are not going to update.
 func setCondition(status *apiv1.JobStatus, condition apiv1.JobCondition) {
 	// Do nothing if JobStatus have failed condition
-	if IsFailed(*status) {
+	if IsFailed(*status) || IsSucceeded(*status) {
 		return
 	}
 

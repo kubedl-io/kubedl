@@ -75,6 +75,15 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *training.TFJob, replicaS
 
 	// Check whether worker 0 has completed。
 	worker0Completed := false
+	allWorkersSucceed := false
+	workerRep, workerFound := replicaSpecs[training.TFReplicaTypeWorker]
+	if workerFound {
+		succeed := int32(0)
+		if jobStatus.ReplicaStatuses[training.TFReplicaTypeWorker] != nil {
+			succeed = jobStatus.ReplicaStatuses[training.TFReplicaTypeWorker].Succeeded
+		}
+		allWorkersSucceed = *workerRep.Replicas == succeed
+	}
 
 	// Get all pods for tfJob.
 	pods, err := r.GetPodsForJob(tfJob)
@@ -137,7 +146,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *training.TFJob, replicaS
 
 		// If the TFJob contains Chief or Master spec, then we will update the status
 		// according to the Chief/Master spec.
-		if ContainChieforMasterSpec(tfJob) {
+		if job_controller.ContainsReplicaType(replicaSpecs, training.TFReplicaTypeChief, training.TFReplicaTypeMaster, v1.JobReplicaTypeAIMaster) {
 			if training.IsTFJobChieforMaster(rtype) {
 				if running > 0 {
 					msg := fmt.Sprintf("TFJob %s is running.", tfJob.Name)
@@ -147,7 +156,15 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *training.TFJob, replicaS
 						return err
 					}
 				}
-				if expected == 0 {
+				// Conditions for marking job as succeeded:
+				// 1. chief or master exit successfully with success policy is none.
+				// 2. if success policy is AllWorkers, then wait util all workers succeed.
+				// 3. aimaster is enabled and it exits successfully.
+				succeed := expected == 0
+				if rtype != v1.JobReplicaTypeAIMaster && workerFound && tfJob.Spec.SuccessPolicy != nil && *tfJob.Spec.SuccessPolicy == v1.SuccessPolicyAllWorkers {
+					succeed = succeed && allWorkersSucceed
+				}
+				if succeed {
 					msg := fmt.Sprintf("TFJob %s successfully completed.", tfJob.Name)
 					r.recorder.Event(tfJob, corev1.EventTypeNormal, commonutil.JobSucceededReason, msg)
 					if jobStatus.CompletionTime == nil {
@@ -194,7 +211,7 @@ func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *training.TFJob, replicaS
 		}
 
 		if failed > 0 {
-			if restart {
+			if restart && rtype != v1.JobReplicaTypeAIMaster {
 				msg := fmt.Sprintf("TFJob %s is restarting because %d %s replica(s) failed.", tfJob.Name, failed, rtype)
 				r.recorder.Event(tfJob, corev1.EventTypeWarning, commonutil.JobRestartingReason, msg)
 				err := commonutil.UpdateJobConditions(jobStatus, v1.JobRestarting, commonutil.JobRestartingReason, msg)

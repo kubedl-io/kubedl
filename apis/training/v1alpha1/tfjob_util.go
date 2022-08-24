@@ -20,7 +20,7 @@ import (
 
 // IsTFJobChieforMaster returns true if the type is Master or Chief.
 func IsTFJobChieforMaster(typ commonv1.ReplicaType) bool {
-	return typ == TFReplicaTypeChief || typ == TFReplicaTypeMaster
+	return typ == TFReplicaTypeChief || typ == TFReplicaTypeMaster || typ == commonv1.JobReplicaTypeAIMaster
 }
 
 // IsTFJobWorker returns true if the type is Worker.

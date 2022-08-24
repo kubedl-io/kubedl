@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/labels"
+	quotav1 "k8s.io/apiserver/pkg/quota/v1"
 	"k8s.io/klog"
 	"k8s.io/utils/pointer"
 
@@ -95,6 +96,10 @@ func (vs *volcanoScheduler) CreateGang(job metav1.Object, replicas map[apiv1.Rep
 }
 
 func (vs *volcanoScheduler) BindPodToGang(job metav1.Object, podSpec *v1.PodTemplateSpec, gangEntity runtime.Object, rtype string) error {
+	if rtype == strings.ToLower(string(apiv1.JobReplicaTypeAIMaster)) {
+		podSpec.Spec.SchedulerName = "default-scheduler"
+		return nil
+	}
 	podGroups, ok := gangEntity.(*v1beta1.PodGroupList)
 	if !ok {
 		klog.Warningf("podgrpoups entity cannot convert to podgrpoups list, entity: %+v", gangEntity)
@@ -180,11 +185,19 @@ func (vs *volcanoScheduler) generateGangByJobUnit(apiVersion, kind, name, namesp
 		},
 		Spec: v1beta1.PodGroupSpec{MinMember: k8sutil.GetTotalReplicas(replicas)},
 	}
+	jobResource := resourceutils.JobResourceRequests(replicas)
+
+	if aimaster := replicas[apiv1.JobReplicaTypeAIMaster]; aimaster != nil && aimaster.Replicas != nil {
+		if *aimaster.Replicas > 0 {
+			pg.Spec.MinMember -= *aimaster.Replicas
+			jobResource = quotav1.SubtractWithNonNegativeResult(jobResource,
+				resourceutils.Multiply(int64(*aimaster.Replicas), resourceutils.ReplicaResourceRequests(aimaster)))
+		}
+	}
 
 	if schedPolicy != nil && schedPolicy.MinAvailable != nil && *schedPolicy.MinAvailable > 0 {
 		pg.Spec.MinMember = *schedPolicy.MinAvailable
 	}
-	jobResource := resourceutils.JobResourceRequests(replicas)
 	pg.Spec.MinResources = &jobResource
 	return &v1beta1.PodGroupList{Items: []v1beta1.PodGroup{pg}}
 }
@@ -193,6 +206,9 @@ func (vs *volcanoScheduler) generateGangByRoleUnit(apiVersion, kind, name, names
 	pgs := v1beta1.PodGroupList{Items: make([]v1beta1.PodGroup, 0, len(replicas))}
 
 	for rtype, spec := range replicas {
+		if rtype == apiv1.JobReplicaTypeAIMaster {
+			continue
+		}
 		rt := strings.ToLower(string(rtype))
 		gangName := fmt.Sprintf("%s-%s", name, rt)
 		resources := resourceutils.ReplicaResourceRequests(spec)

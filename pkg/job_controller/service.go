@@ -177,7 +177,7 @@ func (jc *JobController) GetServiceSlices(services []*v1.Service, replicas int, 
 			logger.Warningf("Error when strconv.Atoi: %v", err)
 			continue
 		}
-		if index < 0 || index >= replicas {
+		if index < 0 {
 			logger.Warningf("The label index is not expected: %d", index)
 		} else if index >= replicas {
 			// Service index out of range, which indicates that it is a scale in

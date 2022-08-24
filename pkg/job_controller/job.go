@@ -68,28 +68,20 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 
 // ReconcileJobs checks and updates replicas for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods/services.
-func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus apiv1.JobStatus,
+func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus apiv1.JobStatus,
 	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackend *cachev1alpha1.CacheBackendSpec) (result reconcile.Result, err error) {
 
-	metaObject, ok := job.(metav1.Object)
-	jobName := metaObject.GetName()
-	if !ok {
-		return result, fmt.Errorf("job is not of type metav1.Object")
-	}
-	runtimeObject, ok := job.(runtime.Object)
-	if !ok {
-		return result, fmt.Errorf("job is not of type runtime.Object")
-	}
+	jobName := job.GetName()
 	jobKey, err := KeyFunc(job)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("couldn't get key for job object %#v: %v", job, err))
 		return result, err
 	}
-	log.Infof("Reconciling for job %s", metaObject.GetName())
+	log.Infof("Reconciling for job %s", job.GetName())
 
 	//if it's a scheduled task，create a cronJob of the same name
 	if runPolicy != nil && runPolicy.CronPolicy != nil {
-		if err := jc.ReconcileCron(metaObject, runtimeObject, runPolicy); err != nil {
+		if err := jc.ReconcileCron(job, job, runPolicy); err != nil {
 			return result, err
 		}
 	}
@@ -107,7 +99,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 
 	oldStatus := jobStatus.DeepCopy()
 
-	err = code_sync.InjectCodeSyncInitContainers(metaObject, replicas)
+	err = code_sync.InjectCodeSyncInitContainers(job, replicas)
 	if err != nil {
 		log.Error(err, "failed to inject code sync init container")
 		return reconcile.Result{}, err
@@ -117,14 +109,14 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	if cacheBackend != nil {
 		// Create cache backend
 		// if cache backend has been created, the func also returns nil
-		err = jc.createCache(metaObject, cacheBackend, &jobStatus)
+		err = jc.createCache(job, cacheBackend, &jobStatus)
 		if err != nil {
 			log.Error(err, " failed to create cacheBackend")
 			return reconcile.Result{Requeue: true}, err
 		}
 
 		// Next step is to get pvc and inject it to containers
-		err = jc.addCachePathToContainer(metaObject, cacheBackend, replicas)
+		err = jc.addCachePathToContainer(job, cacheBackend, replicas)
 		if err != nil {
 			log.Error(err, " failed to inject pvc to containers")
 			return reconcile.Result{Requeue: true}, err
@@ -194,17 +186,17 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 		}
 
 		if jc.Config.EnableGangScheduling {
-			jc.Recorder.Event(runtimeObject, v1.EventTypeNormal, "JobTerminated", "Job has been terminated. Deleting PodGroup")
-			if err = jc.DeleteGang(metaObject); err != nil {
-				jc.Recorder.Eventf(runtimeObject, v1.EventTypeWarning, "FailedDeletePodGroup", "Error deleting: %v", err)
+			jc.Recorder.Event(job, v1.EventTypeNormal, "JobTerminated", "Job has been terminated. Deleting PodGroup")
+			if err = jc.DeleteGang(job); err != nil {
+				jc.Recorder.Eventf(job, v1.EventTypeWarning, "FailedDeletePodGroup", "Error deleting: %v", err)
 				return result, err
 			} else {
-				jc.Recorder.Eventf(runtimeObject, v1.EventTypeNormal, "SuccessfulDeletePodGroup", "Deleted PodGroup: %v", jobName)
+				jc.Recorder.Eventf(job, v1.EventTypeNormal, "SuccessfulDeletePodGroup", "Deleted PodGroup: %v", jobName)
 			}
 		}
 
 		if jobExceedsLimit {
-			jc.Recorder.Event(runtimeObject, v1.EventTypeNormal, commonutil.JobFailedReason, failureMessage)
+			jc.Recorder.Event(job, v1.EventTypeNormal, commonutil.JobFailedReason, failureMessage)
 			if jobStatus.CompletionTime == nil {
 				now := metav1.Now()
 				jobStatus.CompletionTime = &now
@@ -227,7 +219,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 
 			// job finished, create the model version
 			if modelVersion != nil {
-				err = jc.createModelVersion(metaObject, modelVersion, pods, &jobStatus)
+				err = jc.createModelVersion(job, modelVersion, pods, &jobStatus)
 			}
 			if err != nil {
 				return reconcile.Result{Requeue: true}, err
@@ -242,7 +234,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 
 	if jc.Config.EnableGangScheduling {
 		log.Infof("gang schedule enabled, start to syncing for job %s", jobKey)
-		if _, err = jc.CreateGang(metaObject, replicas, runPolicy.SchedulingPolicy); err != nil {
+		if _, err = jc.CreateGang(job, replicas, runPolicy.SchedulingPolicy); err != nil {
 			return result, err
 		}
 	}
@@ -251,7 +243,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	// 1. job has been in running state.
 	// 2. elastic scaling feature gate has been enabled.
 	// 3. generation has incremented, which represents the expected replicas changed.
-	if commonutil.IsRunning(*oldStatus) && jc.Controller.EnableElasticScaling(metaObject, runPolicy) {
+	if commonutil.IsRunning(*oldStatus) && jc.Controller.EnableElasticScaling(job, runPolicy) {
 		// Firstly check necessity of checkpoint, notify aimaster executing checkpoint if it is.
 		// Once checkpoint triggered, scale out/in progress will be hold util it completed.
 		done, err := jc.Controller.CheckpointIfNecessary(job, pods)
@@ -260,8 +252,8 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			return result, err
 		}
 		// No in-progressing checkpoint and generation has incremented (scale out or scale in happened).
-		if done && metaObject.GetGeneration() > 1 {
-			activeReplicasInNewGeneration := k8sutil.GetNumReplicasForLatestGeneration(pods, metaObject.GetGeneration())
+		if done && job.GetGeneration() > 1 {
+			activeReplicasInNewGeneration := k8sutil.GetNumReplicasForLatestGeneration(pods, job.GetGeneration())
 
 			if totalReplicas > activeReplicasInNewGeneration {
 				err = jc.Controller.ScaleOut(job, replicas, pods, services)
@@ -291,8 +283,8 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 		}
 
 		// Hack for AIMaster and DO-NOT-REMOVE-THIS.
-		if _, amExists := replicas[apiv1.JobReplicaTypeAIMaster]; rtype != apiv1.JobReplicaTypeAIMaster &&
-			amExists && metaObject.GetAnnotations()["aimaster"] != "ready" {
+		if ContainsReplicaType(replicas, apiv1.JobReplicaTypeAIMaster) && rtype != apiv1.JobReplicaTypeAIMaster &&
+			job.GetAnnotations()["aimaster"] != "ready" {
 			log.Infof("aimaster has not ready and reconciling is freezed.")
 			return reconcile.Result{}, nil
 		}
@@ -301,11 +293,11 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 		// If DAG scheduling has been enabled and current replica has upstream vertex(replica:phase),
 		// wait util all upstream replicas ready then trigger next reconciling.
 		if features.KubeDLFeatureGates.Enabled(features.DAGScheduling) && len(spec.DependOn) > 0 &&
-			!jc.dagConditionsReady(metaObject, replicas, pods, spec.DependOn) {
+			!jc.dagConditionsReady(job, replicas, pods, spec.DependOn) {
 			continue
 		}
 
-		err = jc.ReconcilePods(ctx, metaObject, &jobStatus, pods, rtype, spec, replicas, runPolicy, &restart)
+		err = jc.ReconcilePods(ctx, job, &jobStatus, pods, rtype, spec, replicas, runPolicy, &restart)
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
 			return result, err
@@ -323,7 +315,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 			continue
 		}
 
-		err = jc.ReconcileServices(ctx, metaObject, services, rtype, spec)
+		err = jc.ReconcileServices(ctx, job, services, rtype, spec)
 		if err != nil {
 			log.Warnf("ReconcileServices error %v", err)
 			return result, err
@@ -338,7 +330,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 
 	// Metering first pod launch delay when job state transit from created to running.
 	if commonutil.IsCreated(*oldStatus) && commonutil.IsRunning(jobStatus) {
-		jc.Metrics.FirstPodLaunchDelaySeconds(activePods, metaObject, jobStatus)
+		jc.Metrics.FirstPodLaunchDelaySeconds(activePods, job, jobStatus)
 	}
 
 	// Metring all pods launch delay when latest pods are all active after reconciled, and previous
@@ -352,7 +344,7 @@ func (jc *JobController) ReconcileJobs(job interface{}, replicas map[apiv1.Repli
 	if (k8sutil.GetTotalAvtiveReplicas(jobStatus.ReplicaStatuses) == totalReplicas) &&
 		(k8sutil.GetTotalAvtiveReplicas(oldStatus.ReplicaStatuses) < totalReplicas) &&
 		!commonutil.IsRestarting(*oldStatus) {
-		jc.Metrics.AllPodsLaunchDelaySeconds(pods, metaObject, jobStatus)
+		jc.Metrics.AllPodsLaunchDelaySeconds(pods, job, jobStatus)
 	}
 
 	// No need to update the job status if the status hasn't changed since last time.
