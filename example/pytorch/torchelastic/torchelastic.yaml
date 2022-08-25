@@ -23,7 +23,7 @@ spec:
               imagePullPolicy: Always
     Worker:
       replicas: 1
-      restartPolicy: ExitCode
+      restartPolicy: OnFailure
       template:
         spec:
           volumes:
