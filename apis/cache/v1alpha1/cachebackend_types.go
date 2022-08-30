@@ -39,6 +39,9 @@ type CacheBackendSpec struct {
 
 	// CacheEngine is different kinds of cache engine
 	CacheEngine *CacheEngine `json:"cacheEngine,omitempty"`
+
+	// Options is used to set additional configuration
+	Options Options `json:"options,omitempty"`
 }
 
 // CacheBackendStatus defines the observed state of CacheBackend
@@ -55,8 +58,8 @@ type CacheBackendStatus struct {
 	// UsedNum equals to the size of UsedBy array
 	UsedNum int `json:"usedNum,omitempty"`
 
-	// IdleTime means how long cacheBackend is not currently in use
-	IdleTime time.Duration `json:"idleTime,omitempty"`
+	// LastUsedTime is equal to the completion time of the last job that used CacheBackend
+	LastUsedTime *metav1.Time `json:"lastUsedTime,omitempty"`
 }
 
 // Dataset is used to define where specific data sources are stored and mounted
@@ -121,6 +124,11 @@ const (
 	CacheCreating CacheStatus = "CacheCreating"
 )
 
+type Options struct {
+	// IdleTime means how long cacheBackend is not currently in use
+	IdleTime time.Duration `json:"idleTime,omitempty"`
+}
+
 // +k8s:defaulter-gen=TypeMeta
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
@@ -128,7 +136,8 @@ const (
 // +kubebuilder:printcolumn:name="Engine",type=string,JSONPath=`.status.cacheEngine`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.cacheStatus`
 // +kubebuilder:printcolumn:name="Used-Num",type=integer,JSONPath=`.status.usedNum`
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Last-Used-Time",type=date,JSONPath=`.status.lastUsedTime`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=".metadata.creationTimestamp"
 
 // CacheBackend is the Schema for the cache backends API
 type CacheBackend struct {

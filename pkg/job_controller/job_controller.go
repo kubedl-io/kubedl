@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller"
+	"k8s.io/utils/strings/slices"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -198,9 +199,8 @@ func (jc *JobController) resolveControllerRef(namespace string, controllerRef *m
 	return job
 }
 
-func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) error {
+func (jc *JobController) checkCache(metaObject metav1.Object, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) error {
 	cacheBackend := &cachev1alpha1.CacheBackend{}
-	//cacheBackendName := cachectrl.GetCacheName(metaObject)
 	cacheBackendName := cacheBackendSpec.CacheBackendName
 	cacheBackendNameSpace := metaObject.GetNamespace()
 	err := jc.Client.Get(context.Background(), types.NamespacedName{
@@ -209,36 +209,54 @@ func (jc *JobController) createCache(metaObject metav1.Object, cacheBackendSpec 
 	}, cacheBackend)
 
 	if err == nil {
-		// Already been created
-		log.Infof("CacheBackend has been created")
-		return nil
-	} else {
-		if k8serrors.IsNotFound(err) {
-			log.Infof("CacheBackend is not exist, start to create %s", cacheBackendName)
-
-			// If haven't created yet
-			cacheBackend = &cachev1alpha1.CacheBackend{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      cacheBackendName,
-					Namespace: cacheBackendNameSpace,
-				},
-				Spec: *cacheBackendSpec,
-			}
-			cacheBackend.Status.CacheStatus = cachev1alpha1.CacheCreating
-
-			err = jc.Client.Create(context.Background(), cacheBackend)
+		log.Infof("CacheBackend %s has been created", cacheBackendName)
+		if !slices.Contains(cacheBackend.Status.UsedBy, metaObject.GetName()) {
+			cacheCpy := cacheBackend.DeepCopy()
+			cacheCpy.Status.UsedBy = append(cacheBackend.Status.UsedBy, metaObject.GetName())
+			err = jc.Client.Status().Update(context.Background(), cacheCpy)
 			if err != nil {
-				log.Errorf("Failed to create cache backend %s", cacheBackend.Name)
+				log.Errorf("Update UsedBy status failed")
 				return err
 			}
-
+		}
+	} else {
+		if k8serrors.IsNotFound(err) {
+			// If haven't created yet
+			if cacheBackendSpec.Dataset == nil || cacheBackendSpec.CacheEngine == nil {
+				log.Errorf("Information on creating CacheBackend is missing. The creation failed")
+				return err
+			}
+			log.Infof("CacheBackend is not exist, start to create %s", cacheBackendName)
+			err = jc.createCache(cacheBackendName, cacheBackendNameSpace, cacheBackendSpec)
+			if err != nil {
+				log.Errorf("Failed to create CacheBackend %s", cacheBackendName)
+				return err
+			}
+			log.Infof("CacheBackend %s created", cacheBackendName)
 		} else {
-			log.Errorf("Failed to get cache backend %s", cacheBackend.Name)
+			log.Errorf("Failed to get CacheBackend %s", cacheBackendName)
 			return err
 		}
 	}
-	log.Infof("CacheBackend %s created", cacheBackendName)
+
 	return nil
+}
+
+func (jc *JobController) createCache(name, namespace string, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) error {
+	cacheBackend := &cachev1alpha1.CacheBackend{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: *cacheBackendSpec,
+		Status: cachev1alpha1.CacheBackendStatus{
+			CacheStatus: cachev1alpha1.CacheCreating,
+			UsedBy:      []string{name},
+		},
+	}
+
+	err := jc.Client.Create(context.Background(), cacheBackend)
+	return err
 }
 
 func (jc JobController) addCachePathToContainer(metaObject metav1.Object, cacheBackend *cachev1alpha1.CacheBackendSpec,
@@ -312,4 +330,42 @@ func (jc JobController) addCacheVolumeToPodSpec(pvcName, mountPath string, pod *
 				Name: "cachevolume", MountPath: mountPath,
 			})
 	}
+}
+
+func (jc JobController) updateCacheUsedStatus(metaObject metav1.Object, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) (err error) {
+	cacheBackend := &cachev1alpha1.CacheBackend{}
+	cacheBackendName := cacheBackendSpec.CacheBackendName
+	cacheBackendNameSpace := metaObject.GetNamespace()
+	err = jc.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: cacheBackendNameSpace,
+		Name:      cacheBackendName,
+	}, cacheBackend)
+
+	if err == nil {
+		//for i, jobName := range cacheBackend.Status.UsedBy {
+		//	if jobName == metaObject.GetName() {
+		//		cacheBackend.Status.UsedBy = append(cacheBackend.Status.UsedBy[:i], cacheBackend.Status.UsedBy[i+1:]...)
+		//		break
+		//	}
+		//}
+
+		i := slices.Index(cacheBackend.Status.UsedBy, metaObject.GetName())
+		if i != -1 {
+			cacheBackend.Status.UsedBy = append(cacheBackend.Status.UsedBy[:i], cacheBackend.Status.UsedBy[i+1:]...)
+			log.Infof("Update CacheBackend %s used status", cacheBackendName)
+			err = jc.Client.Status().Update(context.Background(), cacheBackend)
+			if err != nil {
+				log.Errorf("Update CacheBackend %s used status", cacheBackendName)
+				return err
+			}
+		}
+
+	} else {
+		if k8serrors.IsNotFound(err) {
+			log.Errorf("Cannot find CacheBackend %s to update used status", cacheBackendName)
+		} else {
+			log.Errorf("Failed to get CacheBackend %s to update used status", cacheBackendName)
+		}
+	}
+	return
 }

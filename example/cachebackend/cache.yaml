@@ -15,3 +15,6 @@ spec:
           - cachePath: /dev/shm
             quota: "1Gi"
             mediumType: MEM
+  options:
+    idleTime: 60
+

@@ -491,7 +491,7 @@ func TestCreateCache(T *testing.T) {
 			}
 
 			// Create CacheBackend
-			err := mainJobController.createCache(job, &cacheBackend.Spec)
+			err := mainJobController.createCache(job.Name, job.Namespace, &cacheBackend.Spec)
 			assert.NoError(T, err)
 
 			// Check

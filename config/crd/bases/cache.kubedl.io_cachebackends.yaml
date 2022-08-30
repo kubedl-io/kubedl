@@ -26,6 +26,9 @@ spec:
     - jsonPath: .status.usedNum
       name: Used-Num
       type: integer
+    - jsonPath: .status.lastUsedTime
+      name: Last-Used-Time
+      type: date
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
@@ -80,6 +83,12 @@ spec:
                 type: string
               name:
                 type: string
+              options:
+                properties:
+                  idleTime:
+                    format: int64
+                    type: integer
+                type: object
             type: object
           status:
             properties:
@@ -87,9 +96,9 @@ spec:
                 type: string
               cacheStatus:
                 type: string
-              idleTime:
-                format: int64
-                type: integer
+              lastUsedTime:
+                format: date-time
+                type: string
               usedBy:
                 items:
                   type: string
