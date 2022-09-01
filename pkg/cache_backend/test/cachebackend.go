@@ -25,6 +25,7 @@ func NewFluidCacheBackend(name string, namespace string) *v1alpha1.CacheBackend 
 					},
 				},
 			},
+			Options: v1alpha1.Options{IdleTime: 60},
 		},
 		Status: v1alpha1.CacheBackendStatus{
 			CacheEngine: "fluid",
