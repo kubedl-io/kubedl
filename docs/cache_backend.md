@@ -36,11 +36,15 @@ spec:
           - cachePath: /dev/shm
             quota: "1Gi"
             mediumType: MEM
+  options:
+    idleTime: 60
 ```
 
 This example uses the [MNIST dataset](http://yann.lecun.com/exdb/mnist/), which is a very classic dataset in the field of computer vision. If you want to practice this case yourself, you need to download the MNIST dataset and replace the file path at `spec.cachebackend.cacheengine.fluid.dataset.datasources.path`. Note that the prefix `local://` is reserved, which means to load the source file locally (Or you can replace it with any path that can be recognized by alluxio).
 
-Dataset and AlluxioRuntime are the basic components of Fluid. These two abstractions are used to define dataset and configure cache parameters.The parameter meanings of these two parts are almost the same as those in Fluid (some names may be modified in KubeDL to make naming easier to understand)
+Dataset and AlluxioRuntime are the basic components of Fluid. These two abstractions are used to define dataset and configure cache parameters.The parameter meanings of these two parts are almost the same as those in Fluid (some parameters may be modified in KubeDL to make naming easier to understand)
+
+CacheBackend supports simple parameters to support more functionality, it mainly using the `options` field.  In the above demo file, we added the `idleTime` to `options`. `idleTime` controls the maximum unused time of a CacheBackend. If a CacheBackend has been unused for more than Idletime, the controller will automatically remove the infrequently used CacheBackend.
 
 #### Create CacheBackend
 
@@ -53,10 +57,12 @@ cachebackend.cache.kubedl.io/test-cachebackend created
 
 Check the status of CacheBackend. If enabled cache, KubeDL will create a cachebackend. The status is `PVCCreating`, which means that cachebackend is already requesting the Fluid to create dataset and alluxioruntime.
 
+The `LAST-USED-TIME` means that current CacheBackend is in inactive status and it is equal to the completion time of the last job that used CacheBackend. The `USED-NUM` is the number of jobs that are currently using CacheBackend.
+
 ```shell
 $ kubectl get cacheBackend
-NAME                ENGINE   STATUS        AGE
-test-cachebackend   fluid    PVCCreating   34s
+NAME                ENGINE   STATUS        USED-NUM   LAST-USED-TIME   AGE
+test-cachebackend   fluid    PVCCreating                               28s
 ```
 
 After a while, can view the status of the dataset and the alluxio runtime. At this moment, the dataset has not been cached.
@@ -75,8 +81,8 @@ Kubedl will automatically check whether the PVC is created. If the status of cac
 
 ```shell
 $ kubectl get cacheBackend  
-NAME                ENGINE   STATUS        AGE
-test-cachebackend   fluid    PVCCreated    99s
+NAME                ENGINE   STATUS       USED-NUM   LAST-USED-TIME   AGE
+test-cachebackend   fluid    PVCCreated              5s               88s
 
 $ kubectl get pvc
 NAME                STATUS   VOLUME                      CAPACITY   ACCESS MODES   STORAGECLASS   AGE
@@ -163,10 +169,6 @@ NAME                           READY   STATUS      RESTARTS   AGE
 tf-cache-worker-0              0/1     Completed   0          2m18s
 ```
 
-#### Cache Reuse
-
-Cache Backend objects have job-independent life cycles. When a job bound to CacheBackend is deleted, CacheBackend and cached datasets will remain in the environment. It means that you can bind multiple jobs to the same CacheBackend or bind the same cacheBackend to different jobs at different times.
-
 #### Clean Up
 
 Delete Job
@@ -184,3 +186,7 @@ cachebackend.cache.kubedl.io "test-cachebackend" deleted
 ```
 
 After CacheBackend removed, the `dataset`, `alluxioruntime` and `pvc` will be automatically deleted.
+
+## Cache Reuse
+
+CacheBackend objects have job-independent life cycles. When a job bound to CacheBackend is deleted, CacheBackend and cached datasets will remain in the environment. It means that you can bind multiple jobs to the same CacheBackend or bind the same cacheBackend to different jobs at different times.
