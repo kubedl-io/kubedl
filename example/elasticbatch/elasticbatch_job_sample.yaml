@@ -1,0 +1,29 @@
+apiVersion: inference.kubedl.io/v1alpha1
+kind: ElasticBatchJob
+metadata:
+  name: elasticbatch-example
+  namespace: default
+  annotations:
+    pai.ai/enable-error-monitoring: 'true'
+spec:
+  elasticBatchReplicaSpecs:
+    AIMaster:
+      template:
+        spec:
+          containers:
+          - name: elasticbatch
+            image: registry.cn-zhangjiakou.aliyuncs.com/pai-dlc/aimaster:1.1.3
+            args: ["--community-k8s=true --execution-mode=async --max-tolerated-failure-rate=1 "]
+          serviceAccountName: default
+    Worker:
+      replicas: 3
+      template:
+        spec:
+          containers:
+            - name: elasticbatch
+              image: busybox:latest
+              imagePullPolicy: Always
+              command:
+              - /bin/sh
+              - -c
+              - echo __hello___ && sleep 3000

@@ -166,6 +166,26 @@ rules:
   - patch
   - update
 - apiGroups:
+  - inference.kubedl.io
+  resources:
+  - elasticbatchjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - inference.kubedl.io
+  resources:
+  - elasticbatchjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - model.kubedl.io
   resources:
   - models

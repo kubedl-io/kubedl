@@ -19,6 +19,7 @@ import (
 
 	appv1 "github.com/alibaba/kubedl/apis/apps/v1alpha1"
 	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
+	inference "github.com/alibaba/kubedl/apis/inference/v1alpha1"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	model "github.com/alibaba/kubedl/controllers/model"
@@ -303,15 +304,7 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 			return result, err
 		}
 
-		// Skip service of ElasticDLJob and MPIJob.
-		if jc.Controller.GetAPIGroupVersionKind().Kind == training.ElasticDLJobKind ||
-			jc.Controller.GetAPIGroupVersionKind().Kind == training.MPIJobKind {
-			continue
-		}
-
-		// Service is in need only for Master
-		if jc.Controller.GetAPIGroupVersionKind().Kind == training.PyTorchJobKind &&
-			rtype != training.PyTorchReplicaTypeMaster {
+		if !jc.shouldCreateService(rtype) {
 			continue
 		}
 
@@ -609,4 +602,15 @@ func (jc *JobController) cleanupJob(runPolicy *apiv1.RunPolicy, jobStatus apiv1.
 	res.Requeue = true
 	res.RequeueAfter = deleteTime.Sub(currentTime)
 	return res, nil
+}
+
+func (jc *JobController) shouldCreateService(rtype apiv1.ReplicaType) bool {
+	if (jc.Controller.GetAPIGroupVersionKind().Kind == training.PyTorchJobKind && rtype != training.PyTorchReplicaTypeMaster) ||
+		(jc.Controller.GetAPIGroupVersionKind().Kind == training.MPIJobKind) ||
+		(jc.Controller.GetAPIGroupVersionKind().Kind == training.ElasticDLJobKind) ||
+		(jc.Controller.GetAPIGroupVersionKind().Kind == inference.ElasticBatchJobKind) {
+		return false
+	}
+
+	return true
 }

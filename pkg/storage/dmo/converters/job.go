@@ -25,6 +25,7 @@ import (
 	"k8s.io/klog"
 	"k8s.io/utils/pointer"
 
+	inferencev1alpha1 "github.com/alibaba/kubedl/apis/inference/v1alpha1"
 	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/storage/dmo"
@@ -105,6 +106,8 @@ func ExtractTypedJobInfos(job metav1.Object) (kind string, spec map[v1.ReplicaTy
 		return trainingv1alpha1.XGBoostJobKind, typed.Spec.XGBReplicaSpecs, typed.Status.JobStatus, nil
 	case *trainingv1alpha1.XDLJob:
 		return trainingv1alpha1.XDLJobKind, typed.Spec.XDLReplicaSpecs, typed.Status, nil
+	case *inferencev1alpha1.ElasticBatchJob:
+		return inferencev1alpha1.ElasticBatchJobKind, typed.Spec.ElasticBatchReplicaSpecs, typed.Status, nil
 	}
 	return "", nil, v1.JobStatus{}, fmt.Errorf("unkonwn job kind, %s/%s", job.GetNamespace(), job.GetName())
 }
