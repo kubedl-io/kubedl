@@ -14,8 +14,9 @@ func NewFluidCacheBackend(name string, namespace string) *v1alpha1.CacheBackend 
 			Name:      name,
 		},
 		Spec: v1alpha1.CacheBackendSpec{
-			MountPath: "/test/mount/path",
-			Dataset:   &v1alpha1.Dataset{DataSources: []v1alpha1.DataSource{}},
+			CacheBackendName: name,
+			MountPath:        "/test/mount/path",
+			Dataset:          &v1alpha1.Dataset{DataSources: []v1alpha1.DataSource{}},
 			CacheEngine: &v1alpha1.CacheEngine{
 				Fluid: &v1alpha1.Fluid{
 					AlluxioRuntime: &v1alpha1.AlluxioRuntime{
@@ -24,9 +25,10 @@ func NewFluidCacheBackend(name string, namespace string) *v1alpha1.CacheBackend 
 					},
 				},
 			},
+			Options: v1alpha1.Options{IdleTime: 60},
 		},
 		Status: v1alpha1.CacheBackendStatus{
-			JobName:     "testJobName",
+			CacheEngine: "fluid",
 			CacheStatus: v1alpha1.CacheCreating,
 		},
 	}

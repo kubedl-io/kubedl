@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -26,6 +28,9 @@ const (
 
 // CacheBackendSpec defines the desired state of CacheBackend
 type CacheBackendSpec struct {
+	// CacheBackendName is equal to ObjectMeta.Name for now
+	CacheBackendName string `json:"name,omitempty"`
+
 	// The location in the container where the dataset should be mounted
 	MountPath string `json:"mountPath,omitempty"`
 
@@ -34,15 +39,27 @@ type CacheBackendSpec struct {
 
 	// CacheEngine is different kinds of cache engine
 	CacheEngine *CacheEngine `json:"cacheEngine,omitempty"`
+
+	// Options is used to set additional configuration
+	Options Options `json:"options,omitempty"`
 }
 
 // CacheBackendStatus defines the observed state of CacheBackend
 type CacheBackendStatus struct {
-	// JobName indicates the name of the job that consumes the cache
-	JobName string `json:"jobName,omitempty"`
+	// CacheEngine is the current cache engine used by CacheBackend
+	CacheEngine string `json:"cacheEngine,omitempty"`
 
 	// CacheStatus is used to help understand the status of a caching process
 	CacheStatus CacheStatus `json:"cacheStatus,omitempty"`
+
+	// UsedBy array contains the jobs currently using this cacheBackends
+	UsedBy []string `json:"usedBy,omitempty"`
+
+	// UsedNum equals to the size of UsedBy array
+	UsedNum int `json:"usedNum,omitempty"`
+
+	// LastUsedTime is equal to the completion time of the last job that used CacheBackend
+	LastUsedTime *metav1.Time `json:"lastUsedTime,omitempty"`
 }
 
 // Dataset is used to define where specific data sources are stored and mounted
@@ -107,13 +124,20 @@ const (
 	CacheCreating CacheStatus = "CacheCreating"
 )
 
+type Options struct {
+	// IdleTime means how long cacheBackend is not currently in use
+	IdleTime time.Duration `json:"idleTime,omitempty"`
+}
+
 // +k8s:defaulter-gen=TypeMeta
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:printcolumn:name="Job-Name",type=string,JSONPath=`.status.jobName`
-// +kubebuilder:printcolumn:name="Cache-Status",type=string,JSONPath=`.status.cacheStatus`
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Engine",type=string,JSONPath=`.status.cacheEngine`
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.cacheStatus`
+// +kubebuilder:printcolumn:name="Used-Num",type=integer,JSONPath=`.status.usedNum`
+// +kubebuilder:printcolumn:name="Last-Used-Time",type=date,JSONPath=`.status.lastUsedTime`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=".metadata.creationTimestamp"
 
 // CacheBackend is the Schema for the cache backends API
 type CacheBackend struct {

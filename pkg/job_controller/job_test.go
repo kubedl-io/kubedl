@@ -18,8 +18,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	appv1 "github.com/alibaba/kubedl/apis/apps/v1alpha1"
+	cachev1alpha1 "github.com/alibaba/kubedl/apis/cache/v1alpha1"
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
+	testcachebackend "github.com/alibaba/kubedl/pkg/cache_backend/test"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	v1 "github.com/alibaba/kubedl/pkg/test_job/v1"
@@ -439,4 +441,172 @@ func GetJobByName(mainJobController JobController, namespace string, name string
 		Namespace: namespace,
 		Name:      name,
 	}, obj)
+}
+
+func TestCreateCache(T *testing.T) {
+	testCases := []struct {
+		testName      string
+		cacheBackend  *cachev1alpha1.CacheBackend
+		expectSuccess bool
+	}{
+		{
+			testName:      "fluid (should success)",
+			cacheBackend:  testcachebackend.NewFluidCacheBackend("fluid", "default"),
+			expectSuccess: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		T.Run(testCase.testName, func(T *testing.T) {
+
+			cacheBackend := testCase.cacheBackend
+			unifiedNamespace := cacheBackend.Namespace
+			unifiedName := cacheBackend.Name
+
+			job := &v1.TestJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: unifiedNamespace,
+					Name:      unifiedName,
+				},
+			}
+
+			scheme := runtime.NewScheme()
+			_ = appv1.AddToScheme(scheme)
+			_ = cachev1alpha1.AddToScheme(scheme)
+			_ = v1.AddToScheme(scheme)
+			_ = corev1.AddToScheme(scheme)
+
+			fakeClient := fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithRuntimeObjects(job).
+				Build()
+
+			testJobController := &v1.TestJobController{
+				Job: job,
+			}
+
+			mainJobController := JobController{
+				Controller: testJobController,
+				Client:     fakeClient,
+			}
+
+			// Create CacheBackend
+			err := mainJobController.createCache(job.Name, job.Namespace, &cacheBackend.Spec)
+			assert.NoError(T, err)
+
+			// Check
+			err = fakeClient.Get(context.Background(), types.NamespacedName{
+				Namespace: unifiedNamespace,
+				Name:      unifiedName,
+			}, cacheBackend)
+
+			if assert.NoError(T, err) != testCase.expectSuccess {
+				T.Errorf("CacheBackend status is unexpected, expected: %v, got: %v", testCase.expectSuccess, assert.NoError(T, err))
+			}
+		})
+	}
+}
+
+func newReplica() (replica *apiv1.ReplicaSpec) {
+	replica = &apiv1.ReplicaSpec{
+		RestartPolicy: "Never",
+		Template: corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  "fakeName",
+						Image: "kubedl/fakeImage:fakeImageTag",
+					},
+				},
+			},
+		},
+	}
+	return
+}
+
+func TestAddCachePathToContainer(T *testing.T) {
+	testCases := []struct {
+		testName      string
+		cacheBackend  *cachev1alpha1.CacheBackend
+		expectSuccess bool
+	}{
+		{
+			testName:      "fluid (should success)",
+			cacheBackend:  testcachebackend.NewFluidCacheBackend("fluid", "default"),
+			expectSuccess: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		T.Run(testCase.testName, func(T *testing.T) {
+
+			cacheBackend := testCase.cacheBackend
+			unifiedNamespace := cacheBackend.Namespace
+			unifiedName := cacheBackend.Name
+
+			job := &v1.TestJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: unifiedNamespace,
+					Name:      unifiedName,
+				},
+			}
+
+			replicas := map[apiv1.ReplicaType]*apiv1.ReplicaSpec{
+				"Worker": newReplica(),
+			}
+
+			scheme := runtime.NewScheme()
+			_ = appv1.AddToScheme(scheme)
+			_ = cachev1alpha1.AddToScheme(scheme)
+			_ = v1.AddToScheme(scheme)
+			_ = corev1.AddToScheme(scheme)
+
+			fakeClient := fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithRuntimeObjects(job).
+				Build()
+
+			testJobController := &v1.TestJobController{
+				Job: job,
+			}
+
+			mainJobController := JobController{
+				Controller: testJobController,
+				Client:     fakeClient,
+			}
+
+			// the pvc should be created by reconciler of cacheEngine(e.g. fluid), create it manually for test
+			pvc := &corev1.PersistentVolumeClaim{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: unifiedNamespace,
+					Name:      unifiedName,
+				},
+			}
+			err := fakeClient.Create(context.Background(), pvc)
+
+			err = fakeClient.Get(context.Background(), types.NamespacedName{
+				Namespace: unifiedNamespace,
+				Name:      unifiedName,
+			}, pvc)
+			assert.NoError(T, err)
+
+			err = mainJobController.addCachePathToContainer(job, &cacheBackend.Spec, replicas)
+			assert.NoError(T, err)
+
+			expectedVolume := corev1.Volume{
+				Name: "cachevolume",
+				VolumeSource: corev1.VolumeSource{
+					PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+						ClaimName: "fluid",
+					},
+				},
+			}
+
+			result := assert.Contains(T, replicas["Worker"].Template.Spec.Volumes, expectedVolume)
+
+			if result != testCase.expectSuccess {
+				T.Errorf("Volume status is unexpected, expected: %v, got: %v", testCase.expectSuccess, result)
+			}
+		})
+	}
 }

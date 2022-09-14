@@ -1,0 +1,20 @@
+apiVersion: "cache.kubedl.io/v1alpha1"
+kind: "CacheBackend"
+metadata:
+  name: "test-cachebackend"
+spec:
+  dataset:
+    dataSources:
+      - location: local:///dataset/mnist  # path property can be any legal UFS path acknowledged by Alluxio
+        subDirName: mnist   # dataset needs to specify the name of the file directory in the mount path
+  cacheEngine:
+    fluid:
+      alluxioRuntime:
+        replicas: 1
+        tieredStorage:
+          - cachePath: /dev/shm
+            quota: "1Gi"
+            mediumType: MEM
+  options:
+    idleTime: 60
+
