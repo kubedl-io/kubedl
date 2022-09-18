@@ -41,6 +41,10 @@ type JobStatus struct {
 	// It is represented in RFC3339 form and is in UTC.
 	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
 
+	// Represents the elastic scaling status for training jobs,
+	// specifies the status of current elastic scaling.
+	ElasticStatus map[ReplicaType]*ElasticScalingStatus `json:"elasticScaling,omitempty"`
+
 	// Represents last time when the job was reconciled. It is not guaranteed to
 	// be set in happens-before order across separate operations.
 	// It is represented in RFC3339 form and is in UTC.
@@ -56,6 +60,28 @@ type JobStatus struct {
 // ReplicaType represents the type of the replica. Each operator needs to define its
 // own set of ReplicaTypes.
 type ReplicaType string
+
+// ElasticScalingStatus represents the current elastic scaling status of the training job.
+// +k8s:deepcopy-gen=true
+type ElasticScalingStatus struct {
+	// Type of elastic scaling condition.
+	ElasticCondition ElasticConditionType `json:"elasticCondition,omitempty"`
+
+	// Continue represents whether the job needs to continue scaling.
+	Continue bool `json:"continue,omitempty"`
+
+	// The number of current scaling pod replicas.
+	CurrentReplicas int32 `json:"currentReplicas,omitempty"`
+
+	// The number of last scaling pod replicas.
+	LastReplicas int32 `json:"lastReplicas,omitempty"`
+
+	// The time this elastic scaling loop was started.
+	LastUpdateTime *metav1.Time `json:"startTime,omitempty"`
+
+	// A human readable message indicating details about the transition.
+	Message string `json:"message,omitempty"`
+}
 
 // ReplicaStatus represents the current observed state of the replica.
 type ReplicaStatus struct {
@@ -130,6 +156,23 @@ type JobCondition struct {
 	// Last time the condition transitioned from one status to another.
 	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 }
+
+// ElasticConditionType defines all kinds of elastic scaling conditions.
+type ElasticConditionType string
+
+const (
+	ElasticJobPending ElasticConditionType = "HasPendingPod"
+	// ElasticStart means the elastic scaling has been started.
+	ElasticStart ElasticConditionType = "Start"
+	// ElasticStop means the elastic scaling has been stopped.
+	ElasticStop ElasticConditionType = "Stop"
+	// ElasticContinue means the elastic scaling continues.
+	ElasticContinue ElasticConditionType = "Continue"
+	// ElasticMaxMetric means the training metrics have reached the max.
+	ElasticMaxMetric ElasticConditionType = "ReachMaxMetric"
+	// ElasticMaxReplica means the replicas have reached the maxReplicas.
+	ElasticMaxReplica ElasticConditionType = "ReachMaxReplicas"
+)
 
 // JobConditionType defines all kinds of types of JobStatus.
 type JobConditionType string

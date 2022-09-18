@@ -1,0 +1,55 @@
+apiVersion: training.kubedl.io/v1alpha1
+kind: "PyTorchJob"
+metadata:
+  name: "resnet"
+  namespace: elastic-job
+spec:
+  enableElastic: true
+  elasticPolicy:
+    rdzvBackend: etcd
+    rdzvEndpoint: "etcd-service:2379"
+    minReplicas: 1
+    maxReplicas: 3
+    nProcPerNode: 1
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: ExitCode
+      template:
+        spec:
+          containers:
+            - name: pytorch
+              image: kubedl/pytorch-dist-example
+              imagePullPolicy: Always
+    Worker:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          volumes:
+            - name: checkpoint
+              persistentVolumeClaim:
+                claimName: pvc-torch-checkpoint
+          containers:
+            - name: pytorch
+              image: wanziyu/imagenet:1.1
+              imagePullPolicy: Always
+              args:
+                - "/workspace/examples/imagenet/main.py"
+                - "--arch=resnet50"
+                - "--epochs=20"
+                - "--batch-size=64"
+                - "--print-freq=50"
+                # number of data loader workers (NOT trainers)
+                # zero means load the data on the same process as the trainer
+                # this is set so that the container does not OOM since
+                # pytorch data loaders use shm
+                - "--workers=0"
+                - "/workspace/data/tiny-imagenet-200"
+                - "--checkpoint-file=/mnt/blob/data/checkpoint.pth.tar"
+              resources:
+                limits:
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: checkpoint
+                  mountPath: "/mnt/blob/data"

@@ -35,6 +35,7 @@ const (
 	AnnotationCheckpointRequestedVersion = v1.KubeDLPrefix + "/ckpt-requested-version"
 	AnnotationCheckpointCompletedVersion = v1.KubeDLPrefix + "/ckpt-completed-version"
 	AnnotationReadyToStartWorker         = v1.KubeDLPrefix + "/ready-to-start-worker"
+	AnnotationReadyToRestartWorker       = v1.KubeDLPrefix + "/ready-to-restart-worker"
 	AnnotationImmediatelyStartWorker     = v1.KubeDLPrefix + "/immediately-start-worker"
 	AnnotationWorldSize                  = v1.KubeDLPrefix + "/world-size"
 )

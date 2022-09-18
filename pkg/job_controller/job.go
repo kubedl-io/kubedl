@@ -318,10 +318,15 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 			continue
 		}
 
-		// Service is in need only for Master
-		if jc.Controller.GetAPIGroupVersionKind().Kind == training.PyTorchJobKind &&
-			rtype != training.PyTorchReplicaTypeMaster {
-			continue
+		if jc.Controller.GetAPIGroupVersionKind().Kind == training.PyTorchJobKind {
+			pytorchJob, ok := job.(*training.PyTorchJob)
+			if !ok {
+				log.Warnf("Job is not a type of PytorchJob %v", err)
+			}
+			// Service is in need only for pytorch Master
+			if !pytorchJob.Spec.EnableElastic && rtype != training.PyTorchReplicaTypeMaster {
+				continue
+			}
 		}
 
 		err = jc.ReconcileServices(ctx, job, services, rtype, spec)
