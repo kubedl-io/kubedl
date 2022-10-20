@@ -2,8 +2,8 @@
 name: Feature Request
 about: Suggest an idea for this project
 title: "[feature request]"
-labels: kind/feature-request
-assignees: jian-he
+labels: ''
+assignees: jian-he, SimonCqk
 
 ---
 
