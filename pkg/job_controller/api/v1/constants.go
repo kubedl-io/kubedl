@@ -20,6 +20,9 @@ const (
 
 	// JobRoleLabel represents the label key for the job role, e.g. the value is master
 	JobRoleLabel = "job-role"
+
+	// JobBatchLabel
+	JobBatchLabel = "job-batch"
 )
 
 // Constant label/annotation keys for job configuration.
@@ -43,6 +46,15 @@ const (
 	ReplicaTypeTensorBoard ReplicaType = "TensorBoard"
 	//ResourceNvidiaGPU is the key of gpu type in labels
 	ResourceNvidiaGPU v1.ResourceName = "nvidia.com/gpu"
+)
+
+// add annonations
+const (
+	AnnotationPodBatchSize           = KubeDLPrefix + "/pod-batch-size"
+	AnnotationPodAffinityStrategy    = KubeDLPrefix + "/pod-affinity-strategy"
+	AnnotationPodTopologyKey         = KubeDLPrefix + "/pod-topology-key"
+	PodAffinityStrategyPSWorker      = "ps-worker"
+	PodAffinityStrategyRingallreduce = "ringallreduce"
 )
 
 const (
