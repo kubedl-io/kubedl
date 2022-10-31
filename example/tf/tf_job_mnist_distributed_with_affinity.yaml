@@ -1,0 +1,32 @@
+# A simple distributed tf with 3 replicas.
+# Affinity related settings can be noted in annotations.
+# Where:
+#  1: pod-affinity-strategy refers to topology, which can be ringallreduce, allreduce or ps worker;
+#  2: pod-batch-size refers to the number of partitions. For example, in ringallreduce, if pod batch-size
+#    is set to 2, it means that two adjacent pod are scheduled to the same node.
+
+apiVersion: "training.kubedl.io/v1alpha1"
+kind: "TFJob"
+metadata:
+  name: "tf-distributed-simple"
+  annotations:
+    kubedl.io/pod-affinity-strategy: "ringallreduce" #It has a default value and is not required.
+    kubedl.io/pod-batch-size: "2" #It has a default value and is not required.
+    kubedl.io/pod-topology-key: kubernetes.io/hostname #It has a default value and is not required.
+spec:
+  cleanPodPolicy: None
+  tfReplicaSpecs:
+    Worker:
+      replicas: 3
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+            - name: tensorflow
+              image: kubedl/tf-mnist-estimator-api:v0.1.1
+              command:
+                - "python"
+                - "/keras_model_to_estimator.py"
+                - "/tmp/tfkeras_example/"        # checkpoint dir
+                - "/kubedl-model"                # export saved_model dir
+              imagePullPolicy: Always

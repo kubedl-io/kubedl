@@ -2,7 +2,15 @@ package job_controller
 
 import (
 	"context"
+	"fmt"
+	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/gang_schedule"
+	"github.com/alibaba/kubedl/pkg/metrics"
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/workqueue"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 
 	"k8s.io/api/core/v1"
@@ -293,4 +301,54 @@ func newPodFailedWithReason(name, rt, index, reason string, exitCode int) *v1.Po
 		}
 	}
 	return p
+}
+
+func TestJobController_injectAffinity(t *testing.T) {
+	type fields struct {
+		Controller         apiv1.ControllerInterface
+		Config             options.JobControllerConfiguration
+		PodControl         controller.PodControlInterface
+		ServiceControl     ServiceControlInterface
+		GangScheduler      gang_schedule.GangScheduler
+		Expectations       controller.ControllerExpectationsInterface
+		BackoffStatesQueue workqueue.RateLimitingInterface
+		Recorder           record.EventRecorder
+		Metrics            *metrics.JobMetrics
+		patcher            func(oldObj, newObj client.Object) error
+		Client             client.Client
+		Scheme             *runtime.Scheme
+		APIReader          client.Reader
+	}
+	type args struct {
+		podTemplate *v1.PodTemplateSpec
+		job         interface{}
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr assert.ErrorAssertionFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			jc := &JobController{
+				Controller:         tt.fields.Controller,
+				Config:             tt.fields.Config,
+				PodControl:         tt.fields.PodControl,
+				ServiceControl:     tt.fields.ServiceControl,
+				GangScheduler:      tt.fields.GangScheduler,
+				Expectations:       tt.fields.Expectations,
+				BackoffStatesQueue: tt.fields.BackoffStatesQueue,
+				Recorder:           tt.fields.Recorder,
+				Metrics:            tt.fields.Metrics,
+				patcher:            tt.fields.patcher,
+				Client:             tt.fields.Client,
+				Scheme:             tt.fields.Scheme,
+				APIReader:          tt.fields.APIReader,
+			}
+			tt.wantErr(t, jc.injectAffinity(tt.args.podTemplate, tt.args.job), fmt.Sprintf("injectAffinity(%v, %v)", tt.args.podTemplate, tt.args.job))
+		})
+	}
 }
