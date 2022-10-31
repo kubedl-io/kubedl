@@ -1,0 +1,7 @@
+apiVersion: inference.kubedl.io/v1alpha1
+kind: ElasticBatchJob
+metadata:
+  name: elasticbatchjob-sample
+spec:
+  # Add fields here
+  foo: bar

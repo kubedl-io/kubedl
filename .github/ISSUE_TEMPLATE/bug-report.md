@@ -2,8 +2,8 @@
 name: Bug Report
 about: Create a report to help us improve
 title: "[BUG]"
-labels: kind/bug
-assignees: SimonCqk
+labels: ''
+assignees: jian-he, SimonCqk
 
 ---
 

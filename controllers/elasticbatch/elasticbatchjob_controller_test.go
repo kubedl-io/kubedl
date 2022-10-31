@@ -1,4 +1,17 @@
-package tensorflow
+// Copyright 2022 The Alibaba Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package elasticbatch
 
 import (
 	"context"
@@ -11,10 +24,8 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/alibaba/kubedl/apis"
-	"github.com/alibaba/kubedl/apis/model/v1alpha1"
-	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	inference "github.com/alibaba/kubedl/apis/inference/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
-	controllers "github.com/alibaba/kubedl/controllers/model"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -38,17 +49,17 @@ func init() {
 	_ = pflag.Set("v", "10")
 }
 
-type TFJobReconcilerTest struct {
-	TFJobReconciler
+type ElasticBatchJobReconcilerTest struct {
+	ElasticBatchJobReconciler
 }
 
-func (r *TFJobReconcilerTest) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
-	job := &training.TFJob{}
+func (r *ElasticBatchJobReconcilerTest) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
+	job := &inference.ElasticBatchJob{}
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	return job, err
 }
 
-func (r *TFJobReconcilerTest) satisfiedExpectations(tfJob *training.TFJob) bool {
+func (r *ElasticBatchJobReconcilerTest) satisfiedExpectations(elasticbatchJob *inference.ElasticBatchJob) bool {
 	// during unit test, no watch events will happen, hence always return true to trigger reconcile
 	return true
 }
@@ -69,9 +80,9 @@ func tearDown() {
 // NewReconciler returns a new reconcile.Reconciler
 func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 	recorder record.EventRecorder,
-	config options.JobControllerConfiguration) *TFJobReconcilerTest {
-	r := &TFJobReconcilerTest{
-		TFJobReconciler{
+	config options.JobControllerConfiguration) *ElasticBatchJobReconcilerTest {
+	r := &ElasticBatchJobReconcilerTest{
+		ElasticBatchJobReconciler{
 			Client: client,
 			scheme: scheme,
 		},
@@ -87,7 +98,7 @@ func NewReconcilerTest(client client.Client, scheme *runtime.Scheme,
 		ServiceControl:     job_controller.NewServiceControl(client, recorder),
 		Config:             config,
 		Recorder:           recorder,
-		Metrics:            metrics.NewJobMetrics(training.TFJobKind, client),
+		Metrics:            metrics.NewJobMetrics(inference.ElasticBatchJobKind, client),
 	}
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
@@ -108,12 +119,12 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 	defer tearDown()
 
 	// a job with 2 replicas
-	tfjob := createTFJob("job1", 2)
-	fakeClient := fake.NewFakeClientWithScheme(scheme, tfjob)
+	elasticbatchJob := createElasticBatchJob("job1", 2)
+	fakeClient := fake.NewFakeClientWithScheme(scheme, elasticbatchJob)
 	jobControllerConfig := options.JobControllerConfiguration{}
 	eventBroadcaster := record.NewBroadcaster()
 	recorder := eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"})
-	tfJobReconciler := NewReconcilerTest(fakeClient, scheme, recorder, jobControllerConfig)
+	elasticbatchJobReconciler := NewReconcilerTest(fakeClient, scheme, recorder, jobControllerConfig)
 
 	jobRequest := reconcile.Request{
 		NamespacedName: types.NamespacedName{
@@ -122,89 +133,39 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 		},
 	}
 	// reconcile the job, it should create 2 replicas
-	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
+	_, _ = elasticbatchJobReconciler.Reconcile(context.Background(), jobRequest)
 
+	markPodStatus("job1-aimaster-0", corev1.PodRunning, elasticbatchJobReconciler)
 	// mark two pods running
-	markPodStatus("job1-worker-0", corev1.PodRunning, tfJobReconciler)
-	markPodStatus("job1-worker-1", corev1.PodRunning, tfJobReconciler)
+	markPodStatus("job1-worker-0", corev1.PodRunning, elasticbatchJobReconciler)
+	markPodStatus("job1-worker-1", corev1.PodRunning, elasticbatchJobReconciler)
 
 	// Reconcile again, the job should go into Running state
-	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
-	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
-	assert.True(t, util.HasCondition(tfjob.Status, v1.JobRunning))
+	_, _ = elasticbatchJobReconciler.Reconcile(context.Background(), jobRequest)
+	_ = elasticbatchJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, elasticbatchJob)
+	assert.True(t, util.HasCondition(elasticbatchJob.Status, v1.JobRunning))
 
 	// make job1-worker-0 succeed
-	markPodStatus("job1-worker-0", corev1.PodSucceeded, tfJobReconciler)
+	markPodStatus("job1-worker-0", corev1.PodSucceeded, elasticbatchJobReconciler)
 
 	// reconcile again
-	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
+	_, _ = elasticbatchJobReconciler.Reconcile(context.Background(), jobRequest)
 	// one worker succeeded, because of AllWorker SuccessPolicy, the job is still running
-	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
-	assert.True(t, util.HasCondition(tfjob.Status, v1.JobRunning))
+	_ = elasticbatchJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, elasticbatchJob)
+	assert.True(t, util.HasCondition(elasticbatchJob.Status, v1.JobRunning))
 
 	// mark job1-worker-0 succeed too
-	markPodStatus("job1-worker-1", corev1.PodSucceeded, tfJobReconciler)
+	markPodStatus("job1-worker-1", corev1.PodSucceeded, elasticbatchJobReconciler)
 
 	// reconcile again
-	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
+	_, _ = elasticbatchJobReconciler.Reconcile(context.Background(), jobRequest)
 
 	// two workers succeeded, the jobs is succeeded
-	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
-	assert.True(t, util.HasCondition(tfjob.Status, v1.JobSucceeded))
+	_ = elasticbatchJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, elasticbatchJob)
+	assert.True(t, util.HasCondition(elasticbatchJob.Status, v1.JobSucceeded))
 }
 
-// Test the tfjob will create a modelVersion after it finishes.
-func TestJobCreateModel(t *testing.T) {
-	scheme := runtime.NewScheme()
-	_ = apis.AddToScheme(scheme)
-	_ = corev1.AddToScheme(scheme)
-	defer tearDown()
-
-	// a job with 2 replicas
-	tfjob := createTFJob("job1", 1)
-	tfjob.Spec.ModelVersion = &v1alpha1.ModelVersionSpec{
-		ModelName: "tfjob-model",
-		Storage: &v1alpha1.Storage{
-			LocalStorage: &v1alpha1.LocalStorage{
-				Path:     "/tmp/model",
-				NodeName: "localhost",
-			},
-		},
-	}
-	fakeClient := fake.NewFakeClientWithScheme(scheme, tfjob)
-	jobControllerConfig := options.JobControllerConfiguration{}
-	eventBroadcaster := record.NewBroadcaster()
-	recorder := eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"})
-	tfJobReconciler := NewReconcilerTest(fakeClient, scheme, recorder, jobControllerConfig)
-
-	jobRequest := reconcile.Request{
-		NamespacedName: types.NamespacedName{
-			Name:      "job1",
-			Namespace: "default",
-		},
-	}
-	// reconcile the job, it should create 2 replicas
-	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
-
-	// make job1-worker-0 succeed
-	markPodStatus("job1-worker-0", corev1.PodSucceeded, tfJobReconciler)
-	// reconcile
-	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
-	// the jobs is succeeded
-	_ = tfJobReconciler.Get(context.TODO(), jobRequest.NamespacedName, tfjob)
-	assert.True(t, util.HasCondition(tfjob.Status, v1.JobSucceeded))
-	_, _ = tfJobReconciler.Reconcile(context.Background(), jobRequest)
-
-	modelVersion := &v1alpha1.ModelVersion{}
-	_ = tfJobReconciler.Get(context.TODO(), types.NamespacedName{
-		Namespace: "default",
-		Name:      controllers.GetJobModelVersionName(tfjob),
-	}, modelVersion)
-	// the modelVersion is created
-	assert.Equal(t, controllers.GetJobModelVersionName(tfjob), modelVersion.Name)
-}
-
-func markPodStatus(podName string, status corev1.PodPhase, tfJobReconciler *TFJobReconcilerTest) {
+func markPodStatus(podName string, status corev1.PodPhase, elasticbatchJobReconciler *ElasticBatchJobReconcilerTest) {
 	worker := reconcile.Request{
 		NamespacedName: types.NamespacedName{
 			Name:      podName,
@@ -212,7 +173,7 @@ func markPodStatus(podName string, status corev1.PodPhase, tfJobReconciler *TFJo
 		},
 	}
 	pod := &corev1.Pod{}
-	_ = tfJobReconciler.Get(context.TODO(), worker.NamespacedName, pod)
+	_ = elasticbatchJobReconciler.Get(context.TODO(), worker.NamespacedName, pod)
 
 	var containerState corev1.ContainerState
 	switch status {
@@ -232,7 +193,7 @@ func markPodStatus(podName string, status corev1.PodPhase, tfJobReconciler *TFJo
 
 	pod.Status.ContainerStatuses = []corev1.ContainerStatus{
 		{
-			Name:  "tensorflow",
+			Name:  "elasticbatch",
 			State: containerState,
 		},
 	}
@@ -241,20 +202,40 @@ func markPodStatus(podName string, status corev1.PodPhase, tfJobReconciler *TFJo
 		now := metav1.Now()
 		pod.Status.StartTime = &now
 	}
-	_ = tfJobReconciler.Status().Update(context.Background(), pod)
+	_ = elasticbatchJobReconciler.Status().Update(context.Background(), pod)
 }
 
-func createTFJob(jobName string, replicas int32) *training.TFJob {
+func createElasticBatchJob(jobName string, replicas int32) *inference.ElasticBatchJob {
+	var aimasterReplica int32 = 1
+
 	successPolicy := v1.SuccessPolicyAllWorkers
-	tfjob1 := &training.TFJob{
+	elasticbatchJob1 := &inference.ElasticBatchJob{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      jobName,
-			Namespace: "default",
-			UID:       "12345",
+			Name:        jobName,
+			Namespace:   "default",
+			UID:         "12345",
+			Annotations: map[string]string{"aimaster": "ready"},
 		},
 
-		Spec: training.TFJobSpec{
-			TFReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{
+		Spec: inference.ElasticBatchJobSpec{
+			ElasticBatchReplicaSpecs: map[v1.ReplicaType]*v1.ReplicaSpec{
+				"AIMaster": {
+					Replicas:      &aimasterReplica,
+					RestartPolicy: "Never",
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: jobName + "-aimaster-pod",
+						},
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "elasticbatch",
+									Image: "kubedl/aimaster:latest",
+								},
+							},
+						},
+					},
+				},
 				"Worker": {
 					Replicas:      &replicas,
 					RestartPolicy: "Never",
@@ -262,8 +243,8 @@ func createTFJob(jobName string, replicas int32) *training.TFJob {
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:  "tensorflow",
-									Image: "kubedl/tf-mnist-with-summaries:1.0",
+									Name:  "elasticbatch",
+									Image: "kubedl/elasticbatch:1.0",
 								},
 							},
 						},
@@ -274,14 +255,14 @@ func createTFJob(jobName string, replicas int32) *training.TFJob {
 		},
 		Status: v1.JobStatus{},
 	}
-	return tfjob1
+	return elasticbatchJob1
 }
 
 // not used, maybe using later..
-func createPodForJob(podName string, job *training.TFJob) *corev1.Pod {
+func createPodForJob(podName string, job *inference.ElasticBatchJob) *corev1.Pod {
 	labelGroupName := v1.GroupNameLabel
 	labelJobName := v1.JobNameLabel
-	groupName := training.SchemeGroupVersion.Group
+	groupName := inference.GroupVersion.Group
 	labels := map[string]string{
 		labelGroupName: groupName,
 		labelJobName:   strings.Replace(job.Name, "/", "-", -1),
@@ -299,7 +280,7 @@ func createPodForJob(podName string, job *training.TFJob) *corev1.Pod {
 		Status: corev1.PodStatus{
 			ContainerStatuses: []corev1.ContainerStatus{
 				{
-					Name: "tensorflow",
+					Name: "elasticbatch",
 					State: corev1.ContainerState{
 						Terminated: &corev1.ContainerStateTerminated{
 							ExitCode: 0,
