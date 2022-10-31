@@ -401,11 +401,65 @@ func (jc *JobController) reconcileOnePod(ctx context.Context, job client.Object,
 
 func (jc *JobController) jobBatchIndex(job metav1.Object, index string) string {
 	inx, _ := strconv.Atoi(index)
-	batchSize := 25
+	batchSize := 10
+	//BatchSize refers to the number of partitions.
+	//For example, in ringallreduce, if pod batch size is set to 2, it means that
+	//two adjacent pod are scheduled to the same node.
 	if str := job.GetAnnotations()[apiv1.AnnotationPodBatchSize]; str != "" {
 		batchSize, _ = strconv.Atoi(str)
 	}
 	return strconv.Itoa((inx-(inx%batchSize))/batchSize + 1)
+}
+
+func (jc *JobController) injectAffinity(podTemplate *v1.PodTemplateSpec, job interface{}) error {
+	// inject pod affinity
+	metaObject, ok := job.(metav1.Object)
+	if !ok {
+		return fmt.Errorf("job is not a metav1.Object type")
+	}
+	affinity := podTemplate.Spec.Affinity
+	if affinity == nil {
+		affinity = &v1.Affinity{}
+		podTemplate.Spec.Affinity = affinity
+	}
+	podAffinity := affinity.PodAffinity
+	if podAffinity == nil {
+		podAffinity = &v1.PodAffinity{}
+		affinity.PodAffinity = podAffinity
+	}
+	podAffinityStrategy := metaObject.GetAnnotations()[apiv1.AnnotationPodAffinityStrategy]
+	if podAffinityStrategy == "" {
+		podAffinityStrategy = apiv1.PodAffinityStrategyPSWorker
+	}
+	topologyKey := metaObject.GetAnnotations()[apiv1.AnnotationPodTopologyKey]
+	if topologyKey == "" {
+		topologyKey = "kubernetes.io/hostname"
+	}
+
+	podAffinityTerm := v1.PodAffinityTerm{
+		TopologyKey: topologyKey,
+		LabelSelector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				apiv1.GroupNameLabel:   podTemplate.Labels[apiv1.GroupNameLabel],
+				apiv1.JobNameLabel:     podTemplate.Labels[apiv1.JobNameLabel],
+				apiv1.ReplicaTypeLabel: podTemplate.Labels[apiv1.ReplicaTypeLabel],
+				apiv1.JobBatchLabel:    podTemplate.Labels[apiv1.JobBatchLabel],
+			},
+		},
+		Namespaces: []string{metaObject.GetNamespace()},
+	}
+
+	switch podAffinityStrategy {
+	case apiv1.PodAffinityStrategyPSWorker:
+		podAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(podAffinity.RequiredDuringSchedulingIgnoredDuringExecution, podAffinityTerm)
+	case apiv1.PodAffinityStrategyRingallreduce:
+		podAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(podAffinity.PreferredDuringSchedulingIgnoredDuringExecution, v1.WeightedPodAffinityTerm{
+			Weight:          1,
+			PodAffinityTerm: podAffinityTerm,
+		})
+	}
+
+	return nil
 }
 
 // createNewPod creates a new pod for the given index and type.
@@ -449,46 +503,9 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 	podTemplate.Labels = commonutil.MergeMap(podTemplate.Labels, labels)
 
 	// inject pod affinity
-	affinity := podTemplate.Spec.Affinity
-	if affinity == nil {
-		affinity = &v1.Affinity{}
-		podTemplate.Spec.Affinity = affinity
-	}
-	podAffinity := affinity.PodAffinity
-	if podAffinity == nil {
-		podAffinity = &v1.PodAffinity{}
-		affinity.PodAffinity = podAffinity
-	}
-	podAffinityStrategy := metaObject.GetAnnotations()[apiv1.AnnotationPodAffinityStrategy]
-	if podAffinityStrategy == "" {
-		podAffinityStrategy = apiv1.PodAffinityStrategyPSWorker
-	}
-	topologyKey := metaObject.GetAnnotations()[apiv1.AnnotationPodTopologyKey]
-	if topologyKey == "" {
-		topologyKey = "kubernetes.io/hostname"
-	}
-
-	podAffinityTerm := v1.PodAffinityTerm{
-		TopologyKey: topologyKey,
-		LabelSelector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				apiv1.GroupNameLabel:   podTemplate.Labels[apiv1.GroupNameLabel],
-				apiv1.JobNameLabel:     podTemplate.Labels[apiv1.JobNameLabel],
-				apiv1.ReplicaTypeLabel: podTemplate.Labels[apiv1.ReplicaTypeLabel],
-				apiv1.JobBatchLabel:    podTemplate.Labels[apiv1.JobBatchLabel],
-			},
-		},
-		Namespaces: []string{metaObject.GetNamespace()},
-	}
-
-	switch podAffinityStrategy {
-	case apiv1.PodAffinityStrategyPSWorker:
-		podAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(podAffinity.RequiredDuringSchedulingIgnoredDuringExecution, podAffinityTerm)
-	case apiv1.PodAffinityStrategyRingallreduce:
-		podAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(podAffinity.PreferredDuringSchedulingIgnoredDuringExecution, v1.WeightedPodAffinityTerm{
-			Weight:          1,
-			PodAffinityTerm: podAffinityTerm,
-		})
+	err := jc.injectAffinity(podTemplate, job)
+	if err != nil {
+		return err
 	}
 
 	// Submit a warning event if the user specifies restart policy for

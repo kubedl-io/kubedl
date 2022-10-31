@@ -50,10 +50,9 @@ const (
 
 // add annonations
 const (
-	AnnotationPodBatchSize        = KubeDLPrefix + "/pod-batch-size"
-	AnnotationPodAffinityStrategy = KubeDLPrefix + "/pod-affinity-strategy"
-	AnnotationPodTopologyKey      = KubeDLPrefix + "/pod-topology-key"
-
+	AnnotationPodBatchSize           = KubeDLPrefix + "/pod-batch-size"
+	AnnotationPodAffinityStrategy    = KubeDLPrefix + "/pod-affinity-strategy"
+	AnnotationPodTopologyKey         = KubeDLPrefix + "/pod-topology-key"
 	PodAffinityStrategyPSWorker      = "ps-worker"
 	PodAffinityStrategyRingallreduce = "ringallreduce"
 )
