@@ -26,8 +26,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"github.com/alibaba/kubedl/pkg/features"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/helper"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
 
@@ -48,6 +50,15 @@ func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
 			log.Error(err, "append job condition error")
 			return false
 		}
+
+		if features.KubeDLFeatureGates.Enabled(features.JobCoordinator) && reconciler.coordinator != nil &&
+			(commonutil.NeedEnqueueToCoordinator(tfJob.Status)) {
+			log.Info("tfjob enqueued into coordinator and wait for being scheduled.", "namespace", tfJob.Namespace, "name", tfJob.Name)
+			reconciler.coordinator.EnqueueOrUpdate(helper.ToQueueUnit(tfJob, tfJob.Spec.TFReplicaSpecs,
+				&tfJob.Status, tfJob.Spec.SchedulingPolicy))
+			return true
+		}
+
 		log.Info(msg)
 		reconciler.ctrl.Metrics.CreatedInc()
 		return true

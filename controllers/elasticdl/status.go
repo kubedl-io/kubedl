@@ -22,10 +22,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/alibaba/kubedl/pkg/job_controller"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -116,36 +112,4 @@ func (r *ElasticDLJobReconciler) updateGeneralJobStatus(elasticdlJob *training.E
 		return errors.New("invalid config: Job must contain master replica spec")
 	}
 	return nil
-}
-
-func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
-	return func(e event.CreateEvent) bool {
-		elasticdlJob, ok := e.Object.(*training.ElasticDLJob)
-		if !ok {
-			return true
-		}
-		reconciler, ok := r.(*ElasticDLJobReconciler)
-		if !ok {
-			return true
-		}
-		reconciler.scheme.Default(elasticdlJob)
-		msg := fmt.Sprintf("ElasticDLJob %s is created.", e.Object.GetName())
-		if err := commonutil.UpdateJobConditions(&elasticdlJob.Status, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
-			log.Error(err, "append job condition error")
-			return false
-		}
-		reconciler.ctrl.Metrics.CreatedInc()
-		return true
-	}
-}
-
-func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
-	return func(e event.DeleteEvent) bool {
-		elasticdlJob, ok := e.Object.(*training.ElasticDLJob)
-		if !ok {
-			return false
-		}
-		jc.DeleteExpectations(elasticdlJob, elasticdlJob.Spec.ElasticDLReplicaSpecs)
-		return true
-	}
 }

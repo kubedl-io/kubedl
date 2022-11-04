@@ -45,6 +45,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/core"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
@@ -68,6 +69,9 @@ func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) 
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
+	if features.KubeDLFeatureGates.Enabled(features.JobCoordinator) {
+		r.coordinator = core.NewCoordinator(mgr)
+	}
 	return r
 }
 
@@ -77,9 +81,10 @@ var _ v1.ControllerInterface = &PytorchJobReconciler{}
 // PytorchJobReconciler reconcile a PytorchJob object
 type PytorchJobReconciler struct {
 	client.Client
-	scheme   *runtime.Scheme
-	recorder record.EventRecorder
-	ctrl     job_controller.JobController
+	scheme      *runtime.Scheme
+	recorder    record.EventRecorder
+	ctrl        job_controller.JobController
+	coordinator core.Coordinator
 }
 
 func (r *PytorchJobReconciler) GetNodeForModelOutput(pods []*corev1.Pod) (nodeName string) {
@@ -159,8 +164,9 @@ func (r *PytorchJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Watch owner resource with create event filter.
 	if err = c.Watch(&source.Kind{Type: &training.PyTorchJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
-		CreateFunc: onOwnerCreateFunc(r),
-		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
+		CreateFunc: job_controller.OnOwnerCreateFunc(r.scheme, training.ExtractMetaFieldsFromObject, log, r.coordinator, r.ctrl.Metrics),
+		UpdateFunc: job_controller.OnOwnerUpdateFunc(r.scheme, training.ExtractMetaFieldsFromObject, log, r.coordinator),
+		DeleteFunc: job_controller.OnOwnerDeleteFunc(r.ctrl, training.ExtractMetaFieldsFromObject, log),
 	}); err != nil {
 		return err
 	}

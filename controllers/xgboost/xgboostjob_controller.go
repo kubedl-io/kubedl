@@ -32,9 +32,11 @@ import (
 
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/features"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/core"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
@@ -56,6 +58,9 @@ func NewReconciler(mgr manager.Manager, config options.JobControllerConfiguratio
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
+	if features.KubeDLFeatureGates.Enabled(features.JobCoordinator) {
+		r.coordinator = core.NewCoordinator(mgr)
+	}
 	return r
 }
 
@@ -65,9 +70,10 @@ var _ v1.ControllerInterface = &XgboostJobReconciler{}
 // XgboostJobReconciler reconciles a XGBoostJob object
 type XgboostJobReconciler struct {
 	client.Client
-	scheme   *runtime.Scheme
-	ctrl     job_controller.JobController
-	recorder record.EventRecorder
+	scheme      *runtime.Scheme
+	ctrl        job_controller.JobController
+	recorder    record.EventRecorder
+	coordinator core.Coordinator
 	utilruntime.EmptyScaleImpl
 }
 
@@ -133,8 +139,9 @@ func (r *XgboostJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Watch owner resource with create event filter.
 	if err = c.Watch(&source.Kind{Type: &v1alpha1.XGBoostJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
-		CreateFunc: onOwnerCreateFunc(r),
-		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
+		CreateFunc: job_controller.OnOwnerCreateFunc(r.scheme, v1alpha1.ExtractMetaFieldsFromObject, log, r.coordinator, r.ctrl.Metrics),
+		UpdateFunc: job_controller.OnOwnerUpdateFunc(r.scheme, v1alpha1.ExtractMetaFieldsFromObject, log, r.coordinator),
+		DeleteFunc: job_controller.OnOwnerDeleteFunc(r.ctrl, v1alpha1.ExtractMetaFieldsFromObject, log),
 	}); err != nil {
 		return err
 	}

@@ -29,8 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (r *MPIJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
@@ -173,44 +171,4 @@ func (r *MPIJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus
 	jobCpy = mpiJob.DeepCopy()
 	jobCpy.Status = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
-}
-
-func onOwnerCreateFunc(r reconcile.Reconciler) func(e event.CreateEvent) bool {
-	return func(e event.CreateEvent) bool {
-		mpiJob, ok := e.Object.(*training.MPIJob)
-		if !ok {
-			return false
-		}
-		reconciler, ok := r.(*MPIJobReconciler)
-		if !ok {
-			return false
-		}
-		reconciler.scheme.Default(mpiJob)
-
-		msg := fmt.Sprintf("MPIJob %s is created.", e.Object.GetName())
-		if err := util.UpdateJobConditions(&mpiJob.Status, v1.JobCreated, util.JobCreatedReason, msg); err != nil {
-			log.Error(err, "append job condition error")
-			return false
-		}
-		reconciler.ctrl.Metrics.CreatedInc()
-
-		// LegacyMPIJobToV1MPIJob handles legacy fields across different versioned mpi-jobs
-		// so that job can be reconciled in one implementation.
-		if err := LegacyMPIJobToV1MPIJob(mpiJob); err != nil {
-			log.Error(err, "handle legacy fields of mpi job failed")
-			return true
-		}
-		return true
-	}
-}
-
-func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
-	return func(e event.DeleteEvent) bool {
-		mpiJob, ok := e.Object.(*training.MPIJob)
-		if !ok {
-			return false
-		}
-		jc.DeleteExpectations(mpiJob, mpiJob.Spec.MPIReplicaSpecs)
-		return true
-	}
 }

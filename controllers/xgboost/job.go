@@ -25,8 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -195,37 +193,4 @@ func (r *XgboostJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobSt
 	jobCpy = xgboostjob.DeepCopy()
 	jobCpy.Status.JobStatus = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
-}
-
-// onOwnerCreateFunc modify creation condition.
-func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
-	return func(e event.CreateEvent) bool {
-		xgboostJob, ok := e.Object.(*v1alpha1.XGBoostJob)
-		if !ok {
-			return true
-		}
-		reconciler, ok := r.(*XgboostJobReconciler)
-		if !ok {
-			return true
-		}
-		reconciler.scheme.Default(xgboostJob)
-		msg := fmt.Sprintf("xgboostJob %s is created.", e.Object.GetName())
-		if err := commonutil.UpdateJobConditions(&xgboostJob.Status.JobStatus, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
-			log.Error(err, "append job condition error")
-			return false
-		}
-		reconciler.ctrl.Metrics.CreatedInc()
-		return true
-	}
-}
-
-func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
-	return func(e event.DeleteEvent) bool {
-		xgboostJob, ok := e.Object.(*v1alpha1.XGBoostJob)
-		if !ok {
-			return false
-		}
-		jc.DeleteExpectations(xgboostJob, xgboostJob.Spec.XGBReplicaSpecs)
-		return true
-	}
 }

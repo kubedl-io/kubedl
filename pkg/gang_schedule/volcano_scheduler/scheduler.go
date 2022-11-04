@@ -185,7 +185,7 @@ func (vs *volcanoScheduler) generateGangByJobUnit(apiVersion, kind, name, namesp
 		},
 		Spec: v1beta1.PodGroupSpec{MinMember: k8sutil.GetTotalReplicas(replicas)},
 	}
-	jobResource := resourceutils.JobResourceRequests(replicas)
+	jobResource, _ := resourceutils.JobResourceRequests(replicas)
 
 	if aimaster := replicas[apiv1.JobReplicaTypeAIMaster]; aimaster != nil && aimaster.Replicas != nil {
 		if *aimaster.Replicas > 0 {

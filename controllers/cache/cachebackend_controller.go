@@ -94,10 +94,10 @@ func (r *CacheBackendReconciler) Reconcile(_ context.Context, req ctrl.Request) 
 			return reconcile.Result{RequeueAfter: idleTime * time.Second}, nil
 		} else {
 			if time.Now().After(status.LastUsedTime.Add(idleTime * time.Second)) {
+				r.Log.V(2).Info("cache backend has expired since last used, delete it",
+					"name", cacheBackend.Name, "lastUsed", status.LastUsedTime)
 				err = r.Delete(context.Background(), cacheBackend)
-				if err != nil {
-					return reconcile.Result{Requeue: true}, err
-				}
+				return reconcile.Result{Requeue: err != nil}, err
 			} else {
 				//return reconcile.Result{Requeue: true}, err
 			}
@@ -158,10 +158,6 @@ func (r *CacheBackendReconciler) Reconcile(_ context.Context, req ctrl.Request) 
 		// Update status
 		status.CacheStatus = cachev1alpha1.PVCCreating
 		status.LastUsedTime = nil
-		err = r.updateCacheBackendStatus(cacheBackend, &status)
-		if err != nil {
-			return reconcile.Result{Requeue: true}, err
-		}
 	}
 
 	if !reflect.DeepEqual(oldStatus, status) {
@@ -178,7 +174,7 @@ func (r *CacheBackendReconciler) updateCacheBackendStatus(cacheBackend *cachev1a
 	status *cachev1alpha1.CacheBackendStatus) error {
 
 	cacheCopy := cacheBackend.DeepCopy()
-	cacheCopy.Status = *status.DeepCopy()
+	cacheCopy.Status = *status
 
 	err := r.Status().Update(context.Background(), cacheCopy)
 	if err != nil {
