@@ -74,6 +74,7 @@ type ElasticDLJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create
 // +kubebuilder:rbac:groups=scheduling.incubator.k8s.io;scheduling.sigs.dev;scheduling.volcano.sh,resources=podgroups;queues,verbs=*
+// +kubebuilder:rbac:groups=scheduling.sigs.k8s.io,resources=podgroups,verbs=*
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=elasticdljobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=training.kubedl.io,resources=elasticdljobs/status,verbs=get;update;patch
 
