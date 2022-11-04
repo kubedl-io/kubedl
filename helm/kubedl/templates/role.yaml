@@ -260,6 +260,12 @@ rules:
   verbs:
   - '*'
 - apiGroups:
+  - scheduling.sigs.k8s.io
+  resources:
+  - podgroups
+  verbs:
+  - '*'
+- apiGroups:
   - serving.kubedl.io
   resources:
   - inferences

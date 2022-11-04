@@ -90,6 +90,7 @@ type ElasticBatchJobReconciler struct {
 // +kubebuilder:rbac:groups="",resources=services/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create
 // +kubebuilder:rbac:groups=scheduling.incubator.k8s.io;scheduling.sigs.dev;scheduling.volcano.sh,resources=podgroups;queues,verbs=*
+// +kubebuilder:rbac:groups=scheduling.sigs.k8s.io,resources=podgroups,verbs=*
 // +kubebuilder:rbac:groups=inference.kubedl.io,resources=elasticbatchjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=inference.kubedl.io,resources=elasticbatchjobs/status,verbs=get;update;patch
 
