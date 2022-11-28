@@ -388,6 +388,7 @@ func createImgBuildPod(model *modelv1alpha1.ModelVersion, pvc *v1.PersistentVolu
 					Name:  imgBuildPodName,
 					Image: options.CtrlConfig.ModelImageBuilder,
 					Args: []string{
+						"--skip-tls-verify=true",
 						"--dockerfile=/workspace/dockerfile",
 						"--context=dir:///workspace/",
 						fmt.Sprintf("--destination=%s", newImage)},
