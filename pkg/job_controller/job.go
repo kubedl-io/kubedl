@@ -70,7 +70,7 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 // ReconcileJobs checks and updates replicas for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods/services.
 func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus apiv1.JobStatus,
-	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) (result reconcile.Result, err error) {
+	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackend *cachev1alpha1.CacheBackendSpec) (result reconcile.Result, err error) {
 
 	jobName := job.GetName()
 	jobKey, err := KeyFunc(job)
@@ -102,28 +102,26 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 
 	err = code_sync.InjectCodeSyncInitContainers(job, replicas)
 	if err != nil {
-		log.Error(err, " Failed to inject code sync init container")
+		log.Error(err, "failed to inject code sync init container")
 		return reconcile.Result{}, err
 	}
 	// TODO(SimonCqk): update job conditions failed ?
 
-	if cacheBackendSpec != nil && jobStatus.CacheBackendName == "" && !commonutil.IsSucceeded(jobStatus) {
-		// Check CacheBackend has been created or not
-		err = jc.checkCache(job, cacheBackendSpec)
-
+	if cacheBackend != nil {
+		// Create cache backend
+		// if cache backend has been created, the func also returns nil
+		err = jc.createCache(job, cacheBackend, &jobStatus)
 		if err != nil {
+			log.Error(err, " failed to create cacheBackend")
 			return reconcile.Result{Requeue: true}, err
 		}
 
 		// Next step is to get pvc and inject it to containers
-
-		err = jc.addCachePathToContainer(job, cacheBackendSpec, replicas)
+		err = jc.addCachePathToContainer(job, cacheBackend, replicas)
 		if err != nil {
-			log.Error(err, " Failed to inject pvc to containers")
+			log.Error(err, " failed to inject pvc to containers")
 			return reconcile.Result{Requeue: true}, err
 		}
-
-		jobStatus.CacheBackendName = cacheBackendSpec.CacheBackendName // update to api-server later
 	}
 
 	pods, err := jc.Controller.GetPodsForJob(job)
@@ -226,13 +224,6 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 			}
 			if err != nil {
 				return reconcile.Result{Requeue: true}, err
-			}
-		}
-
-		if cacheBackendSpec != nil {
-			err = jc.updateCacheUsedStatus(job, cacheBackendSpec)
-			if err != nil {
-				return result, err
 			}
 		}
 

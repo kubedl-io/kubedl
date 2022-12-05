@@ -92,14 +92,6 @@ spec:
                     type: object
                   mountPath:
                     type: string
-                  name:
-                    type: string
-                  options:
-                    properties:
-                      idleTime:
-                        format: int64
-                        type: integer
-                    type: object
                 type: object
               cleanPodPolicy:
                 type: string
