@@ -201,7 +201,7 @@ func (kbs *kubeCoscheduler) generateGangByJobUnit(apiVersion, kind, name, namesp
 		},
 		Spec: v1alpha1.PodGroupSpec{MinMember: k8sutil.GetTotalReplicas(replicas)},
 	}
-	jobResource, _ := resourceutils.JobResourceRequests(replicas)
+	jobResource := resourceutils.JobResourceRequests(replicas)
 
 	if aimaster := replicas[apiv1.JobReplicaTypeAIMaster]; aimaster != nil && aimaster.Replicas != nil {
 		if *aimaster.Replicas > 0 {

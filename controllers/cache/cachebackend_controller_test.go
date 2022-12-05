@@ -85,5 +85,4 @@ func TestCacheBackendStatus(t *testing.T) {
 		}, cacheBackend)
 		assert.Equal(t, v1alpha1.PVCCreated, cacheBackend.Status.CacheStatus)
 	}
-
 }
