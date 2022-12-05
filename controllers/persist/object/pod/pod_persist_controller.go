@@ -21,7 +21,6 @@ import (
 	stderrors "errors"
 	"fmt"
 
-	inferencev1alpha1 "github.com/alibaba/kubedl/apis/inference/v1alpha1"
 	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	persistutil "github.com/alibaba/kubedl/controllers/persist/util"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
@@ -133,9 +132,6 @@ func matchDefaultContainerName(kind string) string {
 		return trainingv1alpha1.XDLJobDefaultContainerName
 	case trainingv1alpha1.XGBoostJobKind:
 		return trainingv1alpha1.XGBoostJobDefaultContainerName
-	case inferencev1alpha1.ElasticBatchJobKind:
-		return inferencev1alpha1.ElasticBatchJobDefaultContainerName
 	}
-
 	return ""
 }

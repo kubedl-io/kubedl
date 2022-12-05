@@ -17,7 +17,6 @@ limitations under the License.
 package util
 
 import (
-	inferencev1alpha1 "github.com/alibaba/kubedl/apis/inference/v1alpha1"
 	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
@@ -26,8 +25,7 @@ import (
 )
 
 func IsKubeDLManagedJobKind(kind string) bool {
-	return kind == trainingv1alpha1.TFJobKind || kind == trainingv1alpha1.PyTorchJobKind ||
-		kind == trainingv1alpha1.XDLJobKind || kind == trainingv1alpha1.XGBoostJobKind || kind == inferencev1alpha1.ElasticBatchJobKind
+	return kind == trainingv1alpha1.TFJobKind || kind == trainingv1alpha1.PyTorchJobKind || kind == trainingv1alpha1.XDLJobKind || kind == trainingv1alpha1.XGBoostJobKind
 }
 
 func IsKubeDLManagedPod(pod *corev1.Pod) bool {

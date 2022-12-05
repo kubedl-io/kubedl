@@ -26,7 +26,6 @@ import (
 	cronutil "github.com/robfig/cron/v3"
 
 	"github.com/alibaba/kubedl/apis/apps/v1alpha1"
-	inferencev1alpha1 "github.com/alibaba/kubedl/apis/inference/v1alpha1"
 	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -488,6 +487,5 @@ var (
 		&trainingv1alpha1.XGBoostJob{},
 		&trainingv1alpha1.XDLJob{},
 		&trainingv1alpha1.MPIJob{},
-		&inferencev1alpha1.ElasticBatchJob{},
 	}
 )

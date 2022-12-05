@@ -14,7 +14,7 @@ import (
 	"github.com/alibaba/kubedl/apis/model/v1alpha1"
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
-	controllers "github.com/alibaba/kubedl/controllers/model"
+	"github.com/alibaba/kubedl/controllers/model"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"

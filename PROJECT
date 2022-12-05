@@ -37,11 +37,7 @@ resources:
   version: v1alpha1
 - group: cache
   kind: CacheBackend
-  version: ""
 - group: notebook
   kind: Notebook
-  version: v1alpha1
-- group: inference
-  kind: ElasticBatchJob
   version: v1alpha1
 version: "2"

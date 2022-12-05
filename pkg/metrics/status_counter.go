@@ -22,7 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	inference1alpha1 "github.com/alibaba/kubedl/apis/inference/v1alpha1"
 	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
@@ -48,12 +47,11 @@ func JobStatusCounter(kind string, reader client.Reader, filter func(status v1.J
 
 var (
 	listObjectMap = map[string]client.ObjectList{
-		trainingv1alpha1.TFJobKind:           &trainingv1alpha1.TFJobList{},
-		trainingv1alpha1.PyTorchJobKind:      &trainingv1alpha1.PyTorchJobList{},
-		trainingv1alpha1.XDLJobKind:          &trainingv1alpha1.XDLJobList{},
-		trainingv1alpha1.XGBoostJobKind:      &trainingv1alpha1.XGBoostJobList{},
-		trainingv1alpha1.MarsJobKind:         &trainingv1alpha1.MarsJobList{},
-		inference1alpha1.ElasticBatchJobKind: &inference1alpha1.ElasticBatchJobList{},
+		trainingv1alpha1.TFJobKind:      &trainingv1alpha1.TFJobList{},
+		trainingv1alpha1.PyTorchJobKind: &trainingv1alpha1.PyTorchJobList{},
+		trainingv1alpha1.XDLJobKind:     &trainingv1alpha1.XDLJobList{},
+		trainingv1alpha1.XGBoostJobKind: &trainingv1alpha1.XGBoostJobList{},
+		trainingv1alpha1.MarsJobKind:    &trainingv1alpha1.MarsJobList{},
 	}
 )
 
