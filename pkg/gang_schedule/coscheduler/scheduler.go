@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	quotav1 "k8s.io/apiserver/pkg/quota/v1"
 	"k8s.io/klog"
 	"k8s.io/utils/pointer"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -40,6 +41,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/gang_schedule"
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
+	resourceutils "github.com/alibaba/kubedl/pkg/util/resource_utils"
 )
 
 func init() {
@@ -199,10 +201,13 @@ func (kbs *kubeCoscheduler) generateGangByJobUnit(apiVersion, kind, name, namesp
 		},
 		Spec: v1alpha1.PodGroupSpec{MinMember: k8sutil.GetTotalReplicas(replicas)},
 	}
+	jobResource, _ := resourceutils.JobResourceRequests(replicas)
 
 	if aimaster := replicas[apiv1.JobReplicaTypeAIMaster]; aimaster != nil && aimaster.Replicas != nil {
 		if *aimaster.Replicas > 0 {
 			pg.Spec.MinMember -= *aimaster.Replicas
+			jobResource = quotav1.SubtractWithNonNegativeResult(jobResource,
+				resourceutils.Multiply(int64(*aimaster.Replicas), resourceutils.ReplicaResourceRequests(aimaster)))
 		}
 	}
 
@@ -210,6 +215,7 @@ func (kbs *kubeCoscheduler) generateGangByJobUnit(apiVersion, kind, name, namesp
 		pg.Spec.MinMember = *schedPolicy.MinAvailable
 	}
 
+	pg.Spec.MinResources = &jobResource
 	return &v1alpha1.PodGroupList{Items: []v1alpha1.PodGroup{pg}}
 }
 
@@ -222,6 +228,7 @@ func (kbs *kubeCoscheduler) generateGangByRoleUnit(apiVersion, kind, name, names
 		}
 		rt := strings.ToLower(string(rtype))
 		gangName := fmt.Sprintf("%s-%s", name, rt)
+		resources := resourceutils.ReplicaResourceRequests(spec)
 		pgs.Items = append(pgs.Items, v1alpha1.PodGroup{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      gangName,
@@ -241,7 +248,10 @@ func (kbs *kubeCoscheduler) generateGangByRoleUnit(apiVersion, kind, name, names
 					},
 				},
 			},
-			Spec: v1alpha1.PodGroupSpec{MinMember: *spec.Replicas},
+			Spec: v1alpha1.PodGroupSpec{
+				MinMember:    *spec.Replicas,
+				MinResources: &resources,
+			},
 		})
 	}
 	return &pgs
