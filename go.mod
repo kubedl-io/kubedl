@@ -7,7 +7,7 @@ require (
 	github.com/fluid-cloudnative/fluid v0.7.0
 	github.com/gin-contrib/sessions v0.0.3
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
-	github.com/gin-gonic/gin v1.7.0
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.1-0.20210423233217-9f3e0b1ce51b // indirect
 	github.com/go-sql-driver/mysql v1.4.1
