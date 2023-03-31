@@ -44,13 +44,13 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-go-
       - name: Validate Helm Chart
-        run: |
+        run: |  
           chart_version=$(yq e '.version' helm/kubedl/Chart.yaml)
           values_version=$(yq e '.version' helm/kubedl/values.yaml)
           if [ "$chart_version" != "$values_version" ]; then
             echo "ERROR: Chart version ($chart_version) does not match values version ($values_version)"
             exit 1
-
+          fi
       - name: Run Unit Tests
         run: |
           make generate
