@@ -54,6 +54,10 @@ type TFJobSpec struct {
 	// CacheBackend is used to configure the cache engine for job
 	// +optional
 	CacheBackend *cachev1alpha1.CacheBackendSpec `json:"cacheBackend"`
+
+	// GitSyncConfig defines the configuration for syncing code from Git repository
+	// +optional
+	GitSyncConfig string `json:"gitSyncConfig,omitempty"`
 }
 
 // +genclient

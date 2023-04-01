@@ -1,12 +1,12 @@
 package code_sync
 
 import (
+	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"path"
 
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 )
 
 const (
@@ -34,7 +34,7 @@ type SyncOptions struct {
 func InjectCodeSyncInitContainers(metaObj metav1.Object, specs map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
 	var err error
 
-	if cfg, ok := metaObj.GetAnnotations()[apiv1.AnnotationGitSyncConfig]; ok {
+	if cfg := metaObj.(*trainingv1alpha1.TFJob).Spec.GitSyncConfig; cfg != "" {
 		if err = injectCodeSyncInitContainer([]byte(cfg), &gitSyncHandler{}, specs, &v1.Volume{
 			Name:         "git-sync",
 			VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{}},
