@@ -152,7 +152,7 @@ func (r *MPIJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.
 	// Set default properties for tensorflow job.
 	r.scheme.Default(mpiJob)
 
-	result, err = r.ctrl.ReconcileJobs(mpiJob, mpiJob.Spec.MPIReplicaSpecs, mpiJob.Status, &mpiJob.Spec.RunPolicy, nil, nil)
+	result, err = r.ctrl.ReconcileJobs(mpiJob, mpiJob.Spec.MPIReplicaSpecs, mpiJob.Status, &mpiJob.Spec.RunPolicy, nil, nil, mpiJob.Spec.GitSyncConfig)
 	if err != nil {
 		log.Error(err, "mpi job reconcile failed")
 		return result, err

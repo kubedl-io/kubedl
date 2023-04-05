@@ -171,7 +171,7 @@ func (r *TFJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.R
 	// Set default properties for tensorflow job.
 	r.scheme.Default(tfJob)
 
-	result, err := r.ctrl.ReconcileJobs(tfJob, tfJob.Spec.TFReplicaSpecs, tfJob.Status, &tfJob.Spec.RunPolicy, tfJob.Spec.ModelVersion, tfJob.Spec.CacheBackend)
+	result, err := r.ctrl.ReconcileJobs(tfJob, tfJob.Spec.TFReplicaSpecs, tfJob.Status, &tfJob.Spec.RunPolicy, tfJob.Spec.ModelVersion, tfJob.Spec.CacheBackend, tfJob.Spec.GitSyncConfig)
 	if err != nil {
 		log.Error(err, "tensorflow job reconcile failed")
 		return result, err
