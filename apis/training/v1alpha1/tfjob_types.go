@@ -57,7 +57,7 @@ type TFJobSpec struct {
 
 	// GitSyncConfig defines the configuration for syncing code from Git repository
 	// +optional
-	GitSyncConfig string `json:"gitSyncConfig,omitempty"`
+	GitSyncConfig *commonv1.GitSyncOptions `json:"gitSyncConfig,omitempty"`
 }
 
 // +genclient

@@ -35,6 +35,10 @@ type ElasticDLJobSpec struct {
 	//     "Master": ElasticDLReplicaSpec,
 	//   }
 	ElasticDLReplicaSpecs map[common.ReplicaType]*common.ReplicaSpec `json:"elasticdlReplicaSpecs"`
+
+	// GitSyncConfig defines the configuration for syncing code from Git repository
+	// +optional
+	GitSyncConfig *common.GitSyncOptions `json:"gitSyncConfig,omitempty"`
 }
 
 // +genclient

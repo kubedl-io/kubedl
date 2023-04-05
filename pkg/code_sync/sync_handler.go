@@ -1,12 +1,12 @@
 package code_sync
 
 import (
-	trainingv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	"encoding/json"
 	"path"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	commonv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -17,32 +17,19 @@ type CodeSyncHandler interface {
 	InitContainer(optsConfig []byte, mountVolume *v1.Volume) (c *v1.Container, codePath string, err error)
 }
 
-type SyncOptions struct {
-	// Code source address.(required)
-	Source string `json:"source"`
-	// Image contains toolkits to execute syncing code.
-	Image string `json:"image,omitempty"`
-	// Code root/destination directory path.
-	// Root: the path to save downloaded files.
-	// Dest: the name of (a symlink to) a directory in which to check-out files
-	RootPath string `json:"rootPath,omitempty"`
-	DestPath string `json:"destPath,omitempty"`
-	// User-customized environment variables.
-	Envs []v1.EnvVar `json:"envs,omitempty"`
-}
-
-func InjectCodeSyncInitContainers(metaObj metav1.Object, specs map[apiv1.ReplicaType]*apiv1.ReplicaSpec) error {
-	var err error
-
-	if cfg := metaObj.(*trainingv1alpha1.TFJob).Spec.GitSyncConfig; cfg != "" {
-		if err = injectCodeSyncInitContainer([]byte(cfg), &gitSyncHandler{}, specs, &v1.Volume{
+func InjectCodeSyncInitContainers(specs map[apiv1.ReplicaType]*apiv1.ReplicaSpec, gitSyncConfig *commonv1.GitSyncOptions) error {
+	if cfg := gitSyncConfig; cfg != nil {
+		optsConfig, err := json.Marshal(gitSyncConfig)
+		if err != nil {
+			return err
+		}
+		if err = injectCodeSyncInitContainer(optsConfig, &gitSyncHandler{}, specs, &v1.Volume{
 			Name:         "git-sync",
 			VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{}},
 		}); err != nil {
 			return err
 		}
 	}
-
 	// TODO(SimonCqk): support other sources.
 
 	return nil

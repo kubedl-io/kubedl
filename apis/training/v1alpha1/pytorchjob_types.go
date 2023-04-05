@@ -46,6 +46,10 @@ type PyTorchJobSpec struct {
 	// CacheBackend is used to configure the cache engine for job
 	// +optional
 	CacheBackend *cachev1alpha1.CacheBackendSpec `json:"cacheBackend"`
+
+	// GitSyncConfig defines the configuration for syncing code from Git repository
+	// +optional
+	GitSyncConfig *common.GitSyncOptions `json:"gitSyncConfig,omitempty"`
 }
 
 // PyTorchJobStatus defines the observed state of PyTorchJob
