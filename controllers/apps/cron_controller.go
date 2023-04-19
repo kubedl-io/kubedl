@@ -461,6 +461,52 @@ func (cc *CronController) newEmptyWorkload(apiVersion, kind string) (client.Obje
 	return nil, fmt.Errorf("workload %+v has not implemented client.Object interface", groupVersion)
 }
 
+// Deletes successfully complete jobs based on given history limits.
+func (cc *CronController) deleteCompletedJobsBeyondThreshold(cron *v1alpha1.Cron) error {
+	historyLimit := cron.Spec.HistoryLimit
+	if historyLimit == nil {
+		return nil
+	}
+
+	completedWorkloads, err := cc.listCompletedWorkloads(cron)
+	if err != nil {
+		return err
+	}
+
+	if len(completedWorkloads) <= int(*historyLimit) {
+		return nil
+	}
+
+	// Sort completed workloads by creation timestamp.
+	sort.Slice(completedWorkloads, func(i, j int) bool {
+		return completedWorkloads[i].GetCreationTimestamp().Before(&completedWorkloads[j].GetCreationTimestamp())
+	})
+
+	// Delete the oldest completed workloads.
+	for _, wl := range completedWorkloads[:len(completedWorkloads)-int(*historyLimit)] {
+		if err := cc.deleteWorkload(cron, wl); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Helper function to list completed workloads (jobs) for a given Cron object.
+func (cc *CronController) listCompletedWorkloads(cron *v1alpha1.Cron) ([]*batchv1.Job, error) {
+	jobList, err := cc.jobLister.Jobs(cron.Namespace).List(labels.SelectorFromSet(cron.Spec.JobLabelSelector))
+	if err != nil {
+		return nil, err
+	}
+
+	var completedWorkloads []*batchv1.Job
+	for _, job := range jobList {
+		if job.Status.Succeeded >= *job.Spec.Completions {
+			completedWorkloads = append(completedWorkloads, job)
+		}
+	}
+	return completedWorkloads, nil
+}
+
 func (cc *CronController) deleteWorkload(cron *v1alpha1.Cron, ref corev1.ObjectReference) error {
 	wl, err := cc.newEmptyWorkload(ref.APIVersion, ref.Kind)
 	if err != nil {
