@@ -136,6 +136,11 @@ func (cc *CronController) Reconcile(_ context.Context, req ctrl.Request) (ctrl.R
 	if nextDuration != nil {
 		return ctrl.Result{RequeueAfter: *nextDuration}, nil
 	}
+
+	if err = cc.deleteCompletedJobsBeyondThreshold(&cron); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -461,14 +466,14 @@ func (cc *CronController) newEmptyWorkload(apiVersion, kind string) (client.Obje
 	return nil, fmt.Errorf("workload %+v has not implemented client.Object interface", groupVersion)
 }
 
-// Deletes successfully complete jobs based on given history limits.
+// Deletes successfully completed jobs beyond given history limits.
 func (cc *CronController) deleteCompletedJobsBeyondThreshold(cron *v1alpha1.Cron) error {
 	historyLimit := cron.Spec.HistoryLimit
 	if historyLimit == nil {
 		return nil
 	}
 
-	completedWorkloads, err := cc.listCompletedWorkloads(cron)
+	completedWorkloads, err := cc.listSuccessfullyCompletedWorkloads(cron)
 	if err != nil {
 		return err
 	}
@@ -479,32 +484,65 @@ func (cc *CronController) deleteCompletedJobsBeyondThreshold(cron *v1alpha1.Cron
 
 	// Sort completed workloads by creation timestamp.
 	sort.Slice(completedWorkloads, func(i, j int) bool {
-		return completedWorkloads[i].GetCreationTimestamp().Before(&completedWorkloads[j].GetCreationTimestamp())
+		return completedWorkloads[i].GetCreationTimestamp().Time.Before(completedWorkloads[j].GetCreationTimestamp().Time)
 	})
 
+	// Create a new Scheme object.
+	s := runtime.NewScheme()
+
+	// Register the required Kubernetes API types with the Scheme object.
+	corev1.AddToScheme(s)
+	v1alpha1.AddToScheme(s)
+
 	// Delete the oldest completed workloads.
-	for _, wl := range completedWorkloads[:len(completedWorkloads)-int(*historyLimit)] {
-		if err := cc.deleteWorkload(cron, wl); err != nil {
+	for _, wlObj := range completedWorkloads[:len(completedWorkloads)-int(*historyLimit)] {
+		// Convert to ObjectReference
+		var wlRef corev1.ObjectReference
+		if err := s.Convert(wlObj, &wlRef, nil); err != nil {
+			return err
+		}
+
+		if err := cc.deleteWorkload(cron, wlRef); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-// Helper function to list completed workloads (jobs) for a given Cron object.
-func (cc *CronController) listCompletedWorkloads(cron *v1alpha1.Cron) ([]*batchv1.Job, error) {
-	jobList, err := cc.jobLister.Jobs(cron.Namespace).List(labels.SelectorFromSet(cron.Spec.JobLabelSelector))
-	if err != nil {
-		return nil, err
-	}
+// listSuccessfullyCompletedWorkloads returns a list of successfully completed workloads.
+func (cc *CronController) listSuccessfullyCompletedWorkloads(cron *v1alpha1.Cron) ([]metav1.Object, error) {
+	workloads := make([]metav1.Object, 0)
 
-	var completedWorkloads []*batchv1.Job
-	for _, job := range jobList {
-		if job.Status.Succeeded >= *job.Spec.Completions {
-			completedWorkloads = append(completedWorkloads, job)
+	for _, history := range cron.Status.History {
+		if history.Status == v1.JobSucceeded {
+			wl, err := cc.newEmptyWorkload(cron.APIVersion, history.Object.Kind)
+			if err != nil {
+				klog.Errorf("unsupported cron workload and failed to init by scheme, kind: %s, err: %v",
+					history.Object.Kind, err)
+				continue
+			}
+			if err := cc.client.Get(context.Background(), types.NamespacedName{
+				Name:      history.Object.Name,
+				Namespace: history.Object.Namespace,
+			}, wl); err != nil {
+				if errors.IsNotFound(err) {
+					klog.Infof("completed workload[%s/%s] in cron[%s/%s] has been deleted.",
+						history.Object.Namespace, history.Object.Name, cron.Namespace, cron.Name)
+					continue
+				}
+				return nil, err
+			}
+			metaWl, ok := wl.(metav1.Object)
+			if !ok {
+				klog.Warningf("workload [%s/%s] cannot convert to metav1.Object", cron.Namespace, history.Object.Name)
+				continue
+			}
+			workloads = append(workloads, metaWl)
 		}
 	}
-	return completedWorkloads, nil
+
+	return workloads, nil
 }
 
 func (cc *CronController) deleteWorkload(cron *v1alpha1.Cron, ref corev1.ObjectReference) error {
