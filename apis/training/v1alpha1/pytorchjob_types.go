@@ -46,6 +46,9 @@ type PyTorchJobSpec struct {
 	// CacheBackend is used to configure the cache engine for job
 	// +optional
 	CacheBackend *cachev1alpha1.CacheBackendSpec `json:"cacheBackend"`
+
+	// NetworkMode defines network mode for intra job communicating.
+	NetworkMode *common.NetworkMode `json:"networkmode,omitempty"`
 }
 
 // PyTorchJobStatus defines the observed state of PyTorchJob

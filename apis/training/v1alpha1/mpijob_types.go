@@ -46,6 +46,9 @@ type MPIJobSpec struct {
 
 	// LegacySpec reserves the deprecated fields for backward compatibility.
 	*MPIJobLegacySpec `json:",inline"`
+
+	// NetworkMode defines network mode for intra job communicating.
+	NetworkMode *apiv1.NetworkMode `json:"networkmode,omitempty"`
 }
 
 // MPIJobLegacySpec is a collection of legacy fields that were used in v1alpha1/v1alpha2 but

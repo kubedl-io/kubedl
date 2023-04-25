@@ -312,3 +312,11 @@ type DAGCondition struct {
 	// OnPhase defines at which phase the upstream replica will trigger this condition.
 	OnPhase v1.PodPhase `json:"onPhase"`
 }
+
+// NetworkMode defines network mode for intra job communicating.
+type NetworkMode string
+
+const (
+	// HostNetworkMode indicates that replicas use host-network to communicate with each other.
+	HostNetworkMode NetworkMode = "host"
+)

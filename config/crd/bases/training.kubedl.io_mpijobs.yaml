@@ -3075,6 +3075,8 @@ spec:
                       type: object
                   type: object
                 type: object
+              networkmode:
+                type: string
               processingResourceType:
                 type: string
               processingUnits:

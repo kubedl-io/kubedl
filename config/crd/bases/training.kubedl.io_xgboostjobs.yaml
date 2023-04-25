@@ -66,6 +66,8 @@ spec:
                 required:
                 - schedule
                 type: object
+              networkmode:
+                type: string
               schedulingPolicy:
                 properties:
                   minAvailable:

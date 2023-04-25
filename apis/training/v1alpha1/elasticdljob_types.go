@@ -35,6 +35,9 @@ type ElasticDLJobSpec struct {
 	//     "Master": ElasticDLReplicaSpec,
 	//   }
 	ElasticDLReplicaSpecs map[common.ReplicaType]*common.ReplicaSpec `json:"elasticdlReplicaSpecs"`
+
+	// NetworkMode defines network mode for intra job communicating.
+	NetworkMode *common.NetworkMode `json:"networkmode,omitempty"`
 }
 
 // +genclient

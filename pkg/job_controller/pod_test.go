@@ -146,6 +146,7 @@ func TestReconcilePods(t *testing.T) {
 		job             *testjobv1.TestJob
 		pods            []*v1.Pod
 		rtype           apiv1.ReplicaType
+		mode            *apiv1.NetworkMode
 		expectedPodsNum int
 	}{
 		{
@@ -248,7 +249,7 @@ func TestReconcilePods(t *testing.T) {
 			}
 
 			err := jc.ReconcilePods(context.Background(), c.job, &c.job.Status, c.pods, c.rtype, c.job.Spec.TestReplicaSpecs[c.rtype],
-				c.job.Spec.TestReplicaSpecs, &apiv1.RunPolicy{}, pointer.BoolPtr(false))
+				c.job.Spec.TestReplicaSpecs, &apiv1.RunPolicy{}, c.mode, pointer.BoolPtr(false))
 			if err != nil {
 				t.Errorf("failed to ReconcilePods, err: %v", err)
 			}

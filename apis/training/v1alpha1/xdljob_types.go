@@ -48,6 +48,9 @@ type XDLJobSpec struct {
 	// MinFinishWorkPercentage takes precedence over  MinFinishWorkerNum if both are
 	// specified.
 	MinFinishWorkerPercentage *int32 `json:"minFinishWorkRate,omitempty"`
+
+	// NetworkMode defines network mode for intra job communicating.
+	NetworkMode *v1.NetworkMode `json:"networkmode,omitempty"`
 }
 
 // XDLJobStatus defines the observed state of XDLJob

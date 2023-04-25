@@ -199,7 +199,8 @@ func (jc *JobController) ReconcileServices(
 	job metav1.Object,
 	services []*v1.Service,
 	rtype apiv1.ReplicaType,
-	spec *apiv1.ReplicaSpec) error {
+	spec *apiv1.ReplicaSpec,
+	networkmode *apiv1.NetworkMode) error {
 
 	// Convert ReplicaType to lower string.
 	rt := strings.ToLower(string(rtype))
@@ -218,7 +219,7 @@ func (jc *JobController) ReconcileServices(
 			commonutil.LoggerForReplica(job, rt).Warningf("we have too many services for %s %d", rt, index)
 		} else if len(serviceSlice) == 0 {
 			commonutil.LoggerForReplica(job, rt).Infof("need to create new service: %s-%d", rt, index)
-			err = jc.CreateNewService(ctx, job, rtype, spec, strconv.Itoa(index))
+			err = jc.CreateNewService(ctx, job, rtype, spec, strconv.Itoa(index), networkmode)
 			if err != nil {
 				return err
 			}
@@ -235,7 +236,7 @@ func (jc *JobController) ReconcileServices(
 					}
 				}
 			}
-			if EnableHostNetwork(job) {
+			if EnableHostNetwork(networkmode) {
 				hostPort, ok := GetHostNetworkPortFromContext(ctx, rt, strconv.Itoa(index))
 				if ok && len(service.Spec.Ports) > 0 && service.Spec.Ports[0].TargetPort.IntVal != hostPort {
 					commonutil.LoggerForReplica(job, rt).Infof("update target service: %s-%d, new port: %d",
@@ -274,7 +275,7 @@ func (jc *JobController) GetPortFromJob(spec *apiv1.ReplicaSpec) (int32, error) 
 
 // createNewService creates a new service for the given index and type.
 func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object, rtype apiv1.ReplicaType,
-	spec *apiv1.ReplicaSpec, index string) error {
+	spec *apiv1.ReplicaSpec, index string, networkmode *apiv1.NetworkMode) error {
 
 	// Convert ReplicaType to lower string.
 	rt := strings.ToLower(string(rtype))
@@ -291,7 +292,7 @@ func (jc *JobController) CreateNewService(ctx context.Context, job metav1.Object
 	targetPort := svcPort
 	clusterIP := "None"
 
-	if !features.KubeDLFeatureGates.Enabled(features.HostNetWithHeadlessSvc) && EnableHostNetwork(job) {
+	if !features.KubeDLFeatureGates.Enabled(features.HostNetWithHeadlessSvc) && EnableHostNetwork(networkmode) {
 		// Communications between replicas use headless services by default, as for hostnetwork mode,
 		// headless service can not forward traffic from one port to another, so we use normal service
 		// when hostnetwork enabled.

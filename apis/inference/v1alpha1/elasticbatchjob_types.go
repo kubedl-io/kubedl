@@ -41,6 +41,9 @@ type ElasticBatchJobSpec struct {
 	//      "Worker": ReplicaSpec,
 	//   }
 	ElasticBatchReplicaSpecs map[common.ReplicaType]*common.ReplicaSpec `json:"elasticBatchReplicaSpecs"`
+
+	// NetworkMode defines network mode for intra job communicating.
+	NetworkMode *common.NetworkMode `json:"networkmode,omitempty"`
 }
 
 // +genclient

@@ -243,7 +243,7 @@ func (jc *JobController) ReconcilePods(
 	pods []*v1.Pod,
 	rtype apiv1.ReplicaType,
 	spec *apiv1.ReplicaSpec,
-	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, runPolicy *apiv1.RunPolicy, restart *bool) error {
+	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, runPolicy *apiv1.RunPolicy, mode *apiv1.NetworkMode, restart *bool) error {
 
 	// Convert ReplicaType to lower string.
 	rt := strings.ToLower(string(rtype))
@@ -278,7 +278,7 @@ func (jc *JobController) ReconcilePods(
 			logger.Infof("Need to create new pod: %s-%d", rt, index)
 
 			// check if this replica is the master role
-			err = jc.createNewPod(ctx, job, rt, strconv.Itoa(index), spec, jc.Controller.IsMasterRole(replicas, rtype, index), runPolicy)
+			err = jc.createNewPod(ctx, job, rt, strconv.Itoa(index), spec, jc.Controller.IsMasterRole(replicas, rtype, index), runPolicy, mode)
 			if err != nil {
 				// When controller tries to create a new pod but api-server returns a AlreadyExists error,
 				// there may comes with two case:
@@ -311,7 +311,7 @@ func (jc *JobController) ReconcilePods(
 			// Check the status of the current pod.
 			pod := podSlice[0]
 
-			failOver, exitCode, err := jc.reconcileOnePod(ctx, job, jobStatus, spec, pod, index, numReplicas, rtype, logger)
+			failOver, exitCode, err := jc.reconcileOnePod(ctx, job, jobStatus, spec, pod, index, numReplicas, rtype, logger, mode)
 			if failOver {
 				podsToFailover = append(podsToFailover, pod)
 			} else if pod.Status.Phase == v1.PodFailed {
@@ -353,7 +353,7 @@ func (jc *JobController) ReconcilePods(
 }
 
 func (jc *JobController) reconcileOnePod(ctx context.Context, job client.Object, jobStatus *apiv1.JobStatus,
-	spec *apiv1.ReplicaSpec, pod *v1.Pod, index, numReplicas int, rtype apiv1.ReplicaType, logger *log.Entry) (failOver bool, exitCode int32, err error) {
+	spec *apiv1.ReplicaSpec, pod *v1.Pod, index, numReplicas int, rtype apiv1.ReplicaType, logger *log.Entry, mode *apiv1.NetworkMode) (failOver bool, exitCode int32, err error) {
 	const (
 		// magic number
 		initialExitCode int32 = 0xbeef
@@ -381,7 +381,7 @@ func (jc *JobController) reconcileOnePod(ctx context.Context, job client.Object,
 	}
 
 	// Get and pass its container port by context if pod enables hostnetwork mode.
-	if EnableHostNetwork(job) {
+	if EnableHostNetwork(mode) {
 		storeHostNetworkPortToContext(ctx, strings.ToLower(string(rtype)), strconv.Itoa(index),
 			getContainerHostNetworkPort(pod, jc.Controller.GetDefaultContainerName(), jc.Controller.GetDefaultContainerPortName()))
 	}
@@ -401,7 +401,7 @@ func (jc *JobController) reconcileOnePod(ctx context.Context, job client.Object,
 
 // createNewPod creates a new pod for the given index and type.
 func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, index string, spec *apiv1.ReplicaSpec, masterRole bool,
-	runPolicy *apiv1.RunPolicy) error {
+	runPolicy *apiv1.RunPolicy, mode *apiv1.NetworkMode) error {
 
 	metaObject, ok := job.(metav1.Object)
 	if !ok {
@@ -429,7 +429,7 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 		labels[apiv1.LabelGeneration] = strconv.Itoa(int(metaObject.GetGeneration()))
 	}
 
-	if EnableHostNetwork(metaObject) {
+	if EnableHostNetwork(mode) {
 		commonutil.LoggerForReplica(metaObject, rt).Infof("pod enable host network, name: %s, masterRole: %v",
 			metaObject.GetName(), masterRole)
 		if err := jc.setupHostNetwork(ctx, podTemplate, rt, index); err != nil {

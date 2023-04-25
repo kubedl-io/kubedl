@@ -72,6 +72,8 @@ spec:
               minFinishWorkRate:
                 format: int32
                 type: integer
+              networkmode:
+                type: string
               schedulingPolicy:
                 properties:
                   minAvailable:
