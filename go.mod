@@ -7,7 +7,7 @@ require (
 	github.com/fluid-cloudnative/fluid v0.7.0
 	github.com/gin-contrib/sessions v0.0.3
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
-	github.com/gin-gonic/gin v1.7.0
+	github.com/gin-gonic/gin v1.9.0
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.1-0.20210423233217-9f3e0b1ce51b // indirect
 	github.com/go-sql-driver/mysql v1.4.1
@@ -22,9 +22,9 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.1
 	github.com/tidwall/gjson v1.8.0
-	golang.org/x/net v0.0.0-20211209124913-491a49abca63
+	golang.org/x/net v0.7.0
 	gopkg.in/yaml.v2 v2.4.0
 	istio.io/api v0.0.0-20210420211535-1c598ea4139c
 	istio.io/client-go v1.9.4
