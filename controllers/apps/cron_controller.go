@@ -487,18 +487,11 @@ func (cc *CronController) deleteCompletedJobsBeyondThreshold(cron *v1alpha1.Cron
 		return completedWorkloads[i].GetCreationTimestamp().Time.Before(completedWorkloads[j].GetCreationTimestamp().Time)
 	})
 
-	// Create a new Scheme object.
-	s := runtime.NewScheme()
-
-	// Register the required Kubernetes API types with the Scheme object.
-	corev1.AddToScheme(s)
-	v1alpha1.AddToScheme(s)
-
 	// Delete the oldest completed workloads.
 	for _, wlObj := range completedWorkloads[:len(completedWorkloads)-int(*historyLimit)] {
 		// Convert to ObjectReference
 		var wlRef corev1.ObjectReference
-		if err := s.Convert(wlObj, &wlRef, nil); err != nil {
+		if err := cc.scheme.Convert(wlObj, &wlRef, nil); err != nil {
 			return err
 		}
 
