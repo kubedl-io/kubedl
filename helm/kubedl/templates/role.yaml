@@ -27,25 +27,6 @@ rules:
   - patch
   - update
 - apiGroups:
-    - "coordination.k8s.io"
-  resources:
-    - leases
-  verbs:
-    - get
-    - list
-    - watch
-    - create
-    - update
-    - patch
-    - delete
-- apiGroups:
-    - ""
-  resources:
-    - namespaces
-  verbs:
-    - list
-    - watch
-- apiGroups:
   - ""
   resources:
   - events
@@ -54,6 +35,13 @@ rules:
   - get
   - list
   - patch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
 - apiGroups:
   - ""
   resources:
@@ -89,7 +77,6 @@ rules:
   - ""
   resources:
   - pods
-  - pods/log
   verbs:
   - create
   - delete
@@ -174,6 +161,26 @@ rules:
   - cache.kubedl.io
   resources:
   - cachebackends/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - inference.kubedl.io
+  resources:
+  - elasticbatchjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - inference.kubedl.io
+  resources:
+  - elasticbatchjobs/status
   verbs:
   - get
   - patch
