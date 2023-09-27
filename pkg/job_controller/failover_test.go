@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openkruise/kruise/apis/apps/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -115,7 +114,7 @@ func TestDoFailOverByAction(t *testing.T) {
 			}
 
 			if testCase.expectedCrr > 0 {
-				crrs := v1alpha1.ContainerRecreateRequestList{}
+				crrs := kruisev1alpha1.ContainerRecreateRequestList{}
 				err = fc.List(context.Background(), &crrs, client.InNamespace("default"))
 				if err != nil {
 					t.Error(err)

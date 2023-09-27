@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
-	jobv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 
 	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
@@ -361,16 +360,16 @@ func (h *apiServerBackend) DetectWorkloadsInNS(ns, kind string) bool {
 	)
 
 	switch kind {
-	case jobv1alpha1.TFJobKind:
-		list = &jobv1alpha1.TFJobList{}
+	case v1.TFJobKind:
+		list = &v1.TFJobList{}
 		detector = func(object runtime.Object) bool {
-			tfJobs := object.(*jobv1alpha1.TFJobList)
+			tfJobs := object.(*v1.TFJobList)
 			return len(tfJobs.Items) > 0
 		}
-	case jobv1alpha1.PyTorchJobKind:
-		list = &jobv1alpha1.PyTorchJobList{}
+	case v1.PyTorchJobKind:
+		list = &v1.PyTorchJobList{}
 		detector = func(object runtime.Object) bool {
-			pytorchJobs := object.(*jobv1alpha1.PyTorchJobList)
+			pytorchJobs := object.(*v1.PyTorchJobList)
 			return len(pytorchJobs.Items) > 0
 		}
 	case v1alpha1.NotebookKind:
