@@ -210,9 +210,10 @@ func (ir *InferenceReconciler) syncPredictor(inf *servingv1alpha1.Inference, ind
 // model A.2, the network topology looks like this:
 //
 // User
-//  |---request---> VirtualService
-//                        |--- 90% ---> Deploy-Of-Model-A.1
-//                        |--- 10% ---> Deploy-Of-Model-B.1
+//
+//	|---request---> VirtualService
+//	                      |--- 90% ---> Deploy-Of-Model-A.1
+//	                      |--- 10% ---> Deploy-Of-Model-B.1
 func (ir *InferenceReconciler) syncTrafficDistribution(inf *servingv1alpha1.Inference) error {
 	vsvcInCluster := v1beta1.VirtualService{}
 	vsvcExists := true

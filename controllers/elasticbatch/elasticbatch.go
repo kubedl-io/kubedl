@@ -35,12 +35,13 @@ type TaskSpec struct {
 }
 
 // Generate the environment variable ElASTICBATCH_CONFIG
-// {
-//     "task": {
-//         "type": "worker",
-//         "index": 1
-//         },
-// }
+//
+//	{
+//	    "task": {
+//	        "type": "worker",
+//	        "index": 1
+//	        },
+//	}
 func genElasticBatchConfigJSONStr(ctx context.Context, elasticbatchjob *inference.ElasticBatchJob, rtype, index string) (string, error) {
 	// Configure the ElASTICBATCH_CONFIG environment variable.
 	i, err := strconv.ParseInt(index, 0, 32)

@@ -184,13 +184,13 @@ func (r *PytorchJobReconciler) CheckpointIfNecessary(job interface{}, pods []*co
 // scale handles elastic scaling driven by AIMaster, in general the steps of scale in/out workflow can be
 // described as follows:
 //
-// 1) AIMaster updates expected replicas, then kubedl scales out new replicas or scales in extra replicas.
-// 2) refresh master service to the latest generation, at this point no master endpoints will be selected,
-//    and newly scaled pod will be injected an init container waiting for master service endpoint ready.
-// 3) wait util AnnotationReadyToStartWorker is 'true', which represents worker checkpoint finished(controlled by AIMaster).
-// 4) refresh stale master pod to the latest generation, after that master service will be available.
-// 5) after 4), newly scaled pods will step into running state, then refresh stale worker pods one by one.
-// 6) eventually no stale pods can be gathered, mark AnnotationReadyToStartWorker as false to end current round of scaling.
+//  1. AIMaster updates expected replicas, then kubedl scales out new replicas or scales in extra replicas.
+//  2. refresh master service to the latest generation, at this point no master endpoints will be selected,
+//     and newly scaled pod will be injected an init container waiting for master service endpoint ready.
+//  3. wait util AnnotationReadyToStartWorker is 'true', which represents worker checkpoint finished(controlled by AIMaster).
+//  4. refresh stale master pod to the latest generation, after that master service will be available.
+//  5. after 4), newly scaled pods will step into running state, then refresh stale worker pods one by one.
+//  6. eventually no stale pods can be gathered, mark AnnotationReadyToStartWorker as false to end current round of scaling.
 //
 // The order of the above steps cannot be reversed.
 func (r *PytorchJobReconciler) scale(pytorchJob *trainingv1alpha1.PyTorchJob, replicas map[v1.ReplicaType]*v1.ReplicaSpec, activePods []*corev1.Pod, activeServices []*corev1.Service) (finished bool, err error) {

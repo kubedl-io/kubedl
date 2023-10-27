@@ -39,9 +39,12 @@ import (
 
 	inference "github.com/alibaba/kubedl/apis/inference/v1alpha1"
 	"github.com/alibaba/kubedl/cmd/options"
+	"github.com/alibaba/kubedl/pkg/features"
 	"github.com/alibaba/kubedl/pkg/gang_schedule/registry"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/core"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/eventhandler"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	"github.com/alibaba/kubedl/pkg/util/k8sutil"
 	patchutil "github.com/alibaba/kubedl/pkg/util/patch"
@@ -67,6 +70,9 @@ func NewReconciler(mgr ctrl.Manager, config options.JobControllerConfiguration) 
 	if r.ctrl.Config.EnableGangScheduling {
 		r.ctrl.GangScheduler = registry.Get(r.ctrl.Config.GangSchedulerName)
 	}
+	if features.KubeDLFeatureGates.Enabled(features.JobCoordinator) {
+		r.coordinator = core.NewCoordinator(mgr)
+	}
 	return r
 }
 
@@ -76,9 +82,10 @@ var _ v1.ControllerInterface = &ElasticBatchJobReconciler{}
 // ElasticBatchJobReconciler reconciles a ElasticBatchJob object
 type ElasticBatchJobReconciler struct {
 	client.Client
-	scheme   *runtime.Scheme
-	recorder record.EventRecorder
-	ctrl     job_controller.JobController
+	scheme      *runtime.Scheme
+	recorder    record.EventRecorder
+	ctrl        job_controller.JobController
+	coordinator core.Coordinator
 	utilruntime.EmptyScaleImpl
 }
 
@@ -149,7 +156,7 @@ func (r *ElasticBatchJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch owner resource with create event filter.
-	if err = c.Watch(&source.Kind{Type: &inference.ElasticBatchJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	if err = c.Watch(&source.Kind{Type: &inference.ElasticBatchJob{}}, eventhandler.NewEnqueueForObject(r.coordinator), predicate.Funcs{
 		CreateFunc: onOwnerCreateFunc(r),
 		DeleteFunc: OnOwnerDeleteAndDeletionExpectationFunc(r.ctrl),
 	}); err != nil {

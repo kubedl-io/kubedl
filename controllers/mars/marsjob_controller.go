@@ -43,6 +43,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/jobcoordinator/core"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/eventhandler"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
@@ -141,7 +142,7 @@ func (r *MarsJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch owner resources with create event filter.
-	if err = c.Watch(&source.Kind{Type: &kubedliov1beta1.MarsJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	if err = c.Watch(&source.Kind{Type: &kubedliov1beta1.MarsJob{}}, eventhandler.NewEnqueueForObject(r.coordinator), predicate.Funcs{
 		CreateFunc: job_controller.OnOwnerCreateFunc(r.scheme, kubedliov1beta1.ExtractMetaFieldsFromObject, log, r.coordinator, r.ctrl.Metrics),
 		UpdateFunc: job_controller.OnOwnerUpdateFunc(r.scheme, kubedliov1beta1.ExtractMetaFieldsFromObject, log, r.coordinator),
 		DeleteFunc: job_controller.OnOwnerDeleteFunc(r.ctrl, kubedliov1beta1.ExtractMetaFieldsFromObject, log),

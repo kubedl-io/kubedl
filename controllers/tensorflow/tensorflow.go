@@ -61,17 +61,18 @@ type TaskSpec struct {
 }
 
 // genTFConfig will generate the environment variable TF_CONFIG
-// {
-//     "cluster": {
-//         "ps": ["ps1:2222", "ps2:2222"],
-//         "worker": ["worker1:2222", "worker2:2222", "worker3:2222"]
-//     },
-//     "task": {
-//         "type": "ps",
-//         "index": 1
-//         },
-//     }
-// }
+//
+//	{
+//	    "cluster": {
+//	        "ps": ["ps1:2222", "ps2:2222"],
+//	        "worker": ["worker1:2222", "worker2:2222", "worker3:2222"]
+//	    },
+//	    "task": {
+//	        "type": "ps",
+//	        "index": 1
+//	        },
+//	    }
+//	}
 func genTFConfigJSONStr(ctx context.Context, tfjob *training.TFJob, rtype, index string) (string, error) {
 	// Configure the TFCONFIG environment variable.
 	i, err := strconv.ParseInt(index, 0, 32)

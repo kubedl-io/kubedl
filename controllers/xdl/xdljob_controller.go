@@ -43,6 +43,7 @@ import (
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/jobcoordinator/core"
+	"github.com/alibaba/kubedl/pkg/jobcoordinator/eventhandler"
 	"github.com/alibaba/kubedl/pkg/metrics"
 	utilruntime "github.com/alibaba/kubedl/pkg/util/runtime"
 )
@@ -151,7 +152,7 @@ func (r *XDLJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch owner resource with create event filter.
-	if err = c.Watch(&source.Kind{Type: &training.XDLJob{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	if err = c.Watch(&source.Kind{Type: &training.XDLJob{}}, eventhandler.NewEnqueueForObject(r.coordinator), predicate.Funcs{
 		CreateFunc: job_controller.OnOwnerCreateFunc(r.scheme, training.ExtractMetaFieldsFromObject, log, r.coordinator, r.ctrl.Metrics),
 		UpdateFunc: job_controller.OnOwnerUpdateFunc(r.scheme, training.ExtractMetaFieldsFromObject, log, r.coordinator),
 		DeleteFunc: job_controller.OnOwnerDeleteFunc(r.ctrl, training.ExtractMetaFieldsFromObject, log),

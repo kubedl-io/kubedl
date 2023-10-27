@@ -47,17 +47,18 @@ type TaskSpec struct {
 }
 
 // genXDLConfigJSON will generate the environment variable json formatted XDL_CONFIG
-// {
-//     "cluster": {
-//         "ps": ["ps1:2222", "ps2:2222"],
-//         "worker": ["worker1:2222", "worker2:2222", "worker3:2222"]
-//     },
-//     "task": {
-//         "type": "ps",
-//         "index": 1
-//         },
-//     }
-// }
+//
+//	{
+//	    "cluster": {
+//	        "ps": ["ps1:2222", "ps2:2222"],
+//	        "worker": ["worker1:2222", "worker2:2222", "worker3:2222"]
+//	    },
+//	    "task": {
+//	        "type": "ps",
+//	        "index": 1
+//	        },
+//	    }
+//	}
 func genXDLConfigJSON(xdlJob *v1alpha1.XDLJob, rtype, index string) (string, error) {
 	idx, err := strconv.ParseInt(index, 0, 32)
 	if err != nil {
