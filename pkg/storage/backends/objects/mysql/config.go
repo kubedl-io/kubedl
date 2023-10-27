@@ -29,15 +29,16 @@ import (
 // deployment manifests files, for security user should better init environment
 // variables by referencing Secret key as down below:
 // spec:
-//  containers:
-//  - name: xxx-container
-//    image: xxx
-//    env:
-//      - name: MYSQL_HOST
-//        valueFrom:
-//          secretKeyRef:
-//            name: my-mysql-secret
-//            key: host
+//
+//	containers:
+//	- name: xxx-container
+//	  image: xxx
+//	  env:
+//	    - name: MYSQL_HOST
+//	      valueFrom:
+//	        secretKeyRef:
+//	          name: my-mysql-secret
+//	          key: host
 const (
 	EnvDBHost     = "MYSQL_HOST"
 	EnvDBPort     = "MYSQL_PORT"

@@ -28,15 +28,16 @@ import (
 // deployment manifests files, for security user should better init environment
 // variables by referencing Secret key as down below:
 // spec:
-//  containers:
-//  - name: xxx-container
-//    image: xxx
-//    env:
-//      - name: SLS_ENDPOINT
-//        valueFrom:
-//          secretKeyRef:
-//            name: my-sls-secret
-//            key: endpoint
+//
+//	containers:
+//	- name: xxx-container
+//	  image: xxx
+//	  env:
+//	    - name: SLS_ENDPOINT
+//	      valueFrom:
+//	        secretKeyRef:
+//	          name: my-sls-secret
+//	          key: endpoint
 const (
 	EnvSLSEndpoint  = "SLS_ENDPOINT"
 	EnvSLSKeyID     = "SLS_KEY_ID"

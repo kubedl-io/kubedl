@@ -41,7 +41,8 @@ type APIController interface {
 	RegisterRoutes(routes *gin.RouterGroup)
 }
 
-//InitRouter load handlers and middlewares, it contains check auth, frontend resource,
+// InitRouter load handlers and middlewares, it contains check auth, frontend resource,
+//
 //	error recovery etc. and returns an instance of Engine
 func InitRouter() *gin.Engine {
 	r := gin.New()
@@ -98,7 +99,7 @@ func InitRouter() *gin.Engine {
 	return r
 }
 
-//initControllersRoute registers customized controllers and adds routes
+// initControllersRoute registers customized controllers and adds routes
 func initControllersRoute(r *gin.Engine, baseGroup string) error {
 	//load check auth middleware
 	authHandler := auth.GetAuth()

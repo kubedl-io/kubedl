@@ -39,10 +39,11 @@ var (
 // reconcile logic of the job controller
 //
 // ReconcileJobs(
-//		job interface{},
-//		replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec,
-//		jobStatus apiv1.JobStatus,
-//		runPolicy *apiv1.RunPolicy) error
+//
+//	job interface{},
+//	replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec,
+//	jobStatus apiv1.JobStatus,
+//	runPolicy *apiv1.RunPolicy) error
 type JobController struct {
 	Controller apiv1.ControllerInterface
 

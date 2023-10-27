@@ -43,8 +43,9 @@ type ServiceControllerRefManager struct {
 // If canAdopt() returns a non-nil error, all adoptions will fail.
 //
 // NOTE: Once canAdopt() is called, it will not be called again by the same
-//       ServiceControllerRefManager instance. Create a new instance if it makes
-//       sense to check canAdopt() again (e.g. in a different sync pass).
+//
+//	ServiceControllerRefManager instance. Create a new instance if it makes
+//	sense to check canAdopt() again (e.g. in a different sync pass).
 func NewServiceControllerRefManager(
 	serviceControl ServiceControlInterface,
 	ctr metav1.Object,
@@ -66,8 +67,8 @@ func NewServiceControllerRefManager(
 // ClaimServices tries to take ownership of a list of Services.
 //
 // It will reconcile the following:
-//   * Adopt orphans if the selector matches.
-//   * Release owned objects if the selector no longer matches.
+//   - Adopt orphans if the selector matches.
+//   - Release owned objects if the selector no longer matches.
 //
 // Optional: If one or more filters are specified, a Service will only be claimed if
 // all filters return true.

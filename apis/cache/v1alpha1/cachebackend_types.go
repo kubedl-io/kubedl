@@ -116,7 +116,8 @@ type CacheStatus string
 
 // The four CacheStatus vary as follows:
 // CacheCreating -> PVCCreating ( CacheSucceed ) -> PVCCreated
-//            or -> CacheFailed
+//
+//	or -> CacheFailed
 const (
 	PVCCreated    CacheStatus = "PVCCreated"
 	PVCCreating   CacheStatus = "PVCCreating"

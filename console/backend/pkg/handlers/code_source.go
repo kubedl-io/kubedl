@@ -30,7 +30,7 @@ type CodeSourceHandler struct {
 	client client.Client
 }
 
-//post
+// post
 func (ov *CodeSourceHandler) PostCodeSourceToConfigMap(codeSource model.CodeSource) error {
 	klog.Infof("CodeSource : %s", codeSource)
 
@@ -55,7 +55,7 @@ func (ov *CodeSourceHandler) PostCodeSourceToConfigMap(codeSource model.CodeSour
 	return setCodeSourceConfigMap(configMap, codeSourceMap)
 }
 
-//delete
+// delete
 func (ov *CodeSourceHandler) DeleteCodeSourceFromConfigMap(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("name is empty")
@@ -83,7 +83,7 @@ func (ov *CodeSourceHandler) DeleteCodeSourceFromConfigMap(name string) error {
 
 }
 
-//put
+// put
 func (ov *CodeSourceHandler) PutCodeSourceToConfigMap(codeSource model.CodeSource) error {
 	configMap, err := getOrCreateCodeSourceConfigMap()
 	if err != nil {
@@ -102,7 +102,7 @@ func (ov *CodeSourceHandler) PutCodeSourceToConfigMap(codeSource model.CodeSourc
 	return setCodeSourceConfigMap(configMap, codeSourceMap)
 }
 
-//get
+// get
 func (ov *CodeSourceHandler) GetCodeSourceFromConfigMap(name string) (model.CodeSource, error) {
 	if len(name) == 0 {
 		return model.CodeSource{}, fmt.Errorf("name is empty")
@@ -127,7 +127,7 @@ func (ov *CodeSourceHandler) GetCodeSourceFromConfigMap(name string) (model.Code
 	return codeSource, nil
 }
 
-//get all
+// get all
 func (ov *CodeSourceHandler) ListCodeSourceFromConfigMap() (model.CodeSourceMap, error) {
 	configMap, err := getOrCreateCodeSourceConfigMap()
 	if err != nil {
@@ -142,7 +142,7 @@ func (ov *CodeSourceHandler) ListCodeSourceFromConfigMap() (model.CodeSourceMap,
 	return codeSourceMap, nil
 }
 
-//set
+// set
 func setCodeSourceConfigMap(configMap *v1.ConfigMap, codeSourceMap model.CodeSourceMap) error {
 
 	if configMap == nil {

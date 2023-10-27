@@ -30,7 +30,7 @@ type DataSourceHandler struct {
 	client client.Client
 }
 
-//post
+// post
 func (ov *DataSourceHandler) PostDataSourceToConfigMap(dataSource model.DataSource) error {
 	klog.Infof("DataSource : %s", dataSource)
 
@@ -55,7 +55,7 @@ func (ov *DataSourceHandler) PostDataSourceToConfigMap(dataSource model.DataSour
 	return setDataSourceConfigMap(configMap, dataSourceMap)
 }
 
-//delete
+// delete
 func (ov *DataSourceHandler) DeleteDataSourceFromConfigMap(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("name is empty")
@@ -83,7 +83,7 @@ func (ov *DataSourceHandler) DeleteDataSourceFromConfigMap(name string) error {
 
 }
 
-//put
+// put
 func (ov *DataSourceHandler) PutDataSourceToConfigMap(dataSource model.DataSource) error {
 
 	configMap, err := getOrCreateDataSourceConfigMap()
@@ -105,7 +105,7 @@ func (ov *DataSourceHandler) PutDataSourceToConfigMap(dataSource model.DataSourc
 	return rs
 }
 
-//get
+// get
 func (ov *DataSourceHandler) GetDataSourceFromConfigMap(name string) (model.DataSource, error) {
 	if len(name) == 0 {
 		return model.DataSource{}, fmt.Errorf("name is empty")
@@ -130,7 +130,7 @@ func (ov *DataSourceHandler) GetDataSourceFromConfigMap(name string) (model.Data
 	return dataSource, nil
 }
 
-//get all
+// get all
 func (ov *DataSourceHandler) ListDataSourceFromConfigMap() (model.DataSourceMap, error) {
 	configMap, err := getOrCreateDataSourceConfigMap()
 	if err != nil {
@@ -145,7 +145,7 @@ func (ov *DataSourceHandler) ListDataSourceFromConfigMap() (model.DataSourceMap,
 	return dataSourceMap, nil
 }
 
-//set
+// set
 func setDataSourceConfigMap(configMap *v1.ConfigMap, dataSourceMap model.DataSourceMap) error {
 	if configMap == nil {
 		klog.Errorf("ConfigMap is nil")

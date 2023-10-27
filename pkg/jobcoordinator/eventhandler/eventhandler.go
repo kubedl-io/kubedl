@@ -12,6 +12,10 @@ import (
 	"github.com/alibaba/kubedl/pkg/jobcoordinator/core"
 )
 
+func NewEnqueueForObject(co core.Coordinator) handler.EventHandler {
+	return &EnqueueForObject{Coordinator: co}
+}
+
 var _ handler.EventHandler = &EnqueueForObject{}
 
 type EnqueueForObject struct {
