@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
 	k8sv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,11 +38,11 @@ func (r *XgboostJobReconciler) DeleteJob(job interface{}) error {
 		return fmt.Errorf("%+v is not a type of XGBoostJob", xgboostjob)
 	}
 	if err := r.Delete(context.Background(), xgboostjob); err != nil {
-		r.recorder.Eventf(xgboostjob, corev1.EventTypeWarning, job_controller.FailedDeleteJobReason, "Error deleting: %v", err)
+		r.recorder.Eventf(xgboostjob, k8sv1.EventTypeWarning, job_controller.FailedDeleteJobReason, "Error deleting: %v", err)
 		log.Error(err, "failed to delete job", "namespace", xgboostjob.Namespace, "name", xgboostjob.Name)
 		return err
 	}
-	r.recorder.Eventf(xgboostjob, corev1.EventTypeNormal, job_controller.SuccessfulDeleteJobReason, "Deleted job: %v", xgboostjob.Name)
+	r.recorder.Eventf(xgboostjob, k8sv1.EventTypeNormal, job_controller.SuccessfulDeleteJobReason, "Deleted job: %v", xgboostjob.Name)
 	log.Info("job deleted", "namespace", xgboostjob.Namespace, "name", xgboostjob.Name)
 	return nil
 }
