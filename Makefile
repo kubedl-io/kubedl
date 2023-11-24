@@ -94,6 +94,7 @@ release: helm-chart
 controller-gen:
 ifeq (, $(shell which controller-gen))
 	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.6.1
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
