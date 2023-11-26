@@ -14,7 +14,7 @@ image:
   repository: kubedl/kubedl
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 0.4.2
+  tag: daily
 
 imagePullSecrets: []
 nameOverride: ""

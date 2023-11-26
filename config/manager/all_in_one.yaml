@@ -12,441 +12,447 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: kubedl-manager-role
+  name: manager-role
 rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - get
-      - list
-      - patch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - persistentvolumeclaims
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - persistentvolumes
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - pods/log
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - pods/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      - services
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - services/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - apps.kubedl.io
-    resources:
-      - crons
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - apps.kubedl.io
-    resources:
-      - crons/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - model.kubedl.io
-    resources:
-      - models
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - model.kubedl.io
-    resources:
-      - models/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - model.kubedl.io
-    resources:
-      - modelversions
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - model.kubedl.io
-    resources:
-      - modelversions/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - networking.k8s.io
-    resources:
-      - ingresses
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - notebook.kubedl.io
-    resources:
-      - notebooks
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - notebook.kubedl.io
-    resources:
-      - notebooks/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - scheduling.incubator.k8s.io
-      - scheduling.sigs.dev
-      - scheduling.volcano.sh
-    resources:
-      - podgroups
-      - queues
-    verbs:
-      - '*'
-  - apiGroups:
-      - serving.kubedl.io
-    resources:
-      - inferences
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - serving.kubedl.io
-    resources:
-      - inferences/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - elasticdljobs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - elasticdljobs/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - marsjobs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - marsjobs/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - mpijobs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - mpijobs/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - pytorchjobs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - pytorchjobs/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - tfjobs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - tfjobs/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - xdljobs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - xdljobs/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - xgboostjobs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - training.kubedl.io
-    resources:
-      - xgboostjobs/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - inference.kubedl.io
-    resources:
-      - elasticbatchjobs
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-  - apiGroups:
-      - inference.kubedl.io
-    resources:
-      - elasticbatchjobs/status
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-  - apiGroups:
-      - cache.kubedl.io
-    resources:
-      - cachebackends
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - cache.kubedl.io
-    resources:
-      - cachebackends/status
-    verbs:
-      - get
-      - update
-      - patch
-  - apiGroups:
-      - apps.kruise.io
-    resources:
-     - containerrecreaterequests
-      - containerrecreaterequests/status
-    verbs:
-      - '*'
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces # namespaces has been swapped with nodes from line 57 to line 49.
+  verbs:
+  - get
+  - list # watch has been removed and get has been added instead to be in sync with role.yaml.
+- apiGroups:
+  - ""
+  resources:
+  - nodes # nodes has been swapped with namespaces from line 49 to line 56.
+  verbs:
+  - get
+  - list
+# - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+# - pods/log  
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubedl.io
+  resources:
+  - crons/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups: 
+  - cache.kubedl.io  # adding cache on line 159 from line 424. Total number of lines in cache = 20.
+  resources:
+  - cachebackends
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cache.kubedl.io
+  resources:
+  - cachebackends/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - inference.kubedl.io # adding inference on line 179 from line 400. Total number of lines in inference = 24.
+  resources:
+  - elasticbatchjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - inference.kubedl.io
+  resources:
+  - elasticbatchjobs/status
+  verbs:
+  - get
+# - list
+# - watch
+# - create
+  - patch
+  - update
+# - delete
+- apiGroups:
+  - model.kubedl.io # moving model and beyond until serving from line 159 to line 203. Line Diff = 44 = Total number of lines in model + Total number of lines in inference. 
+  resources:
+  - models
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - models/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - modelversions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - model.kubedl.io
+  resources:
+  - modelversions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - notebook.kubedl.io
+  resources:
+  - notebooks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - notebook.kubedl.io
+  resources:
+  - notebooks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - scheduling.incubator.k8s.io
+  - scheduling.sigs.dev
+  - scheduling.volcano.sh
+  resources:
+  - podgroups
+  - queues
+  verbs:
+  - '*'
+- apiGroups:
+  - scheduling.sigs.k8s.io # adding scheduling.sigs.k8s.io on line 278. Total number of lines in scheduling = 6.
+  resources:
+  - podgroups
+  verbs:
+  - '*'
+- apiGroups:
+  - serving.kubedl.io # moving serving and beyond from line 240 t0 line 290. Line Diff = 50 = Total number of lines in model + Total number of lines in scheduling + Total number of lines in inference.
+  resources:
+  - inferences
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - serving.kubedl.io
+  resources:
+  - inferences/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - elasticdljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - elasticdljobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - marsjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - marsjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - mpijobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - mpijobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - pytorchjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - pytorchjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - tfjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - tfjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xdljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xdljobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - training.kubedl.io
+  resources:
+  - xgboostjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - training.kubedl.io # this portion moved from 392 to 442. Line Diff = 50 remained constant afterwards.
+  resources:
+  - xgboostjobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps.kruise.io
+  resources:
+  - containerrecreaterequests
+  - containerrecreaterequests/status
+  verbs:
+  - '*'
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -468,44 +474,44 @@ kind: ClusterRole
 metadata:
   name: kubedl-leader-election-role
 rules:
-  - apiGroups:
-      - "coordination.k8s.io"
-    resources:
-      - leases
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps/status
-    verbs:
-      - get
-      - update
-      - patch
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
+- apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -516,9 +522,9 @@ roleRef:
   kind: ClusterRole
   name: kubedl-leader-election-role
 subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: kubedl-system
+- kind: ServiceAccount
+  name: default
+  namespace: kubedl-system
 ---
 apiVersion: apps/v1
 kind: Deployment
