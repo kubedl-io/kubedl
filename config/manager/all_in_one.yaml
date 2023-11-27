@@ -118,6 +118,19 @@ rules:
   - apiGroups:
       - ""
     resources:
+      - resourcequotas
+      - resourcequotas/status
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
       - services/status
     verbs:
       - get
