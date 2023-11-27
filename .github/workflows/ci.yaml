@@ -20,7 +20,7 @@ env:
 jobs:
 
   unit-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -64,7 +64,7 @@ jobs:
       - name: Check diff
         run: '[[ -z $(git status -s) ]] || (git diff; printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
   e2e-tests:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
