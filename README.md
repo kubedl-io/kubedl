@@ -1,5 +1,6 @@
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![KubeDL Action Status](https://github.com/kubedl-io/kubedl/workflows/CI/badge.svg)](https://github.com/kubedl-io}/kubedl}/actions)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl?ref=badge_shield)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5072/badge)](https://bestpractices.coreinfrastructure.org/projects/5072)
 
 

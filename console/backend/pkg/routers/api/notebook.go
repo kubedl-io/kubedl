@@ -5,12 +5,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"k8s.io/klog"
+
 	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 	"github.com/alibaba/kubedl/console/backend/pkg/handlers"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 	"github.com/alibaba/kubedl/pkg/storage/backends"
-	"github.com/gin-gonic/gin"
-	"k8s.io/klog"
 )
 
 func NewNotebookAPIsController(notebookHandler *handlers.NotebookHandler) *notebookAPIsController {
@@ -34,7 +35,7 @@ func (nc *notebookAPIsController) RegisterRoutes(routes *gin.RouterGroup) {
 func (nc *notebookAPIsController) SubmitNotebook(c *gin.Context) {
 	data, err := c.GetRawData()
 	if err != nil {
-		Error(c, fmt.Sprintf("failed to get raw posted data from request"))
+		Error(c, "failed to get raw posted data from request")
 		return
 	}
 	if err = nc.notebookHandler.SubmitNotebook(data); err != nil {

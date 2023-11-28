@@ -67,9 +67,7 @@ func setDefaultSyncOpts(opts *gitSyncOptions) {
 	if opts.DestPath == "" {
 		parts := strings.Split(strings.Trim(opts.Source, "/"), "/")
 		opts.DestPath = parts[len(parts)-1]
-		if strings.HasSuffix(opts.DestPath, ".git") {
-			opts.DestPath = opts.DestPath[:len(opts.DestPath)-4]
-		}
+		opts.DestPath = strings.TrimSuffix(opts.DestPath, ".git")
 	}
 	if opts.Image == "" {
 		opts.Image = defaultGitSyncImage

@@ -26,7 +26,7 @@ const (
 )
 
 func NewDataHandler() *DataHandler {
-	clientmgr.IndexField(&corev1.Pod{}, IndexNodeName, func(obj client.Object) []string {
+	_ = clientmgr.IndexField(&corev1.Pod{}, IndexNodeName, func(obj client.Object) []string {
 		pod, ok := obj.(*corev1.Pod)
 		if !ok {
 			return []string{}
@@ -37,7 +37,7 @@ func NewDataHandler() *DataHandler {
 		return []string{pod.Spec.NodeName}
 	})
 
-	clientmgr.IndexField(&corev1.Pod{}, IndexPhase, func(obj client.Object) []string {
+	_ = clientmgr.IndexField(&corev1.Pod{}, IndexPhase, func(obj client.Object) []string {
 		pod, ok := obj.(*corev1.Pod)
 		if !ok {
 			return []string{}

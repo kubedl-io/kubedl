@@ -64,11 +64,11 @@ func init() {
 	apis.AddToSchemes = append(apis.AddToSchemes, kruisev1alpha1.AddToScheme)
 }
 
-func (r *PytorchJobReconciler) EnableElasticScaling(job metav1.Object, runPolicy *v1.RunPolicy) bool {
+func (r *PytorchJobReconciler) EnableElasticScaling(job client.Object, runPolicy *v1.RunPolicy) bool {
 	return job.GetAnnotations()[v1.AnnotationEnableElasticTraining] == "true"
 }
 
-func (r *PytorchJobReconciler) ScaleOut(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, activePods []*corev1.Pod, activeServices []*corev1.Service) error {
+func (r *PytorchJobReconciler) ScaleOut(job client.Object, replicas map[v1.ReplicaType]*v1.ReplicaSpec, activePods []*corev1.Pod, activeServices []*corev1.Service) error {
 	pytorchJob, ok := job.(*trainingv1alpha1.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", job)
@@ -80,7 +80,7 @@ func (r *PytorchJobReconciler) ScaleOut(job interface{}, replicas map[v1.Replica
 	return err
 }
 
-func (r *PytorchJobReconciler) ScaleIn(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, activePods []*corev1.Pod, activeServices []*corev1.Service) error {
+func (r *PytorchJobReconciler) ScaleIn(job client.Object, replicas map[v1.ReplicaType]*v1.ReplicaSpec, activePods []*corev1.Pod, activeServices []*corev1.Service) error {
 	pytorchJob, ok := job.(*trainingv1alpha1.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", job)
@@ -115,13 +115,13 @@ func (r *PytorchJobReconciler) ScaleIn(job interface{}, replicas map[v1.ReplicaT
 // Checkpoint requests contains a `version` to distinguish from different progresses, and controller guarantees that
 // 'checkpoint-version' <= 'job generation'. When preemption happens controller triggers a new round of checkpoint
 // and take job generation as its version, and self-increase generation after checkpoint succeed.
-func (r *PytorchJobReconciler) CheckpointIfNecessary(job interface{}, pods []*corev1.Pod) (completed bool, err error) {
+func (r *PytorchJobReconciler) CheckpointIfNecessary(job client.Object, activePods []*corev1.Pod) (completed bool, err error) {
 	pytorchJob, ok := job.(*trainingv1alpha1.PyTorchJob)
 	if !ok {
 		return false, fmt.Errorf("%+v is not a type of PytorchJob", job)
 	}
 
-	victims := filterVictimPods(pods, pytorchJob.Generation)
+	victims := filterVictimPods(activePods, pytorchJob.Generation)
 
 	// start to notify aimaster executing checkpointing and wait for response.
 	ckptReqVersion, err := getCheckpointVersion(pytorchJob.Annotations, AnnotationCheckpointRequestedVersion)
@@ -361,7 +361,9 @@ func (r *PytorchJobReconciler) restartPodInKruiseProtocol(job *trainingv1alpha1.
 
 	// Finalize container-recreate-request object once it completes, because elastic scaling is repeatable
 	// and 'crr' request will be re-initiated.
-	defer r.Client.Delete(context.Background(), &crr)
+	defer func() {
+		_ = r.Client.Delete(context.Background(), &crr)
+	}()
 
 	r.recorder.Eventf(pod, corev1.EventTypeNormal, "ContainerRecreateSucceed", "succeed to recreate containers in stale worker: %s", podKey)
 	return true, nil
@@ -436,7 +438,7 @@ func (r *PytorchJobReconciler) recreatePodContainers(job *trainingv1alpha1.PyTor
 func (r *PytorchJobReconciler) triggerJobCheckpoint(pytorchJob *trainingv1alpha1.PyTorchJob) error {
 	version := &ckptVersion{
 		Version:   int32(pytorchJob.Generation),
-		Context:   fmt.Sprintf("pytorch job starts to request for checkpoint"),
+		Context:   "pytorch job starts to request for checkpoint",
 		Timestamp: nowFunc(),
 		Status:    checkpointInProgress,
 	}

@@ -125,8 +125,11 @@ func TestQuota_Filter(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			corev1.AddToScheme(scheme.Scheme)
-			q := quota{client: fake.NewFakeClientWithScheme(scheme.Scheme), recorder: record.NewFakeRecorder(10)}
+			_ = corev1.AddToScheme(scheme.Scheme)
+			q := quota{
+				client:   fake.NewClientBuilder().WithScheme(scheme.Scheme).Build(),
+				recorder: record.NewFakeRecorder(10),
+			}
 
 			used := testCase.q.Status.DeepCopy()
 			if err := q.client.Create(context.Background(), testCase.q); err != nil {

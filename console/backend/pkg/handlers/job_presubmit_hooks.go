@@ -148,8 +148,6 @@ func pytorchJobPreSubmitAutoConvertReplicas(job runtime.Object) {
 	} else if workerReplicas > 0 {
 		pytorchJob.Spec.PyTorchReplicaSpecs[v1.PyTorchReplicaTypeWorker].Replicas = Int32(workerReplicas)
 	}
-
-	return
 }
 
 func pytorchJobPreSubmitTensorBoardDefaults(job runtime.Object) {

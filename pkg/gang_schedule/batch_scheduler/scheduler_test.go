@@ -24,7 +24,7 @@ func TestCreateGang(t *testing.T) {
 		_ = corev1.AddToScheme(scheme)
 		_ = testjobv1.AddToScheme(scheme)
 		testJob := testutilv1.NewTestJob(workerNumber)
-		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(testJob).Build()
 		testScheduler := &kubeBatchScheduler{client: fakeClient}
 
 		testObject, _ := testScheduler.CreateGang(testJob, testJob.Spec.TestReplicaSpecs, testJob.Spec.RunPolicy.SchedulingPolicy)
@@ -45,13 +45,14 @@ func TestBindPodToGang(t *testing.T) {
 		_ = corev1.AddToScheme(scheme)
 		_ = testjobv1.AddToScheme(scheme)
 		testJob := testutilv1.NewTestJob(workerNumber)
-		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(testJob).Build()
 		testScheduler := &kubeBatchScheduler{client: fakeClient}
 
 		testObject, _ := testScheduler.CreateGang(testJob, testJob.Spec.TestReplicaSpecs, testJob.Spec.RunPolicy.SchedulingPolicy)
 		testPodGroup := testObject.(*v1alpha1.PodGroup)
 		testPodSpec := testutilv1.NewTestReplicaSpecTemplate()
-		testScheduler.BindPodToGang(testJob, &testPodSpec, testPodGroup, "")
+		err := testScheduler.BindPodToGang(testJob, &testPodSpec, testPodGroup, "")
+		assert.NoError(t, err)
 		assert.Equal(t, testPodSpec.Annotations[v1alpha1.GroupNameAnnotationKey], testPodGroup.Name)
 	}
 }

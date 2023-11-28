@@ -65,7 +65,8 @@ func (q *queue) size() int {
 func (q *queue) snapshot() queueView {
 	view := make(queueView, 0, len(q.units))
 	for _, qu := range q.units {
-		view = append(view, &(*qu) /* taking address is necessary */)
+		quc := *qu /* taking address is necessary */
+		view = append(view, &quc)
 	}
 	return view
 }

@@ -49,9 +49,6 @@ const (
 	podTemplateRestartPolicyReason = "SettedPodTemplateRestartPolicy"
 	// exitedWithCodeReason is the normal reason when the pod is exited because of the exit code.
 	exitedWithCodeReason = "ExitedWithCode"
-	// podTemplateSchedulerNameReason is the warning reason when other scheduler name is set
-	// in pod templates with gang-scheduling enabled
-	podTemplateSchedulerNameReason = "SettedPodTemplateSchedulerName"
 )
 
 // When a pod is created, enqueue the job that manages it and update its expectations.
@@ -140,7 +137,7 @@ func (jc *JobController) OnPodUpdateFunc(e event.UpdateEvent) bool {
 // When a pod is deleted, enqueue the job that manages the pod and update its expectations.
 // obj could be an *v1.Pod, or a DeletionFinalStateUnknown marker item.
 func (jc *JobController) OnPodDeleteFunc(e event.DeleteEvent) bool {
-	pod, ok := e.Object.(*v1.Pod)
+	pod := e.Object.(*v1.Pod)
 	logger := commonutil.LoggerForPod(pod, jc.Controller.GetAPIGroupVersionKind().Kind)
 
 	if k8sutil.HasFinalizer(pod.Finalizers, apiv1.FinalizerPreemptProtector) {
@@ -151,7 +148,7 @@ func (jc *JobController) OnPodDeleteFunc(e event.DeleteEvent) bool {
 		}
 	}
 
-	// When a delete is dropped, the relist will notice a pod in the store not
+	// When a deletion is dropped, the relist will notice a pod in the store not
 	// in the list, leading to the insertion of a tombstone object which contains
 	// the deleted key/value. Note that this value might be stale. If the pod
 	// changed labels the new job will not be woken up till the periodic resync.
@@ -400,38 +397,28 @@ func (jc *JobController) reconcileOnePod(ctx context.Context, job client.Object,
 }
 
 // createNewPod creates a new pod for the given index and type.
-func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, index string, spec *apiv1.ReplicaSpec, masterRole bool,
+func (jc *JobController) createNewPod(ctx context.Context, job client.Object, rt, index string, spec *apiv1.ReplicaSpec, masterRole bool,
 	runPolicy *apiv1.RunPolicy) error {
-
-	metaObject, ok := job.(metav1.Object)
-	if !ok {
-		return fmt.Errorf("job is not a metav1.Object type")
-	}
-	runtimeObject, ok := job.(runtime.Object)
-	if !ok {
-		return fmt.Errorf("job is not a runtime.Object type")
-	}
-
-	logger := commonutil.LoggerForReplica(metaObject, rt)
+	logger := commonutil.LoggerForReplica(job, rt)
 
 	podTemplate := spec.Template.DeepCopy()
 
 	// Set type and index for the worker.
-	labels := jc.GenLabels(metaObject.GetName())
+	labels := jc.GenLabels(job.GetName())
 	labels[apiv1.ReplicaTypeLabel] = rt
 	labels[apiv1.ReplicaIndexLabel] = index
 
 	if masterRole {
 		labels[apiv1.JobRoleLabel] = "master"
 	}
-	if jc.Controller.EnableElasticScaling(metaObject, runPolicy) {
+	if jc.Controller.EnableElasticScaling(job, runPolicy) {
 		podTemplate.Finalizers = append(podTemplate.Finalizers, apiv1.FinalizerPreemptProtector)
-		labels[apiv1.LabelGeneration] = strconv.Itoa(int(metaObject.GetGeneration()))
+		labels[apiv1.LabelGeneration] = strconv.Itoa(int(job.GetGeneration()))
 	}
 
-	if EnableHostNetwork(metaObject) {
-		commonutil.LoggerForReplica(metaObject, rt).Infof("pod enable host network, name: %s, masterRole: %v",
-			metaObject.GetName(), masterRole)
+	if EnableHostNetwork(job) {
+		commonutil.LoggerForReplica(job, rt).Infof("pod enable host network, name: %s, masterRole: %v",
+			job.GetName(), masterRole)
 		if err := jc.setupHostNetwork(ctx, podTemplate, rt, index); err != nil {
 			return err
 		}
@@ -444,7 +431,7 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 	if podTemplate.Spec.RestartPolicy != v1.RestartPolicy("") {
 		errMsg := "Restart policy in pod template will be overwritten by restart policy in replica spec"
 		logger.Warning(errMsg)
-		jc.Recorder.Event(runtimeObject, v1.EventTypeWarning, podTemplateRestartPolicyReason, errMsg)
+		jc.Recorder.Event(job, v1.EventTypeWarning, podTemplateRestartPolicyReason, errMsg)
 	}
 	setRestartPolicy(podTemplate, spec)
 
@@ -455,15 +442,15 @@ func (jc *JobController) createNewPod(ctx context.Context, job interface{}, rt, 
 	// If gang-scheduling is enabled, try re-bind this pod with gang entity to maintain the gang relationship,
 	// if it has existed, binding is a no-op.
 	if jc.Config.EnableGangScheduling {
-		entity, err := jc.GangScheduler.GetGang(types.NamespacedName{Name: metaObject.GetName(), Namespace: metaObject.GetNamespace()})
+		entity, err := jc.GangScheduler.GetGang(types.NamespacedName{Name: job.GetName(), Namespace: job.GetNamespace()})
 		if err != nil {
 			return err
 		}
 
 		klog.V(5).Infof("gang scheduling enabled, gang scheduler name: %s, bind pod to gang: %s",
-			jc.GangScheduler.PluginName(), metaObject.GetName())
+			jc.GangScheduler.PluginName(), job.GetName())
 
-		if err = jc.GangScheduler.BindPodToGang(metaObject, podTemplate, entity, rt); err != nil {
+		if err = jc.GangScheduler.BindPodToGang(job, podTemplate, entity, rt); err != nil {
 			return err
 		}
 

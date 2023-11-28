@@ -64,5 +64,4 @@ func (jc *JobController) DeleteExpectations(job metav1.Object, specs map[apiv1.R
 		jc.Expectations.DeleteExpectations(expectationPodsKey)
 		jc.Expectations.DeleteExpectations(expectationServicesKey)
 	}
-	return
 }

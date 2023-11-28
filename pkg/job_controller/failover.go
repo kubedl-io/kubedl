@@ -182,7 +182,9 @@ func (jc *JobController) RestartPod(job client.Object, pod *corev1.Pod) (complet
 
 	// Finalize container-recreate-request object once it completes, because elastic scaling is repeatable
 	// and 'crr' request will be re-initiated.
-	defer jc.Client.Delete(context.Background(), &crr)
+	defer func() {
+		_ = jc.Client.Delete(context.Background(), &crr)
+	}()
 
 	jc.Recorder.Eventf(pod, corev1.EventTypeNormal, "ContainerRecreateSucceed", "succeed to recreate containers in stale worker: %s", podKey)
 	return true, nil

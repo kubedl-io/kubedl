@@ -226,7 +226,7 @@ func (r *PytorchJobReconciler) GetGroupNameLabelValue() string {
 }
 
 // SetClusterSpec sets the cluster spec for the pod
-func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job client.Object, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	pytorchJob, ok := job.(*training.PyTorchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of PytorchJob", job)

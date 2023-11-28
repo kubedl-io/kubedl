@@ -227,14 +227,14 @@ func TestReconcilePods(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.name, func(t *testing.T) {
-			testjobv1.AddToScheme(scheme.Scheme)
-			fakeClient := fake.NewFakeClientWithScheme(scheme.Scheme)
+			_ = testjobv1.AddToScheme(scheme.Scheme)
+			fakeClient := fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 			fakeRecorder := record.NewFakeRecorder(10)
 
 			for _, p := range c.pods {
-				fakeClient.Create(context.Background(), p.DeepCopy())
+				_ = fakeClient.Create(context.Background(), p.DeepCopy())
 				if p.Status.Phase != "" {
-					fakeClient.Update(context.Background(), p)
+					_ = fakeClient.Update(context.Background(), p)
 				}
 			}
 

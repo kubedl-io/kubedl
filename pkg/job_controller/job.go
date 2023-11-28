@@ -80,7 +80,7 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 	}
 	log.Infof("Reconciling for job %s", job.GetName())
 
-	//if it's a scheduled task，create a cronJob of the same name
+	// if it's a scheduled task，create a cronJob of the same name
 	if runPolicy != nil && runPolicy.CronPolicy != nil {
 		if err := jc.ReconcileCron(job, job, runPolicy); err != nil {
 			return result, err
@@ -284,7 +284,7 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 	// add model path to container env
 	addModelPathEnv(replicas, modelVersion)
 
-	ctx := context.WithValue(context.Background(), contextHostNetworkPorts, make(map[string]int32))
+	ctx := context.WithValue(context.Background(), apiv1.ContextHostNetworkPorts, make(map[string]int32))
 	// Diff current active pods/services with replicas.
 	for _, rtype := range jc.Controller.GetReconcileOrders() {
 		spec, exist := replicas[rtype]
@@ -427,7 +427,7 @@ func (jc *JobController) createCronInstance(policy *apiv1.RunPolicy, runtimeObj 
 	if err != nil {
 		return nil, err
 	}
-	//create
+	// create
 	cronTemplateSpec := appv1.CronTemplateSpec{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       kind,
@@ -587,7 +587,7 @@ func (jc *JobController) pastBackoffLimit(jobName string, runPolicy *apiv1.RunPo
 	return result >= *runPolicy.BackoffLimit, nil
 }
 
-func (jc *JobController) cleanupJob(runPolicy *apiv1.RunPolicy, jobStatus apiv1.JobStatus, job interface{}) (reconcile.Result, error) {
+func (jc *JobController) cleanupJob(runPolicy *apiv1.RunPolicy, jobStatus apiv1.JobStatus, job client.Object) (reconcile.Result, error) {
 	currentTime := time.Now()
 	metaObject, _ := job.(metav1.Object)
 	res := reconcile.Result{}
@@ -601,7 +601,7 @@ func (jc *JobController) cleanupJob(runPolicy *apiv1.RunPolicy, jobStatus apiv1.
 	duration := time.Second * time.Duration(*ttl)
 	deleteTime := jobStatus.CompletionTime.Add(duration)
 	if currentTime.After(deleteTime) {
-		err := jc.Controller.DeleteJob(job)
+		err := jc.Client.Delete(context.Background(), job)
 		if err != nil {
 			commonutil.LoggerForJob(metaObject).Warnf("Cleanup Job error: %v.", err)
 			return res, err

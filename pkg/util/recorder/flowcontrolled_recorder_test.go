@@ -40,7 +40,7 @@ func TestFlowControlledRecorder(t *testing.T) {
 			break
 		}
 	}
-	elapse := time.Now().Sub(start).Seconds()
+	elapse := time.Since(start).Seconds()
 
 	if elapse < 2 {
 		t.Errorf("recorder qps limit is 3, emit 7 events but elapse[%v] less than 2 seconds", elapse)

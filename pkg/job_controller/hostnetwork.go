@@ -32,13 +32,13 @@ func EnableHostNetwork(job metav1.Object) bool {
 }
 
 func GetHostNetworkPortFromContext(ctx context.Context, rtype, index string) (int32, bool) {
-	ports := ctx.Value(contextHostNetworkPorts).(map[string]int32)
+	ports := ctx.Value(v1.ContextHostNetworkPorts).(map[string]int32)
 	port, ok := ports[fmt.Sprintf("%s-%s", rtype, index)]
 	return port, ok
 }
 
 func storeHostNetworkPortToContext(ctx context.Context, rtype, index string, port int32) {
-	ports := ctx.Value(contextHostNetworkPorts).(map[string]int32)
+	ports := ctx.Value(v1.ContextHostNetworkPorts).(map[string]int32)
 	ports[fmt.Sprintf("%s-%s", rtype, index)] = port
 }
 

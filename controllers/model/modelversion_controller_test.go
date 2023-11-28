@@ -47,7 +47,7 @@ func TestCreateModelVersionWithLocalStorage(t *testing.T) {
 
 	version := createModelVersion("model1", "model-v1")
 
-	fakeClient := fake.NewFakeClientWithScheme(scheme, version)
+	fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(version).Build()
 
 	// reconcile the version
 	versionReconciler := &ModelVersionReconciler{

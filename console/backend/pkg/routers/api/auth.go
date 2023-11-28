@@ -32,7 +32,7 @@ func (ac *authAPIsController) login(c *gin.Context) {
 	err := ac.loginAuth.Login(c)
 	if err != nil {
 		klog.Errorf("login err, err: %v, url: %s", err, c.FullPath())
-		if err == auth.LoginInvalid {
+		if err == auth.ErrLoginInvalid {
 			utils.Redirect403(c)
 		} else {
 			utils.Redirect500(c)
@@ -61,8 +61,8 @@ func (ac *authAPIsController) currentUser(c *gin.Context) {
 func (ac *authAPIsController) ingressAuth(c *gin.Context) {
 	err := ac.loginAuth.Authorize(c)
 	if err != nil {
-		if err == auth.LoginInvalid {
-			klog.Errorf("user account error, err: %v", auth.LoginInvalid)
+		if err == auth.ErrLoginInvalid {
+			klog.Errorf("user account error, err: %v", auth.ErrLoginInvalid)
 			utils.Redirect403(c)
 		} else {
 			klog.Errorf("authorize error, err: %v", err)

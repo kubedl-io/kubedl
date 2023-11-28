@@ -22,59 +22,12 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
-	"github.com/alibaba/kubedl/pkg/features"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/jobcoordinator/helper"
 	commonutil "github.com/alibaba/kubedl/pkg/util"
 )
-
-// onOwnerCreateFunc modify creation condition.
-func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
-	return func(e event.CreateEvent) bool {
-		tfJob, ok := e.Object.(*training.TFJob)
-		if !ok {
-			return true
-		}
-		reconciler, ok := r.(*TFJobReconciler)
-		if !ok {
-			return true
-		}
-		reconciler.scheme.Default(tfJob)
-		msg := fmt.Sprintf("TFJob %s is created.", e.Object.GetName())
-		if err := commonutil.UpdateJobConditions(&tfJob.Status, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
-			log.Error(err, "append job condition error")
-			return false
-		}
-
-		if features.KubeDLFeatureGates.Enabled(features.JobCoordinator) && reconciler.coordinator != nil &&
-			(commonutil.NeedEnqueueToCoordinator(tfJob.Status)) {
-			log.Info("tfjob enqueued into coordinator and wait for being scheduled.", "namespace", tfJob.Namespace, "name", tfJob.Name)
-			reconciler.coordinator.EnqueueOrUpdate(helper.ToQueueUnit(tfJob, tfJob.Spec.TFReplicaSpecs,
-				&tfJob.Status, tfJob.Spec.SchedulingPolicy))
-			return true
-		}
-
-		log.Info(msg)
-		reconciler.ctrl.Metrics.CreatedInc()
-		return true
-	}
-}
-
-func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
-	return func(e event.DeleteEvent) bool {
-		tfJob, ok := e.Object.(*training.TFJob)
-		if !ok {
-			return false
-		}
-		jc.DeleteExpectations(tfJob, tfJob.Spec.TFReplicaSpecs)
-		return true
-	}
-}
 
 // updateGeneralJobStatus updates the status of job with given replica specs and job status.
 func (r *TFJobReconciler) updateGeneralJobStatus(tfJob *training.TFJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec,

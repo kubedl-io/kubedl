@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	c = fake.NewFakeClientWithScheme(scheme.Scheme)
+	c = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 
 	code := m.Run()
 	os.Exit(code)

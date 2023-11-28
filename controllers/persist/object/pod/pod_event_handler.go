@@ -74,5 +74,10 @@ func (e *enqueueForPod) Delete(evt event.DeleteEvent, queue workqueue.RateLimiti
 }
 
 func (e *enqueueForPod) Generic(evt event.GenericEvent, queue workqueue.RateLimitingInterface) {
-	e.Create(event.CreateEvent{Object: evt.Object}, queue)
+	if util.IsKubeDLManagedPod(evt.Object.(*v1.Pod)) {
+		queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
+			Namespace: evt.Object.GetNamespace(),
+			Name:      util.IDName(evt.Object),
+		}})
+	}
 }

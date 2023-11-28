@@ -22,12 +22,11 @@ func NewProxyObjectBackend() backends.ObjectStorageBackend {
 type proxyBackend struct {
 	apiServerBackend backends.ObjectStorageBackend
 	mysqlBackend     backends.ObjectStorageBackend
-	hasMysql         bool
 }
 
 func (p proxyBackend) ListWorkspaces(query *backends.WorkspaceQuery) ([]*model.WorkspaceInfo, error) {
 	workspaces, err := p.apiServerBackend.ListWorkspaces(query)
-	if (err == nil && workspaces != nil) || !p.hasMysql {
+	if (err == nil && workspaces != nil) || p.mysqlBackend == nil {
 		return workspaces, err
 	}
 	return p.mysqlBackend.ListWorkspaces(query)
@@ -45,8 +44,8 @@ func (p proxyBackend) Initialize() error {
 	if err := p.apiServerBackend.Initialize(); err != nil {
 		return err
 	}
-	if err := p.mysqlBackend.Initialize(); err == nil {
-		p.hasMysql = true
+	if err := p.mysqlBackend.Initialize(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -55,7 +54,7 @@ func (p proxyBackend) Close() error {
 	if err := p.apiServerBackend.Close(); err != nil {
 		return err
 	}
-	if p.hasMysql {
+	if p.mysqlBackend != nil {
 		if err := p.mysqlBackend.Close(); err != nil {
 			return err
 		}
@@ -73,7 +72,7 @@ func (p proxyBackend) SavePod(pod *corev1.Pod, defaultContainerName, region stri
 
 func (p proxyBackend) ListPods(ns, name, jobID string) ([]*dmo.Pod, error) {
 	pods, err := p.apiServerBackend.ListPods(ns, name, jobID)
-	if (err == nil && pods != nil) || !p.hasMysql {
+	if (err == nil && pods != nil) || p.mysqlBackend == nil {
 		return pods, err
 	}
 	return p.mysqlBackend.ListPods(ns, name, jobID)
@@ -89,7 +88,7 @@ func (p proxyBackend) SaveJob(job metav1.Object, kind string, specs map[v1.Repli
 
 func (p proxyBackend) GetJob(ns, name, jobID, kind, region string) (*dmo.Job, error) {
 	job, err := p.apiServerBackend.GetJob(ns, name, jobID, kind, region)
-	if (err == nil && job != nil) || !p.hasMysql {
+	if (err == nil && job != nil) || p.mysqlBackend == nil {
 		return job, err
 	}
 	return p.mysqlBackend.GetJob(ns, name, jobID, kind, region)
@@ -97,7 +96,7 @@ func (p proxyBackend) GetJob(ns, name, jobID, kind, region string) (*dmo.Job, er
 
 func (p proxyBackend) ListJobs(query *backends.Query) ([]*dmo.Job, error) {
 	jobs, err := p.apiServerBackend.ListJobs(query)
-	if (err == nil && jobs != nil) || !p.hasMysql {
+	if (err == nil && jobs != nil) || p.mysqlBackend == nil {
 		return jobs, err
 	}
 	return p.mysqlBackend.ListJobs(query)
@@ -113,7 +112,7 @@ func (p proxyBackend) DeleteJob(ns, name, jobID, kind, region string) error {
 
 func (p proxyBackend) ListNotebooks(query *backends.NotebookQuery) ([]*dmo.Notebook, error) {
 	notebooks, err := p.apiServerBackend.ListNotebooks(query)
-	if (err == nil && notebooks != nil) || !p.hasMysql {
+	if (err == nil && notebooks != nil) || p.mysqlBackend == nil {
 		return notebooks, err
 	}
 	return p.mysqlBackend.ListNotebooks(query)

@@ -47,7 +47,7 @@ func ToServicePointerList(list []corev1.Service) []*corev1.Service {
 
 func GetControllerOwnerReference(owners []v1.OwnerReference) v1.OwnerReference {
 	for idx := range owners {
-		if owners[idx].Controller != nil && *owners[idx].Controller == true {
+		if owners[idx].Controller != nil && *owners[idx].Controller {
 			return owners[idx]
 		}
 	}

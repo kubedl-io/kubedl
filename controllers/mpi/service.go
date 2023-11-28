@@ -16,10 +16,13 @@ limitations under the License.
 
 package mpi
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
 // MPIJob handles replicas-discovery by itself and does not depend on services.
 
-func (r *MPIJobReconciler) GetServicesForJob(job interface{}) ([]*corev1.Service, error) {
+func (r *MPIJobReconciler) GetServicesForJob(job client.Object) ([]*corev1.Service, error) {
 	return nil, nil
 }

@@ -65,7 +65,7 @@ type ModelVersionReconciler struct {
 
 // ModelVersionController creates a kaniko container that builds a container image including the model.
 func (r *ModelVersionReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
-	//Get the modelVersion
+	// Get the modelVersion
 	modelVersion := &modelv1alpha1.ModelVersion{}
 	err := r.Get(context.Background(), req.NamespacedName, modelVersion)
 	if err != nil {
@@ -199,13 +199,13 @@ func (r *ModelVersionReconciler) Reconcile(_ context.Context, req ctrl.Request) 
 	currentTime := metav1.Now()
 	if imgBuildPod.Status.Phase == v1.PodSucceeded {
 		modelVersionStatus.ImageBuildPhase = modelv1alpha1.ImageBuildSucceeded
-		modelVersionStatus.Message = fmt.Sprintf("Image build succeeded.")
+		modelVersionStatus.Message = "Image build succeeded."
 		modelVersionStatus.FinishTime = &currentTime
 		r.Log.Info(fmt.Sprintf("modelversion %s image build succeeded", modelVersion.Name))
 	} else if imgBuildPod.Status.Phase == v1.PodFailed {
 		modelVersionStatus.ImageBuildPhase = modelv1alpha1.ImageBuildFailed
 		modelVersionStatus.FinishTime = &currentTime
-		modelVersionStatus.Message = fmt.Sprintf("Image build failed.")
+		modelVersionStatus.Message = "Image build failed."
 		r.Log.Info(fmt.Sprintf("modelversion %s image build failed", modelVersion.Name))
 	} else {
 		// image not ready
@@ -476,14 +476,10 @@ func (r *ModelVersionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	var predicates = predicate.Funcs{
 		CreateFunc: func(event event.CreateEvent) bool {
 			version := event.Object.(*modelv1alpha1.ModelVersion)
-			if version.DeletionTimestamp != nil {
-				return false
-			}
-
-			return true
+			return version.DeletionTimestamp == nil
 		},
 
-		//DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
+		// DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
 		//	modelVersion := deleteEvent.Meta.(*modelv1alpha1.ModelVersion)
 		//
 		//	// delete image build pod
@@ -497,7 +493,7 @@ func (r *ModelVersionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		//		log.Error(err, "failed to delete pod "+pod.Name)
 		//	}
 		//	return true
-		//},
+		// },
 	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&modelv1alpha1.ModelVersion{}, builder.WithPredicates(predicates)).

@@ -176,7 +176,6 @@ func TestCachePolicyBasedOnIdleTime(t *testing.T) {
 			// 3. Controller will delete the infrequently used CacheBackend
 			_, err = cacheReconciler.Reconcile(context.Background(), request)
 			assert.NoError(t, err)
-			time.Sleep(100)
 
 			err = cacheReconciler.Get(context.TODO(), types.NamespacedName{
 				Namespace: cacheBackend.Namespace,

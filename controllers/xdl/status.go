@@ -22,10 +22,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/alibaba/kubedl/pkg/job_controller"
 
 	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -36,39 +32,6 @@ const (
 	xdlJobFailedReason     = "XdlJobFailed"
 	xdlJobRestartingReason = "XdlJobRestarting"
 )
-
-// onOwnerCreateFunc modify creation condition.
-func onOwnerCreateFunc(r reconcile.Reconciler) func(event.CreateEvent) bool {
-	return func(e event.CreateEvent) bool {
-		xdlJob, ok := e.Object.(*xdlv1alpha1.XDLJob)
-		if !ok {
-			return true
-		}
-		reconciler, ok := r.(*XDLJobReconciler)
-		if !ok {
-			return true
-		}
-		reconciler.scheme.Default(xdlJob)
-		msg := fmt.Sprintf("XdlJob %s is created.", e.Object.GetName())
-		if err := commonutil.UpdateJobConditions(&xdlJob.Status, v1.JobCreated, commonutil.JobCreatedReason, msg); err != nil {
-			log.Error(err, "append job condition error")
-			return false
-		}
-		reconciler.ctrl.Metrics.CreatedInc()
-		return true
-	}
-}
-
-func OnOwnerDeleteAndDeletionExpectationFunc(jc job_controller.JobController) func(e event.DeleteEvent) bool {
-	return func(e event.DeleteEvent) bool {
-		xdlJob, ok := e.Object.(*xdlv1alpha1.XDLJob)
-		if !ok {
-			return false
-		}
-		jc.DeleteExpectations(xdlJob, xdlJob.Spec.XDLReplicaSpecs)
-		return true
-	}
-}
 
 // updateGeneralJobStatus updates the status of job with given replica specs and job status.
 func (r *XDLJobReconciler) updateGeneralJobStatus(xdlJob *xdlv1alpha1.XDLJob, replicaSpecs map[v1.ReplicaType]*v1.ReplicaSpec,

@@ -80,7 +80,14 @@ func (e *enqueueForEvent) Delete(evt event.DeleteEvent, queue workqueue.RateLimi
 }
 
 func (e *enqueueForEvent) Generic(evt event.GenericEvent, queue workqueue.RateLimitingInterface) {
-	e.Create(event.CreateEvent{Object: evt.Object}, queue)
+	evtObj := evt.Object.(*corev1.Event)
+	if !e.isKubeDLManagedObject(evtObj.InvolvedObject) {
+		return
+	}
+	queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
+		Namespace: evtObj.Namespace,
+		Name:      evtObj.Name,
+	}})
 }
 
 func (e *enqueueForEvent) isKubeDLManagedObject(ref corev1.ObjectReference) bool {
@@ -99,10 +106,7 @@ func (e *enqueueForEvent) isKubeDLManagedPod(ref corev1.ObjectReference) bool {
 		Namespace: ref.Namespace,
 		Name:      ref.Name,
 	}, &pod); err != nil {
-		if errors.IsNotFound(err) {
-			return true
-		}
-		return false
+		return errors.IsNotFound(err)
 	}
 	return util.IsKubeDLManagedPod(&pod)
 }

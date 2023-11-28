@@ -166,13 +166,6 @@ func (aqs *assumedQuotas) assume(quotaName string, qu *jobcoordinator.QueueUnit)
 	}
 }
 
-func (aqs *assumedQuotas) cancel(quotaName, key string) {
-	aqs.mut.Lock()
-	defer aqs.mut.Unlock()
-
-	aqs.cancelWithoutLock(quotaName, key)
-}
-
 func (aqs *assumedQuotas) cancelWithoutLock(quotaName, key string) {
 	delete(aqs.assumed[quotaName], key)
 }
@@ -213,7 +206,7 @@ type assumedQuota struct {
 
 func (aq *assumedQuota) expired(statusFunc func(qu *jobcoordinator.QueueUnit) (v1.JobStatus, error)) bool {
 	// assume timeout.
-	if time.Now().Sub(aq.timestamp).Seconds() > defaultQuotaAssumedTimeoutSeconds {
+	if time.Since(aq.timestamp).Seconds() > defaultQuotaAssumedTimeoutSeconds {
 		klog.V(5).Infof("queue unit %s resources assumed time exceeds threshold[%v], mark it as expired",
 			aq.unit.Key(), defaultQuotaAssumedTimeoutSeconds)
 		return true

@@ -181,7 +181,7 @@ func getOrCreateCodeSourceConfigMap() (*v1.ConfigMap, error) {
 				CodesourceConfigMapKey: "{}",
 			},
 		}
-		clientmgr.GetCtrlClient().Create(context.TODO(), initConfigMap)
+		_ = clientmgr.GetCtrlClient().Create(context.TODO(), initConfigMap)
 		return initConfigMap, nil
 	} else if err != nil {
 		klog.Errorf("Failed to get ConfigMap, ns: %s, name: %s, err: %v", constants.KubeDLSystemNamespace, CodesourceConfigMapName, err)
