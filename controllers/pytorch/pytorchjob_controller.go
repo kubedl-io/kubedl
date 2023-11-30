@@ -146,7 +146,7 @@ func (r *PytorchJobReconciler) Reconcile(_ context.Context, req ctrl.Request) (c
 	// Set default properties for pytorch job.
 	r.scheme.Default(pytorchJob)
 
-	result, err := r.ctrl.ReconcileJobs(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs, pytorchJob.Status, &pytorchJob.Spec.RunPolicy, pytorchJob.Spec.ModelVersion, pytorchJob.Spec.CacheBackend)
+	result, err := r.ctrl.ReconcileJobs(pytorchJob, pytorchJob.Spec.PyTorchReplicaSpecs, pytorchJob.Status, &pytorchJob.Spec.RunPolicy, pytorchJob.Spec.ModelVersion, pytorchJob.Spec.CacheBackend, pytorchJob.Spec.NetworkMode)
 	if err != nil {
 		log.Error(err, "pytorch job reconcile failed")
 		return result, err
@@ -242,7 +242,7 @@ func (r *PytorchJobReconciler) SetClusterSpec(ctx context.Context, job interface
 	}
 
 	masterRole := rtype == strings.ToLower(string(training.PyTorchReplicaTypeMaster))
-	if masterHostPort, ok := job_controller.GetHostNetworkPortFromContext(ctx, "master", "0"); job_controller.EnableHostNetwork(pytorchJob) && ok {
+	if masterHostPort, ok := job_controller.GetHostNetworkPortFromContext(ctx, "master", "0"); job_controller.EnableHostNetwork(pytorchJob.Spec.NetworkMode) && ok {
 		if masterRole || features.KubeDLFeatureGates.Enabled(features.HostNetWithHeadlessSvc) {
 			masterPort = masterHostPort
 		}

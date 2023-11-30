@@ -136,7 +136,7 @@ func genClusterSpec(ctx context.Context, tfJob *training.TFJob, selfType, selfIn
 			selfPort := port
 			// Set endpoint port as selected hostnetwork port so that tensorflow worker process could listen
 			// to correct port by TF_CONFIG[cluster].
-			if job_controller.EnableHostNetwork(tfJob) && rt == selfType && strconv.Itoa(int(i)) == selfIndex {
+			if job_controller.EnableHostNetwork(tfJob.Spec.NetworkMode) && rt == selfType && strconv.Itoa(int(i)) == selfIndex {
 				hostPort, ok := job_controller.GetHostNetworkPortFromContext(ctx, selfType, selfIndex)
 				if ok {
 					selfPort = hostPort

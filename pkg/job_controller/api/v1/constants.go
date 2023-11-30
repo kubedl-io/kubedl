@@ -30,8 +30,6 @@ const (
 	AnnotationGitSyncConfig = KubeDLPrefix + "/git-sync-config"
 	// AnnotationTenancyInfo annotate tenancy information.
 	AnnotationTenancyInfo = KubeDLPrefix + "/tenancy"
-	// AnnotationNetworkMode annotate job network mode.
-	AnnotationNetworkMode = KubeDLPrefix + "/network-mode"
 	// AnnotationEnableElasticTraining indicates job enables elastic training.
 	AnnotationEnableElasticTraining = KubeDLPrefix + "/enable-elastic-training"
 	// AnnotationElasticScaleState indicates current progress of elastic scaling (inflight | done)
@@ -73,14 +71,6 @@ const (
 const (
 	// JobReplicaTypeAIMaster means the AIMaster role for all job
 	JobReplicaTypeAIMaster ReplicaType = "AIMaster"
-)
-
-// NetworkMode defines network mode for intra job communicating.
-type NetworkMode string
-
-const (
-	// HostNetworkMode indicates that replicas use host-network to communicate with each other.
-	HostNetworkMode NetworkMode = "host"
 )
 
 const (

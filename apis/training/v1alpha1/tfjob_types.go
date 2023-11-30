@@ -54,6 +54,9 @@ type TFJobSpec struct {
 	// CacheBackend is used to configure the cache engine for job
 	// +optional
 	CacheBackend *cachev1alpha1.CacheBackendSpec `json:"cacheBackend"`
+
+	// NetworkMode defines network mode for intra job communicating.
+	NetworkMode *commonv1.NetworkMode `json:"networkmode,omitempty"`
 }
 
 // +genclient

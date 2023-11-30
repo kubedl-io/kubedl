@@ -40,6 +40,9 @@ type MarsJobSpec struct {
 	// MarsReplicaSpecs is a map of MarsReplicaType(key) to ReplicaSpec(value),
 	// specifying replicas and template of each type.
 	MarsReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"marsReplicaSpecs"`
+
+	// NetworkMode defines network mode for intra job communicating.
+	NetworkMode *commonv1.NetworkMode `json:"networkmode,omitempty"`
 }
 
 // MarsJobStatus defines the observed state of MarsJob

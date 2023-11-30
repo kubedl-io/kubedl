@@ -53,6 +53,7 @@ type TestJobSpec struct {
 const (
 	TestReplicaTypeWorker apiv1.ReplicaType = "Worker"
 	TestReplicaTypeMaster apiv1.ReplicaType = "Master"
+	Testmode              apiv1.NetworkMode = "host"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

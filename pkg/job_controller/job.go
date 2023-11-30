@@ -70,7 +70,7 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 // ReconcileJobs checks and updates replicas for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods/services.
 func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus apiv1.JobStatus,
-	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) (result reconcile.Result, err error) {
+	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackendSpec *cachev1alpha1.CacheBackendSpec, networkmode *apiv1.NetworkMode) (result reconcile.Result, err error) {
 
 	jobName := job.GetName()
 	jobKey, err := KeyFunc(job)
@@ -307,7 +307,7 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 			continue
 		}
 
-		err = jc.ReconcilePods(ctx, job, &jobStatus, pods, rtype, spec, replicas, runPolicy, &restart)
+		err = jc.ReconcilePods(ctx, job, &jobStatus, pods, rtype, spec, replicas, runPolicy, networkmode, &restart)
 		if err != nil {
 			log.Warnf("ReconcilePods error %v", err)
 			return result, err
@@ -317,7 +317,7 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 			continue
 		}
 
-		err = jc.ReconcileServices(ctx, job, services, rtype, spec)
+		err = jc.ReconcileServices(ctx, job, services, rtype, spec, networkmode)
 		if err != nil {
 			log.Warnf("ReconcileServices error %v", err)
 			return result, err

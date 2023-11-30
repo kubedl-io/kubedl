@@ -20,15 +20,13 @@ import (
 	"context"
 	"fmt"
 
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util"
+	corev1 "k8s.io/api/core/v1"
 )
 
-func EnableHostNetwork(job metav1.Object) bool {
-	return job.GetAnnotations()[v1.AnnotationNetworkMode] == string(v1.HostNetworkMode)
+func EnableHostNetwork(networkmode *v1.NetworkMode) bool {
+	return *networkmode == v1.HostNetworkMode
 }
 
 func GetHostNetworkPortFromContext(ctx context.Context, rtype, index string) (int32, bool) {

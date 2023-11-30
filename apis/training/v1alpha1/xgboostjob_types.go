@@ -37,6 +37,9 @@ type XGBoostJobSpec struct {
 	//     "Worker": ReplicaSpec,
 	//   }
 	XGBReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"xgbReplicaSpecs"`
+
+	// NetworkMode defines network mode for intra job communicating.
+	NetworkMode *commonv1.NetworkMode `json:"networkmode,omitempty"`
 }
 
 // XGBoostJobStatus defines the observed state of XGBoostJob

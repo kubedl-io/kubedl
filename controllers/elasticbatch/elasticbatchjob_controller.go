@@ -137,7 +137,7 @@ func (r *ElasticBatchJobReconciler) Reconcile(_ context.Context, req ctrl.Reques
 	// Set default properties for elasticbatch job.
 	r.scheme.Default(elasticbatchJob)
 
-	result, err := r.ctrl.ReconcileJobs(elasticbatchJob, elasticbatchJob.Spec.ElasticBatchReplicaSpecs, elasticbatchJob.Status, &elasticbatchJob.Spec.RunPolicy, nil, nil)
+	result, err := r.ctrl.ReconcileJobs(elasticbatchJob, elasticbatchJob.Spec.ElasticBatchReplicaSpecs, elasticbatchJob.Status, &elasticbatchJob.Spec.RunPolicy, nil, nil, elasticbatchJob.Spec.NetworkMode)
 	if err != nil {
 		log.Error(err, "elasticbatch job reconcile failed")
 		return result, err

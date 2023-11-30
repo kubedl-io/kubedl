@@ -113,7 +113,7 @@ func (r *ElasticDLJobReconciler) Reconcile(_ context.Context, req ctrl.Request) 
 	// Set default properties for elasicdl job.
 	r.scheme.Default(elasticdlJob)
 
-	result, err := r.ctrl.ReconcileJobs(elasticdlJob, elasticdlJob.Spec.ElasticDLReplicaSpecs, elasticdlJob.Status, &elasticdlJob.Spec.RunPolicy, nil, nil)
+	result, err := r.ctrl.ReconcileJobs(elasticdlJob, elasticdlJob.Spec.ElasticDLReplicaSpecs, elasticdlJob.Status, &elasticdlJob.Spec.RunPolicy, nil, nil, elasticdlJob.Spec.NetworkMode)
 	if err != nil {
 		log.Error(err, "elasticdl job reconcile failed")
 		return result, err

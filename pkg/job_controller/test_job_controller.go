@@ -32,7 +32,6 @@ func (t TestJobController) GetReconcileOrders() []apiv1.ReplicaType {
 		testv1.TestReplicaTypeWorker,
 	}
 }
-
 func (t TestJobController) GetPodsForJob(job interface{}) ([]*corev1.Pod, error) {
 	return []*corev1.Pod{}, nil
 }
