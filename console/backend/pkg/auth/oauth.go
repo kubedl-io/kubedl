@@ -28,8 +28,8 @@ func init() {
 var (
 	GetAuth AuthRegister
 
-	LoginInvalid = errors.New("login id is invalid")
-	GetAuthError = errors.New("get oauthInfo error")
+	ErrLoginInvalid = errors.New("login id is invalid")
+	ErrGetAuthError = errors.New("get oauthInfo error")
 )
 
 type AuthRegister func() Auth

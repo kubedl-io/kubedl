@@ -206,12 +206,12 @@ func (r *ElasticBatchJobReconciler) GetGroupNameLabelValue() string {
 }
 
 // SetClusterSpec generates and sets ElASTICBATCH_CONFIG for the given podTemplateSpec.
-func (r *ElasticBatchJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplateSpec *corev1.PodTemplateSpec, rt, index string) error {
+func (r *ElasticBatchJobReconciler) SetClusterSpec(ctx context.Context, job client.Object, podTemplateSpec *corev1.PodTemplateSpec, rtype, index string) error {
 	elasticBatchJob, ok := job.(*inference.ElasticBatchJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of ElasticBatchJob", job)
 	}
-	if rt == strings.ToLower(string(v1.JobReplicaTypeAIMaster)) {
+	if strings.EqualFold(rtype, string(v1.JobReplicaTypeAIMaster)) {
 		return nil
 	}
 
@@ -220,7 +220,7 @@ func (r *ElasticBatchJobReconciler) SetClusterSpec(ctx context.Context, job inte
 	}
 
 	// Generate ElASTICBATCH_CONFIG JSON string.
-	elasticBatchConfigStr, err := genElasticBatchConfigJSONStr(ctx, elasticBatchJob, rt, index)
+	elasticBatchConfigStr, err := genElasticBatchConfigJSONStr(ctx, elasticBatchJob, strings.ToLower(rtype), index)
 	if err != nil {
 		return err
 	}

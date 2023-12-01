@@ -20,19 +20,13 @@ import (
 	"context"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GetServicesForJob returns the services managed by the job. This can be achieved by selecting services using label key "job-name"
 // i.e. all services created by the job will come with label "job-name" = <this_job_name>
-func (r *PytorchJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Service, error) {
-	job, err := meta.Accessor(obj)
-	if err != nil {
-		return nil, err
-	}
-
+func (r *PytorchJobReconciler) GetServicesForJob(job client.Object) ([]*corev1.Service, error) {
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: r.ctrl.GenLabels(job.GetName()),
 	})

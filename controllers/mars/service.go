@@ -20,23 +20,18 @@ import (
 	"context"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (r *MarsJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Service, error) {
-	job, err := meta.Accessor(obj)
-	if err != nil {
-		return nil, err
-	}
-	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+func (r *MarsJobReconciler) GetServicesForJob(job client.Object) ([]*corev1.Service, error) {
+	selector, _ := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: r.ctrl.GenLabels(job.GetName()),
 	})
 	// List all pods to include those that don't match the selector anymore
 	// but have a ControllerRef pointing to this controller.
 	serviceList := &corev1.ServiceList{}
-	err = r.List(context.Background(), serviceList, client.MatchingLabelsSelector{Selector: selector})
+	err := r.List(context.Background(), serviceList, client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, err
 	}

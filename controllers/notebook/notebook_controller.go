@@ -309,29 +309,29 @@ func nbNamePrefix(nbName string) string {
 	return "nb-" + nbName
 }
 
-func addNotebookDefaultPort(spec *corev1.PodSpec) {
-	index := 0
-	for i, container := range spec.Containers {
-		if container.Name == notebookv1alpha1.NotebookContainerName {
-			index = i
-			break
-		}
-	}
-
-	hasNotebookPort := false
-	for _, port := range spec.Containers[index].Ports {
-		if port.Name == notebookv1alpha1.NotebookPortName {
-			hasNotebookPort = true
-			break
-		}
-	}
-	if !hasNotebookPort {
-		spec.Containers[index].Ports = append(spec.Containers[index].Ports, corev1.ContainerPort{
-			Name:          notebookv1alpha1.NotebookPortName,
-			ContainerPort: notebookv1alpha1.NotebookDefaultPort,
-		})
-	}
-}
+// func addNotebookDefaultPort(spec *corev1.PodSpec) {
+// 	index := 0
+// 	for i, container := range spec.Containers {
+// 		if container.Name == notebookv1alpha1.NotebookContainerName {
+// 			index = i
+// 			break
+// 		}
+// 	}
+//
+// 	hasNotebookPort := false
+// 	for _, port := range spec.Containers[index].Ports {
+// 		if port.Name == notebookv1alpha1.NotebookPortName {
+// 			hasNotebookPort = true
+// 			break
+// 		}
+// 	}
+// 	if !hasNotebookPort {
+// 		spec.Containers[index].Ports = append(spec.Containers[index].Ports, corev1.ContainerPort{
+// 			Name:          notebookv1alpha1.NotebookPortName,
+// 			ContainerPort: notebookv1alpha1.NotebookDefaultPort,
+// 		})
+// 	}
+// }
 
 // set necessary ENVs in notebook container's env
 func setJuypterLabEnv(pod *corev1.Pod, notebook *notebookv1alpha1.Notebook) error {

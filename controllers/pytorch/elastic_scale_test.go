@@ -77,8 +77,8 @@ func TestRefreshStalePod(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			v1alpha1.AddToScheme(scheme.Scheme)
-			fake := fakeclient.NewFakeClientWithScheme(scheme.Scheme)
+			_ = v1alpha1.AddToScheme(scheme.Scheme)
+			fake := fakeclient.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 			fakeRec := record.NewFakeRecorder(10)
 			fakeR := PytorchJobReconciler{Client: fake, recorder: fakeRec,
 				ctrl: job_controller.JobController{Client: fake, Recorder: fakeRec}}
@@ -103,6 +103,9 @@ func TestRefreshStalePod(t *testing.T) {
 
 			p := v1.Pod{}
 			err = fake.Get(context.Background(), types.NamespacedName{Namespace: testCase.pod.Namespace, Name: testCase.pod.Name}, &p)
+			if err != nil {
+				t.Error(err)
+			}
 			if p.Labels[apiv1.LabelGeneration] != testCase.expectedPod.Labels[apiv1.LabelGeneration] {
 				t.Errorf("unexpected generation, expected: %v, got: %v", testCase.expectedPod.Labels[apiv1.LabelGeneration], p.Labels[apiv1.LabelGeneration])
 			}
@@ -225,7 +228,7 @@ func TestRefreshStaleService(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		fake := fakeclient.NewFakeClientWithScheme(scheme.Scheme)
+		fake := fakeclient.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 		fakeR := PytorchJobReconciler{Client: fake, recorder: record.NewFakeRecorder(10)}
 
 		err := fake.Create(context.Background(), &testCase.svc)
@@ -457,11 +460,11 @@ func TestCheckpointIfNecessary(t *testing.T) {
 		},
 	}
 
-	apis.AddToScheme(scheme.Scheme)
-	m := metrics.NewJobMetrics(trainingv1alpha1.PyTorchJobKind, fakeclient.NewFakeClientWithScheme(scheme.Scheme))
+	_ = apis.AddToScheme(scheme.Scheme)
+	m := metrics.NewJobMetrics(trainingv1alpha1.PyTorchJobKind, fakeclient.NewClientBuilder().WithScheme(scheme.Scheme).Build())
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			fakeClient := fakeclient.NewFakeClientWithScheme(scheme.Scheme)
+			fakeClient := fakeclient.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 			fakeRecorder := record.NewFakeRecorder(10)
 
 			err := fakeClient.Create(context.Background(), testCase.pytorchJob)

@@ -10,14 +10,19 @@ on:
 
 env:
   # Common versions
-  GO_VERSION: '1.17'
-  GOLANGCI_VERSION: 'v1.39'
+  GO_VERSION: '1.19'
+  GOLANGCI_VERSION: 'v1.51'
   DOCKER_BUILDX_VERSION: 'v0.4.2'
   KUSTOMIZE_VERSION: '3.9.2'
   KUBEDL_CI: 'true'
   KIND_VERSION: 'v0.11.1'
 
 jobs:
+  staticcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dominikh/staticcheck-action@v1
 
   unit-tests:
     runs-on: ubuntu-latest
@@ -63,6 +68,44 @@ jobs:
           file: cover.out
       - name: Check diff
         run: '[[ -z $(git status -s) ]] || (git diff; printf "Existing modified/untracked files.\nPlease run \"make generate manifests\" and push again.\n"; exit 1)'
+  go-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Cache Go Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
+      - name: Code generate
+        run: |
+          make generate
+      - name: Lint golang code
+        uses: golangci/golangci-lint-action@v3.7.0
+        with:
+          version: ${{ env.GOLANGCI_VERSION }}
+          args: --out-format=colored-line-number --verbose
+          skip-pkg-cache: true
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
   e2e-tests:
     runs-on: ubuntu-latest
     steps:

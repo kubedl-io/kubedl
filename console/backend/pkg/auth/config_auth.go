@@ -26,15 +26,15 @@ func (auth *configAuth) Login(c *gin.Context) error {
 	data := buf[0:n]
 	if err := json.Unmarshal(data, &loginData); err != nil {
 		glog.Errorf("request form error: %v", err)
-		return LoginInvalid
+		return ErrLoginInvalid
 	}
 	userInfo, err := model.GetUserInfoFromConfigMap(loginData.Username)
 	if err != nil {
 		glog.Errorf("Get user info error: %v", err)
-		return LoginInvalid
+		return ErrLoginInvalid
 	}
 	if userInfo.Password != loginData.Password {
-		return LoginInvalid
+		return ErrLoginInvalid
 	}
 	session := sessions.Default(c)
 	session.Set(SessionKeyLoginID, userInfo.Username)
@@ -52,12 +52,12 @@ func (auth configAuth) Authorize(c *gin.Context) error {
 	v := session.Get(SessionKeyLoginID)
 	if v == nil {
 		glog.Warningf("authorize logout")
-		return LoginInvalid
+		return ErrLoginInvalid
 	}
 	_, err := model.GetUserInfoFromConfigMap(v.(string))
 	if err != nil {
 		glog.Warningf("Authorize failed")
-		return LoginInvalid
+		return ErrLoginInvalid
 	}
 	return nil
 }

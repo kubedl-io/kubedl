@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -48,7 +49,7 @@ func (r *XgboostJobReconciler) DeleteJob(job interface{}) error {
 }
 
 // GetJobFromInformerCache returns the Job from Informer Cache
-func (r *XgboostJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
+func (r *XgboostJobReconciler) GetJobFromInformerCache(namespace, name string) (client.Object, error) {
 	job := &v1alpha1.XGBoostJob{}
 	// Default reader for XGBoostJob is cache reader.
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
@@ -64,7 +65,7 @@ func (r *XgboostJobReconciler) GetJobFromInformerCache(namespace, name string) (
 }
 
 // GetJobFromAPIClient returns the Job from API server
-func (r *XgboostJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
+func (r *XgboostJobReconciler) GetJobFromAPIClient(namespace, name string) (client.Object, error) {
 	job := &v1alpha1.XGBoostJob{}
 	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
@@ -79,7 +80,7 @@ func (r *XgboostJobReconciler) GetJobFromAPIClient(namespace, name string) (meta
 }
 
 // UpdateJobStatus updates the job status and job conditions
-func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
+func (r *XgboostJobReconciler) UpdateJobStatus(job client.Object, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	xgboostJob, ok := job.(*v1alpha1.XGBoostJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of xgboostJob", xgboostJob)
@@ -182,14 +183,13 @@ func (r *XgboostJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.
 }
 
 // UpdateJobStatusInApiServer updates the job status in to cluster.
-func (r *XgboostJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus *v1.JobStatus) error {
+func (r *XgboostJobReconciler) UpdateJobStatusInApiServer(job client.Object, jobStatus *v1.JobStatus) error {
 	xgboostjob, ok := job.(*v1alpha1.XGBoostJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of XGBoostJob", xgboostjob)
 	}
-	var jobCpy *v1alpha1.XGBoostJob
 	// Job status passed in differs with status in job, update in basis of the passed in one.
-	jobCpy = xgboostjob.DeepCopy()
+	jobCpy := xgboostjob.DeepCopy()
 	jobCpy.Status.JobStatus = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
 }

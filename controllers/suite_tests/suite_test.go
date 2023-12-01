@@ -47,7 +47,7 @@ func TestAPIs(t *testing.T) {
 
 var _ = BeforeSuite(func(done Done) {
 	logf.SetLogger(zap.New(func(options *zap.Options) {
-		options.DestWritter = GinkgoWriter
+		options.DestWriter = GinkgoWriter
 		options.Development = true
 	}))
 
@@ -58,7 +58,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	// +kubebuilder:scaffold:scheme
 
-	k8sClient = fake.NewFakeClientWithScheme(scheme.Scheme)
+	k8sClient = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 	Expect(k8sClient).ToNot(BeNil())
 
 	close(done)

@@ -70,10 +70,10 @@ func LegacyMPIJobToV1MPIJob(mpiJob *training.MPIJob) error {
 		}
 	}
 
-	if mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2 != nil {
-		// The only differentiated point between versions is 'MPIDistribution', controller
-		// handles this filed in effective position.
-	}
+	// if mpiJob.Spec.MPIJobLegacySpec.LegacyV1Alpha2 != nil {
+	// The only differentiated point between versions is 'MPIDistribution', controller
+	// handles this filed in effective position.
+	// }
 	return nil
 }
 

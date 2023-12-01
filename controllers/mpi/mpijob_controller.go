@@ -224,7 +224,7 @@ func (r *MPIJobReconciler) GetGroupNameLabelValue() string {
 }
 
 // SetClusterSpec generates and sets for the given podTemplateSpec.
-func (r *MPIJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplateSpec *corev1.PodTemplateSpec, rt, index string) error {
+func (r *MPIJobReconciler) SetClusterSpec(ctx context.Context, job client.Object, podTemplateSpec *corev1.PodTemplateSpec, rtype, index string) error {
 	mpiJob, ok := job.(*training.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of MPIJob", job)
@@ -243,7 +243,7 @@ func (r *MPIJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, 
 		}
 	}
 
-	switch rt {
+	switch rtype {
 	case strings.ToLower(string(training.MPIReplicaTypeWorker)):
 		r.setupMPIWorker(mpiJob, podTemplateSpec)
 	case strings.ToLower(string(training.MPIReplicaTypeLauncher)):
@@ -320,7 +320,7 @@ func (r *MPIJobReconciler) setupMPIWorker(mpiJob *training.MPIJob, podTemplateSp
 
 func (r *MPIJobReconciler) setupMPILauncher(mpiJob *training.MPIJob, podTemplateSpec *corev1.PodTemplateSpec) {
 	if len(podTemplateSpec.Spec.Containers) == 0 {
-		msg := fmt.Sprintf("launcher pod does not have any containers in its spec")
+		msg := "launcher pod does not have any containers in its spec"
 		log.Error(stderrors.New(msg), msg)
 		r.recorder.Event(mpiJob, corev1.EventTypeWarning, "LauncherNotExist", msg)
 		return

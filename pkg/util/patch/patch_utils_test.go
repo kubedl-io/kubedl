@@ -2,7 +2,6 @@ package patch
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -27,7 +26,7 @@ func TestPatchBodyGeneration(t *testing.T) {
 		InsertAnnotation("new-annotation", "foo2").
 		DeleteAnnotation("old-annotation")
 
-	expectedPatchBody := fmt.Sprintf(`{"metadata":{"labels":{"new-label":"foo1","old-label":null},"annotations":{"new-annotation":"foo2","old-annotation":null},"finalizers":["new-finalizer"],"$deleteFromPrimitiveList/finalizers":["old-finalizer"]}}`)
+	expectedPatchBody := `{"metadata":{"labels":{"new-label":"foo1","old-label":null},"annotations":{"new-annotation":"foo2","old-annotation":null},"finalizers":["new-finalizer"],"$deleteFromPrimitiveList/finalizers":["old-finalizer"]}}`
 
 	if !reflect.DeepEqual(patchReq.String(), expectedPatchBody) {
 		t.Fatalf("Not equal: \n%s \n%s", expectedPatchBody, patchReq.String())
@@ -52,7 +51,7 @@ func TestPodPatchOperations(t *testing.T) {
 	}
 	nsName := types.NamespacedName{Name: "hello", Namespace: "default"}
 
-	fake := fakeclient.NewFakeClientWithScheme(scheme.Scheme)
+	fake := fakeclient.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 	_ = fake.Create(context.Background(), p)
 
 	patch := NewStrategicPatch()
@@ -113,8 +112,8 @@ func TestJobPatchOperations(t *testing.T) {
 	}
 	nsName := types.NamespacedName{Name: "hello", Namespace: "default"}
 
-	tfv1.SchemeBuilder.AddToScheme(scheme.Scheme)
-	fake := fakeclient.NewFakeClientWithScheme(scheme.Scheme)
+	_ = tfv1.SchemeBuilder.AddToScheme(scheme.Scheme)
+	fake := fakeclient.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 	_ = fake.Create(context.Background(), job)
 
 	patch := NewMergePatch()

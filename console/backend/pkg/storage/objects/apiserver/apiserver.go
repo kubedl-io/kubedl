@@ -12,15 +12,6 @@ import (
 	"github.com/alibaba/kubedl/apis/notebook/v1alpha1"
 	"github.com/alibaba/kubedl/console/backend/pkg/utils"
 
-	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
-	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
-	"github.com/alibaba/kubedl/console/backend/pkg/model"
-	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
-	"github.com/alibaba/kubedl/pkg/storage/backends"
-	"github.com/alibaba/kubedl/pkg/storage/dmo"
-	"github.com/alibaba/kubedl/pkg/storage/dmo/converters"
-	"github.com/alibaba/kubedl/pkg/util/tenancy"
-	"github.com/alibaba/kubedl/pkg/util/workloadgate"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -31,6 +22,16 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	v1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
+	clientmgr "github.com/alibaba/kubedl/console/backend/pkg/client"
+	"github.com/alibaba/kubedl/console/backend/pkg/model"
+	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
+	"github.com/alibaba/kubedl/pkg/storage/backends"
+	"github.com/alibaba/kubedl/pkg/storage/dmo"
+	"github.com/alibaba/kubedl/pkg/storage/dmo/converters"
+	"github.com/alibaba/kubedl/pkg/util/tenancy"
+	"github.com/alibaba/kubedl/pkg/util/workloadgate"
 )
 
 func NewAPIServerObjectBackend() backends.ObjectStorageBackend {
@@ -200,8 +201,7 @@ func (a *apiServerBackend) ListJobs(query *backends.Query) ([]*dmo.Job, error) {
 	})
 	if query.Status != "" {
 		filters = append(filters, func(job *dmo.Job) bool {
-			return strings.ToLower(string(job.Status)) ==
-				strings.ToLower(string(query.Status))
+			return strings.EqualFold(string(job.Status), string(query.Status))
 		})
 	}
 	if query.Type != "" {
@@ -326,8 +326,7 @@ func (a *apiServerBackend) ListNotebooks(query *backends.NotebookQuery) ([]*dmo.
 	})
 	if query.Status != "" {
 		filters = append(filters, func(nb *dmo.Notebook) bool {
-			return strings.ToLower(string(nb.Status)) ==
-				strings.ToLower(string(query.Status))
+			return strings.EqualFold(nb.Status, string(query.Status))
 		})
 	}
 
@@ -429,18 +428,18 @@ func (a *apiServerBackend) ListWorkspaces(query *backends.WorkspaceQuery) ([]*mo
 		workspaceMap[modelWorkspace.Name] = modelWorkspace
 	}
 
-	//resourceQuotas := &corev1.ResourceQuotaList{}
-	//if err := a.client.List(context.Background(), resourceQuotas); err != nil {
+	// resourceQuotas := &corev1.ResourceQuotaList{}
+	// if err := a.client.List(context.Background(), resourceQuotas); err != nil {
 	//	return nil, err
-	//}
+	// }
 	//
-	//for _, quota := range resourceQuotas.Items {
+	// for _, quota := range resourceQuotas.Items {
 	//	if ws, ok := workspaceMap[quota.Name]; ok {
 	//		ws.CPU = quota.Spec.Hard.Cpu().Value()
 	//		ws.Memory = quota.Spec.Hard.Memory().Value()
 	//		ws.GPU = quota.Spec.Hard.Name("nvidia.com/gpu", resource.DecimalSI).Value()
 	//	}
-	//}
+	// }
 
 	for _, ws := range workspaceList {
 		pvc := &corev1.PersistentVolumeClaim{}
@@ -532,7 +531,7 @@ func (a *apiServerBackend) CreateWorkspace(workspace *model.WorkspaceInfo) error
 			return err
 		}
 	}
-	//resourceQuota := &corev1.ResourceQuota{
+	// resourceQuota := &corev1.ResourceQuota{
 	//	TypeMeta: metav1.TypeMeta{},
 	//	ObjectMeta: metav1.ObjectMeta{
 	//		Name:      workspace.Name,
@@ -545,12 +544,12 @@ func (a *apiServerBackend) CreateWorkspace(workspace *model.WorkspaceInfo) error
 	//			"nvidia.com/gpu":      resource.MustParse(strconv.FormatInt(workspace.GPU, 10)),
 	//		},
 	//	},
-	//}
-	//err = a.client.Create(context.Background(), resourceQuota)
-	//if err != nil {
+	// }
+	// err = a.client.Create(context.Background(), resourceQuota)
+	// if err != nil {
 	//	klog.Infof("fail to create quota %s", resourceQuota.Name)
 	//	return err
-	//}
+	// }
 	return nil
 }
 

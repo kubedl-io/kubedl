@@ -95,14 +95,16 @@ func TestCoscheduling_CreateGang(t *testing.T) {
 	}
 
 	dagEnabled := features.KubeDLFeatureGates.Enabled(features.DAGScheduling)
-	defer features.KubeDLFeatureGates.SetFromMap(map[string]bool{string(features.DAGScheduling): dagEnabled})
+	defer func() {
+		_ = features.KubeDLFeatureGates.SetFromMap(map[string]bool{string(features.DAGScheduling): dagEnabled})
+	}()
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			scheme := runtime.NewScheme()
 			_ = apis.AddToScheme(scheme)
 			_ = v1alpha1.AddToScheme(scheme)
-			us := kubeCoscheduler{client: fake.NewFakeClientWithScheme(scheme)}
+			us := kubeCoscheduler{client: fake.NewClientBuilder().WithScheme(scheme).Build()}
 
 			var (
 				specs     map[v1.ReplicaType]*v1.ReplicaSpec
@@ -122,14 +124,14 @@ func TestCoscheduling_CreateGang(t *testing.T) {
 			}
 
 			// only for test
-			features.KubeDLFeatureGates.SetFromMap(map[string]bool{string(features.DAGScheduling): testCase.dag})
+			_ = features.KubeDLFeatureGates.SetFromMap(map[string]bool{string(features.DAGScheduling): testCase.dag})
 
-			gang, err := us.CreateGang(testCase.job, specs, runPolicy.SchedulingPolicy)
+			_, err := us.CreateGang(testCase.job, specs, runPolicy.SchedulingPolicy)
 			if err != nil {
 				t.Errorf("failed to create podgrpoups, err: %v", err)
 			}
 
-			gang, err = us.GetGang(types.NamespacedName{Namespace: testCase.job.GetNamespace(), Name: testCase.job.GetName()})
+			gang, err := us.GetGang(types.NamespacedName{Namespace: testCase.job.GetNamespace(), Name: testCase.job.GetName()})
 			if err != nil {
 				t.Errorf("failed to get latest podgrpoups, err: %v", err)
 			}
@@ -339,16 +341,18 @@ func TestCoscheduling_BindPodToGang(t *testing.T) {
 	}
 
 	dagEnabled := features.KubeDLFeatureGates.Enabled(features.DAGScheduling)
-	defer features.KubeDLFeatureGates.SetFromMap(map[string]bool{string(features.DAGScheduling): dagEnabled})
+	defer func() {
+		_ = features.KubeDLFeatureGates.SetFromMap(map[string]bool{string(features.DAGScheduling): dagEnabled})
+	}()
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			scheme := runtime.NewScheme()
 			_ = apis.AddToScheme(scheme)
 			_ = v1beta1.AddToScheme(scheme)
-			us := kubeCoscheduler{client: fake.NewFakeClientWithScheme(scheme)}
+			us := kubeCoscheduler{client: fake.NewClientBuilder().WithScheme(scheme).Build()}
 			// only for test
-			features.KubeDLFeatureGates.SetFromMap(map[string]bool{string(features.DAGScheduling): testCase.dag})
+			_ = features.KubeDLFeatureGates.SetFromMap(map[string]bool{string(features.DAGScheduling): testCase.dag})
 			for i := range testCase.gang.Items {
 				testCase.gang.Items[i].TypeMeta = metav1.TypeMeta{APIVersion: "scheduling.sigs.k8s.io/v1alpha1", Kind: "PodGroup"}
 			}

@@ -97,9 +97,9 @@ func TestDoFailOverByAction(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			scheme := runtime.NewScheme()
-			v1.AddToScheme(scheme)
-			apis.AddToScheme(scheme)
-			kruisev1alpha1.AddToScheme(scheme)
+			_ = v1.AddToScheme(scheme)
+			_ = apis.AddToScheme(scheme)
+			_ = kruisev1alpha1.AddToScheme(scheme)
 			fc := fake.NewClientBuilder().WithScheme(scheme).WithObjects(testCase.pods...).Build()
 			fr := record.NewFakeRecorder(10)
 			jc := JobController{

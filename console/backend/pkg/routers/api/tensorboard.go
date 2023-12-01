@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 
 	networkingv1 "k8s.io/api/networking/v1"
@@ -55,7 +54,7 @@ func (tc *tensorBoardAPIsController) GetTensorBoardStatus(c *gin.Context) {
 	}
 	tbCfgBytes, ok := job.GetAnnotations()[apiv1.AnnotationTensorBoardConfig]
 	if !ok {
-		utils.Succeed(c, fmt.Sprintf("no tensorboard configured"))
+		utils.Succeed(c, "no tensorboard configured")
 		return
 	}
 	tbCfg := tb.TensorBoard{}

@@ -22,8 +22,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	xdlv1alpha1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -31,7 +31,7 @@ import (
 )
 
 // GetJobFromInformerCache returns the Job from Informer Cache
-func (r *XDLJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
+func (r *XDLJobReconciler) GetJobFromInformerCache(namespace, name string) (client.Object, error) {
 	job := &xdlv1alpha1.XDLJob{}
 	// Default reader for XDLJob is cache reader.
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
@@ -47,7 +47,7 @@ func (r *XDLJobReconciler) GetJobFromInformerCache(namespace, name string) (meta
 }
 
 // GetJobFromAPIClient returns the Job from API server
-func (r *XDLJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
+func (r *XDLJobReconciler) GetJobFromAPIClient(namespace, name string) (client.Object, error) {
 	job := &xdlv1alpha1.XDLJob{}
 	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
@@ -78,7 +78,7 @@ func (r *XDLJobReconciler) DeleteJob(job interface{}) error {
 }
 
 // UpdateJobStatus updates the job status and job conditions
-func (r *XDLJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
+func (r *XDLJobReconciler) UpdateJobStatus(job client.Object, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	xdlJob, ok := job.(*xdlv1alpha1.XDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of XDLJob", xdlJob)
@@ -87,14 +87,13 @@ func (r *XDLJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.Repl
 }
 
 // UpdateJobStatusInApiServer updates the job status in API server
-func (r *XDLJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus *v1.JobStatus) error {
+func (r *XDLJobReconciler) UpdateJobStatusInApiServer(job client.Object, jobStatus *v1.JobStatus) error {
 	xdlJob, ok := job.(*xdlv1alpha1.XDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of XDLJob", xdlJob)
 	}
-	var jobCpy *xdlv1alpha1.XDLJob
 	// Job status passed in differs with status in job, update in basis of the passed in one.
-	jobCpy = xdlJob.DeepCopy()
+	jobCpy := xdlJob.DeepCopy()
 	jobCpy.Status = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
 }

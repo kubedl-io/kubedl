@@ -152,7 +152,7 @@ func newPodTemplateSpec(containerPorts []simpleContainerPort) *v1.PodTemplateSpe
 			}
 		}
 
-		p.Spec.Containers = append(p.Spec.Containers)
+		p.Spec.Containers = append(p.Spec.Containers, c)
 	}
 	return p
 }

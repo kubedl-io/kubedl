@@ -22,8 +22,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -31,7 +31,7 @@ import (
 )
 
 // GetJobFromInformerCache returns the Job from Informer Cache
-func (r *TFJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
+func (r *TFJobReconciler) GetJobFromInformerCache(namespace, name string) (client.Object, error) {
 	job := &training.TFJob{}
 	// Default reader for TFJob is cache reader.
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
@@ -47,7 +47,7 @@ func (r *TFJobReconciler) GetJobFromInformerCache(namespace, name string) (metav
 }
 
 // GetJobFromAPIClient returns the Job from API server
-func (r *TFJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
+func (r *TFJobReconciler) GetJobFromAPIClient(namespace, name string) (client.Object, error) {
 	job := &training.TFJob{}
 	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
@@ -78,7 +78,7 @@ func (r *TFJobReconciler) DeleteJob(job interface{}) error {
 }
 
 // UpdateJobStatus updates the job status and job conditions
-func (r *TFJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
+func (r *TFJobReconciler) UpdateJobStatus(job client.Object, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	tfJob, ok := job.(*training.TFJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of TFJob", tfJob)
@@ -87,14 +87,14 @@ func (r *TFJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.Repli
 }
 
 // UpdateJobStatusInApiServer updates the job status in API server
-func (r *TFJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus *v1.JobStatus) error {
+func (r *TFJobReconciler) UpdateJobStatusInApiServer(job client.Object, jobStatus *v1.JobStatus) error {
 	tfJob, ok := job.(*training.TFJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of TFJob", tfJob)
 	}
-	var jobCpy *training.TFJob
+
 	// Job status passed in differs with status in job, update in basis of the passed in one.
-	jobCpy = tfJob.DeepCopy()
+	jobCpy := tfJob.DeepCopy()
 	jobCpy.Status = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
 }

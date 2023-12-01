@@ -64,5 +64,8 @@ func (e *enqueueForJob) Delete(evt event.DeleteEvent, queue workqueue.RateLimiti
 }
 
 func (e *enqueueForJob) Generic(evt event.GenericEvent, queue workqueue.RateLimitingInterface) {
-	e.Create(event.CreateEvent{Object: evt.Object}, queue)
+	queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{
+		Namespace: evt.Object.GetNamespace(),
+		Name:      util.IDName(evt.Object),
+	}})
 }

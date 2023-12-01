@@ -203,10 +203,18 @@ func (r *XDLJobReconciler) GetGroupNameLabelValue() string {
 }
 
 // SetClusterSpec sets the cluster spec for the pod
-func (r *XDLJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (r *XDLJobReconciler) SetClusterSpec(ctx context.Context, job client.Object, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	xdlJob, ok := job.(*training.XDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of XDLJob", job)
+	}
+	xdlConfigJson, err := genXDLConfigJSON(xdlJob, rtype, index)
+	if err != nil {
+		return err
+	}
+
+	if xdlConfigJson == "" {
+		return nil
 	}
 	// add xdl environment variable
 	for i := range podTemplate.Spec.Containers {
@@ -227,6 +235,12 @@ func (r *XDLJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, 
 		container.Env = append(container.Env,
 			corev1.EnvVar{Name: taskType, Value: strings.ToLower(rtype)},
 			corev1.EnvVar{Name: taskIndex, Value: index})
+		if container.Name == r.GetDefaultContainerName() {
+			container.Env = append(container.Env, corev1.EnvVar{
+				Name:  xdlConfig,
+				Value: xdlConfigJson,
+			})
+		}
 	}
 	return nil
 }

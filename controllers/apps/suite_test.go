@@ -53,7 +53,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	// +kubebuilder:scaffold:scheme
 
-	k8sClient = fake.NewFakeClientWithScheme(scheme.Scheme)
+	k8sClient = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
 }, 60)

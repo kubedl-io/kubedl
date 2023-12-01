@@ -18,10 +18,11 @@ package elasticdl
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GetServicesForJob returns the services managed by the job. This can be achieved by selecting services using label key "job-name"
 // i.e. all services created by the job will come with label "job-name" = <this_job_name>
-func (r *ElasticDLJobReconciler) GetServicesForJob(obj interface{}) ([]*corev1.Service, error) {
+func (r *ElasticDLJobReconciler) GetServicesForJob(job client.Object) ([]*corev1.Service, error) {
 	return []*corev1.Service{}, nil
 }

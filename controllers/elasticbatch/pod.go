@@ -20,17 +20,12 @@ import (
 	"context"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GetPodsForJob returns the set of pods that this job should manage.
-func (r *ElasticBatchJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error) {
-	job, err := meta.Accessor(obj)
-	if err != nil {
-		return nil, err
-	}
+func (r *ElasticBatchJobReconciler) GetPodsForJob(job client.Object) ([]*corev1.Pod, error) {
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: r.ctrl.GenLabels(job.GetName()),
 	})

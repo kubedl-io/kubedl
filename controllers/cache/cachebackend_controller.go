@@ -52,10 +52,10 @@ type CacheBackendReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=cache.kubedl.io,resources=cachebackends,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cache.kubedl.io,resources=cachebackends/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=cache.kubedl.io,resources=cachebackends,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=cache.kubedl.io,resources=cachebackends/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 
 func (r *CacheBackendReconciler) Reconcile(_ context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.Log.Info(fmt.Sprintf("Reconciling for CacheBackend %s", req.Name))
@@ -98,8 +98,6 @@ func (r *CacheBackendReconciler) Reconcile(_ context.Context, req ctrl.Request) 
 					"name", cacheBackend.Name, "lastUsed", status.LastUsedTime)
 				err = r.Delete(context.Background(), cacheBackend)
 				return reconcile.Result{Requeue: err != nil}, err
-			} else {
-				//return reconcile.Result{Requeue: true}, err
 			}
 		}
 	}
@@ -189,9 +187,4 @@ func (r *CacheBackendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1alpha1.CacheBackend{}).
 		Complete(r)
-}
-
-func (r *CacheBackendReconciler) updateUsedStatus(status *cachev1alpha1.CacheBackendStatus) {
-	status.LastUsedTime = &metav1.Time{Time: time.Now()}
-	status.UsedNum = len(status.UsedBy)
 }

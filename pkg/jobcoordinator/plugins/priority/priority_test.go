@@ -59,10 +59,10 @@ func TestPriority_Score(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			schedulingv1.AddToScheme(scheme.Scheme)
-			prio := priority{clientSet: fake.NewFakeClientWithScheme(scheme.Scheme)}
+			_ = schedulingv1.AddToScheme(scheme.Scheme)
+			prio := priority{clientSet: fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()}
 			if testCase.priorityClass != nil {
-				prio.clientSet.Create(context.Background(), testCase.priorityClass)
+				_ = prio.clientSet.Create(context.Background(), testCase.priorityClass)
 			}
 			qu := newQueueUnit(testCase.name, testCase.schedPolicy)
 			val, status := prio.Score(context.Background(), qu)

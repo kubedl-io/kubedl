@@ -5,8 +5,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	apiv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	"github.com/alibaba/kubedl/pkg/util/runtime"
@@ -32,11 +32,11 @@ func (t TestJobController) GetReconcileOrders() []apiv1.ReplicaType {
 	}
 }
 
-func (t TestJobController) GetPodsForJob(job interface{}) ([]*corev1.Pod, error) {
+func (t TestJobController) GetPodsForJob(job client.Object) ([]*corev1.Pod, error) {
 	return []*corev1.Pod{}, nil
 }
 
-func (t TestJobController) GetServicesForJob(job interface{}) ([]*corev1.Service, error) {
+func (t TestJobController) GetServicesForJob(job client.Object) ([]*corev1.Service, error) {
 	return []*corev1.Service{}, nil
 }
 
@@ -68,11 +68,11 @@ func (TestJobController) GetDefaultContainerPortNumber() int32 {
 	return int32(9999)
 }
 
-func (t *TestJobController) GetJobFromInformerCache(namespace, name string) (v1.Object, error) {
+func (t *TestJobController) GetJobFromInformerCache(namespace, name string) (client.Object, error) {
 	return t.Job, nil
 }
 
-func (t *TestJobController) GetJobFromAPIClient(namespace, name string) (v1.Object, error) {
+func (t *TestJobController) GetJobFromAPIClient(namespace, name string) (client.Object, error) {
 	return t.Job, nil
 }
 
@@ -82,12 +82,11 @@ func (t *TestJobController) DeleteJob(job interface{}) error {
 	return nil
 }
 
-func (t *TestJobController) UpdateJobStatus(job interface{}, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec,
-	jobStatus *apiv1.JobStatus, restart bool) error {
+func (t *TestJobController) UpdateJobStatus(job client.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus *apiv1.JobStatus, restart bool) error {
 	return nil
 }
 
-func (t *TestJobController) UpdateJobStatusInApiServer(job interface{}, jobStatus *apiv1.JobStatus) error {
+func (t *TestJobController) UpdateJobStatusInApiServer(job client.Object, jobStatus *apiv1.JobStatus) error {
 	return nil
 }
 
@@ -123,7 +122,7 @@ func (t *TestJobController) DeletePod(job interface{}, pod *corev1.Pod) error {
 	return nil
 }
 
-func (t *TestJobController) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (t *TestJobController) SetClusterSpec(ctx context.Context, job client.Object, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	return nil
 }
 

@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
 	v1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
@@ -31,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *MPIJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
+func (r *MPIJobReconciler) GetJobFromInformerCache(namespace, name string) (client.Object, error) {
 	job := &training.MPIJob{}
 	// Default reader for MPIJob is cache reader.
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
@@ -46,7 +48,7 @@ func (r *MPIJobReconciler) GetJobFromInformerCache(namespace, name string) (meta
 	return job, nil
 }
 
-func (r *MPIJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
+func (r *MPIJobReconciler) GetJobFromAPIClient(namespace, name string) (client.Object, error) {
 	job := &training.MPIJob{}
 	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	if err != nil {
@@ -75,7 +77,7 @@ func (r *MPIJobReconciler) DeleteJob(job interface{}) error {
 	return nil
 }
 
-func (r *MPIJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
+func (r *MPIJobReconciler) UpdateJobStatus(job client.Object, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	mpiJob, ok := job.(*training.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not type of MPIJob", job)
@@ -161,14 +163,13 @@ func (r *MPIJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.Repl
 	return nil
 }
 
-func (r *MPIJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus *v1.JobStatus) error {
+func (r *MPIJobReconciler) UpdateJobStatusInApiServer(job client.Object, jobStatus *v1.JobStatus) error {
 	mpiJob, ok := job.(*training.MPIJob)
 	if !ok {
 		return fmt.Errorf("%+v is not type of MarsJob", mpiJob)
 	}
 
-	var jobCpy *training.MPIJob
-	jobCpy = mpiJob.DeepCopy()
+	jobCpy := mpiJob.DeepCopy()
 	jobCpy.Status = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
 }

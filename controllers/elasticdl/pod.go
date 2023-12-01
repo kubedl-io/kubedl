@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,18 +31,14 @@ import (
 
 // GetPodsForJob returns the pods managed by the job. This can be achieved by selecting pods using label key "job-name"
 // i.e. all pods created by the job will come with label "job-name" = <this_job_name>
-func (r *ElasticDLJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error) {
-	job, err := meta.Accessor(obj)
-	if err != nil {
-		return nil, err
-	}
-	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+func (r *ElasticDLJobReconciler) GetPodsForJob(job client.Object) ([]*corev1.Pod, error) {
+	selector, _ := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: r.ctrl.GenLabels(job.GetName()),
 	})
 	// List all pods to include those that don't match the selector anymore
 	// but have a ControllerRef pointing to this controller.
 	podlist := &corev1.PodList{}
-	err = r.List(context.Background(), podlist, client.MatchingLabelsSelector{Selector: selector})
+	err := r.List(context.Background(), podlist, client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, err
 	}

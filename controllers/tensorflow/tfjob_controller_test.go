@@ -2,7 +2,6 @@ package tensorflow
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -42,15 +41,10 @@ type TFJobReconcilerTest struct {
 	TFJobReconciler
 }
 
-func (r *TFJobReconcilerTest) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
+func (r *TFJobReconcilerTest) GetJobFromAPIClient(namespace, name string) (client.Object, error) {
 	job := &training.TFJob{}
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
 	return job, err
-}
-
-func (r *TFJobReconcilerTest) satisfiedExpectations(tfJob *training.TFJob) bool {
-	// during unit test, no watch events will happen, hence always return true to trigger reconcile
-	return true
 }
 
 type FakeJobExpectations struct {
@@ -109,7 +103,7 @@ func TestAllWorkersSuccessPolicy(t *testing.T) {
 
 	// a job with 2 replicas
 	tfjob := createTFJob("job1", 2)
-	fakeClient := fake.NewFakeClientWithScheme(scheme, tfjob)
+	fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(tfjob).Build()
 	jobControllerConfig := options.JobControllerConfiguration{}
 	eventBroadcaster := record.NewBroadcaster()
 	recorder := eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"})
@@ -171,7 +165,7 @@ func TestJobCreateModel(t *testing.T) {
 			},
 		},
 	}
-	fakeClient := fake.NewFakeClientWithScheme(scheme, tfjob)
+	fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(tfjob).Build()
 	jobControllerConfig := options.JobControllerConfiguration{}
 	eventBroadcaster := record.NewBroadcaster()
 	recorder := eventBroadcaster.NewRecorder(scheme, corev1.EventSource{Component: "broadcast-controller"})
@@ -275,39 +269,4 @@ func createTFJob(jobName string, replicas int32) *training.TFJob {
 		Status: v1.JobStatus{},
 	}
 	return tfjob1
-}
-
-// not used, maybe using later..
-func createPodForJob(podName string, job *training.TFJob) *corev1.Pod {
-	labelGroupName := v1.GroupNameLabel
-	labelJobName := v1.JobNameLabel
-	groupName := training.SchemeGroupVersion.Group
-	labels := map[string]string{
-		labelGroupName: groupName,
-		labelJobName:   strings.Replace(job.Name, "/", "-", -1),
-	}
-	labels[v1.ReplicaTypeLabel] = "Worker"
-	labels[v1.ReplicaIndexLabel] = "0"
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:              podName,
-			Labels:            labels,
-			Namespace:         "default",
-			DeletionTimestamp: nil,
-		},
-
-		Status: corev1.PodStatus{
-			ContainerStatuses: []corev1.ContainerStatus{
-				{
-					Name: "tensorflow",
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 0,
-						},
-					},
-				},
-			},
-			Phase: corev1.PodSucceeded,
-		},
-	}
 }

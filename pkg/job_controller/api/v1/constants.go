@@ -41,7 +41,7 @@ const (
 	AnnotationTensorBoardConfig = KubeDLPrefix + "/tensorboard-config"
 	// ReplicaTypeTensorBoard is the type for TensorBoard.
 	ReplicaTypeTensorBoard ReplicaType = "TensorBoard"
-	//ResourceNvidiaGPU is the key of gpu type in labels
+	// ResourceNvidiaGPU is the key of gpu type in labels
 	ResourceNvidiaGPU v1.ResourceName = "nvidia.com/gpu"
 )
 
@@ -60,10 +60,16 @@ const (
 	LabelGeneration = KubeDLPrefix + "/job-generation"
 )
 
+type ContextKey string
+
 const (
 	// ContextFailedPodContents collects failed pod exit codes while with its failed
 	// reason if they are not retryable.
-	ContextFailedPodContents = KubeDLPrefix + "/failed-pod-contents"
+	ContextFailedPodContents ContextKey = KubeDLPrefix + "/failed-pod-contents"
+
+	// ContextHostNetworkPorts is the key for passing selected host-ports, value is
+	// a map object [replica-index: port].
+	ContextHostNetworkPorts ContextKey = KubeDLPrefix + "/hostnetwork-ports"
 )
 
 const (

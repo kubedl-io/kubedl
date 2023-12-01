@@ -188,7 +188,7 @@ func (r *MarsJobReconciler) GetGroupNameLabelValue() string {
 	return kubedliov1beta1.SchemeGroupVersion.Group
 }
 
-func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job interface{}, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
+func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job client.Object, podTemplate *corev1.PodTemplateSpec, rtype, index string) error {
 	marsJob, ok := job.(*kubedliov1beta1.MarsJob)
 	if !ok {
 		return fmt.Errorf("%+v is not type of MarsJob", job)
@@ -231,7 +231,7 @@ func (r *MarsJobReconciler) SetClusterSpec(ctx context.Context, job interface{},
 
 			// Convert memory tuning settings to environment variables so that worker processes
 			// can be perceived.
-			if strings.ToLower(rtype) == strings.ToLower(string(kubedliov1beta1.MarsReplicaTypeWorker)) && marsJob.Spec.WorkerMemoryTuningPolicy != nil {
+			if strings.EqualFold(rtype, string(kubedliov1beta1.MarsReplicaTypeWorker)) && marsJob.Spec.WorkerMemoryTuningPolicy != nil {
 				memTuningPolicy := marsJob.Spec.WorkerMemoryTuningPolicy
 				if memTuningPolicy.SpillDirs != nil {
 					injectSpillDirsByGivenPaths(memTuningPolicy.SpillDirs, podTemplate, &podTemplate.Spec.Containers[i])

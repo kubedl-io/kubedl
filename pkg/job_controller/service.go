@@ -106,9 +106,9 @@ func (jc *JobController) OnServiceUpdateFunc(e event.UpdateEvent) bool {
 // When a service is deleted, enqueue the job that manages the service and update its expectations.
 // obj could be an *v1.Service, or a DeletionFinalStateUnknown marker item.
 func (jc *JobController) OnServiceDeleteFunc(e event.DeleteEvent) bool {
-	service, ok := e.Object.(*v1.Service)
+	service := e.Object.(*v1.Service)
 
-	// When a delete is dropped, the relist will notice a service in the store not
+	// When a deletion is dropped, the relist will notice a service in the store not
 	// in the list, leading to the insertion of a tombstone object which contains
 	// the deleted key/value. Note that this value might be stale. If the service
 	// changed labels the new job will not be woken up till the periodic resync.

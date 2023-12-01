@@ -52,7 +52,7 @@ func Init() {
 
 func Start(ctx context.Context) {
 	go func() {
-		cmgr.ctrlCache.Start(ctx)
+		_ = cmgr.ctrlCache.Start(ctx)
 	}()
 }
 

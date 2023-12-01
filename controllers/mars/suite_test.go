@@ -48,14 +48,12 @@ var _ = BeforeSuite(func(done Done) {
 
 	By("bootstrapping test environment")
 
-	var err error
-
-	err = kubedliov1beta1.AddToScheme(scheme.Scheme)
+	err := kubedliov1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
 
-	k8sClient = fake.NewFakeClientWithScheme(scheme.Scheme)
+	k8sClient = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 	Expect(k8sClient).ToNot(BeNil())
 
 	close(done)

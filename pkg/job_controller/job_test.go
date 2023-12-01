@@ -108,11 +108,11 @@ func TestDeletePodsAndServices(T *testing.T) {
 		_ = corev1.AddToScheme(scheme)
 		_ = v1.AddToScheme(scheme)
 
-		fakeClient := fake.NewFakeClientWithScheme(scheme, testJob)
-		fakeClient.Create(context.Background(), runningPod)
-		fakeClient.Create(context.Background(), succeededPod)
-		fakeClient.Create(context.Background(), runningPodService)
-		fakeClient.Create(context.Background(), succeededPodService)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(testJob).Build()
+		_ = fakeClient.Create(context.Background(), runningPod)
+		_ = fakeClient.Create(context.Background(), succeededPod)
+		_ = fakeClient.Create(context.Background(), runningPodService)
+		_ = fakeClient.Create(context.Background(), succeededPodService)
 
 		eventBroadcaster := record.NewBroadcaster()
 		mainJobController := JobController{
@@ -135,28 +135,28 @@ func TestDeletePodsAndServices(T *testing.T) {
 		if assert.NoError(T, err) {
 			if tc.deleteRunningPodAndService {
 				// should delete the running pod and its service
-				mainJobController.Client.List(context.Background(), &podList)
-				mainJobController.Client.List(context.Background(), &serviceList)
+				_ = mainJobController.Client.List(context.Background(), &podList)
+				_ = mainJobController.Client.List(context.Background(), &serviceList)
 				assert.NotContains(T, podList.Items, *runningPod)
 				assert.NotContains(T, serviceList.Items, *runningPodService)
 			} else {
 				// should NOT delete the running pod and its service
-				mainJobController.Client.List(context.Background(), &podList)
-				mainJobController.Client.List(context.Background(), &serviceList)
+				_ = mainJobController.Client.List(context.Background(), &podList)
+				_ = mainJobController.Client.List(context.Background(), &serviceList)
 				assert.Contains(T, podList.Items, *runningPod)
 				assert.Contains(T, serviceList.Items, *runningPodService)
 			}
 
 			if tc.deleteSucceededPodAndService {
 				// should delete the SUCCEEDED pod and its service
-				mainJobController.Client.List(context.Background(), &podList)
-				mainJobController.Client.List(context.Background(), &serviceList)
+				_ = mainJobController.Client.List(context.Background(), &podList)
+				_ = mainJobController.Client.List(context.Background(), &serviceList)
 				assert.NotContains(T, podList.Items, *succeededPod)
 				assert.NotContains(T, serviceList.Items, *succeededPodService)
 			} else {
 				// should NOT delete the SUCCEEDED pod and its service
-				mainJobController.Client.List(context.Background(), &podList)
-				mainJobController.Client.List(context.Background(), &serviceList)
+				_ = mainJobController.Client.List(context.Background(), &podList)
+				_ = mainJobController.Client.List(context.Background(), &serviceList)
 				assert.Contains(T, podList.Items, *succeededPod)
 				assert.Contains(T, serviceList.Items, *succeededPodService)
 			}
@@ -248,7 +248,7 @@ func TestCleanupJobIfTTL(T *testing.T) {
 	}
 	oneDayAgo := time.Now()
 	// one day ago
-	oneDayAgo.AddDate(0, 0, -1)
+	oneDayAgo = oneDayAgo.AddDate(0, 0, -1)
 	jobStatus := apiv1.JobStatus{
 		CompletionTime: &metav1.Time{
 			Time: oneDayAgo,
@@ -258,11 +258,15 @@ func TestCleanupJobIfTTL(T *testing.T) {
 	testJobController := &v1.TestJobController{
 		Job: &v1.TestJob{},
 	}
+
+	job := &v1.TestJob{}
+	sche := runtime.NewScheme()
+	_ = v1.AddToScheme(sche)
 	mainJobController := JobController{
 		Controller: testJobController,
+		Client:     fake.NewClientBuilder().WithScheme(sche).WithObjects(job).Build(),
 	}
 
-	var job interface{}
 	_, err := mainJobController.cleanupJob(&runPolicy, jobStatus, job)
 	if assert.NoError(T, err) {
 		// job field is zeroed
@@ -284,11 +288,15 @@ func TestCleanupJob(T *testing.T) {
 	testJobController := &v1.TestJobController{
 		Job: &v1.TestJob{},
 	}
+
+	job := &v1.TestJob{}
+	sche := runtime.NewScheme()
+	_ = v1.AddToScheme(sche)
 	mainJobController := JobController{
 		Controller: testJobController,
+		Client:     fake.NewClientBuilder().WithScheme(sche).WithObjects(job).Build(),
 	}
 
-	var job interface{}
 	_, err := mainJobController.cleanupJob(&runPolicy, jobStatus, job)
 	if assert.NoError(T, err) {
 		assert.Empty(T, testJobController.Job)
@@ -394,13 +402,13 @@ func TestCreateCronJob(t *testing.T) {
 	_ = corev1.AddToScheme(scheme)
 	_ = v1.AddToScheme(scheme)
 	_ = appv1.AddToScheme(scheme)
-	fakeClient := fake.NewFakeClientWithScheme(scheme, job)
+	fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(job).Build()
 
 	mainJobController := JobController{
 		Controller: testJobController,
 		Client:     fakeClient,
 	}
-	//create
+	// create
 	err := mainJobController.ReconcileCron(job, job, job.Spec.RunPolicy)
 	if err != nil {
 		t.Error(err)
@@ -410,7 +418,7 @@ func TestCreateCronJob(t *testing.T) {
 	if errors.IsNotFound(err) {
 		t.Error("createCronJob failed", err)
 	}
-	//update
+	// update
 	updateJob := job.DeepCopy()
 	updateSchedule := "0 0/2 * * *"
 	updateJob.Spec.RunPolicy.CronPolicy.Schedule = updateSchedule
@@ -425,7 +433,7 @@ func TestCreateCronJob(t *testing.T) {
 	if cronJob.Spec.CronPolicy.Schedule != updateSchedule {
 		t.Error("update failed", cronJob)
 	}
-	//normal
+	// normal
 	err = mainJobController.ReconcileCron(updateJob, updateJob, updateJob.Spec.RunPolicy)
 	if err != nil {
 		t.Error(err)
@@ -583,6 +591,7 @@ func TestAddCachePathToContainer(T *testing.T) {
 				},
 			}
 			err := fakeClient.Create(context.Background(), pvc)
+			assert.NoError(T, err)
 
 			err = fakeClient.Get(context.Background(), types.NamespacedName{
 				Namespace: unifiedNamespace,

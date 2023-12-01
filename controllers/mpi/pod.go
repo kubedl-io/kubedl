@@ -18,29 +18,22 @@ package mpi
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	mpiv1 "github.com/alibaba/kubedl/apis/training/v1alpha1"
 )
 
-func (r *MPIJobReconciler) GetPodsForJob(obj interface{}) ([]*corev1.Pod, error) {
-	mpiJob, ok := obj.(*mpiv1.MPIJob)
-	if !ok {
-		return nil, fmt.Errorf("%+v is not type of MPIJob", obj)
-	}
-	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: r.ctrl.GenLabels(mpiJob.GetName()),
+func (r *MPIJobReconciler) GetPodsForJob(job client.Object) ([]*corev1.Pod, error) {
+	selector, _ := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: r.ctrl.GenLabels(job.GetName()),
 	})
 	// List all pods to include those that don't match the selector anymore
 	// but have a ControllerRef pointing to this controller.
 	podList := &corev1.PodList{}
-	err = r.List(context.Background(), podList, client.InNamespace(mpiJob.GetNamespace()), client.MatchingLabelsSelector{Selector: selector})
+	err := r.List(context.Background(), podList, client.InNamespace(job.GetNamespace()), client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, err
 	}
-	return r.ctrl.AdoptAndClaimPods(mpiJob, podList)
+	return r.ctrl.AdoptAndClaimPods(job, podList)
 }

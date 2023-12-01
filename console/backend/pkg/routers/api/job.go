@@ -130,13 +130,13 @@ func (jc *jobAPIsController) GetJobDetail(c *gin.Context) {
 	kind = c.Query("kind")
 
 	if kind == "" {
-		Error(c, fmt.Sprintf("job kind must not be empty"))
+		Error(c, "job kind must not be empty")
 		return
 	}
 
 	if jobName != "" {
 		if namespace == "" {
-			Error(c, fmt.Sprintf("namespace should not be empty"))
+			Error(c, "namespace should not be empty")
 			return
 		}
 
@@ -280,12 +280,12 @@ func (jc *jobAPIsController) ListPVC(c *gin.Context) {
 func (jc *jobAPIsController) SubmitJob(c *gin.Context) {
 	kind := c.Query("kind")
 	if kind == "" {
-		Error(c, fmt.Sprintf("job kind is empty"))
+		Error(c, "job kind is empty")
 		return
 	}
 	data, err := c.GetRawData()
 	if err != nil {
-		Error(c, fmt.Sprintf("failed to get raw posted data from request"))
+		Error(c, "failed to get raw posted data from request")
 		return
 	}
 	if err = jc.jobHandler.SubmitJobWithKind(data, kind); err != nil {

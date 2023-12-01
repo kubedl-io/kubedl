@@ -22,8 +22,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	training "github.com/alibaba/kubedl/apis/training/v1alpha1"
 	"github.com/alibaba/kubedl/pkg/job_controller"
@@ -31,7 +31,7 @@ import (
 )
 
 // GetJobFromInformerCache returns the Job from Informer Cache
-func (r *ElasticDLJobReconciler) GetJobFromInformerCache(namespace, name string) (metav1.Object, error) {
+func (r *ElasticDLJobReconciler) GetJobFromInformerCache(namespace, name string) (client.Object, error) {
 	job := &training.ElasticDLJob{}
 	// Default reader for ElasticDLJob is cache reader.
 	err := r.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
@@ -47,7 +47,7 @@ func (r *ElasticDLJobReconciler) GetJobFromInformerCache(namespace, name string)
 }
 
 // GetJobFromAPIClient returns the Job from API server
-func (r *ElasticDLJobReconciler) GetJobFromAPIClient(namespace, name string) (metav1.Object, error) {
+func (r *ElasticDLJobReconciler) GetJobFromAPIClient(namespace, name string) (client.Object, error) {
 	job := &training.ElasticDLJob{}
 	// Forcibly use client reader.
 	err := r.ctrl.APIReader.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, job)
@@ -79,7 +79,7 @@ func (r *ElasticDLJobReconciler) DeleteJob(job interface{}) error {
 }
 
 // UpdateJobStatus updates the job status and job conditions
-func (r *ElasticDLJobReconciler) UpdateJobStatus(job interface{}, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
+func (r *ElasticDLJobReconciler) UpdateJobStatus(job client.Object, replicas map[v1.ReplicaType]*v1.ReplicaSpec, jobStatus *v1.JobStatus, restart bool) error {
 	elasticdlJob, ok := job.(*training.ElasticDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of ElasticDLJob", elasticdlJob)
@@ -88,14 +88,13 @@ func (r *ElasticDLJobReconciler) UpdateJobStatus(job interface{}, replicas map[v
 }
 
 // UpdateJobStatusInApiServer updates the job status in API server
-func (r *ElasticDLJobReconciler) UpdateJobStatusInApiServer(job interface{}, jobStatus *v1.JobStatus) error {
+func (r *ElasticDLJobReconciler) UpdateJobStatusInApiServer(job client.Object, jobStatus *v1.JobStatus) error {
 	elasticdlJob, ok := job.(*training.ElasticDLJob)
 	if !ok {
 		return fmt.Errorf("%+v is not a type of ElasticDLJob", elasticdlJob)
 	}
-	var jobCpy *training.ElasticDLJob
 	// Job status passed in differs with status in job, update in basis of the passed in one.
-	jobCpy = elasticdlJob.DeepCopy()
+	jobCpy := elasticdlJob.DeepCopy()
 	jobCpy.Status = *jobStatus.DeepCopy()
 	return r.Status().Update(context.Background(), jobCpy)
 }

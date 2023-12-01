@@ -57,7 +57,7 @@ func TestNotebookController(t *testing.T) {
 		Namespace: "default",
 		Name:      "notebook1",
 	}
-	fakeClient := fake.NewFakeClientWithScheme(scheme, notebook)
+	fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(notebook).Build()
 	eventBroadcaster := record.NewBroadcaster()
 
 	// reconcile the version
