@@ -29,9 +29,17 @@ Check the website: https://kubedl.io
  <img src="docs/img/kubedl.png" width="700" title="">
 </div> <br/>
 
+## Getting Involved
+
+| Platform                                                                                  | Purpose                                                                             | Estimated Response Time |
+|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|-------------------------|
+| [DingTalk](https://github.com/kubedl-io/kubedl/blob/master/docs/img/kubedl-dingtalk.png ) | For discussions about development and questions about usage.	                       | < 1 day                 |
+| [Github Issues](https://github.com/kubedl-io/kubedl/issues)                               | For reporting bugs and filing feature requests.                                     | < 2 days                |
+| E-Mail(cncf-kubedl-maintainers@lists.cncf.io)                                             | For discussing specific topics or ask for help from community members/maintainers.  | < 3 days                |
+
 ## Publications
 
-Morphling: Fast, Near-Optimal Auto-Configuration for Cloud-Native Model Serving. ACM Socc 2021
+Morphling: Fast, Near-Optimal Auto-Configuration for Cloud-Native Model Serving. ACM Socc 2021[link](https://dl.acm.org/doi/10.1145/3472883.3486987)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubedl-io%2Fkubedl?ref=badge_large)
