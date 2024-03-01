@@ -330,9 +330,8 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 		return result, err
 	}
 
-        // Metering job status
+	// Metering job status
 	jc.Metrics.JobStatusMetrics(job, jobStatus)
-
 
 	// Metering first pod launch delay when job state transit from created to running.
 	if commonutil.IsCreated(*oldStatus) && commonutil.IsRunning(jobStatus) {
