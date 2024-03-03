@@ -59,6 +59,10 @@ var (
 		Name: "kubedl_jobs_all_pods_launch_delay_seconds",
 		Help: "Histogram for recording sync launch delay duration(from job created to all pods running).",
 	}, []string{"kind", "name", "namespace", "uid"})
+	jobStatus = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "kubedl_job_status",
+		Help: "Counts number of jobs with failed status",
+	}, []string{"kind", "name", "namespace", "uid", "status", "reason"})
 )
 
 // JobMetrics holds the kinds of metrics counter for some type of job workload.
@@ -71,6 +75,7 @@ type JobMetrics struct {
 	restart             prometheus.Counter
 	firstPodLaunchDelay *prometheus.HistogramVec
 	allPodsLaunchDelay  *prometheus.HistogramVec
+	jobStatus           *prometheus.HistogramVec
 }
 
 func NewJobMetrics(kind string, client client.Client) *JobMetrics {
@@ -85,6 +90,7 @@ func NewJobMetrics(kind string, client client.Client) *JobMetrics {
 		restart:             restart.With(label),
 		firstPodLaunchDelay: firstPodLaunchDelayHist,
 		allPodsLaunchDelay:  allPodsLaunchDelayHist,
+		jobStatus:           jobStatus,
 	}
 	// Register running gauge func on center prometheus demand pull.
 	// Different kinds of workload metrics share the same metric name and help info,
@@ -135,6 +141,22 @@ func (m *JobMetrics) FailureInc() {
 
 func (m *JobMetrics) RestartInc() {
 	m.restart.Inc()
+}
+
+func (m *JobMetrics) JobStatusMetrics(job metav1.Object, status v1.JobStatus) {
+	for _, condition := range status.Conditions {
+		if condition.Status == corev1.ConditionTrue {
+			m.jobStatus.With(prometheus.Labels{
+				"kind":      m.kind,
+				"name":      job.GetName(),
+				"namespace": job.GetNamespace(),
+				"uid":       string(job.GetUID()),
+				"status":    string(condition.Type),
+				"reason":    condition.Reason,
+			}).Observe(1)
+			break
+		}
+	}
 }
 
 func (m *JobMetrics) FirstPodLaunchDelaySeconds(activePods []*corev1.Pod, job metav1.Object, status v1.JobStatus) {
