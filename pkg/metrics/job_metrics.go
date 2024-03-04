@@ -59,6 +59,7 @@ var (
 		Name: "kubedl_jobs_all_pods_launch_delay_seconds",
 		Help: "Histogram for recording sync launch delay duration(from job created to all pods running).",
 	}, []string{"kind", "name", "namespace", "uid"})
+<<<<<<< HEAD
 	jobStatus = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "kubedl_job_status",
 		Help: "Counts number of jobs with failed status",
@@ -67,6 +68,12 @@ var (
 		Name: "kubedl_job_finished_time",
 		Help: "Job finished time",
 	}, []string{"kind", "name", "namespace", "uid"})
+=======
+	jobStatus = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "kubedl_job_status",
+		Help: "Counts number of jobs with failed status",
+	}, []string{"kind", "name", "namespace", "uid", "status", "reason"})
+>>>>>>> b93a2b4 (feat: Implemented metrics exposure for job status with labels: name, namespace, uid, status, reason (#310))
 )
 
 // JobMetrics holds the kinds of metrics counter for some type of job workload.
@@ -79,8 +86,12 @@ type JobMetrics struct {
 	restart             prometheus.Counter
 	firstPodLaunchDelay *prometheus.HistogramVec
 	allPodsLaunchDelay  *prometheus.HistogramVec
+<<<<<<< HEAD
 	jobStatus           *prometheus.GaugeVec
 	jobFinishedTime     *prometheus.GaugeVec
+=======
+	jobStatus           *prometheus.HistogramVec
+>>>>>>> b93a2b4 (feat: Implemented metrics exposure for job status with labels: name, namespace, uid, status, reason (#310))
 }
 
 func NewJobMetrics(kind string, client client.Client) *JobMetrics {
@@ -96,7 +107,10 @@ func NewJobMetrics(kind string, client client.Client) *JobMetrics {
 		firstPodLaunchDelay: firstPodLaunchDelayHist,
 		allPodsLaunchDelay:  allPodsLaunchDelayHist,
 		jobStatus:           jobStatus,
+<<<<<<< HEAD
 		jobFinishedTime:     jobFinishedTime,
+=======
+>>>>>>> b93a2b4 (feat: Implemented metrics exposure for job status with labels: name, namespace, uid, status, reason (#310))
 	}
 	// Register running gauge func on center prometheus demand pull.
 	// Different kinds of workload metrics share the same metric name and help info,
@@ -152,15 +166,19 @@ func (m *JobMetrics) RestartInc() {
 func (m *JobMetrics) JobStatusMetrics(job metav1.Object, status v1.JobStatus) {
 	for _, condition := range status.Conditions {
 		if condition.Status == corev1.ConditionTrue {
+<<<<<<< HEAD
 			value, ok := v1.JobConditionTypeValueMap[condition.Type]
 			if !ok {
 				continue
 			}
+=======
+>>>>>>> b93a2b4 (feat: Implemented metrics exposure for job status with labels: name, namespace, uid, status, reason (#310))
 			m.jobStatus.With(prometheus.Labels{
 				"kind":      m.kind,
 				"name":      job.GetName(),
 				"namespace": job.GetNamespace(),
 				"uid":       string(job.GetUID()),
+<<<<<<< HEAD
 			}).Set(value)
 
 			if condition.Type == v1.JobSucceeded || condition.Type == v1.JobFailed {
@@ -175,6 +193,14 @@ func (m *JobMetrics) JobStatusMetrics(job metav1.Object, status v1.JobStatus) {
 		}
 	}
 
+=======
+				"status":    string(condition.Type),
+				"reason":    condition.Reason,
+			}).Observe(1)
+			break
+		}
+	}
+>>>>>>> b93a2b4 (feat: Implemented metrics exposure for job status with labels: name, namespace, uid, status, reason (#310))
 }
 
 func (m *JobMetrics) FirstPodLaunchDelaySeconds(activePods []*corev1.Pod, job metav1.Object, status v1.JobStatus) {
