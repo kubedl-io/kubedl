@@ -168,6 +168,15 @@ const (
 	JobFailed JobConditionType = "Failed"
 )
 
+var JobConditionTypeValueMap = map[JobConditionType]float64{
+	JobCreated:    0,
+	JobQueuing:    1,
+	JobRunning:    2,
+	JobRestarting: 3,
+	JobSucceeded:  4,
+	JobFailed:     5,
+}
+
 // SuccessPolicy is the policy to mark the job as succeeded, when the job does not contain the chief or master role.
 type SuccessPolicy string
 
