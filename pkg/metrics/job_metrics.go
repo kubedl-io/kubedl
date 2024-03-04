@@ -59,10 +59,14 @@ var (
 		Name: "kubedl_jobs_all_pods_launch_delay_seconds",
 		Help: "Histogram for recording sync launch delay duration(from job created to all pods running).",
 	}, []string{"kind", "name", "namespace", "uid"})
-	jobStatus = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	jobStatus = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "kubedl_job_status",
 		Help: "Counts number of jobs with failed status",
-	}, []string{"kind", "name", "namespace", "uid", "status", "reason"})
+	}, []string{"kind", "name", "namespace", "uid"})
+	jobFinishedTime = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "kubedl_job_finished_time",
+		Help: "Job finished time",
+	}, []string{"kind", "name", "namespace", "uid"})
 )
 
 // JobMetrics holds the kinds of metrics counter for some type of job workload.
@@ -75,7 +79,8 @@ type JobMetrics struct {
 	restart             prometheus.Counter
 	firstPodLaunchDelay *prometheus.HistogramVec
 	allPodsLaunchDelay  *prometheus.HistogramVec
-	jobStatus           *prometheus.HistogramVec
+	jobStatus           *prometheus.GaugeVec
+	jobFinishedTime     *prometheus.GaugeVec
 }
 
 func NewJobMetrics(kind string, client client.Client) *JobMetrics {
@@ -91,6 +96,7 @@ func NewJobMetrics(kind string, client client.Client) *JobMetrics {
 		firstPodLaunchDelay: firstPodLaunchDelayHist,
 		allPodsLaunchDelay:  allPodsLaunchDelayHist,
 		jobStatus:           jobStatus,
+		jobFinishedTime:     jobFinishedTime,
 	}
 	// Register running gauge func on center prometheus demand pull.
 	// Different kinds of workload metrics share the same metric name and help info,
@@ -146,17 +152,29 @@ func (m *JobMetrics) RestartInc() {
 func (m *JobMetrics) JobStatusMetrics(job metav1.Object, status v1.JobStatus) {
 	for _, condition := range status.Conditions {
 		if condition.Status == corev1.ConditionTrue {
+			value, ok := v1.JobConditionTypeValueMap[condition.Type]
+			if !ok {
+				continue
+			}
 			m.jobStatus.With(prometheus.Labels{
 				"kind":      m.kind,
 				"name":      job.GetName(),
 				"namespace": job.GetNamespace(),
 				"uid":       string(job.GetUID()),
-				"status":    string(condition.Type),
-				"reason":    condition.Reason,
-			}).Observe(1)
+			}).Set(value)
+
+			if condition.Type == v1.JobSucceeded || condition.Type == v1.JobFailed {
+				m.jobFinishedTime.With(prometheus.Labels{
+					"kind":      m.kind,
+					"name":      job.GetName(),
+					"namespace": job.GetNamespace(),
+					"uid":       string(job.GetUID()),
+				}).Set(float64(condition.LastTransitionTime.Unix()))
+			}
 			break
 		}
 	}
+
 }
 
 func (m *JobMetrics) FirstPodLaunchDelaySeconds(activePods []*corev1.Pod, job metav1.Object, status v1.JobStatus) {
