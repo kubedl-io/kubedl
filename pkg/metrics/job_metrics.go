@@ -151,11 +151,11 @@ func (m *JobMetrics) RestartInc() {
 
 func (m *JobMetrics) JobStatusMetrics(job metav1.Object, status v1.JobStatus) {
 	for _, condition := range status.Conditions {
+		value, ok := v1.JobConditionTypeValueMap[condition.Type]
+		if !ok {
+			continue
+		}
 		if condition.Status == corev1.ConditionTrue {
-			value, ok := v1.JobConditionTypeValueMap[condition.Type]
-			if !ok {
-				continue
-			}
 			m.jobStatus.With(prometheus.Labels{
 				"kind":      m.kind,
 				"name":      job.GetName(),
