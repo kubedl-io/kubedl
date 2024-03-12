@@ -53,7 +53,6 @@ import (
 
 func init() {
 	pflag.StringVar(&kubectlDeliveryImage, "kubectl-delivery-image", defaultKubectlDeliveryImage, "utility image to delivery kubectl binary")
-	pflag.BoolVar(&launcherRunsWorkload, "launcher-runs-workloads", true, "Set launcher run the workload when launcher has GPU")
 }
 
 const (
@@ -67,7 +66,6 @@ var (
 	log = logf.Log.WithName("mpi-controller")
 
 	kubectlDeliveryImage string
-	launcherRunsWorkload bool
 )
 
 // NewReconciler returns a new reconcile.Reconciler
@@ -233,14 +231,16 @@ func (r *MPIJobReconciler) SetClusterSpec(ctx context.Context, job client.Object
 	if workerSpec := mpiJob.Spec.MPIReplicaSpecs[training.MPIReplicaTypeWorker]; workerSpec != nil && workerSpec.Replicas != nil {
 		workerReplicas = *workerSpec.Replicas
 	}
+	launcherRunsWorkload := false
 	if launcherSpec, ok := mpiJob.Spec.MPIReplicaSpecs[training.MPIReplicaTypeLauncher]; ok && launcherSpec != nil {
-		// MPIJob ensures job-attached configuration is kept by ConfigMap when launcher
-		// neither succeed nor failed.
-		log.Info("launcher of MPIJob: ", mpiJob.Namespace+"/"+mpiJob.Name, " generate job config.")
-		_, err := r.getOrCreateJobConfig(mpiJob, workerReplicas, launcherRunsWorkload)
-		if err != nil {
-			return err
-		}
+		launcherRunsWorkload = true
+	}
+	// MPIJob ensures job-attached configuration is kept by ConfigMap when launcher
+	// neither succeed nor failed.
+	log.Info("launcher of MPIJob: ", mpiJob.Namespace+"/"+mpiJob.Name, " generate job config.")
+	_, err := r.getOrCreateJobConfig(mpiJob, workerReplicas, launcherRunsWorkload)
+	if err != nil {
+		return err
 	}
 
 	switch rtype {
