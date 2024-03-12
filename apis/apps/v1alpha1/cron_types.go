@@ -60,7 +60,7 @@ type CronStatus struct {
 
 type CronHistory struct {
 	// Object is the reference of the historical scheduled cron job.
-	Object corev1.TypedLocalObjectReference `json:"object"`
+	Object corev1.ObjectReference `json:"object"`
 	// Status is the final status when job finished.
 	Status v1.JobConditionType `json:"status"`
 	// Created is the creation timestamp of job.

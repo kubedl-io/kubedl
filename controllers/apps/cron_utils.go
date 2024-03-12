@@ -129,16 +129,19 @@ func inActiveList(active []corev1.ObjectReference, workload metav1.Object) bool 
 	return false
 }
 
-func workloadToHistory(wl metav1.Object, apiGroup, kind string) v1alpha1.CronHistory {
+func workloadToHistory(wl metav1.Object, apiVersion, kind string) v1alpha1.CronHistory {
 	status, finished := IsWorkloadFinished(wl)
 	created := wl.GetCreationTimestamp()
 	ch := v1alpha1.CronHistory{
 		Created: &created,
 		Status:  status,
-		Object: corev1.TypedLocalObjectReference{
-			APIGroup: &apiGroup,
-			Kind:     kind,
-			Name:     wl.GetName(),
+		Object: corev1.ObjectReference{
+			APIVersion:      apiVersion,
+			Kind:            kind,
+			Name:            wl.GetName(),
+			Namespace:       wl.GetNamespace(),
+			ResourceVersion: wl.GetResourceVersion(),
+			UID:             wl.GetUID(),
 		},
 	}
 	if finished {

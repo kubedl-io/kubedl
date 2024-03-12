@@ -136,6 +136,11 @@ func (cc *CronController) Reconcile(_ context.Context, req ctrl.Request) (ctrl.R
 	if nextDuration != nil {
 		return ctrl.Result{RequeueAfter: *nextDuration}, nil
 	}
+
+	if err = cc.deleteCompletedJobsBeyondThreshold(&cron); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -459,6 +464,78 @@ func (cc *CronController) newEmptyWorkload(apiVersion, kind string) (client.Obje
 		return wlo, nil
 	}
 	return nil, fmt.Errorf("workload %+v has not implemented client.Object interface", groupVersion)
+}
+
+// Deletes successfully completed jobs beyond given history limits.
+func (cc *CronController) deleteCompletedJobsBeyondThreshold(cron *v1alpha1.Cron) error {
+	historyLimit := cron.Spec.HistoryLimit
+	if historyLimit == nil {
+		return nil
+	}
+
+	completedWorkloads, err := cc.listSuccessfullyCompletedWorkloads(cron)
+	if err != nil {
+		return err
+	}
+
+	if len(completedWorkloads) <= int(*historyLimit) {
+		return nil
+	}
+
+	// Sort completed workloads by creation timestamp.
+	sort.Slice(completedWorkloads, func(i, j int) bool {
+		return completedWorkloads[i].GetCreationTimestamp().Time.Before(completedWorkloads[j].GetCreationTimestamp().Time)
+	})
+
+	// Delete the oldest completed workloads.
+	for _, wlObj := range completedWorkloads[:len(completedWorkloads)-int(*historyLimit)] {
+		// Convert to ObjectReference
+		var wlRef corev1.ObjectReference
+		if err := cc.scheme.Convert(wlObj, &wlRef, nil); err != nil {
+			return err
+		}
+
+		if err := cc.deleteWorkload(cron, wlRef); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// listSuccessfullyCompletedWorkloads returns a list of successfully completed workloads.
+func (cc *CronController) listSuccessfullyCompletedWorkloads(cron *v1alpha1.Cron) ([]metav1.Object, error) {
+	workloads := make([]metav1.Object, 0)
+
+	for _, history := range cron.Status.History {
+		if history.Status == v1.JobSucceeded {
+			wl, err := cc.newEmptyWorkload(cron.APIVersion, history.Object.Kind)
+			if err != nil {
+				klog.Errorf("unsupported cron workload and failed to init by scheme, kind: %s, err: %v",
+					history.Object.Kind, err)
+				continue
+			}
+			if err := cc.client.Get(context.Background(), types.NamespacedName{
+				Name:      history.Object.Name,
+				Namespace: history.Object.Namespace,
+			}, wl); err != nil {
+				if errors.IsNotFound(err) {
+					klog.Infof("completed workload[%s/%s] in cron[%s/%s] has been deleted.",
+						history.Object.Namespace, history.Object.Name, cron.Namespace, cron.Name)
+					continue
+				}
+				return nil, err
+			}
+			metaWl, ok := wl.(metav1.Object)
+			if !ok {
+				klog.Warningf("workload [%s/%s] cannot convert to metav1.Object", cron.Namespace, history.Object.Name)
+				continue
+			}
+			workloads = append(workloads, metaWl)
+		}
+	}
+
+	return workloads, nil
 }
 
 func (cc *CronController) deleteWorkload(cron *v1alpha1.Cron, ref corev1.ObjectReference) error {

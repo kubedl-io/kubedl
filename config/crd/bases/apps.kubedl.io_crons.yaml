@@ -86,15 +86,20 @@ spec:
                       type: string
                     object:
                       properties:
-                        apiGroup:
+                        apiVersion:
+                          type: string
+                        fieldPath:
                           type: string
                         kind:
                           type: string
                         name:
                           type: string
-                      required:
-                      - kind
-                      - name
+                        namespace:
+                          type: string
+                        resourceVersion:
+                          type: string
+                        uid:
+                          type: string
                       type: object
                     status:
                       type: string
