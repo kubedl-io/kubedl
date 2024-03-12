@@ -70,7 +70,7 @@ func (jc *JobController) deletePodsAndServices(runPolicy *apiv1.RunPolicy, job i
 // ReconcileJobs checks and updates replicas for each given ReplicaSpec.
 // It will requeue the job in case of an error while creating/deleting pods/services.
 func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.ReplicaType]*apiv1.ReplicaSpec, jobStatus apiv1.JobStatus,
-	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackendSpec *cachev1alpha1.CacheBackendSpec) (result reconcile.Result, err error) {
+	runPolicy *apiv1.RunPolicy, modelVersion *v1alpha1.ModelVersionSpec, cacheBackendSpec *cachev1alpha1.CacheBackendSpec, gitSyncConfig *apiv1.GitSyncOptions) (result reconcile.Result, err error) {
 
 	jobName := job.GetName()
 	jobKey, err := KeyFunc(job)
@@ -100,7 +100,7 @@ func (jc *JobController) ReconcileJobs(job client.Object, replicas map[apiv1.Rep
 
 	oldStatus := jobStatus.DeepCopy()
 
-	err = code_sync.InjectCodeSyncInitContainers(job, replicas)
+	err = code_sync.InjectCodeSyncInitContainers(replicas, gitSyncConfig)
 	if err != nil {
 		log.Error(err, " Failed to inject code sync init container")
 		return reconcile.Result{}, err

@@ -312,3 +312,36 @@ type DAGCondition struct {
 	// OnPhase defines at which phase the upstream replica will trigger this condition.
 	OnPhase v1.PodPhase `json:"onPhase"`
 }
+
+type SyncOptions struct {
+	// Code source address.(required)
+	Source string `json:"source"`
+	// Image contains toolkits to execute syncing code.
+	Image string `json:"image,omitempty"`
+	// Code root/destination directory path.
+	// Root: the path to save downloaded files.
+	// Dest: the name of (a symlink to) a directory in which to check-out files
+	RootPath string `json:"rootPath,omitempty"`
+	DestPath string `json:"destPath,omitempty"`
+	// User-customized environment variables.
+	Envs []v1.EnvVar `json:"envs,omitempty"`
+}
+
+type GitSyncOptions struct {
+	SyncOptions `json:",inline"`
+
+	// All fields down below are optional.
+
+	// Git repository settings for user to specify.
+	Branch   string `json:"branch,omitempty"`
+	Revision string `json:"revision,omitempty"`
+	Depth    string `json:"depth,omitempty"`
+	// Max consecutive failures allowed.
+	MaxFailures int `json:"maxFailures,omitempty"`
+	// SSH settings for users to use git in ssh pattern.
+	SSH     bool   `json:"ssh,omitempty"`
+	SSHFile string `json:"sshFile,omitempty"`
+	// User-customized account settings.
+	User     string `json:"user,omitempty"`
+	Password string `json:"password,omitempty"`
+}

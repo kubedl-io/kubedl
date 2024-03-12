@@ -37,6 +37,10 @@ type XGBoostJobSpec struct {
 	//     "Worker": ReplicaSpec,
 	//   }
 	XGBReplicaSpecs map[commonv1.ReplicaType]*commonv1.ReplicaSpec `json:"xgbReplicaSpecs"`
+
+	// GitSyncConfig defines the configuration for syncing code from Git repository
+	// +optional
+	GitSyncConfig *commonv1.GitSyncOptions `json:"gitSyncConfig,omitempty"`
 }
 
 // XGBoostJobStatus defines the observed state of XGBoostJob

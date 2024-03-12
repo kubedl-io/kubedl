@@ -48,6 +48,10 @@ type XDLJobSpec struct {
 	// MinFinishWorkPercentage takes precedence over  MinFinishWorkerNum if both are
 	// specified.
 	MinFinishWorkerPercentage *int32 `json:"minFinishWorkRate,omitempty"`
+
+	// GitSyncConfig defines the configuration for syncing code from Git repository
+	// +optional
+	GitSyncConfig *v1.GitSyncOptions `json:"gitSyncConfig,omitempty"`
 }
 
 // XDLJobStatus defines the observed state of XDLJob

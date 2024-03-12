@@ -9,6 +9,8 @@ import (
 )
 
 // ControllerInterface defines the Interface to be implemented by custom operators. e.g. tf-operator needs to implement this interface
+
+// +k8s:deepcopy-gen=false
 type ControllerInterface interface {
 	// ControllerName Returns the Controller name
 	ControllerName() string
@@ -69,6 +71,8 @@ type ControllerInterface interface {
 }
 
 // ElasticScaling defines the interface to be implemented by custom workload elastic behaviors.
+
+// +k8s:deepcopy-gen=false
 type ElasticScaling interface {
 	// EnableElasticScaling indicates workload enables elastic scaling or not.
 	EnableElasticScaling(job client.Object, runPolicy *RunPolicy) bool

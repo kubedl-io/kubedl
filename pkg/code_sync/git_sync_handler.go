@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	commonv1 "github.com/alibaba/kubedl/pkg/job_controller/api/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -14,29 +15,10 @@ const (
 
 var _ CodeSyncHandler = &gitSyncHandler{}
 
-type gitSyncOptions struct {
-	SyncOptions `json:",inline"`
-
-	// All fields down below are optional.
-
-	// Git repository settings for user to specify.
-	Branch   string `json:"branch,omitempty"`
-	Revision string `json:"revision,omitempty"`
-	Depth    string `json:"depth,omitempty"`
-	// Max consecutive failures allowed.
-	MaxFailures int `json:"maxFailures,omitempty"`
-	// SSH settings for users to use git in ssh pattern.
-	SSH     bool   `json:"ssh,omitempty"`
-	SSHFile string `json:"sshFile,omitempty"`
-	// User-customized account settings.
-	User     string `json:"user,omitempty"`
-	Password string `json:"password,omitempty"`
-}
-
 type gitSyncHandler struct{}
 
 func (h *gitSyncHandler) InitContainer(optsConfig []byte, mountVolume *v1.Volume) (*v1.Container, string, error) {
-	opts := gitSyncOptions{}
+	opts := commonv1.GitSyncOptions{}
 	if err := json.Unmarshal(optsConfig, &opts); err != nil {
 		return nil, "", err
 	}
@@ -59,7 +41,7 @@ func (h *gitSyncHandler) InitContainer(optsConfig []byte, mountVolume *v1.Volume
 	return &container, opts.DestPath, nil
 }
 
-func setDefaultSyncOpts(opts *gitSyncOptions) {
+func setDefaultSyncOpts(opts *commonv1.GitSyncOptions) {
 	if opts.RootPath == "" {
 		opts.RootPath = DefaultCodeRootPath
 	}
@@ -77,7 +59,7 @@ func setDefaultSyncOpts(opts *gitSyncOptions) {
 	}
 }
 
-func setSyncOptsEnvs(opts *gitSyncOptions) {
+func setSyncOptsEnvs(opts *commonv1.GitSyncOptions) {
 	opts.Envs = append(opts.Envs, v1.EnvVar{
 		Name:  "GIT_SYNC_REPO",
 		Value: opts.Source,
