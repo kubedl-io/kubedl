@@ -1,0 +1,27 @@
+# permissions for end users to edit trials.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: llm-parameter-tuning
+    app.kubernetes.io/managed-by: kustomize
+  name: trial-editor-role
+rules:
+- apiGroups:
+  - llmpt.kubedl.io.dinokli818.me
+  resources:
+  - trials
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - llmpt.kubedl.io.dinokli818.me
+  resources:
+  - trials/status
+  verbs:
+  - get

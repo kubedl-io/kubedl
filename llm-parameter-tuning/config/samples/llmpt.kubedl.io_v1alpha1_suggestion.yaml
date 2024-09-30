@@ -1,0 +1,9 @@
+apiVersion: llmpt.kubedl.io.dinokli818.me/v1alpha1
+kind: Suggestion
+metadata:
+  labels:
+    app.kubernetes.io/name: llm-parameter-tuning
+    app.kubernetes.io/managed-by: kustomize
+  name: suggestion-sample
+spec:
+  # TODO(user): Add fields here

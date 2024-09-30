@@ -1,0 +1,27 @@
+# permissions for end users to edit suggestions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: llm-parameter-tuning
+    app.kubernetes.io/managed-by: kustomize
+  name: suggestion-editor-role
+rules:
+- apiGroups:
+  - llmpt.kubedl.io.dinokli818.me
+  resources:
+  - suggestions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - llmpt.kubedl.io.dinokli818.me
+  resources:
+  - suggestions/status
+  verbs:
+  - get

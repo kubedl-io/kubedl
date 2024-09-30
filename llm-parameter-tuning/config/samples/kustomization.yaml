@@ -1,0 +1,6 @@
+## Append samples of your project ##
+resources:
+- llmpt.kubedl.io_v1alpha1_experiment.yaml
+- llmpt.kubedl.io_v1alpha1_trial.yaml
+- llmpt.kubedl.io_v1alpha1_suggestion.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

@@ -1,0 +1,23 @@
+# permissions for end users to view trials.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: llm-parameter-tuning
+    app.kubernetes.io/managed-by: kustomize
+  name: trial-viewer-role
+rules:
+- apiGroups:
+  - llmpt.kubedl.io.dinokli818.me
+  resources:
+  - trials
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - llmpt.kubedl.io.dinokli818.me
+  resources:
+  - trials/status
+  verbs:
+  - get
